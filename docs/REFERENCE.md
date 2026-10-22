@@ -290,8 +290,12 @@ carries both an approved and a rejected decision reads contested.
 Status: one schema with the identifier `1`. Every document and every
 question compiles under it. Until the first publication the schema
 evolves in place: each revision recompiles the whole corpus and every
-fixture, and the identifier stays `1`. The predicate set below is the
-public interface. An optional per-guideline table, `vocabulary.tsv`,
+fixture, and the identifier stays `1`. From the first publication on,
+schema `1` is frozen. A change to the predicate set or to the meaning
+of a predicate makes the next identifier, `2`, for every document and
+question at once, and the release notes name the change. A consumer
+combines documents of one identifier only. The predicate set below is
+the public interface. An optional per-guideline table, `vocabulary.tsv`,
 adds the time annotations of the section "Vocabulary table and time
 annotations" and the grade and preference annotations of the section
 "Strength annotations" below. The compiler takes the table from an explicit
@@ -1543,6 +1547,32 @@ stale `release-manifest.tsv` fails the check.
 
 The reviewer interface runs locally on loopback. Web hosting is out of
 scope.
+
+### Releasing
+
+A release is a dated snapshot of the knowledge base. Its identifier is
+`kb-YYYY-MM-DD`, the date of the release. A second release on the same
+date adds `.2`, `.3`, and so on. The archive keeps its commit name; the
+release record outside the archive binds the identifier to the archive
+bytes. Every document ships with its review label; the build blocks a
+rejected or a contested document only.
+
+1. Commit the release state. `just gate` and CI must be green.
+2. Run `ckc dist build`. Keep the archive and its `.sha256` sidecar.
+3. Write the release notes. State the identifier, the date, the archive
+   name and its SHA-256, the release commit, the schema identifier, the
+   source edition and digest of each guideline, and the review label
+   counts. Classify the change from the previous release twice: the
+   schema change (`none`, or the new identifier) and the content change
+   (`none`, `correction`, or `substantive` when a change alters whether
+   a recommendation applies to a patient).
+4. Create the annotated git tag `kb-YYYY-MM-DD` on the release commit,
+   with the release notes as its message.
+5. Deposit the archive and its sidecar on Zenodo as a new version of
+   the project record. Link the preprint that describes the release.
+   The version DOI then names the archive bytes.
+6. Update `CITATION.cff`: the version, the release date, and the
+   version DOI.
 
 ## Licensing
 

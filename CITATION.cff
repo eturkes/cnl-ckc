@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this knowledge base or software, cite it with these metadata."
+title: "cnl-ckc: Controlled Natural Language Clinical Knowledge Compiler"
+type: software
+authors:
+  - family-names: Turkes
+    given-names: Emir
+repository-code: "https://github.com/eturkes/cnl-ckc"
+license-url: "https://github.com/eturkes/cnl-ckc/blob/main/LICENSE"
+abstract: >-
+  cnl-ckc compiles published clinical guidelines into an executable Prolog
+  knowledge base through Attempto Controlled English that clinicians review
+  beside each source passage. The compiled output is certified against a
+  formal specification under a machine-verified kernel. The first knowledge
+  base covers the CDC Clinical Practice Guideline for Prescribing Opioids for
+  Pain (2022).
+keywords:
+  - clinical guidelines
+  - controlled natural language
+  - Attempto Controlled English
+  - Prolog
+  - knowledge base
+  - formal verification
