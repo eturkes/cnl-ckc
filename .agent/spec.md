@@ -53,8 +53,11 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [x] 4e4538e1 PR3 consumer recipe (contract `cr`): the CDC corpus + one patient diverges in plain Prolog and trips the native engine's bounds → a gated tabling recipe for consumers.
 - [x] 506ca5ce PR4 pin drift: rustup-init 1.29.2, node 24.22.1, chrome-headless-shell 156.0.8078.47, crc32fast 1.5.3.
 - [x] 7f9a46ce PR5 release-readiness verdict (MAIN: good milestone once PR0–PR7 land) + versioning rulings (Decisions Publication scope).
-- [ ] PR6 binding-first emission (contract `bf`, kernel): compiled bodies run each goal whose referent a later goal binds after that goal → both engines answer targeted patient questions untabled; corpus + fixtures re-derived before the user's review.
-- [ ] PR7 versioning + provenance policy per the rulings: REFERENCE § Export + Decisions Schema evolution post-publication rule, `CITATION.cff`, release-notes template; the prior-art survey archived beside its contract.
+- [x] 82cff19d PR6 binding-first emission (contract `bf`, kernel): compiled bodies run each goal whose referent a later goal binds after that goal → both engines answer targeted patient questions untabled; corpus + fixtures re-derived before the user's review.
+- [x] 0892e399 PR7 versioning + provenance policy per the rulings: REFERENCE § Export + Decisions Schema evolution post-publication rule, `CITATION.cff`, release-notes template; the prior-art survey archived beside its contract.
+- [ ] PR8 user review of the ACE corpus (reviewer interface) + the human-read spec `rust/ckc-spec/` (user; MAIN waits for the user's word).
+- [ ] PR9 release cut per REFERENCE § Releasing after PR8: closing gate + CI green on the pushed commit, `ckc dist build`, release notes, annotated tag `kb-YYYY-MM-DD`, `CITATION.cff` version/date/DOI (the push, the Zenodo deposit + the arXiv submission = the user's remote actions).
+- [ ] PR10 README cites the arXiv preprint once the user reports it published.
 - Deferral queue = `.agent/deferred.md` (each row above + ruled deferrals; one entry + acceptance check each).
 
 ## Phase
