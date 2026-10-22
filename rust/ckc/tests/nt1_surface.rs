@@ -5,5 +5,7 @@ mod compiler;
 mod model;
 #[path = "../../../tests/nt1-surface/release.rs"]
 mod release;
+#[path = "../../../tests/bf/reorder.rs"]
+mod reorder;
 #[path = "../../../tests/nt1-surface/support.rs"]
 mod support;

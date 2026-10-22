@@ -1,6 +1,8 @@
 // S2 D1/D3/D5/D6, P1/P4/P5; oracle = contract + spec at 37b5dbd6.
 // Clauses, proof trees and offsets are hand-modeled, never S2 output snapshots.
 // CKC_S2_TEST_BIN selects a prebuilt executable for seed-red replay.
+#[path = "../../../tests/bf/reorder.rs"]
+mod reorder;
 use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
@@ -1284,13 +1286,14 @@ impl Cert {
         let pl = if id == "question" {
             cert_question(&question_goals(), Some(&table))
         } else {
-            document_text(
+            // The compiler runs rule bodies binding-first (contract bf).
+            reorder::document(&document_text(
                 id,
                 &fixture(&format!("{id}/ace.txt.in")),
                 Some(&fixture("lexicon.ulex.in")),
                 Some(&table),
                 &cert_clauses(id),
-            )
+            ))
         };
         Self {
             id,
@@ -1336,7 +1339,7 @@ impl Cert {
                     Out::ok("ckc: certify ok question\n")
                 } else if self.id.ends_with("-rule") {
                     let m = cert_rule(self.id);
-                    Out::ok(proof(self.id, &m.witness, &m.heads))
+                    Out::ok(reorder::document(&proof(self.id, &m.witness, &m.heads)))
                 } else {
                     let heads: Vec<_> = self
                         .pl
@@ -1754,20 +1757,37 @@ fn c5ab_antecedent_and_naf_qualifier_mutants() {
                     1,
                 ),
                 "misplace" => {
-                    if copula {
-                        let neighbor = "guideline_arg(actual,C,2,B)";
-                        sample.pl.replacen(
-                            &format!("{neighbor}, {q}"),
-                            &format!("{q}, {neighbor}"),
-                            1,
-                        )
-                    } else {
-                        let neighbor = lit("guideline_event", &["actual", e, "review"]);
-                        sample.pl.replacen(
-                            &format!("{q}, {neighbor}"),
-                            &format!("{neighbor}, {q}"),
-                            1,
-                        )
+                    // Swap the qualifier with the goal before it (binding-first order,
+                    // contract bf, can put a different goal there than the DRS order did).
+                    // A qualifier opening a NAF group swaps with the goal after it.
+                    match sample.pl.find(&format!(", {q}")) {
+                        Some(at) => {
+                            let start = sample.pl[..at].rfind(", ").map_or_else(
+                                || sample.pl[..at].rfind(" :- ").unwrap() + 4,
+                                |i| i + 2,
+                            );
+                            let neighbor = sample.pl[start..at].to_owned();
+                            sample.pl.replacen(
+                                &format!("{neighbor}, {q}"),
+                                &format!("{q}, {neighbor}"),
+                                1,
+                            )
+                        }
+                        None => {
+                            let from = sample
+                                .pl
+                                .find(&format!("{q}, "))
+                                .expect("qualifier beside a goal")
+                                + q.len()
+                                + 2;
+                            let end = from + sample.pl[from..].find(", ").unwrap();
+                            let neighbor = sample.pl[from..end].to_owned();
+                            sample.pl.replacen(
+                                &format!("{q}, {neighbor}"),
+                                &format!("{neighbor}, {q}"),
+                                1,
+                            )
+                        }
                     }
                 }
                 _ => unreachable!(),

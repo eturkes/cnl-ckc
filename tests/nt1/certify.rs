@@ -50,6 +50,23 @@ fn substituted(text: &str, replacement: impl Fn(char) -> String) -> String {
     }
     out
 }
+// The comma-separated goals of a body text (no quoted commas in these samples).
+fn top_level(body: &str) -> Vec<String> {
+    let (mut goals, mut depth, mut start) = (Vec::new(), 0i32, 0);
+    for (i, ch) in body.char_indices() {
+        match ch {
+            '(' | '[' => depth += 1,
+            ')' | ']' => depth -= 1,
+            ',' if depth == 0 => {
+                goals.push(body[start..i].trim().to_owned());
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    goals.push(body[start..].trim().to_owned());
+    goals
+}
 fn numeric_annotation(s: &str) -> bool {
     s.starts_with("guideline_satisfies(") || s.starts_with("guideline_unit(")
 }
@@ -101,6 +118,12 @@ impl Sample {
         sample.body.extend(event(e, "take", "A", Some("B")));
         if !question {
             sample.heads = event(&gid("product", id, 4, "[A,B,C]"), "wait", "A", None);
+            // The compiler runs a rule body binding-first (contract bf); the head's Skolem
+            // list fixes A, B, C, so the letters keep their meaning.
+            let rule = format!("{} :- {}.\n", sample.heads[0], sample.body.join(", "));
+            let ordered = crate::reorder::document(&rule);
+            let body = ordered.trim_end().strip_suffix('.').unwrap().split_once(" :- ").unwrap().1;
+            sample.body = top_level(body);
         }
         sample
     }
@@ -312,8 +335,14 @@ fn p5_dropped_added_or_misplaced_builtin_rejects() {
                     s.body.push("guideline_satisfies(exactly,60,geq,50)".into());
                 }
                 "misplace" => {
+                    // A binding-first body (contract bf) can end on the built-in: then ahead
+                    // of its inputs instead.
                     let goal = s.body.remove(at);
-                    s.body.push(goal);
+                    if at == s.body.len() {
+                        s.body.insert(0, goal);
+                    } else {
+                        s.body.push(goal);
+                    }
                 }
                 _ => unreachable!(),
             }

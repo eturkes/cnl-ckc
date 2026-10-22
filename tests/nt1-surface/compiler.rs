@@ -776,8 +776,8 @@ fn p3_oracle_inverse_and_own_bad_inputs() {
     );
     for p in &cases {
         assert_eq!(
-            model::erase(&p.expected(true), p.alias),
-            p.expected(false),
+            model::erase(&p.expected_drs(true), p.alias),
+            p.expected_drs(false),
             "{} independent inverse",
             p.id
         );
@@ -786,7 +786,7 @@ fn p3_oracle_inverse_and_own_bad_inputs() {
         .iter()
         .find(|p| p.id == "nt-antecedent-day-geq-true")
         .unwrap();
-    let good = p.expected(true);
+    let good = p.expected_drs(true);
     for (before, after) in [
         ("guideline_unit(actual,B,F), ", ""),
         ("guideline_satisfies(D,E,F,geq,2,day), ", ""),
@@ -799,7 +799,7 @@ fn p3_oracle_inverse_and_own_bad_inputs() {
         assert!(good.contains(before), "self-plant anchor {before}");
         assert_ne!(
             model::erase(&good.replacen(before, after, 1), false),
-            p.expected(false),
+            p.expected_drs(false),
             "erasure missed {before}"
         );
     }
@@ -864,8 +864,8 @@ fn p3_projection_preservation_every_green_probe() {
     for original in probes() {
         let p = &r.models[&original.id];
         assert_eq!(
-            model::erase(&p.expected(true), p.alias),
-            p.expected(false),
+            model::erase(&p.expected_drs(true), p.alias),
+            p.expected_drs(false),
             "{} oracle insertion/erasure",
             p.id
         );
@@ -882,14 +882,43 @@ fn p3_projection_preservation_every_green_probe() {
             format!("{} green rc={:?} stderr={:?}", p.id, got.rc, got.stderr),
         );
         if got.ok() {
-            checks.equal(
-                &model::erase(&got.stdout, p.alias),
-                &p.expected(false),
-                &format!("{} old projection", p.id),
+            let (erased, old) = (model::erase(&got.stdout, p.alias), p.expected(false));
+            checks.require(
+                same_up_to_body_order(&erased, &old),
+                format!("{} old projection up to body order:\n{erased}\n{old}", p.id),
             );
         }
     }
     checks.finish("P3 projection preservation");
+}
+
+// Erasing the annotations rebuilds an old time noun where its measure now stands, so the
+// erased binding-first body (contract bf) can order the old goals differently: same lines,
+// each rule with the same head and the same body goals.
+fn same_up_to_body_order(a: &str, b: &str) -> bool {
+    let goals = |l: &str| -> (String, Vec<String>) {
+        match l.strip_suffix('.').and_then(|l| l.split_once(" :- ")) {
+            Some((head, body)) => {
+                let (mut gs, mut depth, mut start) = (Vec::new(), 0i32, 0);
+                for (i, ch) in body.char_indices() {
+                    match ch {
+                        '(' | '[' => depth += 1,
+                        ')' | ']' => depth -= 1,
+                        ',' if depth == 0 => {
+                            gs.push(body[start..i].trim().to_owned());
+                            start = i + 1;
+                        }
+                        _ => {}
+                    }
+                }
+                gs.push(body[start..].trim().to_owned());
+                gs.sort();
+                (head.to_owned(), gs)
+            }
+            None => (l.to_owned(), Vec::new()),
+        }
+    };
+    a.lines().count() == b.lines().count() && a.lines().zip(b.lines()).all(|(x, y)| goals(x) == goals(y))
 }
 #[test]
 fn p3_rejects_keep_upper_root_range_and_about_boundaries() {

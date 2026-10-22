@@ -12,3 +12,5 @@ mod composition;
 mod oracle;
 #[path = "../../../tests/nt1/relation.rs"]
 mod relation;
+#[path = "../../../tests/bf/reorder.rs"]
+mod reorder;

@@ -3,6 +3,8 @@
 mod model;
 #[path = "support/nt_projection.rs"]
 mod nt_projection;
+#[path = "../../../tests/bf/reorder.rs"]
+mod reorder;
 
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -284,13 +286,14 @@ fn cases() -> Vec<Case> {
 fn frozen(c: &Case, suffix: &str) -> String {
     fs::read_to_string(fixture().join(format!("s1/{}.{suffix}", c.id))).unwrap()
 }
+// The frozen S1 artifacts predate binding-first bodies (contract bf).
 fn expected(c: &Case, table: Option<&str>) -> String {
-    model::rebind(
+    reorder::document(&model::rebind(
         &model::annotate(&frozen(c, "pl.in"), table, &c.plans),
         &c.ace,
         &sha(c.ace.as_bytes()),
         table.map(|t| sha(t.as_bytes())).as_deref(),
-    )
+    ))
 }
 
 struct Plant {
@@ -738,12 +741,12 @@ fn t00_reference_baselines_and_oracle_properties() {
         if !c.green() {
             continue;
         }
-        let old = frozen(c, "pl.in");
+        let old = reorder::document(&frozen(c, "pl.in"));
         let predicted = expected(c, c.table.as_deref());
         assert_eq!(
             model::erase(&predicted, &old),
             old,
-            "{} erase(insert(S1))",
+            "{} erase(insert(S1)), binding-first",
             c.id
         );
         let planned = c
@@ -949,7 +952,7 @@ fn t3m_every_green_erases_to_s1_and_naf_obligation_boundary() {
                     ),
                 );
             }
-            let old = frozen(c, "pl.in");
+            let old = reorder::document(&frozen(c, "pl.in"));
             let projected = nt_projection::erase(&actual.stdout, &expected(c, c.table.as_deref()));
             let erased = model::erase(&projected, &old);
             checks.require(
@@ -969,7 +972,7 @@ fn t3m_every_green_erases_to_s1_and_naf_obligation_boundary() {
                 format!("{} erased compile: {}", c.id, erased.describe()),
             );
             if erased.ok() {
-                let old = frozen(c, "pl.in");
+                let old = reorder::document(&frozen(c, "pl.in"));
                 let projected = nt_projection::erase(&erased.stdout, &old);
                 let normalized = model::erase(&projected, &old);
                 checks.require(

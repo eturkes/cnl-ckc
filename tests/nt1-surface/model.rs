@@ -382,7 +382,14 @@ impl Probe {
         }
         out
     }
+    // The compiler's bytes: binding-first bodies (contract bf) over the DRS-order model.
     pub fn expected(&self, nt: bool) -> String {
+        crate::reorder::document(&self.expected_drs(nt))
+    }
+    pub fn proof(&self, nt: bool) -> String {
+        crate::reorder::document(&self.proof_drs(nt))
+    }
+    pub fn expected_drs(&self, nt: bool) -> String {
         let table = if self.table {
             format!("sha256({})", quote(&sha(TABLE.as_bytes())))
         } else {
@@ -420,7 +427,7 @@ impl Probe {
             self.clauses(nt)
         )
     }
-    pub fn proof(&self, nt: bool) -> String {
+    fn proof_drs(&self, nt: bool) -> String {
         self.groups
             .iter()
             .map(|g| {

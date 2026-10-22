@@ -3,6 +3,8 @@
 mod model;
 #[path = "support/nt_projection.rs"]
 mod nt_projection;
+#[path = "../../../tests/bf/reorder.rs"]
+mod reorder;
 
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -780,10 +782,11 @@ fn expected(c: &Case) -> String {
             1,
         )
     };
-    model::rebind(
+    // The C1 baselines predate binding-first bodies (contract bf).
+    reorder::document(&model::rebind(
         &text,
         c.table.as_deref().map(|t| sha(t.as_bytes())).as_deref(),
-    )
+    ))
 }
 
 fn compiler_row(row: &'static str) {
@@ -906,10 +909,11 @@ fn e00_reference_baselines_and_oracle_properties() {
             c.id
         );
         let predicted = expected(c);
+        let ordered = reorder::document(&old);
         assert_eq!(
-            model::erase(&predicted.replacen(QUALIFIER_DECLARATIONS, "", 1), &old),
-            old,
-            "{} erase(insert(C1)) = C1",
+            model::erase(&predicted.replacen(QUALIFIER_DECLARATIONS, "", 1), &ordered),
+            ordered,
+            "{} erase(insert(C1)) = C1, binding-first",
             c.id
         );
         if c.mode == "doc" {
@@ -1024,7 +1028,7 @@ fn e19_every_green_projection_erases_to_c1() {
             format!("{} projection compile: {}", c.id, actual.describe()),
         );
         if actual.ok() {
-            let old = baseline(c);
+            let old = reorder::document(&baseline(c));
             let projected = nt_projection::erase(&actual.stdout, &expected(c));
             let erased = model::erase(&projected.replacen(QUALIFIER_DECLARATIONS, "", 1), &old);
             checks.require(

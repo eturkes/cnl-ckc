@@ -47,7 +47,12 @@ impl Group {
                 {
                     body.push(format!("\\+ {}", exclusion(key)));
                 }
-                canonical(&format!("{head} :- {}", body.join(", ")))
+                // The compiler runs the body binding-first (contract bf).
+                let ordered = crate::reorder::document(&format!(
+                    "{}.",
+                    canonical(&format!("{head} :- {}", body.join(", ")))
+                ));
+                ordered.strip_suffix('.').unwrap().to_owned()
             })
             .collect()
     }
@@ -59,7 +64,7 @@ impl Group {
             .map(|g| self.bind(id, g))
             .collect();
         let heads: Vec<_> = self.heads(key).iter().map(|h| self.bind(id, h)).collect();
-        proof(id, self.k, &facts, &heads)
+        crate::reorder::document(&proof(id, self.k, &facts, &heads))
     }
 }
 #[derive(Clone)]

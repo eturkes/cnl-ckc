@@ -10,5 +10,7 @@ mod common;
 mod composition;
 #[path = "../../../tests/cs1/model.rs"]
 mod model;
+#[path = "../../../tests/bf/reorder.rs"]
+mod reorder;
 #[path = "../../../tests/cs1/scan.rs"]
 mod scan;
