@@ -1,4 +1,4 @@
-// DA2 P1–P10; contract-only scene oracle, seed 1e0fff81.
+// DA2 P1–P10; contract-only scene oracle.
 // CKC_DA2_TEST_BIN selects a prebuilt ckc; the fork + driver come from this tree.
 #[path = "../../../tests/da2/cases.rs"]
 mod cases;

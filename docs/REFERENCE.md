@@ -1030,8 +1030,8 @@ values, and the head of the rule takes the result. When a built-in derives
 nothing for these values, for example for a divisor of 0, the sentence
 rejects. The witness value is fixed: when it breaks another condition of
 the rule, such as `does not provably contain at least 1 cat`, the
-obligation fails although another value would satisfy the rule. Write
-such a rule without that condition.
+obligation fails although another value would satisfy the rule, and the
+compiler rejects the document with `underivable_obligation`.
 
 A formula that breaks a rule rejects with `formula_shape(Why, S)`, class
 `unsupported`. The reason names the first check that fails, in this order:

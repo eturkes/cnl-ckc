@@ -1,4 +1,4 @@
-// DA1 P1–P11; contract-only oracle, seed b2c6494d.
+// DA1 P1–P11; contract-only oracle.
 // CKC_DA1_TEST_BIN / CKC_DA1_SCHEMA_FILE select the implementation under test.
 #[path = "../../../tests/da1/codec.rs"]
 mod codec;

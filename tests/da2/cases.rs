@@ -310,7 +310,7 @@ pub fn rejected() -> Vec<Reject> {
             ),
             "operand_bound",
         ),
-        // reviewer-2 F1 + F2: a plain-number time quantity and an APE measurement are no operands.
+        // A plain-number time quantity and an APE measurement are no operands (D1).
         red(
             "da2-plain-time-operand",
             EXAMPLE
