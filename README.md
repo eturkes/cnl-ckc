@@ -66,6 +66,13 @@ program, its formal specification, and its proofs.
   plain number in a statement means at least that many. To state a
   measured value, use `exactly`. Seconds, minutes, hours, days and weeks
   convert, and months convert to years. Days and months do not convert.
+- The knowledge base converts the daily dose of each opioid in the CDC
+  conversion table to MME per day, with the exact factor of the table. To
+  use it, state the dose as an opioid dosage that contains an amount, for
+  example `exactly 40 oxycodone-milligrams-per-day`. The conversion does
+  not apply to a dosage that serves the management of opioid use
+  disorder. The knowledge base does not add the doses of several opioids:
+  a total dosage must come from the patient data.
 - A guideline can state where its recommendations do not apply, for
   example for patients with cancer-related pain. The compiler turns
   such a statement into a scope exclusion. When the condition of an

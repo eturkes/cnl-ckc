@@ -38,9 +38,9 @@ documents 24 grade records, one strength and one evidence value each.
 and `instead-of` alternatives. Two of them, `cdc2022-opioid-s22-02` and
 `cdc2022-opioid-s37-09`, are new documents for regions that earlier
 restated a recommendation without its preference. The table's 56
-qualifier rows type the hedges of 158 documents on the actions that
-they qualify, in seven classes: manner (64 documents), applicability
-(43), possibility (29), usuality (26), focus (23), ideality (5) and
+qualifier rows type the hedges of 156 documents on the actions that
+they qualify, in seven classes: manner (63 documents), applicability
+(43), possibility (29), usuality (26), focus (22), ideality (5) and
 force (2). A "might" claim compiles under "can" with "possibly". An
 applicability hedge ("as appropriate", "when feasible") compiles as a
 condition. 36 new documents formalize regions that earlier restated a
@@ -56,7 +56,7 @@ and stay in the nouns of the ACE. Two emphasize a whole prohibition
 `cdc2022-opioid-s51-11`); they stay untyped, and the projection notes
 record them.
 
-Temporal status: 56 of the CDC guideline's 387 documents carry
+Temporal status: 56 of the CDC guideline's 382 documents carry
 annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
 whose sources state a bound that the interval and recurrence
@@ -85,7 +85,7 @@ after without a quantity (`during a visit`), a window anchored on a
 start or end point that the source does not name, and a measured
 number such as `3 d` stay outside the schema.
 
-Numeric-threshold status: 30 of the CDC guideline's 387 documents
+Numeric-threshold status: 30 of the CDC guideline's 382 documents
 compare a quantity with a number, and 34 state a time quantity with its
 unit. The 19 documents that stated a comparison in ACE before the
 comparison built-ins compile it as a value comparison without an ACE
@@ -108,7 +108,7 @@ dose-arithmetic class.
 
 Dose-arithmetic status: the exact product and quotient built-ins and the ACE formula (`docs/REFERENCE.md` § Arithmetic built-ins and § Formulas in ACE) carry the exact arithmetic of the class. A census of the 702 regions outside Box 3 and of the table on PDF page 33 (`.agent/archive/da-census/`) found four statements that a formula carries: the MME conversion table, its multiply instruction, its two worked examples, and a reduction of the daily dosage to 50% (`cdc2022-opioid-s42-15`). The table, its instruction, its cautions and its notes now form one region with one document (`cdc2022-opioid-s33-01`, user ruling): ten rules convert the daily dose of each listed opioid to MME per day with the exact factor of the table, and caution 7 is a condition of every rule, so a dosage that serves the management of opioid use disorder gets no MME. The worked examples derive the totals that they state (20 mg and 20 MME; 20 mg and 30 MME). The class keeps a recorded loss where no carrier exists: a total across several opioids or prescriptions (14 regions), an equivalent dose without a stated factor (S31-04, S31-06 and cautions 2 and 3 of the table), and a taper rate per period or an approximate reduction (4 regions).
 
-Condition-scope status: the scope and exclusion rows of the CDC table make all 386 documents scoped. Twelve exclusion rules gate the 1,151 should, must and may edge clauses of the guideline: four care contexts (S3-03, restated by S9-01), three facility settings with the discharge exception (S7-02), and patients younger than 18 years (S10-04, with the adult audience of S9-05). Thirty-eight absence conditions in 18 documents read `does not provably`, for example a contraindication or a prerequisite step without a record. Observed negative findings and actual status stay classical negations. Eleven census rows gain rule conditions, prohibitions or data. Population and audience statements stay data.
+Condition-scope status: the scope and exclusion rows of the CDC table make all 382 documents scoped. Twelve exclusion rules gate the 1,150 should, must and may edge clauses of the guideline: four care contexts (S3-03, restated by S9-01), three facility settings with the discharge exception (S7-02), and patients younger than 18 years (S10-04, with the adult audience of S9-05). Thirty-eight absence conditions in 18 documents read `does not provably`, for example a contraindication or a prerequisite step without a record. Observed negative findings and actual status stay classical negations. Eleven census rows gain rule conditions, prohibitions or data. Population and audience statements stay data.
 
 The CDC counts record what the projections lost or approximated, not
 proven limits of v1: v1 already carries Horn prerequisites and

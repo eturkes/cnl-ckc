@@ -951,11 +951,16 @@ built-ins in ISO Prolog; a consumer loads it with the documents. The
 results are exact when the integers of the engine can hold every
 intermediate integer, absolute values and products included. SWI-Prolog 9.2.9 has unbounded integers.
 
-An emitted rule can feed its own condition, for example a rule whose
-condition and result both use the verb `include`. Plain left-to-right
-Prolog can then search without end. Tabling ends the search for the
-conversion rules of this repository but proves no general termination. The
-engine of this repository is bounded and reports `indeterminate(limit)`.
+An emitted rule can feed its own condition. Plain left-to-right Prolog
+then searches without end, and the engine of this repository stops at its
+bound and reports `indeterminate(limit)`. Three rule shapes cause this: a
+result that uses a verb or a noun of the condition; a first condition that
+names a noun that other rules derive, such as `opioid-dosage`; and a
+formula in a rule with a time condition, because a compiled time quantity
+reads its count before its event binds it. The rules of this repository
+avoid all three. Each conversion rule starts with the amount of its opioid,
+each result word differs from the condition words, and a rule with a time
+condition names the result of a separate formula rule.
 
 #### Formulas in ACE
 
@@ -963,7 +968,7 @@ A rule can compute a quantity with a formula. The formula is the last part
 of the consequent:
 
 ```
-If an opioid-dosage contains some oxycodone-milligrams-per-day X then the opioid-dosage includes some MME-units-per-day Y and Y = X * 1.5.
+If some oxycodone-milligrams-per-day X are contained by an opioid-dosage then the opioid-dosage includes some MME-units-per-day Y and Y = X * 1.5.
 ```
 
 The compiler reads two extensions of ACE in a formula. These extensions are
@@ -1006,10 +1011,10 @@ conditions of the rule. The count of the target takes the result of the
 last built-in:
 
 ```
-guideline_cardinality(actual,'$guideline_id'(product,…,ref(4),…),na,F,G) :-
-    …, guideline_entity(actual,B,'oxycodone-milligram-per-day',countable),
-    guideline_cardinality(actual,B,na,C,D), …,
-    guideline_product(C,D,exactly,rational(3,2),F,G).
+guideline_cardinality(actual,'$guideline_id'(product,…,ref(4),…),na,D,E) :-
+    guideline_entity(actual,A,'oxycodone-milligram-per-day',countable),
+    guideline_cardinality(actual,A,na,F,G), …,
+    guideline_product(F,G,exactly,rational(3,2),D,E).
 ```
 
 An operand with `some` directly before its noun keeps no
