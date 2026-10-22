@@ -1,1 +1,29 @@
-Every clinician should multiply an opioid-dosage by a conversion-factor for an MME-dosage-determination.
+If some codeine-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 0.15.
+If some transdermal-fentanyl-micrograms-per-hour X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 2.4.
+If some hydrocodone-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 1.0.
+If some hydromorphone-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 5.0.
+If some methadone-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 4.7.
+If some morphine-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 1.0.
+If some oxycodone-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 1.5.
+If some oxymorphone-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 3.0.
+If some tapentadol-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 0.4.
+If some tramadol-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 0.2.
+A hydrocodone-regimen-example contains exactly 5 hydrocodone-milligrams-per-dose and contains exactly 325 acetaminophen-milligrams-per-dose and has exactly 4 doses-per-day.
+If a hydrocodone-regimen-example contains some hydrocodone-milligrams-per-dose X and has some doses-per-day Z then the hydrocodone-regimen-example provides some daily-hydrocodone-milligrams Y and Y = X * Z.
+If a hydrocodone-regimen-example provides some daily-hydrocodone-milligrams X then the hydrocodone-regimen-example includes some MME-units-per-day Y and Y = X * 1.0.
+An extended-release-oxycodone-regimen-example contains exactly 10 oxycodone-milligrams-per-dose and has exactly 2 doses-per-day.
+If an extended-release-oxycodone-regimen-example contains some oxycodone-milligrams-per-dose X and has some doses-per-day Z then the extended-release-oxycodone-regimen-example provides some daily-oxycodone-milligrams Y and Y = X * Z.
+If an extended-release-oxycodone-regimen-example provides some daily-oxycodone-milligrams X then the extended-release-oxycodone-regimen-example includes some MME-units-per-day Y and Y = X * 1.5.
+Every equianalgesic-dose-conversion is an estimate.
+No equianalgesic-dose-conversion can capture an individual-genetic-variability.
+No equianalgesic-dose-conversion can capture an individual-pharmacokinetic-variability.
+If there is a clinician then it is recommended that the clinician does not use a calculated-MME-dosage for an opioid-conversion-dosage.
+Every clinician can typically use a substantially-lower-opioid-dosage during an opioid-conversion.
+If a clinician converts a methadone-dose then the clinician should particularly convert the methadone-dose cautiously.
+If a clinician prescribes a transdermal-fentanyl then the clinician should particularly prescribe the transdermal-fentanyl cautiously.
+Every clinician should consider a transdermal-fentanyl-dosing during a transdermal-fentanyl-prescription.
+Every clinician should consider a transdermal-fentanyl-absorption during a transdermal-fentanyl-prescription.
+An MME-conversion-table does not list a buprenorphine-pain-product.
+If there is a clinician then it is recommended that the clinician does not use a conversion-factor for an opioid-use-disorder-dosage-decision.
+Every tapentadol-medication is a mu-receptor-agonist and is a norepinephrine-reuptake-inhibitor.
+Every tramadol-medication is a mu-receptor-agonist and is a norepinephrine-reuptake-inhibitor and is a serotonin-reuptake-inhibitor.

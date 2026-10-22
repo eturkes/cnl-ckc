@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s52-04',ace_sha256('3977fdfc381e44fc2a0fc79fe0ef86787d50d0c3cacf36922c1293e409652a0e'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-s52-04',ace_sha256('3977fdfc381e44fc2a0fc79fe0ef86787d50d0c3cacf36922c1293e409652a0e'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: If a PDMP-result is unexpected then the PDMP-result can be helpful.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s52-04',1,box(1),[A,B,C]),can) :- guideline_entity(actual,A,'PDMP-result',countable), guideline_cardinality(actual,A,na,eq,1), guideline_property(actual,B,unexpected,pos), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_property('$guideline_id'(context,'cdc2022-opioid-s52-04',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s52-04',1,ref(4),[A,B,C]),helpful,pos) :- guideline_entity(actual,A,'PDMP-result',countable), guideline_cardinality(actual,A,na,eq,1), guideline_property(actual,B,unexpected,pos), guideline_event(actual,C,be), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

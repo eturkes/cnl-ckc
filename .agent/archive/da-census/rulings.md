@@ -1,0 +1,9 @@
+# Dose-arithmetic census — rulings
+
+Census = `census.tsv` (232 CDC payloads matching arithmetic markers: region, status, markers, class, quantities, rationale) + an expanded scan of all 702 non-Box-3 payloads (dose/dosage, taper/reduction, per-dose/per-time, percent, equivalents, totals, tablets, strength, frequency, weight, mg/mcg/MME, multiplication/division/conversion terms; 130 further hits read) + PDF p33 (the MME table + its notes, then absent from the evidence). Classes: `formula` (a product or quotient of stated quantities that the DA2 surface carries), `threshold` (a bound on one stated quantity; numeric-threshold class), `gap` (dose arithmetic the surface cannot carry), `out` (no dose arithmetic). Rulings (MAIN unless marked user):
+
+- `formula` → re-authored: S33-01 (the multiply instruction) + the p33 table rows + the p33 worked examples = one region + one document `cdc2022-opioid-s33-01` (user ruling: the table + its whole footnote = one region, so the review page shows the passage behind every condition); S42-15 (`reducing the daily dosage to 50%`) = a reduction target = the daily MME × 0.5.
+- p33 worked examples → example rules (user ruling): inert example regimens + formula rules deriving the stated totals.
+- Caution 7 (S33-06, merged) → an absence condition on every conversion rule + its prohibition sentence, both in the merged document.
+- `gap` (21) → no ACE change; each document's projection notes already record the dropped arithmetic: sums across opioids or prescriptions (S22-06, S30-13, S32-14, S34-05, S34-09, S34-10, S42-20, S44-03, S50-10, S51-03, S51-04, S51-05, S52-05, S52-06; Decisions `Dose arithmetic`: a recorded gap), unstated equianalgesia (S31-04, S31-06, S33-03, caution 2: no factor stated), time-indexed or approximate tapers (S35-23, S38-22, S39-01, S42-16: rates per period, `approximately`, a switching baseline).
+- `threshold` (14) + `out` (197) → no change. `MME` inside `recommendation` = marker noise.

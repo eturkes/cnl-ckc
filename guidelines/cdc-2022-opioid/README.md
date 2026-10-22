@@ -24,8 +24,8 @@ Rep 2022;71(No. RR-3):1–95. DOI `http://dx.doi.org/10.15585/mmwr.rr7103a1`.
 - `source/rec01-05-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 19–39 (Box 4 and the
   recommendation 1–5 subsections: restated statements, supporting
-  rationale, implementation considerations; 309 payload regions). SHA-256
-  `31fbc6cce791c4e09ff79e2e3fe4249db0e2635c82e6b5ec6b64e3d57c1dc4ff`.
+  rationale, implementation considerations; 304 payload regions). SHA-256
+  `227fd695ae78dc9e52a297419fa2fb1ccb7ac1c8a7b7236d10be6357c8ae5014`.
 - `source/rec06-12-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 40–63 (recommendation 6–12
   subsections and end matter through the Conclusion; 327 payload regions).
@@ -74,7 +74,7 @@ that it was published with.
     behavioral-health specialists serving as taper-support team members).
 - `ace/cdc2022-opioid-<region-id>.ace` — one ACE document per formalized
   front-matter or recommendation 1–5 supporting-rationale region outside
-  the implementation-consideration lists (132 documents; docid = the
+  the implementation-consideration lists (127 documents; docid = the
   region id lowercased, S25-04 → `s25-04`). These documents follow the
   same knowledge-only projection contract and
   `audit/projection-notes.tsv` discipline as the implementation
@@ -126,7 +126,7 @@ guideline conclusions.
 ## Coverage
 
 - Verbatim extraction evidence spans the whole document: pages 3–18, the
-  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63. That is 718
+  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63. That is 713
   payload regions across the four extraction files. The project verified
   each region as rendered PDF text and held duplicate regions to the
   source's own repetition count. Physical pages 64–100 hold references,
@@ -139,7 +139,7 @@ guideline conclusions.
   parenthetical and simplified action rules. It adds one document per
   formalized recommendation 1–5 implementation-consideration region
   (67 documents). It adds one document per formalized front-matter and
-  recommendation 1–5 rationale region (132 documents). It adds one
+  recommendation 1–5 rationale region (127 documents). It adds one
   document per formalized recommendation 6–12 body,
   implementation-consideration, special-populations, and conclusion
   region (176 documents). The rules encode
@@ -147,12 +147,12 @@ guideline conclusions.
   region states them. `audit/projection-notes.tsv` (kept/dropped columns)
   and `coverage.tsv` record each document's remaining simplifications per
   region.
-- `coverage.tsv` records one status row per payload region (all 718), and
+- `coverage.tsv` records one status row per payload region (all 713), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (387);
+  - `ace(<docid>)` — formalized (382);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
-    region (212);
-  - `uncovered(<class>: <reason>)` — deliberately not formalized (119;
+    region (213);
+  - `uncovered(<class>: <reason>)` — deliberately not formalized (118;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet
     authored (0 — the recommendation 6–12 worklist closed with the
@@ -166,6 +166,14 @@ guideline conclusions.
   re-point to the transitive root (the echo relation is transitive). A
   region with its own ACE document keeps `ace(...)` even when it also
   repeats another region.
+- Dose arithmetic. The MME conversion table on physical PDF page 33 and
+  all of its notes form one region (S33-01), so its review page shows the
+  source of every condition. Its document computes the MME dose of each
+  listed opioid with an exact formula. The rules do not apply to a dosage
+  that serves the management of opioid use disorder. The two worked
+  examples under the table compute the totals that they state.
+  No rule adds the doses of several opioids: a total dosage must come
+  from the patient data.
 - Ruling tests. A CDC-voice imperative or endorsement with a trailing
   citation is the guideline's own directive: formalize it.
   `uncovered(external)` is reserved for reporting frames that name a

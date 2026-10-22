@@ -1,0 +1,4 @@
+% q-mme-exact compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'q-mme-exact',ace_sha256('46f347cb2044fa7816823a8402e44e75105c524b61c67e8bc0a850898dbf4c6b'),ulex(sha256(ea08df2c0364239536194c128dd430bbd88114b5508f5ab45882331c92505c99)),vocabulary(sha256('05eeed04deb22824331a3748ab69daba7285d901ff655fc1df56792e87853e5a'))).
+% Q1: Does an opioid-dosage include exactly 60 MME-units-per-day?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,'opioid-dosage',countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_event(actual,B,include),','(guideline_arg(actual,B,1,A),','(guideline_arg(actual,B,2,C),','(guideline_entity(actual,C,'MME-unit-per-day',countable),','(guideline_cardinality(actual,C,na,D,E),guideline_satisfies(D,E,exactly,60))))))))),answers([])).

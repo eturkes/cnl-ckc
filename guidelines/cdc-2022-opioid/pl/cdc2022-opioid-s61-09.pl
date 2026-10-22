@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s61-09',ace_sha256('6de02a6f136c6f025e8f1f52a3d67d3549115c7a2d314787edf2ed3b6bf23656'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-s61-09',ace_sha256('6de02a6f136c6f025e8f1f52a3d67d3549115c7a2d314787edf2ed3b6bf23656'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: Every payer may support a broader-nonpharmacologic-intervention-array.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s61-09',1,box(1),[A]),may) :- guideline_entity(actual,A,payer,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s61-09',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s61-09',1,ref(2),[A]),'broader-nonpharmacologic-intervention-array',countable) :- guideline_entity(actual,A,payer,countable), guideline_cardinality(actual,A,na,eq,1).

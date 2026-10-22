@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s57-02',ace_sha256('8aa9789e06ebf4f1887034696e1a5ff38e571c82d75cc53bf77fde406cad7497'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-s57-02',ace_sha256('8aa9789e06ebf4f1887034696e1a5ff38e571c82d75cc53bf77fde406cad7497'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: Every opioid-use-disorder-identification can alter an expected-opioid-benefit and can alter an expected-opioid-risk.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s57-02',1,box(1),[A]),can) :- guideline_entity(actual,A,'opioid-use-disorder-identification',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s57-02',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s57-02',1,ref(2),[A]),'expected-opioid-benefit',countable) :- guideline_entity(actual,A,'opioid-use-disorder-identification',countable), guideline_cardinality(actual,A,na,eq,1).

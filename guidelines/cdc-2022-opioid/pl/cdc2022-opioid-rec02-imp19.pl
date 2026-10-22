@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp19',ace_sha256('11b3b6394dd3b4c0da352eef618149572c27127382e1c2b4426f01c223f9f9e2'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-rec02-imp19',ace_sha256('11b3b6394dd3b4c0da352eef618149572c27127382e1c2b4426f01c223f9f9e2'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: Every clinician should jointly determine a functional-benefit-evaluation with a patient for a subacute-pain before an opioid-initiation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp19',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp19',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp19',1,ref(2),[A]),'functional-benefit-evaluation',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

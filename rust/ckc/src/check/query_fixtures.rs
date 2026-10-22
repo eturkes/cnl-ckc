@@ -33,6 +33,7 @@ const GREEN_REQUIRED: &[&str] = &[
     "absent-queries",
     "canonical-sort",
     "depth-backtrack",
+    "dose-arithmetic",
     "empty-queries",
     "numeric-bigint",
     "positive",
@@ -46,6 +47,10 @@ const GREEN_REQUIRED: &[&str] = &[
 const PIN_EXPECTED: &[&str] = &[
     "green/canonical-sort/answers-golden/q-sort",
     "green/depth-backtrack/answers-golden/q-back",
+    "green/dose-arithmetic/answers-golden/q-mme",
+    "green/dose-arithmetic/answers-golden/q-mme-exact",
+    "green/dose-arithmetic/traces-golden/q-mme",
+    "green/dose-arithmetic/traces-golden/q-mme-exact",
     "green/numeric-bigint/answers-golden/q-big",
     "green/numeric-bigint/traces-golden/q-big",
     "green/positive/answers-golden/q-wh",
@@ -515,7 +520,7 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
         return Err(violation(
             "queries-fixtures",
             format!(
-                "golden-pin inventory drifted from pinned 44-entry map: {} pins on disk",
+                "golden-pin inventory drifted from pinned 48-entry map: {} pins on disk",
                 pins.len()
             ),
         ));
@@ -526,10 +531,10 @@ pub(super) fn check(scratch: &process::Scratch, swipl: &Path, stage: &Path) -> R
             format!("red case count drift: expected 24 got {}", red.len()),
         ));
     }
-    if green.len() != 12 {
+    if green.len() != 13 {
         return Err(violation(
             "queries-fixtures",
-            format!("green case count drift: expected 12 got {}", green.len()),
+            format!("green case count drift: expected 13 got {}", green.len()),
         ));
     }
     nonfinite(scratch)?;

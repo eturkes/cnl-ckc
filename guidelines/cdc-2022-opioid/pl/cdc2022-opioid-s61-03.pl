@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s61-03',ace_sha256(e2a720e7e3d38b4594db48f265d562783226be2757f49c3338ffa04cc6449ee8),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-s61-03',ace_sha256(e2a720e7e3d38b4594db48f265d562783226be2757f49c3338ffa04cc6449ee8),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: Every nonpharmacologic-treatment-modality is a treatment-modality.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s61-03',1,ref(2),[A]),'treatment-modality',countable) :- guideline_entity(actual,A,'nonpharmacologic-treatment-modality',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s61-03',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'nonpharmacologic-treatment-modality',countable), guideline_cardinality(actual,A,na,eq,1).

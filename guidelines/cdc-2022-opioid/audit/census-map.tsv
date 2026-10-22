@@ -282,10 +282,10 @@ p032.C15	S32-15	mapped
 p032.C16	S33-07	mapped: census page slip; the occurrence is the p33 table footnote
 p032.C17	S32-17	mapped
 p033.C01	S33-01	mapped
-p033.C02	S33-03	mapped
-p033.C03	S33-04	mapped
-p033.C04	S33-05	mapped
-p033.C05	S33-06	mapped
+p033.C02	S33-01	mapped: the table region holds the footnote
+p033.C03	S33-01	mapped: the table region holds the footnote
+p033.C04	S33-01	mapped: the table region holds the footnote
+p033.C05	S33-01	mapped: the table region holds the footnote
 p034.C01	S34-01	mapped
 p034.C02	S34-02	mapped
 p034.C03	S34-03	mapped

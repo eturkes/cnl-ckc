@@ -1,0 +1,233 @@
+region	status	markers	class	quantities	rationale
+S3-01	ace(cdc2022-opioid-s3-01)	mme	out	-	“appropriate pain treatment” = care selection, no computed dose.
+S3-02	ace(cdc2022-opioid-s3-02)	mme	out	-	“inflexible standards of care” = recommendation scope, no quantity.
+S3-03	ace(cdc2022-opioid-s3-03)	mme	out	-	“do not apply” = excluded clinical contexts, no dose arithmetic.
+S4-01	uncovered(aim: states an aspiration without operative directive)	mme	out	-	“immediate and sustained attention” = aspiration, no dose computation.
+S5-03	uncovered(external: reports third-party guidance or policy)	mme	out	-	“At least 17 states” counts laws; “high dosages” supplies no arithmetic.
+S5-04	uncovered(external: reports third-party guidance or policy)	mme	out	-	“voluntary and intended to be flexible” = policy context, no quantity.
+S6-01	restates(S8-12)	mme	out	-	“does not replace clinical judgment” = scope, no dose computation.
+S6-02	ace(cdc2022-opioid-s6-02)	mme	out	-	“whole-person approach” = decision context, no dose computation.
+S7-01	restates(S3-03)	mme	out	-	“do not apply” names excluded conditions/settings, no arithmetic.
+S7-02	ace(cdc2022-opioid-s7-02)	mme	out	-	“hospitalized or in an emergency department” = care-setting exclusion.
+S7-03	restates(S7-02)	mme	out	-	“when patients are discharged” = scope exception, no arithmetic.
+S8-01	uncovered(descriptive: states context without an operative directive)	mme	out	-	“benefits for pain and function ... outweigh risks” = judgment, no dose formula.
+S8-04	uncovered(descriptive: fuses recommendations 4, 5, and 6 without adding a directive; canonical at B3-06, B3-07, B3-09)	mme	out	-	“lowest effective dosage” has no numeric amount or computation.
+S8-08	restates(S3-01)	mme	out	-	“appropriate pain treatment” = care selection, no computed dose.
+S8-12	ace(cdc2022-opioid-s8-12)	mme	out	-	“support, not supplant” = decision-support scope, no quantity.
+S9-02	restates(S3-02)	mme	out	-	“not be used as inflexible standards” = scope, no arithmetic.
+S9-03	restates(S3-02)	mme	out	-	“absolute limits for policy or practice” = scope, no dose value.
+S9-04	ace(cdc2022-opioid-s9-04)	mme	out	-	“time-bound definitions” = temporal definitions, not dose arithmetic.
+S9-06	restates(S7-02)	mme	out	-	“hospitalized or in an emergency department” = care-setting exclusion.
+S9-07	restates(S7-02)	mme	out	-	“discharged from hospitals” = scope exception, no dose arithmetic.
+S10-04	ace(cdc2022-opioid-s10-04)	mme	out	-	“aged <18 years” = age threshold, not a dose quantity.
+S11-01	ace(cdc2022-opioid-s11-01)	mme	out	-	“not the focus” = opioid-use-disorder treatment scope, no arithmetic.
+S12-01	ace(cdc2022-opioid-s12-01)	mme	out	-	“Category A recommendations” = recommendation category, no dose quantity.
+S12-02	ace(cdc2022-opioid-s12-02)	mme	out	-	“Category B recommendations” = recommendation category, no dose quantity.
+S12-03	ace(cdc2022-opioid-s12-03)	mme	out	-	“shared decision-making” = clinician duty, no dose computation.
+S14-01	restates(S12-01)	mme	out	-	“Category A recommendation” = recommendation category, no dose quantity.
+S14-02	restates(S12-02)	mme	out	-	“Individual decision-making needed” = category meaning, no arithmetic.
+S16-01	uncovered(process: reports guideline-development procedure)	mme	out	-	“2-hour public comment period” = development procedure, not dosing.
+S17-02	restates(S3-02)	mme	out	-	“absolute limits of policy or practice” = scope, no dose value.
+S17-03	uncovered(descriptive: restates the category definitions without adding a directive; canonical at S12-01, S12-02, S12-03)	mme	out	-	“Category A ... category B” = category definitions, no dose computation.
+S18-01	ace(cdc2022-opioid-s18-01)	mme	out	-	“not meant to be rigidly or inflexibly followed” = scope, no quantity.
+S18-02	uncovered(heading: structural label without directive)	mme	out	-	“five guiding principles” = heading, not dose arithmetic.
+S18-04	restates(S8-12)	mme	out	-	“support, not supplant” = scope, no dose computation.
+S19-02	restates(S8-12)	mme	out	-	“support, not supplant” = scope, no dose computation.
+S19-09	restates(B3-02)	mme	out	-	“maximize use” and “benefits ... outweigh risks” give no dose computation.
+S19-11	ace(cdc2022-opioid-rec01-imp02)	mme	out	-	“lowest effective dose” supplies no arithmetic or numeric dose.
+S19-12	ace(cdc2022-opioid-rec01-imp03)	mme	threshold	5 mg hydrocodone; 325 mg acetaminophen; 1 tablet at intervals ≥4 h	“hydrocodone 5 mg/acetaminophen 325 mg, one tablet” states a formulation/regimen; no daily amount is computed.
+S20-01	ace(cdc2022-opioid-rec01-imp04)	mme	out	-	“returning to the patient’s baseline opioid dosage” names a target, no arithmetic relation.
+S20-05	uncovered(external: reports third-party guidance or policy)	mme	out	-	“superficial heat, massage, acupuncture, or spinal manipulation” = treatment selection.
+S20-09	uncovered(external: reports third-party guidance or policy)	mme	out	-	“NSAIDs or skeletal muscle relaxants” = treatment selection, no dose arithmetic.
+S20-10	uncovered(external: reports third-party guidance or policy)	mme	out	-	“topical NSAIDs ... first-line therapy” = treatment preference, no computed dose.
+S20-11	uncovered(external: reports third-party guidance or policy)	mme	out	-	“NSAIDs as first-line treatment” = treatment preference, no dose arithmetic.
+S21-06	uncovered(external: reports third-party guidance or policy)	mme	out	-	“stepwise, multimodal, shared decision-making” = approach, no computed dose.
+S21-07	uncovered(external: reports third-party guidance or policy)	mme	out	-	“if needed, adding an opioid” = therapy choice, not numeric addition.
+S21-08	uncovered(external: reports third-party guidance or policy)	mme	out	-	“shortest reasonable course” = qualitative duration, no dose computation.
+S21-09	uncovered(external: reports third-party guidance or policy)	mme	out	-	“duration of therapy and neonatal signs of toxicity” = counseling, no arithmetic.
+S21-10	uncovered(external: reports third-party guidance or policy)	mme	out	-	“recommends nonopioid medications” = treatment selection, no computation.
+S21-12	uncovered(external: reports third-party guidance or policy)	mme	out	-	“NSAIDs as the first-line therapy” = preference, no computed dose.
+S22-01	uncovered(external: reports third-party guidance or policy)	mme	out	-	“except as a last resort” = treatment preference, no dose arithmetic.
+S22-02	ace(cdc2022-opioid-s22-02)	equivalent,mme	out	-	“equivalent or lesser effectiveness” compares treatment effectiveness, not equianalgesic amounts.
+S22-03	restates(S19-11)	mme	out	-	“lowest effective dose” gives no numeric amount or computation.
+S22-05	ace(cdc2022-opioid-s22-05)	mme	threshold	5 mg hydrocodone; 325 mg acetaminophen; 1 tablet at intervals ≥4 h	“hydrocodone 5 mg/acetaminophen 325 mg, one tablet” states a regimen, not a daily-dose product.
+S22-06	uncovered(descriptive: fuses recommendations 8, 9, and 11 duties without adding a directive; canonical at B3-12, B3-13, B3-15)	mme	gap	cumulative opioid dosage after a new prescription	“will not contribute to cumulative opioid dosages” needs aggregation across prescriptions; DA2 has no sum over facts.
+S22-07	ace(cdc2022-opioid-s22-07)	mme	out	-	“offer or arrange medication treatment” = opioid-use-disorder care, no computed dose.
+S22-10	restates(S20-01)	mme	out	-	“taper to baseline dosage” names a target but supplies no numeric relation.
+S22-13	ace(cdc2022-opioid-s22-13)	mme	out	-	“appropriately taper opioids as pain resolves” supplies no taper amount or rate.
+S23-02	ace(cdc2022-opioid-s23-02)	mme	out	-	“serious adverse effects” = counseling, no dose arithmetic.
+S23-07	ace(cdc2022-opioid-s23-07)	mme	out	-	“provide and discuss an opioid tapering plan” supplies no numeric taper.
+S23-13	ace(cdc2022-opioid-s23-13)	mme	out	-	“taken with benzodiazepines” = co-exposure risk, not numeric addition.
+S23-16	ace(cdc2022-opioid-s23-16)	mme	out	-	“naloxone for overdose reversal” = precaution, no dose computation.
+S23-17	restates(B3-03)	mme	out	-	“Nonopioid therapies are preferred” = treatment preference, no computed quantity.
+S23-19	ace(cdc2022-opioid-rec02-imp02)	mme	out	-	“noninvasive nonpharmacologic approaches” = treatment choices; weight loss is not weight-based dosing.
+S24-05	ace(cdc2022-opioid-rec02-imp07)	multipl	out	-	“multiple joints” counts affected joints, not doses.
+S24-11	ace(cdc2022-opioid-rec02-imp13)	mme	out	-	“benefit from antidepressant medication” = treatment suitability, no dose computation.
+S24-21	ace(cdc2022-opioid-rec02-imp23)	mme	out	-	“avoid rapid tapering” is qualitative advice, no numeric taper operation.
+S25-06	restates(S24-08)	mme	out	-	“recommended for neuropathic pain syndromes” = treatment selection, no arithmetic.
+S25-10	uncovered(external: reports third-party guidance or policy)	mme	out	-	“patients aged ≥75 years” = age threshold and treatment preference, not dosing arithmetic.
+S25-11	uncovered(external: reports third-party guidance or policy)	mme	out	-	“aerobic, aquatic, or resistance exercises” = treatment options, no dose computation.
+S26-04	uncovered(external: reports third-party guidance or policy)	mme	out	-	“maintenance of physical activity” = nonpharmacologic advice, no dose computation.
+S27-01	restates(S24-04)	mme	out	-	“single or a few joints” counts joints, not dose amounts.
+S27-02	ace(cdc2022-opioid-s27-02)	multipl	out	-	“multiple joints” counts affected joints, not doses.
+S27-08	restates(S24-08)	mme	out	-	“recommended for neuropathic pain” = medication selection, no dose computation.
+S27-09	ace(cdc2022-opioid-s27-09)	mme	out	-	“treatment of fibromyalgia” = medication selection, no arithmetic.
+S27-10	uncovered(descriptive: reports common practice and hedged endorsement without a guideline directive)	mme	out	-	“often is used and recommended” describes practice, no computed dose.
+S27-11	ace(cdc2022-opioid-s27-11)	mme	out	-	“benefit from antidepressant medication” = suitability, no dose computation.
+S28-10	ace(cdc2022-opioid-s28-10)	mme	out	-	“three-item PEG” = assessment scale, not a dose quantity.
+S28-11	ace(cdc2022-opioid-s28-11)	mme	out	-	“functional goals that have meaning” = outcome assessment, no dose arithmetic.
+S28-17	restates(S24-21)	mme	out	-	“avoid rapid tapering” gives no numeric reduction or rate.
+S29-18	restates(S23-16)	mme	out	-	“precautions to reduce risks” = counseling and monitoring, no dose computation.
+S29-21	ace(cdc2022-opioid-s29-21)	mme	out	-	“review expected benefits and risks ... periodically” = reassessment, no dose arithmetic.
+S30-09	restates(B3-05)	mme	out	-	“immediate-release ... instead of ... ER/LA” = formulation preference, no conversion.
+S30-12	uncovered(external: reports third-party guidance or policy)	mme	out	-	“certain dosages ... for at least 1 week” gives a duration, no numeric dose or conversion factor.
+S30-13	ace(cdc2022-opioid-rec03-imp04)	mme,total daily	gap	reduced total daily dosage after an opioid switch	“reduce total daily dosage” needs an aggregate and a reduction amount; neither summation nor a numeric cross-tolerance adjustment is supplied by DA2/source.
+S31-01	uncovered(external: reports third-party guidance or policy)	mme	out	-	“not used as as-needed pain relievers” = treatment restriction, no dose computation.
+S31-04	ace(cdc2022-opioid-s31-04)	equianalgesic,mme	gap	equianalgesic other-opioid dose; examples 60 mg/day morphine and 30 mg/day oxycodone	“equianalgesic dosages of other opioids” supplies no equivalence factor; the two example thresholds alone remain expressible.
+S31-06	uncovered(external: reports third-party guidance or policy)	equianalgesic	gap	equianalgesic other-opioid dose; examples 60 mg/day morphine and 30 mg/day oxycodone	“equianalgesic dosages of other opioids” supplies no factor; external FDA statement, not a new conversion rule.
+S32-02	ace(cdc2022-opioid-s32-02)	mme	out	-	“temporarily using lower dosages of both” states no magnitude or computed target.
+S32-07	restates(B3-06)	mme	out	-	“lowest effective dosage” and “diminishing returns” are qualitative dosing judgments.
+S32-08	ace(cdc2022-opioid-rec04-imp01)	mme	out	-	“not intended to be used as an inflexible, rigid standard” = scope, no arithmetic.
+S32-09	restates(B3-06)	mme	out	-	“rather than emphasizing a single specific numeric threshold” supplies no amount.
+S32-10	ace(cdc2022-opioid-rec04-imp03)	mme	out	-	“starting opioids or ... increasing opioid dosages” = recommendation scope, no computation.
+S32-12	ace(cdc2022-opioid-rec04-imp05)	mme	out	-	“using product labeling as a starting point” supplies no numeric calibration rule.
+S32-14	ace(cdc2022-opioid-rec04-imp07)	mme	gap	total opioid dosage ≥50 MME/day	“total opioid dosage” needs summation across opioids; ≥50 comparison works only on a supplied total.
+S33-01	ace(cdc2022-opioid-s33-01)	conversion,mme,multipl	formula	MME dose = opioid dose × table factor	“Multiply the dose for each opioid by the conversion factor”; PDF p33 supplies the ten exact factor values.
+S33-03	ace(cdc2022-opioid-s33-03)	calculat,convert,mme	gap	new-opioid dose substantially below calculated MME dose	“substantially lower dose than the calculated MME dose” gives no numeric relation; using calculated MME for inter-opioid dosing is expressly forbidden.
+S33-04	ace(cdc2022-opioid-s33-04)	conversion	out	-	“Use particular caution with methadone dose conversions” adds caution, not an arithmetic identity.
+S33-06	ace(cdc2022-opioid-s33-06)	conversion	out	-	“should not be applied ... opioid use disorder” = conversion-rule scope restriction, not a computed quantity.
+S33-07	restates(S32-08)	mme	out	-	“not intended ... an inflexible, rigid standard” = scope, no arithmetic.
+S34-02	restates(S32-12)	mme	out	-	“using product labeling as a starting point” supplies no numeric calibration rule.
+S34-03	uncovered(external: reports third-party guidance or policy)	tablets,total daily	threshold	≤8 tablets/day; 1–2 tablets every 4–6 h; 5 mg hydrocodone + 300 mg acetaminophen per tablet	“total daily dosage should not exceed eight tablets” is a stated cap, not a computed total; external product-label example.
+S34-04	ace(cdc2022-opioid-s34-04)	mme	out	-	“patients aged ≥65 years” = age threshold; “smaller therapeutic window” gives no dose formula.
+S34-08	restates(B3-10)	mme	out	-	“reevaluate patients after increasing dosage” = monitoring, no arithmetic relation.
+S34-09	ace(cdc2022-opioid-s34-09)	mme	gap	total opioid dosage ≥50 MME/day; >50 MME/day discussion	“total opioid dosage” requires aggregation; its ≥50 condition works on a supplied total, not a DA2-derived sum.
+S34-10	ace(cdc2022-opioid-s34-10)	mme	gap	sum of all opioid sources ≥50 MME/day	“for all sources of opioids combined” requires a sum over facts; the ≥50 comparison alone is supported.
+S34-13	uncovered(external: reports third-party guidance or policy)	mme	threshold	opioid dosage >120 MME/day	“dosage to >120 MME/day” = stated bound in an external Washington policy, no arithmetic.
+S34-14	ace(cdc2022-opioid-s34-14)	mme	threshold	MME thresholds, values unstated	“policies related to MME thresholds” names the measure, not a computation.
+S34-15	restates(B3-07)	mme	out	-	“gradually taper to lower dosages” gives qualitative advice, no numeric operation.
+S35-06	ace(cdc2022-opioid-rec05-imp06)	mme	out	-	“taper to lower ... remaining on higher” = treatment-goal context, no dose computation.
+S35-21	ace(cdc2022-opioid-rec05-imp21)	mme	out	-	“screen for anxiety, depression, and opioid misuse” = monitoring, no arithmetic.
+S35-22	ace(cdc2022-opioid-rec05-imp22)	mme	out	-	“high-dose or otherwise high-risk opioid regimens” = risk classification, no numeric dose.
+S35-23	ace(cdc2022-opioid-rec05-imp27)	%	gap	taper ≤10% of dose per month	“10% per month or slower” needs time-indexed reduction/state updates, not one ×/÷ result.
+S36-04	ace(cdc2022-opioid-rec05-imp26)	mme	out	-	“slower taper rates” is unquantified applicability guidance, no arithmetic identity.
+S37-01	ace(cdc2022-opioid-s37-01)	mme	out	-	“reevaluated periodically” = benefit/risk monitoring, no dose computation.
+S37-11	ace(cdc2022-opioid-s37-11)	mme	out	-	“coordinated with prescribers” = care coordination, no numerical dose relation.
+S37-19	ace(cdc2022-opioid-s37-19)	mme	out	-	“tapering does not need to occur immediately” = timing permission, no dose arithmetic.
+S38-09	restates(S35-06)	mme	out	-	“individualized assessment of benefits and risks” = treatment selection, no dose computation.
+S38-10	restates(S35-06)	mme	out	-	“establish functional goals” = care planning, no computed dose.
+S38-11	ace(cdc2022-opioid-s38-11)	mme	out	-	“collaborate with mental health specialists” = support, no arithmetic.
+S38-13	restates(S35-21)	mme	out	-	“screen for anxiety, depression, and opioid misuse” = monitoring, no dose computation.
+S38-22	restates(S35-23)	%	gap	taper ≈10% of dose per month or slower	“approximately 10% per month” needs an approximate factor and repeated time-indexed reduction.
+S39-01	ace(cdc2022-opioid-s39-01)	%	gap	weekly decrease 10% of original dose until ≈30%, then ≈10% of remaining dose weekly	“per week”, “until approximately 30%”, “remaining dose” need iteration, approximate amounts and a computed switching condition.
+S39-12	ace(cdc2022-opioid-s39-12)	mme	out	-	“assessed for opioid use disorder” = assessment and treatment, no dose arithmetic.
+S39-14	uncovered(external: reports third-party guidance or policy)	mme	out	-	“waiver from SAMHSA” = prescribing authority, no numeric quantity.
+S39-15	restates(S39-16)	mme	out	-	“specific timing of the initial buprenorphine dose” = sequencing, no conversion amount.
+S40-02	restates(S35-22)	mme	out	-	“high-dosage or otherwise high-risk” = qualitative risk, no computed dose.
+S40-06	restates(B3-09)	mme	out	-	“no greater quantity than needed” supplies no numeric amount or arithmetic rule.
+S41-02	uncovered(descriptive: cross-references Recommendations 2, 5, and 7 without adding a directive; canonical at B3-03, B3-07, B3-10)	mme	out	-	“refer to recommendations” = cross-reference, no dose computation.
+S41-05	ace(cdc2022-opioid-rec06-imp14)	mme	out	-	“durations might need to be adjusted” states no numeric duration/dose relation.
+S42-11	restates(S41-02)	mme	out	-	“refer to recommendations” = cross-reference, no dose computation.
+S42-15	ace(cdc2022-opioid-s42-15)	%,daily dosage	formula	reduced daily dosage = original daily dosage ×0.5	“reducing the daily dosage to 50% for 2 days” = one exact fraction with a fixed duration; formula can define the target outside the permission box.
+S42-16	ace(cdc2022-opioid-s42-16)	%,daily dosage	gap	repeat ≈20% daily-dose reduction every 2 days	“by approximately 20% every 2 days” needs approximate arithmetic and recurrent state updates.
+S42-18	restates(B3-10)	mme	out	-	“within 1–4 weeks” = follow-up interval, not dose arithmetic.
+S42-19	restates(B3-10)	mme	out	-	“within 1–4 weeks” = evaluation interval, no computed dose.
+S42-20	ace(cdc2022-opioid-rec07-imp02)	mme,total daily	gap	total daily opioid dosage ≥50 MME/day	“total daily opioid dosage” requires aggregation; ≥50 is supported only once the total is supplied.
+S43-02	ace(cdc2022-opioid-rec07-imp03)	mme	threshold	opioid dosage <50 MME/day	“dosage of <50 MME/day” = one stated bound, no arithmetic.
+S43-04	restates(S24-19)	mme	out	-	“benefits are likely to outweigh risks” = treatment judgment, no dose computation.
+S43-06	restates(S24-20)	mme	out	-	“establish treatment goals” = planning, no dose quantity.
+S43-07	ace(cdc2022-opioid-rec07-imp08)	mme	threshold	opioid dosage ≥50 MME/day	“taking ≥50 MME/day” = one stated dose bound; 3 months governs monitoring, not a dose calculation.
+S43-08	ace(cdc2022-opioid-rec07-imp09)	mme	out	-	“regularly screen all patients” = monitoring, no dose arithmetic.
+S43-14	ace(cdc2022-opioid-rec07-imp15)	mme	threshold	opioid dosage ≥50 MME/day	“dosages of ≥50 MME/day” = stated risk-regimen threshold; no computed reduction amount.
+S43-15	restates(B3-03)	mme	out	-	“maximize pain treatment” = care selection, no dose arithmetic.
+S44-01	uncovered(descriptive: states context without an operative directive)	mme	out	-	“social determinants of health” = follow-up access, no dose computation.
+S44-03	restates(S42-20)	mme,multipl,total daily	gap	total daily opioid dosage ≥50 MME/day	“total daily opioid dosage” needs summation; “risk is doubled across multiple studies” is evidence, not a conversion factor.
+S44-04	ace(cdc2022-opioid-s44-04)	mme	out	-	“every 2–3 days for the first week” = monitoring schedule; no dose arithmetic.
+S44-05	restates(S43-02)	mme	threshold	opioid dosage <50 MME/day	“dosage of <50 MME/day” = one stated bound, no arithmetic.
+S44-08	ace(cdc2022-opioid-s44-08)	mme	out	-	“reassess the patient’s pain, function, and treatment course” = assessment, no dose computation.
+S44-10	restates(S24-20)	mme	out	-	“establish treatment goals” = planning, no dose arithmetic.
+S44-11	restates(S43-07)	mme	threshold	opioid dosage ≥50 MME/day	“taking ≥50 MME/day” = stated risk bound; monitoring frequency is separate.
+S44-12	restates(S43-08)	mme	out	-	“regularly screen all patients” = monitoring, no arithmetic.
+S44-17	ace(cdc2022-opioid-s44-17)	%,mme	out	-	“30% improvement in scores for both pain and function” = derived outcome measure, not dose arithmetic.
+S44-18	ace(cdc2022-opioid-s44-18)	mme	out	-	“greater quantities or more frequently than prescribed” = misuse symptom, no numeric dose calculation.
+S45-01	ace(cdc2022-opioid-s45-01)	mme	out	-	“validated screening tools” = risk assessment, no dose arithmetic.
+S45-02	ace(cdc2022-opioid-s45-02)	mme	out	-	“assess for these conditions” = psychological-comorbidity assessment, no arithmetic.
+S45-04	restates(S43-14)	mme	threshold	opioid dosage ≥50 MME/day	“dosages of ≥50 MME/day” = stated risk threshold; no computed reduction amount.
+S45-05	restates(B3-03)	mme	out	-	“maximize pain treatment” = care selection, no dose arithmetic.
+S45-06	restates(B3-12)	mme	out	-	“strategies to mitigate risk, including offering naloxone” = care duty, no dose quantity.
+S45-09	ace(cdc2022-opioid-rec08-imp03)	mme	threshold	opioid dosage ≥50 MME/day	“higher dosages of opioids (e.g., ≥50 MME/day)” = stated risk bound, no computation.
+S45-12	ace(cdc2022-opioid-rec08-imp06)	mme	out	-	“naloxone should be offered” = access/outcome wording, no dose arithmetic.
+S45-16	restates(S35-19)	mme	out	-	“access appropriate expertise if tapering is being considered” = consultation, no computed dose.
+S45-17	ace(cdc2022-opioid-rec08-imp11)	mme	out	-	“buprenorphine or methadone” and “as early as possible” = treatment choice/timing, no dose quantity.
+S46-01	ace(cdc2022-opioid-rec08-imp12)	mme	out	-	“patients aged ≥65 years” = age threshold with monitoring advice, not dose arithmetic.
+S46-04	ace(cdc2022-opioid-rec08-imp15)	mme	out	-	“PDMP data ... toxicology screening” = risk assessment, no numerical calculation.
+S46-05	ace(cdc2022-opioid-rec08-imp16)	mme	out	-	“combined with other drugs or alcohol” = co-exposure risk, not dose addition.
+S46-07	ace(cdc2022-opioid-rec08-imp18)	mme	out	-	“incorporate strategies to mitigate risk” = counseling and monitoring, no arithmetic.
+S46-09	ace(cdc2022-opioid-rec08-imp20)	mme	out	-	“reduce opioid dosage ... when indicated” supplies no numeric reduction rule.
+S46-10	ace(cdc2022-opioid-rec08-imp21)	mme	out	-	“previous opioid overdose” = treatment-risk context, no computed dose.
+S46-13	restates(S45-09)	mme	threshold	opioid dosage ≥50 MME/day	“higher dosages of opioids (e.g., ≥50 MME/day)” = stated risk bound, no computation.
+S46-14	uncovered(descriptive: states context without an operative directive)	mme	out	-	“offering ... rather than ... prescribing” = access wording, no arithmetic.
+S47-07	ace(cdc2022-opioid-s47-07)	mme	out	-	“review of all prescription and nonprescription medications” = review duty, no dose calculation.
+S47-08	ace(cdc2022-opioid-s47-08)	mme	out	-	“reproductive justice framework” = counseling approach, no dose arithmetic.
+S47-10	restates(S19-11)	mme	out	-	“lowest effective dose” = qualitative dose selection, no numeric computation.
+S47-11	uncovered(external: reports third-party guidance or policy)	mme	out	-	“avoid or minimize the use of opioids” = treatment selection, no arithmetic.
+S47-13	restates(S35-19)	mme	out	-	“access appropriate expertise” = taper consultation, no computed amount.
+S47-14	restates(S45-17)	mme	out	-	“as early as possible in pregnancy” = treatment timing, no dose computation.
+S47-15	uncovered(external: reports third-party guidance or policy)	mme	out	-	“antenatal counseling” and “postnatal treatment” = care advice, no dose calculation.
+S47-19	uncovered(external: reports third-party guidance or policy)	mme	out	-	“review duration of therapy and neonatal signs of toxicity” = monitoring, no arithmetic.
+S48-01	restates(S46-01)	mme	out	-	“susceptibility to accumulation” = pharmacokinetic caution, no numerical accumulation model.
+S48-05	restates(S46-01)	mme	out	-	“patients aged ≥65 years” = age threshold, not a dose quantity.
+S48-10	ace(cdc2022-opioid-s48-10)	mme	out	-	“Additional caution and increased monitoring” = precaution, no arithmetic.
+S48-12	ace(cdc2022-opioid-s48-12)	mme	out	-	“tricyclic or SNRI antidepressants” = treatment selection, no dose quantity.
+S49-01	uncovered(external: reports third-party guidance or policy)	mme	out	-	“screening or risk assessment tools” = assessment, no dose arithmetic.
+S49-02	ace(cdc2022-opioid-s49-02)	mme	out	-	“supplemented with other assessments” = clinical assessment, not numeric addition.
+S49-07	restates(S46-04)	mme	out	-	“assess for concurrent substance use” = risk assessment, no dose calculation.
+S49-08	restates(S46-05)	mme	out	-	“combined with other drugs or alcohol” = co-exposure risk, not dose addition.
+S49-09	restates(S46-07)	mme	out	-	“discuss increased risks” and “increasing frequency of monitoring” = counseling, no arithmetic.
+S49-13	restates(S46-09)	mme	out	-	“reduce opioid dosage ... when indicated” supplies no numeric reduction rule.
+S49-14	ace(cdc2022-opioid-s49-14)	mme	out	-	“increasing frequency of monitoring combined with shorter prescription durations” = precautions, no computed dose.
+S50-01	restates(S45-09)	mme	threshold	opioid dosage ≥50 MME/day	“higher dosages of opioids (≥50 MME/day)” = one stated risk bound, no computation.
+S50-04	restates(B3-13)	mme	out	-	“dosages or combinations ... high risk” = PDMP review duty without a specified total or arithmetic relation.
+S50-06	ace(cdc2022-opioid-rec09-imp02)	mme	out	-	“PDMP availability and access policies” = applicability, no arithmetic.
+S50-08	ace(cdc2022-opioid-rec09-imp04)	mme	out	-	“minimize bias in application” = implementation fairness, no computed dose.
+S50-16	ace(cdc2022-opioid-rec09-imp12)	mme,multipl	out	-	“multiple clinicians” counts prescribers; overlapping prescriptions alone give no arithmetic.
+S51-02	ace(cdc2022-opioid-rec09-imp14)	mme	out	-	“communicate with others managing the patient” = care coordination, no calculation.
+S51-03	ace(cdc2022-opioid-rec09-imp15)	mme	gap	total MME/day across concurrent opioid prescriptions	“total MME/day for concurrent opioid prescriptions” needs a sum over facts, outside DA2 ×/÷.
+S51-04	ace(cdc2022-opioid-rec09-imp16)	calculat,mme	gap	total MME/day excluding buprenorphine	“not be counted in the total MME/day in calculations” needs a filtered aggregate; exclusion advice is separately expressible.
+S51-05	ace(cdc2022-opioid-rec09-imp17)	mme,total daily	gap	total daily opioid dosage that confers overdose risk	“total daily dosages of opioids” needs aggregation; risk threshold is also unstated.
+S51-08	ace(cdc2022-opioid-rec09-imp20)	mme	out	-	“Screen for substance use” = assessment, no arithmetic.
+S51-09	ace(cdc2022-opioid-rec09-imp21)	mme	out	-	“toxicology testing ... discontinued without causing withdrawal” = clinical decision, no computed quantity.
+S51-10	ace(cdc2022-opioid-rec09-imp22)	mme	out	-	“negative toxicology test” = interpretation of test evidence, no dose arithmetic.
+S52-02	restates(S50-06)	mme	out	-	“PDMP availability and access policies” = applicability, no arithmetic.
+S52-04	ace(cdc2022-opioid-s52-04)	mme	out	-	“minimize bias in application” = implementation fairness, no computed quantity.
+S52-05	restates(S50-10)	mme	gap	total MME prescribed across additional prescribers	“additional prescribers to determine the total amount of MME prescribed” needs a sum over prescriptions.
+S52-06	restates(S50-16)	mme,multipl	gap	total opioid dosage across prescriptions	“total opioid dosages” and “multiple ... prescriptions” require aggregation; safety actions alone do not compute it.
+S52-07	restates(B3-14)	mme	out	-	“benefits and risks of toxicology testing” = assessment policy, no dose arithmetic.
+S52-11	ace(cdc2022-opioid-rec10-imp04)	mme	out	-	“minimize bias in testing” = implementation fairness, no dose quantity.
+S53-04	ace(cdc2022-opioid-rec10-imp14)	mme	out	-	“use unexpected results to improve patient safety” = action selection, no numeric dose relation.
+S53-05	restates(S52-11)	mme	out	-	“minimize bias in its application” = implementation fairness, no arithmetic.
+S54-06	restates(S52-15)	multipl	out	-	“multiple nonprescribed substances” counts assay targets, not doses.
+S54-14	ace(cdc2022-opioid-s54-14)	mme	out	-	“use unexpected results to improve patient safety” = action selection, no computed quantity.
+S54-17	restates(B3-15)	mme	out	-	“benzodiazepines concurrently” = co-prescribing caution, no arithmetic.
+S55-04	ace(cdc2022-opioid-rec11-imp04)	mme	out	-	“check the PDMP” and “involving pharmacists” = care coordination, no computation.
+S55-10	uncovered(process: reports guideline-development procedure)	mme,multipl	out	-	“multiple experts” describes guideline development, not multiplication.
+S56-01	restates(S55-04)	mme	out	-	“check PDMPs” and “involving pharmacists” = care coordination, no computation.
+S56-09	restates(B3-16)	mme	out	-	“Detoxification on its own ... not recommended” = treatment choice, no dose arithmetic.
+S56-15	restates(S45-17)	mme	out	-	“as early as possible in pregnancy” = treatment timing, no dose computation.
+S58-05	uncovered(external: reports third-party guidance or policy)	mme	out	-	“psychosocial needs” and “should not preclude or delay medications” = treatment access, no dose arithmetic.
+S58-06	restates(S56-10)	mme	out	-	“discuss their concern with their patient” = diagnostic discussion, no quantity.
+S58-09	restates(S45-07)	mme	out	-	“ask about use of alcohol and other substances” = assessment, no arithmetic.
+S58-13	ace(cdc2022-opioid-s58-13)	mme	out	-	“naloxone and training on proper use” = preventive care, no dose quantity.
+S58-16	restates(B3-16)	mme	out	-	“Detoxification on its own ... not recommended” = treatment choice, no computation.
+S58-17	restates(S45-17)	mme	out	-	“as early as possible in pregnancy” = treatment timing, no dose arithmetic.
+S58-18	uncovered(external: reports third-party guidance or policy)	mme	out	-	“buprenorphine (without naloxone) is preferred” = formulation preference, no arithmetic.
+S58-19	uncovered(external: reports third-party guidance or policy)	mme	out	-	“whether to continue naltrexone treatment” = shared clinical decision, no dose computation.
+S59-01	uncovered(external: reports third-party guidance or policy)	mme	out	-	“≥90 days” and “30–90 days” = return-to-use timing conditions, not dose arithmetic.
+S59-12	ace(cdc2022-opioid-s59-12)	mme	out	-	“minimum of 7–10 days free of opioids” = waiting interval, no dose calculation.
+S59-14	ace(cdc2022-opioid-s59-14)	mme	out	-	“Oral naltrexone ... should not be used” = treatment restriction, no arithmetic.
+S59-15	ace(cdc2022-opioid-s59-15)	mme	out	-	“dosage thresholds ... are not applicable” = pain-vs-use-disorder scope restriction; no numeric amount.
+S59-16	uncovered(descriptive: states context without an operative directive)	mme	out	-	“No recommended duration limit” = treatment-duration statement, no dose quantity.
+S59-17	uncovered(descriptive: states context without an operative directive)	mme	out	-	“No recommended duration limit” = treatment-duration statement, no dose quantity.
+S60-08	ace(cdc2022-opioid-s60-08)	mme	out	-	“larger amounts than intended” = misuse description; no computed dose or stated numeric bound.
+S60-10	ace(cdc2022-opioid-s60-10)	mme	out	-	“transitioning to buprenorphine ... can be considered” = treatment choice, no conversion factor.
+S60-12	ace(cdc2022-opioid-s60-12)	mme	out	-	“nonpharmacologic and nonopioid pharmacologic pain treatments” = therapy selection, no arithmetic.

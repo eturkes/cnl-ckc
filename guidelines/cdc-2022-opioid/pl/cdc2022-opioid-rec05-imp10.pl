@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp10',ace_sha256('0ce20314651cbb2e40750fa7e246324fd27d1a7bfa9835426ee24d52411cd073'),ulex(sha256('3210e31a7a1a232faae4aed00d06481f6bef71ebd89b6c884183bc530be9986e')),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-rec05-imp10',ace_sha256('0ce20314651cbb2e40750fa7e246324fd27d1a7bfa9835426ee24d52411cd073'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
 % S1: If a clinician reduces an opioid then the clinician should slowly taper the opioid for a withdrawal-minimization.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp10',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,reduce), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec05-imp10',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-rec05-imp10',1,ref(4),[A,B,C]),'withdrawal-minimization',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,reduce), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
