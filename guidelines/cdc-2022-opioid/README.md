@@ -117,11 +117,13 @@ that it was published with.
 These derivatives are project-authored formal projections. Present them as
 the project's own work, and credit CDC as the source of the underlying
 recommendations. Every document states guideline knowledge alone — no
-authored witnesses, probe queries, or named individuals. The compiler
-derives each sentence's proof obligation and discharges it against the
-document's own clauses, alone and co-loaded with the rest of the corpus.
-Those proofs establish internal consistency of the projection, not
-guideline conclusions.
+authored witnesses, probe queries, or named individuals. For each
+sentence, the compiler checks that the emitted clauses derive the
+conclusion of the sentence from sample facts that satisfy its
+conditions, for the document alone and with the rest of the corpus
+loaded. This replay check finds clauses that do not carry their
+sentence. It does not show that a sentence states the guideline
+correctly: the clinician review checks that.
 
 ## Coverage
 

@@ -21,11 +21,15 @@ that it came from, and every decision stays on record.
   code, and any conforming engine can load the result. The file
   `guidelines/schema.pl` defines the numeric comparisons of the
   conditions. Load it with the documents.
-- **Proof-checked compilation.** The compiler derives a proof
-  obligation for every sentence and discharges it before it emits
-  anything: a shipped clause is one that the compiler has proved
-  follows from the sentence it quotes. Committed questions ship with
-  answers and proof traces that name the exact clause lines used.
+- **Checked compilation.** For every sentence, the compiler makes
+  sample facts that satisfy the conditions of the sentence. Before it
+  emits anything, it checks that the emitted clauses derive the
+  conclusion of the sentence from these facts, for the document alone
+  and with the whole guideline loaded. This check finds clauses that do
+  not carry their sentence. It does not show that a sentence states
+  its passage correctly: the clinician review checks that. Committed
+  questions ship with answers and proof traces that name the exact
+  clause lines used.
 - **Certified compilation.** `ckc certify` parses every committed
   document again with the upstream ACE parser. It then checks that the
   committed clauses are exactly what the formal specification states
