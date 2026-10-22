@@ -50,7 +50,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [x] c5642c39 PR0 offload audit (owner request relayed by the offload session): pool gate form + host-labelled durations in `.claude/rules/`.
 - [x] 72715ccd PR1 CI rust job without SWI-Prolog: red on every push since 07f1060e (SWI-backed harnesses since 9092662f, runner without `swipl`; `check` + `certify` skipped) → `just swipl` in the job, cached on its pin.
 - [x] 6c9188ef PR2 README assurance wording (deferred row).
-- [ ] PR3 consumer recipe (contract `cr`): the CDC corpus + one patient diverges in plain Prolog and trips the native engine's bounds → a gated tabling recipe for consumers.
+- [x] 4e4538e1 PR3 consumer recipe (contract `cr`): the CDC corpus + one patient diverges in plain Prolog and trips the native engine's bounds → a gated tabling recipe for consumers.
 - [ ] PR4 pin drift: rustup-init 1.29.2, node 24.22.1, chrome-headless-shell 156.0.8078.47, crc32fast 1.5.3.
 - [ ] PR5 release-readiness verdict; if ready, the versioning + provenance policy drafted for user rulings (its prior-art survey archived beside the policy contract).
 - Deferral queue = `.agent/deferred.md` (each row above + ruled deferrals; one entry + acceptance check each).

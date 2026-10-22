@@ -7,7 +7,7 @@ ckc-kernel	0.1.0
 ckc-spec	0.1.0
 convert_case	0.4.0
 cpufeatures	0.3.1
-crc32fast	1.5.2
+crc32fast	1.5.3
 crypto-common	0.2.2
 digest	0.11.3
 equivalent	1.0.3

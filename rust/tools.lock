@@ -1,10 +1,10 @@
 tool	version	asset	sha256	url
-rustup-init	1.29.1	rustup-init	dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71	https://static.rust-lang.org/rustup/archive/1.29.1/x86_64-unknown-linux-gnu/rustup-init
+rustup-init	1.29.2	rustup-init	5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4	https://static.rust-lang.org/rustup/archive/1.29.2/x86_64-unknown-linux-gnu/rustup-init
 just	1.59.0	just-1.59.0-x86_64-unknown-linux-musl.tar.gz	409044617b6f06517c1035e55ca38c8c856ff8b650e41bc2aa1ef82d5903a23e	https://github.com/casey/just/releases/download/1.59.0/just-1.59.0-x86_64-unknown-linux-musl.tar.gz
 verusfmt	0.7.4	verusfmt-x86_64-unknown-linux-gnu.tar.xz	bbc5cb02c01efeaf9e66c93443ae782b11c5d8fd88c67d558c23216222971f4f	https://github.com/verus-lang/verusfmt/releases/download/v0.7.4/verusfmt-x86_64-unknown-linux-gnu.tar.xz
 cargo-deny	0.20.2	cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz	9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f	https://github.com/EmbarkStudios/cargo-deny/releases/download/0.20.2/cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz
 gitleaks	8.30.1	gitleaks_8.30.1_linux_x64.tar.gz	551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb	https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
 zizmor	1.31.1	zizmor-x86_64-unknown-linux-gnu.tar.gz	d185f726bdaf92df78273217dfdd24ebcd6b0ef48cf3ce776ff5762b6e138c99	https://github.com/zizmorcore/zizmor/releases/download/v1.31.1/zizmor-x86_64-unknown-linux-gnu.tar.gz
 cargo-mutants	27.1.0	cargo-mutants-x86_64-unknown-linux-gnu.tar.gz	dfe6dc37d0342c891d2829b5a695aa57c2d0edecef7e7d0399a30cc6e206411e	https://github.com/sourcefrog/cargo-mutants/releases/download/v27.1.0/cargo-mutants-x86_64-unknown-linux-gnu.tar.gz
-node	24.22.0	node-v24.22.0-linux-x64.tar.xz	cc2f601cee82d9a5a233302fe307abc600727035fd7d2c3a3571755989e95008	https://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.xz
-chrome-headless-shell	155.0.8059.84	chrome-headless-shell-linux64.zip	a5d71b91aa996fef00517cd212b2dfb816b43055edefbe727e6fd562d4ae1f9c	https://storage.googleapis.com/chrome-for-testing-public/155.0.8059.84/linux64/chrome-headless-shell-linux64.zip
+node	24.22.1	node-v24.22.1-linux-x64.tar.xz	6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6	https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz
+chrome-headless-shell	156.0.8078.47	chrome-headless-shell-linux64.zip	0d5acc62c3e213f8c87d3c298d66ffcf9a236d12ea4b9f85318bf85dbc279daa	https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.47/linux64/chrome-headless-shell-linux64.zip
