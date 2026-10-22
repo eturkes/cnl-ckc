@@ -1,8 +1,5 @@
 use crate::k2_manifest::udec_vec;
 #[cfg(verus_keep_ghost)]
-use crate::k2_term::int_order_ok;
-use crate::k2_term::{EOrder, int_order};
-#[cfg(verus_keep_ghost)]
 use ckc_spec::v1text::{digit_byte, udec_bytes};
 #[cfg(verus_keep_ghost)]
 use vstd::arithmetic::div_mod::{
@@ -167,63 +164,6 @@ pub fn multiply(magnitude: &Vec<u8>, factor: usize, n: Ghost<nat>) -> (out: Vec<
         out.push(digit);
     }
     out
-}
-
-pub open spec fn magnitude_of(n: int) -> nat {
-    if n < 0 {
-        (-n) as nat
-    } else {
-        n as nat
-    }
-}
-
-proof fn positive_scale(n: int, factor: int)
-    requires
-        factor > 0,
-    ensures
-        (n * factor < 0) == (n < 0),
-        magnitude_of(n * factor) == magnitude_of(n) * factor,
-{
-    if n < 0 {
-        assert(n * factor < 0) by (nonlinear_arith)
-            requires
-                n < 0,
-                factor > 0,
-        ;
-        assert((-n) * factor == -(n * factor)) by (nonlinear_arith);
-    } else {
-        assert(n * factor >= 0) by (nonlinear_arith)
-            requires
-                n >= 0,
-                factor > 0,
-        ;
-    }
-}
-
-proof fn scale_order(order: &EOrder, a: int, b: int, factor: int)
-    requires
-        int_order_ok(order, a, b),
-        factor > 0,
-    ensures
-        int_order_ok(order, a * factor, b * factor),
-{
-    match order {
-        EOrder::Less => {
-            assert(a * factor < b * factor) by (nonlinear_arith)
-                requires
-                    a < b,
-                    factor > 0,
-            ;
-        },
-        EOrder::Equal => {},
-        EOrder::Greater => {
-            assert(a * factor > b * factor) by (nonlinear_arith)
-                requires
-                    a > b,
-                    factor > 0,
-            ;
-        },
-    }
 }
 
 } // verus!

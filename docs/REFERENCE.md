@@ -307,7 +307,7 @@ domain-neutral:
 | `guideline_schema_version(Version)` | schema identifier of this document (`1`) |
 | `guideline_document(DocId, ace_sha256(H), ulex(none \| sha256(U)), vocabulary(none \| sha256(T)))` | document record + source digests |
 | `guideline_entity(Context, Ref, Noun, Class)` | an entity referent and its noun/class |
-| `guideline_cardinality(Context, Ref, Unit, Comparison, Count)` | that referent's quantity payload, verbatim |
+| `guideline_cardinality(Context, Ref, Unit, Comparison, Count)` | that referent's quantity payload, verbatim (a formula target: the computed result, section "Formulas in ACE") |
 | `guideline_event(Context, EventRef, Lemma)` | an event referent and its verb |
 | `guideline_arg(Context, EventRef, Position, Ref)` | participant at `Position` (1-based, DRS order) |
 | `guideline_pp(Context, EventRef, Preposition, Ref)` | prepositional attachment on the event |
@@ -336,9 +336,10 @@ exist.
 `exactly`, `na`, or `about` (an approximate time quantity, below). A
 plain number (`eq`) states at least that many, as in ACE: `3 cars` allows
 more cars. `exactly` states the count itself. The compiler copies units
-and counts through as data and performs no arithmetic and no modal
-inference: a cardinality clause of a fact or a rule head records what the
-sentence said, nothing more. A condition with a comparison compares; the
+and counts through as data and performs no modal inference: a cardinality
+clause of a fact or a rule head records what the sentence said, nothing
+more. The one exception is the target of a formula: its count is the
+result of the arithmetic built-ins (section "Formulas in ACE"). A condition with a comparison compares; the
 section "Comparison conditions" below states how.
 
 Every one of those values is reachable, but not from every position. An
@@ -1027,7 +1028,10 @@ allows, for example 1 for `at least 0` and −1 for `less than 1`. Only
 `exactly 0` keeps 0. The obligation computes the built-ins with these
 values, and the head of the rule takes the result. When a built-in derives
 nothing for these values, for example for a divisor of 0, the sentence
-rejects.
+rejects. The witness value is fixed: when it breaks another condition of
+the rule, such as `does not provably contain at least 1 cat`, the
+obligation fails although another value would satisfy the rule. Write
+such a rule without that condition.
 
 A formula that breaks a rule rejects with `formula_shape(Why, S)`, class
 `unsupported`. The reason names the first check that fails, in this order:

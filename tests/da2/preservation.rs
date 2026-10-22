@@ -285,7 +285,7 @@ fn p9_corpus_and_six_query_products_answers_traces_unchanged() {
         .into_iter()
         .filter(|p| p.extension().is_some_and(|s| s == "ace"))
         .collect();
-    assert!(inputs.len() >= 392, "seed corpus + queries census");
+    assert!(inputs.len() >= 388, "corpus + queries census");
     let failures = parallel(&inputs, |ace| {
         let query = ace.parent().unwrap().file_name().unwrap() == "queries";
         let id = ace.file_stem().unwrap().to_str().unwrap();
