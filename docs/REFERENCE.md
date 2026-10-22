@@ -106,7 +106,9 @@ compiler base:
   `tests/v1/`, `tests/align/`, `tests/align-probes/`,
   `tests/check-mutants/`, and `tests/dist/` hold the clause-file,
   alignment, `ckc check`, and export batteries that `cargo test`
-  replays. Every case pins exact output bytes. `just check` is the
+  replays. Every case pins exact output bytes. `tests/consumer/` holds
+  the patient worlds and drivers of the consumer-recipe check
+  ("Loading a whole knowledge base"). `just check` is the
   full acceptance gate, with `just certify` beside it. It runs
   `.agent/spec-lint`, `ckc check`, `ckc ui check`, and a fresh
   compile whose output must equal the committed corpus.
@@ -515,6 +517,14 @@ the shape that makes an open query's termination depend on load order.
 The gate checks it rather than asserts its absence. Every
 `ckc check` runs `recursion-check` over the loaded composition and
 rejects one, printing the rule-clause count that it scanned. The shipped corpus holds none.
+The check reads the leftmost body goal only. A later body goal can
+still unify with its own head, and it runs with its referent unbound
+when the goals before it hold for a patient:
+`cdc2022-opioid-s37-13` reads a negation box before the content of the
+box, and `cdc2022-opioid-rec05-imp12` reads a time quantity before the
+event that names it. With the facts of a patient loaded, a standard
+engine therefore needs tabling to finish (section "Loading a whole
+knowledge base").
 
 Authoring notes:
 
@@ -547,6 +557,39 @@ Authoring notes:
   rejects the composition as `proof, left_recursive(…)`. Refer back to
   the antecedent referent (`the patient`), or give the consequent
   entity its own noun.
+
+### Loading a whole knowledge base
+
+A consumer loads `guidelines/schema.pl`, every compiled document of the
+guidelines that it combines, and the facts of one patient. Before the
+first document loads, declare every schema predicate as tabled:
+
+```prolog
+:- table guideline_schema_version/1, guideline_document/4, guideline_entity/4, guideline_cardinality/5, guideline_event/3, guideline_arg/4, guideline_pp/4, guideline_property/4, guideline_operator/3, guideline_interval/6, guideline_recurrence/4, guideline_frequency/5, guideline_order/4, guideline_recurrence_window/7, guideline_range/3, guideline_grade/5, guideline_preference/4, guideline_qualifier/4, guideline_unit/3, guideline_exclusion/1.
+```
+
+Without tabling, a standard engine does not finish when the facts of a
+patient make the rules apply. For example, plain left-to-right search
+over the CDC documents and a patient of three sentences does not
+answer whether an opioid dosage includes at least 50 MME per day. With
+the declaration, SWI-Prolog 9.2.9 answers that question in seconds,
+lists every "should" statement for the patient, and gives each
+committed question its committed answer.
+
+The documents use `\+` for negation as failure. Under tabling, `\+` is
+correct when no goal depends on its own negation. For a recursion
+through negation, SWI-Prolog gives an answer and no warning. The gate
+checks the corpus with the patient worlds in `tests/consumer/` and the
+patient world of `tests/queries/green/dose-arithmetic`: it evaluates
+each composition again with `tnot/1` in place of `\+`, under the
+well-founded semantics, and requires the same answers and no undefined
+answer. A composition that you extend needs the same check. The gate
+runs this recipe in SWI-Prolog 9.2.9. Other engines are not tested.
+
+The engine of this repository searches without tabling. It answers the
+committed questions, which hold no patient facts. A question over the
+facts of a patient can stop at the bounds of that engine with
+`indeterminate(limit)`.
 
 ### Vocabulary table and time annotations
 
@@ -958,10 +1001,13 @@ bound and reports `indeterminate(limit)`. Three rule shapes cause this: a
 result that uses a verb or a noun of the condition; a first condition that
 names a noun that other rules derive, such as `opioid-dosage`; and a
 formula in a rule with a time condition, because a compiled time quantity
-reads its count before its event binds it. The rules of this repository
-avoid all three. Each conversion rule starts with the amount of its opioid,
-each result word differs from the condition words, and a rule with a time
-condition names the result of a separate formula rule.
+reads its count before its event binds it. The formula rules of this
+repository avoid all three. Each conversion rule starts with the amount of
+its opioid, each result word differs from the condition words, and a rule
+with a time condition names the result of a separate formula rule. Other
+rules of the corpus still feed their conditions once patient facts are
+loaded; a consumer therefore loads with tabling (section "Loading a whole
+knowledge base").
 
 #### Formulas in ACE
 

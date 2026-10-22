@@ -93,7 +93,14 @@ program, its formal specification, and its proofs.
   names the content of the box. A standard Prolog engine searches the
   same clauses from left to right. For the documents in this
   repository, both orders give the same answers when both searches
-  end. A standard engine can need much more time for some questions.
+  end.
+- To query the knowledge base with the facts of a patient in a
+  standard Prolog engine, declare the schema predicates as tabled
+  before you load the documents. `docs/REFERENCE.md` states the
+  declaration in "Loading a whole knowledge base". Without it, the
+  search does not end. The `ckc` program answers the stored questions.
+  A question about a patient can stop at its search limit with
+  `indeterminate(limit)`.
 
 ## Install
 

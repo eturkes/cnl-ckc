@@ -1,0 +1,14 @@
+% Well-founded check (contract cr): every `\+ G` of a schema clause becomes
+% tnot('$naf'(K, Vs)) over a tabled auxiliary '$naf'(K, Vs) :- G.
+:- table '$naf'/2.
+:- multifile('$naf'/2).
+:- dynamic(naf_key/1).
+naf_key(0).
+user:term_expansion((H :- B), [(H :- B2)|Aux]) :-
+    functor(H, N, _), sub_atom(N, 0, _, _, guideline_),
+    naf_rewrite(B, B2, Aux, []), Aux \== [].
+naf_rewrite((A, B), (A2, B2)) --> !, naf_rewrite(A, A2), naf_rewrite(B, B2).
+naf_rewrite(\+ G, tnot('$naf'(K, Vs))) --> !,
+    { retract(naf_key(K0)), K is K0 + 1, assertz(naf_key(K)), term_variables(G, Vs) },
+    [('$naf'(K, Vs) :- G)].
+naf_rewrite(G, G) --> [].

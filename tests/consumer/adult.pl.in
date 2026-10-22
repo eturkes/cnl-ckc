@@ -1,0 +1,78 @@
+% Consumer-recipe patient world (contract cr): the facts ckc compile writes for this ACE
+% under the CDC lexicon + vocabulary table:
+%   A clinician prescribes an opioid to a patient.
+%   The patient has an age.
+%   The age includes exactly 45 years.
+%   The patient has a chronic-pain.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+guideline_schema_version(1).
+guideline_document(adult,ace_sha256('7049db666f30f36d5fb8e9d9401913c6e14d2882f3bc2ff14379bfd30c4ae8d4'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+% S1: A clinician prescribes an opioid to a patient.
+guideline_entity(actual,'$guideline_id'(product,adult,1,ref(1),[]),clinician,countable).
+guideline_cardinality(actual,'$guideline_id'(product,adult,1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,adult,1,ref(2),[]),opioid,countable).
+guideline_cardinality(actual,'$guideline_id'(product,adult,1,ref(2),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,adult,1,ref(3),[]),patient,countable).
+guideline_cardinality(actual,'$guideline_id'(product,adult,1,ref(3),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,adult,1,ref(4),[]),prescribe).
+guideline_arg(actual,'$guideline_id'(product,adult,1,ref(4),[]),1,'$guideline_id'(product,adult,1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,adult,1,ref(4),[]),2,'$guideline_id'(product,adult,1,ref(2),[])).
+guideline_pp(actual,'$guideline_id'(product,adult,1,ref(4),[]),to,'$guideline_id'(product,adult,1,ref(3),[])).
+% S2: The patient has an age.
+guideline_entity(actual,'$guideline_id'(product,adult,2,ref(1),[]),age,countable).
+guideline_cardinality(actual,'$guideline_id'(product,adult,2,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,adult,2,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,adult,2,ref(2),[]),1,'$guideline_id'(product,adult,1,ref(3),[])).
+guideline_arg(actual,'$guideline_id'(product,adult,2,ref(2),[]),2,'$guideline_id'(product,adult,2,ref(1),[])).
+% S3: The age includes exactly 45 years.
+guideline_event(actual,'$guideline_id'(product,adult,3,ref(1),[]),include).
+guideline_arg(actual,'$guideline_id'(product,adult,3,ref(1),[]),1,'$guideline_id'(product,adult,2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,adult,3,ref(1),[]),2,'$guideline_id'(product,adult,3,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,adult,3,ref(3),[]),year,countable).
+guideline_cardinality(actual,'$guideline_id'(product,adult,3,ref(3),[]),na,exactly,45).
+guideline_unit(actual,'$guideline_id'(product,adult,3,ref(3),[]),year).
+% S4: The patient has a chronic-pain.
+guideline_entity(actual,'$guideline_id'(product,adult,4,ref(1),[]),'chronic-pain',countable).
+guideline_cardinality(actual,'$guideline_id'(product,adult,4,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,adult,4,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,adult,4,ref(2),[]),1,'$guideline_id'(product,adult,1,ref(3),[])).
+guideline_arg(actual,'$guideline_id'(product,adult,4,ref(2),[]),2,'$guideline_id'(product,adult,4,ref(1),[])).

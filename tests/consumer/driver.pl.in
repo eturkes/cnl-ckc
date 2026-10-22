@@ -1,0 +1,45 @@
+% Consumer-recipe probe driver (contract cr), loaded after the composition.
+% answer(Q, A): one committed question against its committed answers file.
+% enum: each open goal's answer count, undefined count and answer-set hash.
+answer(QFile, AFile) :-
+    read_match(QFile, '$guideline_query_projection'(goal(G), answers(As))),
+    read_match(AFile, '$guideline_answers'(_, Id, _, result(Want0))),
+    (   As == []
+    ->  ( call(G) -> Got = yes ; Got = no ), Want = Want0
+    ;   answer_vars(As, Vs),
+        findall(sol(Vs), G, L0), sort(L0, L), Got = solutions(L),
+        Want0 = solutions(W0), sort(W0, W), Want = solutions(W)
+    ),
+    ( Got == Want -> V = same ; V = differs ),
+    format("answer ~q ~w~n", [Id, V]).
+% The goal's own answer variables (findall/3 would copy them apart from the goal).
+answer_vars([], []).
+answer_vars([answer(V, _)|As], [V|Vs]) :- answer_vars(As, Vs).
+read_match(File, Pattern) :-
+    setup_call_cleanup(open(File, read, S), read_loop(S, Pattern), close(S)).
+read_loop(S, P) :-
+    read_term(S, T, []),
+    (   T == end_of_file -> fail
+    ;   T = P -> true
+    ;   read_loop(S, P)
+    ).
+goal(should, guideline_operator(actual, _, should)).
+goal(must, guideline_operator(actual, _, must)).
+goal(may, guideline_operator(actual, _, may)).
+goal(can, guideline_operator(actual, _, can)).
+goal(negation, guideline_operator(actual, _, -)).
+goal(exclusion, guideline_exclusion(_)).
+goal(entity, guideline_entity(actual, _, _, _)).
+enum :- forall(goal(N, G), enum(N, G)).
+enum(N, G) :-
+    catch(call_with_time_limit(120, findall(G-D, call_delays(G, D), L)), E, true),
+    (   nonvar(E)
+    ->  format("enum ~w error ~q~n", [N, E])
+    ;   findall(G1, member(G1-_, L), Gs), sort(Gs, S), length(S, C),
+        findall(x, (member(_-D1, L), D1 \== true), U), length(U, NU),
+        variant_sha1(S, H),
+        format("enum ~w ~w undefined ~w ~w~n", [N, C, NU, H])
+    ).
+bounded(Seconds, Name, G) :-
+    catch(call_with_time_limit(Seconds, (call(G) -> R = yes ; R = no)), E, R = E),
+    format("bounded ~w ~q~n", [Name, R]).
