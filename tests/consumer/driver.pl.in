@@ -43,3 +43,8 @@ enum(N, G) :-
 bounded(Seconds, Name, G) :-
     catch(call_with_time_limit(Seconds, (call(G) -> R = yes ; R = no)), E, R = E),
     format("bounded ~w ~q~n", [Name, R]).
+% Exhausts G: every answer, not the first.
+bounded_all(Seconds, Name, G) :-
+    catch(call_with_time_limit(Seconds, (findall(x, G, L), length(L, N), R = solutions(N))),
+        E, R = E),
+    format("bounded ~w ~q~n", [Name, R]).

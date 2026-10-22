@@ -521,14 +521,22 @@ the shape that makes an open query's termination depend on load order.
 The gate checks it rather than asserts its absence. Every
 `ckc check` runs `recursion-check` over the loaded composition and
 rejects one, printing the rule-clause count that it scanned. The shipped corpus holds none.
-The check reads the leftmost body goal only. A later body goal can
-still unify with its own head, and it runs with its referent unbound
-when the goals before it hold for a patient:
-`cdc2022-opioid-s37-13` reads a negation box before the content of the
-box, and `cdc2022-opioid-rec05-imp12` reads a time quantity before the
-event that names it. With the facts of a patient loaded, a standard
-engine therefore needs tabling to finish (section "Loading a whole
-knowledge base").
+The compiler writes each rule body binding-first: a goal that waits
+on a value runs after the goal that binds it. A comparison or an
+arithmetic built-in waits on its inputs. Any other schema goal except an
+entity or an event goal waits on its referent, the second argument. A
+negation waits on its variables that positive goals share. Each step
+takes the leftmost goal that does not wait, else the leftmost goal. The
+checks of the compiler read the order of the sentence, and only the
+written body changes. For example, `cdc2022-opioid-s37-13` reads the
+content of its negation box before the box, and
+`cdc2022-opioid-rec05-imp12` reads its time quantity after the event
+that names it. When no remaining goal is ready, the leftmost remaining
+goal runs next: in `If it is false that there are at least 3 days then a
+patient sleeps.`, no goal binds the context of the negation box, so the
+box goal stays first. With the facts of a patient loaded, a broad
+question still needs tabling (section "Loading a whole knowledge
+base").
 
 Authoring notes:
 
@@ -572,13 +580,14 @@ first document loads, declare every schema predicate as tabled:
 :- table guideline_schema_version/1, guideline_document/4, guideline_entity/4, guideline_cardinality/5, guideline_event/3, guideline_arg/4, guideline_pp/4, guideline_property/4, guideline_operator/3, guideline_interval/6, guideline_recurrence/4, guideline_frequency/5, guideline_order/4, guideline_recurrence_window/7, guideline_range/3, guideline_grade/5, guideline_preference/4, guideline_qualifier/4, guideline_unit/3, guideline_exclusion/1.
 ```
 
-Without tabling, a standard engine does not finish when the facts of a
-patient make the rules apply. For example, plain left-to-right search
-over the CDC documents and a patient of three sentences does not
-answer whether an opioid dosage includes at least 50 MME per day. With
-the declaration, SWI-Prolog 9.2.9 answers that question in seconds,
-lists every "should" statement that the composition derives, and gives
-each committed question its committed answer. Some rules derive an
+Without tabling, a standard engine does not finish a broad question
+when the facts of a patient make the rules apply. For example, plain
+left-to-right search over the CDC documents and a patient of three
+sentences does not finish the list of every "should" statement. It does
+answer the two dose questions of the gate, whether an opioid dosage
+includes at least 50 or exactly 60 MME per day. With the declaration, SWI-Prolog 9.2.9 lists
+every "should" statement that the composition derives in seconds, and
+gives each committed question its committed answer. Some rules derive an
 entity of their own, such as a patient in their conclusion, so a
 derived statement can concern that entity and not the patient of the
 loaded facts. Match each statement to the referents of the patient.
@@ -594,9 +603,9 @@ answer. A composition that you extend needs the same check. The gate
 runs this recipe in SWI-Prolog 9.2.9. Other engines are not tested.
 
 The engine of this repository searches without tabling. It answers the
-committed questions, which hold no patient facts. A question over the
-facts of a patient can stop at the bounds of that engine with
-`indeterminate(limit)`.
+committed questions and the two dose questions of the gate. A
+broad question over the facts of a patient can stop at the bounds of
+that engine with `indeterminate(limit)`.
 
 ### Vocabulary table and time annotations
 
@@ -1008,12 +1017,13 @@ bound and reports `indeterminate(limit)`. Three rule shapes cause this: a
 result that uses a verb or a noun of the condition; a first condition that
 names a noun that other rules derive, such as `opioid-dosage`; and a
 formula in a rule with a time condition, because a compiled time quantity
-reads its count before its event binds it. The formula rules of this
-repository avoid all three. Each conversion rule starts with the amount of
+read its count before its event bound it. Binding-first bodies now read
+that count after the event; the corpus keeps the split form. The formula
+rules of this repository avoid all three. Each conversion rule starts with the amount of
 its opioid, each result word differs from the condition words, and a rule
 with a time condition names the result of a separate formula rule. Other
 rules of the corpus still feed their conditions once patient facts are
-loaded; a consumer therefore loads with tabling (section "Loading a whole
+loaded; a broad question therefore needs tabling (section "Loading a whole
 knowledge base").
 
 #### Formulas in ACE

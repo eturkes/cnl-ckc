@@ -3302,6 +3302,109 @@ pub open spec fn rule_clauses(heads: Seq<Term>, body: Seq<BodyItem>) -> Seq<DocC
     heads.map_values(|h: Term| DocClause { head: h, body })
 }
 
+// --- binding-first body order (contract bf) ---
+// A goal waits until the variables of some of its arguments are bound: a
+// comparison its count inputs (/4: the comparison + count; /6: + the unit), an
+// arithmetic built-in its two operand pairs, a semantic predicate other than
+// the entity and event generators its referent (argument 2).
+pub open spec fn waited(t: Term) -> Seq<Term> {
+    match t {
+        Term::Comp(name, args) => if crate::compare::is_compare(name, args.len()) {
+            if args.len() == 4 {
+                args.take(2)
+            } else {
+                args.take(3)
+            }
+        } else if crate::arith::is_arith(name, args.len()) {
+            args.take(4)
+        } else if is_semantic_pred(name, args.len()) && args.len() >= 2 && name != ascii(
+            "guideline_entity"@,
+        ) && name != ascii("guideline_event"@) {
+            seq![args[1]]
+        } else {
+            Seq::empty()
+        },
+        _ => Seq::empty(),
+    }
+}
+
+// A NAF item waits until its variables that positive goals share are bound.
+pub open spec fn ready(it: BodyItem, bound: Set<nat>, shared: Set<nat>) -> bool {
+    match it {
+        BodyItem::Pos(t) => vars_all(waited(t)).subset_of(bound),
+        BodyItem::Naf(gs) => vars_all(gs).intersect(shared).subset_of(bound),
+    }
+}
+
+// Least position >= from whose item is ready.
+pub open spec fn ready_from(
+    items: Seq<BodyItem>,
+    bound: Set<nat>,
+    shared: Set<nat>,
+    from: nat,
+) -> Option<nat>
+    decreases items.len() - from,
+{
+    if from >= items.len() {
+        Option::None
+    } else if ready(items[from as int], bound, shared) {
+        Option::Some(from)
+    } else {
+        ready_from(items, bound, shared, from + 1)
+    }
+}
+
+pub proof fn ready_from_bound(items: Seq<BodyItem>, bound: Set<nat>, shared: Set<nat>, from: nat)
+    ensures
+        ready_from(items, bound, shared, from) matches Option::Some(i) ==> from <= i < items.len(),
+    decreases items.len() - from,
+{
+    if from < items.len() && !ready(items[from as int], bound, shared) {
+        ready_from_bound(items, bound, shared, from + 1);
+    }
+}
+
+// The leftmost ready item, else the leftmost item.
+pub open spec fn pick(items: Seq<BodyItem>, bound: Set<nat>, shared: Set<nat>) -> nat {
+    match ready_from(items, bound, shared, 0) {
+        Option::Some(i) => i,
+        Option::None => 0,
+    }
+}
+
+pub open spec fn binds(it: BodyItem) -> Set<nat> {
+    match it {
+        BodyItem::Pos(t) => vars_of(t),
+        BodyItem::Naf(_) => Set::empty(),
+    }
+}
+
+pub open spec fn order_from(items: Seq<BodyItem>, bound: Set<nat>, shared: Set<nat>) -> Seq<
+    BodyItem,
+>
+    decreases items.len(),
+    via order_from_decreases
+{
+    if items.len() == 0 {
+        Seq::empty()
+    } else {
+        let i = pick(items, bound, shared) as int;
+        seq![items[i]] + order_from(items.remove(i), bound.union(binds(items[i])), shared)
+    }
+}
+
+#[via_fn]
+proof fn order_from_decreases(items: Seq<BodyItem>, bound: Set<nat>, shared: Set<nat>) {
+    if items.len() > 0 {
+        ready_from_bound(items, bound, shared, 0);
+    }
+}
+
+// An open call binds no head variable, so the order starts from nothing bound.
+pub open spec fn bind_first(body: Seq<BodyItem>) -> Seq<BodyItem> {
+    order_from(body, Set::empty(), positive_vars(body))
+}
+
 pub open spec fn all_head_safe(cs: Seq<DocClause>) -> bool {
     forall|i: int| 0 <= i < cs.len() ==> head_safe(#[trigger] cs[i])
 }
@@ -3614,13 +3717,21 @@ pub open spec fn variant(
             } else if heads.len() == 0 || !all_pos(heads) {
                 Result::Err(atom("rule_without_consequent"@))
             } else {
-                let cs = rule_clauses(pos_terms(heads), goals + pos_all(fp.chain));
+                let body = goals + pos_all(fp.chain);
+                let cs = rule_clauses(pos_terms(heads), body);
                 if !all_naf_safe(cs, body_doms(fp.aitems)) {
                     Result::Err(atom("naf_safety"@))
                 } else if !all_head_safe(cs) {
                     Result::Err(atom("head_variable_not_bound_in_body"@))
                 } else {
-                    Result::Ok(Group { k, pairs: fp.pairs, clauses: cs })
+                    // The checks read the DRS order; the clauses run binding-first.
+                    Result::Ok(
+                        Group {
+                            k,
+                            pairs: fp.pairs,
+                            clauses: rule_clauses(pos_terms(heads), bind_first(body)),
+                        },
+                    )
                 }
             },
             (Result::Err(e), _) => Result::Err(e),

@@ -97,10 +97,12 @@ program, its formal specification, and its proofs.
 - To query the knowledge base with the facts of a patient in a
   standard Prolog engine, declare the schema predicates as tabled
   before you load the documents. `docs/REFERENCE.md` states the
-  declaration in "Loading a whole knowledge base". Without it, the
-  search does not end. The `ckc` program answers the stored questions.
-  A question about a patient can stop at its search limit with
-  `indeterminate(limit)`.
+  declaration in "Loading a whole knowledge base". Without it, a
+  broad question, such as every "should" statement for the patient,
+  does not end. The tested question whether a dosage reaches 50 MME
+  per day ends without it. The `ckc` program answers the stored
+  questions and that tested question. A broad question about a patient
+  can stop at its search limit with `indeterminate(limit)`.
 
 ## Install
 

@@ -175,6 +175,9 @@ mod m6_impl;
 mod m6_model;
 mod m6_normal;
 mod m6_numeral;
+mod m6_order;
+#[cfg(test)]
+mod m6_order_tests;
 mod m6_payload;
 mod m6_project;
 mod m6_query;

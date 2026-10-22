@@ -68,6 +68,9 @@
 % and executable negation-as-failure for top-level antecedent NAF boxes;
 % a root condition list joins its sentence's facts when its root-context
 % upper bounds are all `exactly N`, N >= 1 (contract root-exact).
+% Rule bodies run binding-first (contract bf, bf_order/2): the safety
+% checks read the sentence order; the written body takes the leftmost goal
+% whose waited values are bound, else the leftmost goal.
 % Translation is total: a sentence yields an ordered bundle of one or
 % more clauses; any unrecognized shape rejects the whole document, and
 % authored questions reject (class unsupported,
@@ -3329,9 +3332,79 @@ v1_variant(AItems, CItems, Chain, Map, Sko, S, Clauses) :-
         reject(unsupported, sentence_shape(rule_without_consequent(S)))
     ; true
     ),
-    v1_rule_clauses(Heads, Goals, Clauses),
-    v1_naf_safety(Clauses),
-    maplist(v1_check_safety, Clauses).
+    v1_rule_clauses(Heads, Goals, Checked),
+    v1_naf_safety(Checked),
+    maplist(v1_check_safety, Checked),
+    bf_order(Goals, Ordered),
+    v1_rule_clauses(Heads, Ordered, Clauses).
+
+/* Binding-first body order (contract bf; spec emit.rs bind_first). The checks
+   above read the DRS order; the clauses run binding-first: each step takes the
+   leftmost ready goal, else the leftmost goal. A positive goal is ready once
+   the variables of the arguments it waits on are bound (bf_waited/2); a NAF
+   item once its variables that positive goals share are bound. A positive
+   goal binds its variables; an open call binds no head variable. */
+bf_order(Goals, Ordered) :-
+    bf_positive_vars(Goals, [], Shared),
+    bf_order(Goals, [], Shared, Ordered).
+
+bf_order([], _, _, []) :- !.
+bf_order(Goals, Bound, Shared, [Goal|Ordered]) :-
+    ( bf_take_ready(Goals, Bound, Shared, Goal, Rest) ->
+        true
+    ; Goals = [Goal|Rest]
+    ),
+    bf_bind(Goal, Bound, Bound1),
+    bf_order(Rest, Bound1, Shared, Ordered).
+
+bf_take_ready([Goal|Goals], Bound, Shared, Goal, Goals) :-
+    bf_ready(Goal, Bound, Shared),
+    !.
+bf_take_ready([Goal|Goals], Bound, Shared, Taken, [Goal|Rest]) :-
+    bf_take_ready(Goals, Bound, Shared, Taken, Rest).
+
+bf_ready(naf(_, Sub), Bound, Shared) :-
+    !,
+    term_variables(Sub, Vars),
+    forall(( member(V, Vars), v1_var_member(V, Shared) ),
+        v1_var_member(V, Bound)).
+bf_ready(Goal, Bound, _) :-
+    bf_waited(Goal, Args),
+    term_variables(Args, Vars),
+    forall(member(V, Vars), v1_var_member(V, Bound)).
+
+/* A comparison waits on its count inputs (/4: comparison + count; /6: + the
+   unit), an arithmetic built-in on its two operand pairs, a semantic predicate
+   other than the entity and event generators on its referent (argument 2). */
+bf_waited(guideline_satisfies(S, N, _, _), [S, N]) :- !.
+bf_waited(guideline_satisfies(S, N, U, _, _, _), [S, N, U]) :- !.
+bf_waited(guideline_product(S1, N1, S2, N2, _, _), [S1, N1, S2, N2]) :- !.
+bf_waited(guideline_quotient(S1, N1, S2, N2, _, _), [S1, N1, S2, N2]) :- !.
+bf_waited(Goal, [Ref]) :-
+    functor(Goal, Name, Arity),
+    memberchk(Name/Arity, [guideline_cardinality/5, guideline_arg/4,
+        guideline_pp/4, guideline_property/4, guideline_operator/3,
+        guideline_interval/6, guideline_recurrence/4, guideline_frequency/5,
+        guideline_order/4, guideline_recurrence_window/7, guideline_range/3,
+        guideline_grade/5, guideline_preference/4, guideline_qualifier/4,
+        guideline_unit/3]),
+    !,
+    arg(2, Goal, Ref).
+bf_waited(_, []).
+
+bf_bind(naf(_, _), Bound, Bound) :- !.
+bf_bind(Goal, Bound0, Bound) :-
+    term_variables(Goal, Vars),
+    append(Bound0, Vars, Bound).
+
+bf_positive_vars([], Vars, Vars).
+bf_positive_vars([naf(_, _)|Goals], Vars0, Vars) :-
+    !,
+    bf_positive_vars(Goals, Vars0, Vars).
+bf_positive_vars([Goal|Goals], Vars0, Vars) :-
+    term_variables(Goal, GoalVars),
+    append(Vars0, GoalVars, Vars1),
+    bf_positive_vars(Goals, Vars1, Vars).
 
 v1_box(Box, Dom, Conds) :-
     ( nonvar(Box),

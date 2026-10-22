@@ -1,0 +1,48 @@
+% bf-neg-box.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+guideline_schema_version(1).
+guideline_document('bf-neg-box',ace_sha256('1d80ff7c6f12e0b7989b53631a93163b465ae89bbab36b529910ad1933f251d5'),ulex(sha256(a7e9721414a8ff615f3784181b701de4555b83d27aed9e026ee371572fcd212f)),vocabulary(sha256('5d2577ebf8384f1adf9aaa7c0f20ac8ed33bc3a02a8346a60eef7b22e28a029c'))).
+% S1: If it is false that a patient sleeps then a dog runs.
+guideline_entity(actual,'$guideline_id'(product,'bf-neg-box',1,ref(3),[]),dog,countable) :- guideline_operator(actual,A,-), guideline_entity(A,B,patient,countable), guideline_cardinality(A,B,na,eq,1), guideline_event(A,C,sleep), guideline_arg(A,C,1,B).
+guideline_cardinality(actual,'$guideline_id'(product,'bf-neg-box',1,ref(3),[]),na,eq,1) :- guideline_operator(actual,A,-), guideline_entity(A,B,patient,countable), guideline_cardinality(A,B,na,eq,1), guideline_event(A,C,sleep), guideline_arg(A,C,1,B).
+guideline_event(actual,'$guideline_id'(product,'bf-neg-box',1,ref(4),[]),run) :- guideline_operator(actual,A,-), guideline_entity(A,B,patient,countable), guideline_cardinality(A,B,na,eq,1), guideline_event(A,C,sleep), guideline_arg(A,C,1,B).
+guideline_arg(actual,'$guideline_id'(product,'bf-neg-box',1,ref(4),[]),1,'$guideline_id'(product,'bf-neg-box',1,ref(3),[])) :- guideline_operator(actual,A,-), guideline_entity(A,B,patient,countable), guideline_cardinality(A,B,na,eq,1), guideline_event(A,C,sleep), guideline_arg(A,C,1,B).

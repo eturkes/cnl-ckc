@@ -1,0 +1,3 @@
+sentences([[^,'If',it,is,false,that,a,patient,sleeps,then,a,dog,runs,'.']]).
+drs(drs([],[=>(drs([],[-(drs([A,B],[-(object(A,patient,countable,na,eq,1),/(1,7)),-(predicate(B,sleep,A),/(1,8))]))]),drs([C,D],[-(object(C,dog,countable,na,eq,1),/(1,11)),-(predicate(D,run,C),/(1,12))]))])).
+messages([]).

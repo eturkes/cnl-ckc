@@ -1,0 +1,4 @@
+% bf-question compiled from ACE question by ace_to_pl question mode; do not edit.
+'$guideline_query'(v1,'bf-question',ace_sha256(c16351a1edeff287b2b0a9cc1c9a247fe60dd73aac0f749b074740dbd49462ee),ulex(sha256(a7e9721414a8ff615f3784181b701de4555b83d27aed9e026ee371572fcd212f)),vocabulary(sha256('5d2577ebf8384f1adf9aaa7c0f20ac8ed33bc3a02a8346a60eef7b22e28a029c'))).
+% Q1: Does a patient wait for at least 3 days?
+'$guideline_query_projection'(goal(','(guideline_entity(actual,A,patient,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_cardinality(actual,B,na,C,D),','(guideline_unit(actual,B,E),','(guideline_satisfies(C,D,E,geq,3,day),','(guideline_event(actual,F,wait),','(guideline_arg(actual,F,1,A),','(guideline_pp(actual,F,for,B),guideline_interval(actual,F,duration,B,E,none)))))))))),answers([])).

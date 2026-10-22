@@ -267,7 +267,7 @@ fn patient_worlds_finish_and_agree_with_the_well_founded_model() {
 }
 
 #[test]
-fn dose_questions_answer_under_the_recipe_and_diverge_without_it() {
+fn dose_questions_answer_under_the_recipe_and_open_goals_diverge_without_it() {
     let s = Scratch::new("dose");
     let fx = root().join(DOSE);
     let calls: Vec<String> = ["q-mme", "q-mme-exact"]
@@ -285,12 +285,13 @@ fn dose_questions_answer_under_the_recipe_and_diverge_without_it() {
         &calls.join(", "),
     );
     assert_eq!(out.matches(" same\n").count(), 2, "{out}");
-    // Firing: plain left-to-right search over the same composition does not finish.
-    let goal = "bounded(20, plain, guideline_entity(actual, _, 'opioid-dosage', countable))";
+    // Firing: plain left-to-right search answers the targeted questions (binding-first bodies,
+    // contract bf) but does not exhaust every should box of the same composition.
+    let goal = "bounded_all(20, plain, guideline_operator(actual, _, should))";
     let out = swipl(&s, &load(&s, Mode::Plain, &[world]), goal);
     assert_eq!(
         out, "bounded plain time_limit_exceeded\n",
-        "plain search finished: the recipe text may be stale"
+        "plain search exhausted every should box: the recipe text may be stale"
     );
 }
 

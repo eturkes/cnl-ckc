@@ -17,7 +17,7 @@ use vstd::slice::slice_to_vec;
 
 verus! {
 
-fn semantic_name(name: &Vec<u8>, arity: usize) -> (out: bool)
+pub fn semantic_name(name: &Vec<u8>, arity: usize) -> (out: bool)
     ensures
         out == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
 {

@@ -22,6 +22,7 @@ ckc-kernel/src/k4_rows.rs	external	1	reveal_byteslit(b"external");
 ckc-kernel/src/k4_rows.rs	external	1	reveal_strlit("external");
 ckc-kernel/src/k4_rows.rs	external	2	assert(b"external"@ == ckc_spec::v1text::ascii("external"@));
 ckc-kernel/src/k5_text.rs	unsafe	1	let text = unsafe { str::from_utf8_unchecked(bytes) };
+ckc-kernel/src/m6_order_tests.rs	#[path	1	#[path = "../../../tests/bf/model.rs"]
 ckc-spec/src/check.rs	external	1	"# format: id<TAB>file<TAB>page<TAB>section<TAB>status\n# status: ace(<docid>) | restates(<id>) | uncovered(<class>: <one-clause reason>) | pending\n# uncovered classes: heading | process | external | aim | descriptive | notice | inexpressible\n"@,
 ckc-spec/src/check.rs	external	1	||| c == ascii("external"@)
 ckc-spec/src/v1text.rs	admit	1	// Traces admit '$VAR'/1 as an ordinary compound: their writer runs

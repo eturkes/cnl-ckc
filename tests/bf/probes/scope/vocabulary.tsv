@@ -1,0 +1,5 @@
+# format: kind	lemma	value
+unit	day	day
+relation	for	duration
+scope	guideline	probe
+exclusion	apply	scope

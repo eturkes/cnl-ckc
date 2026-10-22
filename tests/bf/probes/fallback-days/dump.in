@@ -1,0 +1,3 @@
+sentences([[^,'If',it,is,false,that,there,are,at,least,3,days,then,a,patient,sleeps,'.']]).
+drs(drs([],[=>(drs([],[-(drs([A],[-(object(A,day,countable,na,geq,3),/(1,11))]))]),drs([B,C],[-(object(B,patient,countable,na,eq,1),/(1,14)),-(predicate(C,sleep,B),/(1,15))]))])).
+messages([]).

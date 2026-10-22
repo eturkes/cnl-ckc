@@ -362,13 +362,14 @@ pub open spec fn variant_tail(
     } else if heads.len() == 0 || !spec::all_pos(heads) {
         Err(ckc_spec::replay::atom("rule_without_consequent"@))
     } else {
-        let cs = spec::rule_clauses(spec::pos_terms(heads), goals + spec::pos_all(chain));
+        let body = goals + spec::pos_all(chain);
+        let cs = spec::rule_clauses(spec::pos_terms(heads), body);
         if !spec::all_naf_safe(cs, spec::body_doms(aitems)) {
             Err(ckc_spec::replay::atom("naf_safety"@))
         } else if !spec::all_head_safe(cs) {
             Err(ckc_spec::replay::atom("head_variable_not_bound_in_body"@))
         } else {
-            Ok(cs)
+            Ok(spec::rule_clauses(spec::pos_terms(heads), spec::bind_first(body)))
         }
     }
 }
@@ -462,7 +463,8 @@ fn group_clauses(
     if !all_head_safe(arena, &cs) {
         return Err(error(arena, &Sym::HeadVariableNotBoundInBody, Ghost(start)));
     }
-    Ok(cs)
+    let ordered = crate::m6_order::bind_first(arena, goals);
+    Ok(rule_clauses(arena, &hterms, &ordered))
 }
 
 pub open spec fn root_condition_model(r: spec::Root) -> Option<Term> {
