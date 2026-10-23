@@ -6,5 +6,5 @@ cargo-deny	0.20.2	cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz	9f12ed4c499
 gitleaks	8.30.1	gitleaks_8.30.1_linux_x64.tar.gz	551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb	https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
 zizmor	1.31.1	zizmor-x86_64-unknown-linux-gnu.tar.gz	d185f726bdaf92df78273217dfdd24ebcd6b0ef48cf3ce776ff5762b6e138c99	https://github.com/zizmorcore/zizmor/releases/download/v1.31.1/zizmor-x86_64-unknown-linux-gnu.tar.gz
 cargo-mutants	27.1.0	cargo-mutants-x86_64-unknown-linux-gnu.tar.gz	dfe6dc37d0342c891d2829b5a695aa57c2d0edecef7e7d0399a30cc6e206411e	https://github.com/sourcefrog/cargo-mutants/releases/download/v27.1.0/cargo-mutants-x86_64-unknown-linux-gnu.tar.gz
-node	24.22.1	node-v24.22.1-linux-x64.tar.xz	6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6	https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz
+node	26.12.1	node-v26.12.1-linux-x64.tar.xz	6170b2d474e1c626f43cff3adc118df9fe3b573258a4fc3d850c8dbc6b079bbd	https://nodejs.org/dist/v26.12.1/node-v26.12.1-linux-x64.tar.xz
 chrome-headless-shell	156.0.8078.47	chrome-headless-shell-linux64.zip	0d5acc62c3e213f8c87d3c298d66ffcf9a236d12ea4b9f85318bf85dbc279daa	https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.47/linux64/chrome-headless-shell-linux64.zip

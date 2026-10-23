@@ -951,16 +951,16 @@ struct Swipl<'a> {
     digest: Option<&'a str>,
 }
 
-// One `outdated` run over a fixture tree: member ckc pins sha2 `=0.11.0` (held by ckc alone),
-// requires zlib-x `^1.0` (a newer major exists), and reaches syn through ext-macro; both CI
-// container jobs pin the swipl recipe's version at IMAGE.
-fn outdated_case(
+// One `outdated` fixture tree: member ckc pins sha2 `=0.11.0` (held by ckc alone), requires
+// zlib-x `^1.0` (a newer major exists), and reaches syn through ext-macro; both CI container
+// jobs pin the swipl recipe's version at IMAGE; node pins the Current line's 26.1.0.
+fn outdated_fixture(
     s: &Scratch,
     name: &str,
     justfile: &str,
     metadata_fails: bool,
     swipl: Swipl,
-) -> Output {
+) -> Fixture {
     let fx = Fixture::new(s, name, justfile);
     let image = format!(
         "      image: docker.io/library/swipl:{}@sha256:{IMAGE}\n",
@@ -1035,7 +1035,7 @@ fn outdated_case(
         &rust.join("tools.lock"),
         format!(
             "tool\tversion\tasset\tsha256\turl\njust\t1.58.0\tjust.tar.gz\t{}\thttps://github.com/casey/just/releases/download/1.58.0/just.tar.gz
-node\t24.22.0\tnode.tar.xz\t{}\thttps://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.xz
+node\t26.1.0\tnode.tar.xz\t{}\thttps://nodejs.org/dist/v26.1.0/node-v26.1.0-linux-x64.tar.xz
 chrome-headless-shell\t155.0.8059.84\tchs.zip\t{}\thttps://storage.googleapis.com/chrome-for-testing-public/155.0.8059.84/linux64/chrome-headless-shell-linux64.zip\n",
             "3".repeat(64),
             "4".repeat(64),
@@ -1075,10 +1075,11 @@ chrome-headless-shell\t155.0.8059.84\tchs.zip\t{}\thttps://storage.googleapis.co
         &format!("{api}/casey/just/releases/latest"),
         r#"{"tag_name": "1.58.0"}"#,
     );
-    // Latest node = the newest LTS line: a newer current (non-LTS) release stays out.
+    // Latest node = the highest version, the Current line included (user ruling), wherever
+    // index.json lists it.
     fx.route(
         "https://nodejs.org/dist/index.json",
-        r#"[{"version": "v26.1.0", "lts": false}, {"version": "v24.22.0", "lts": "Krypton"}, {"version": "v24.21.0", "lts": "Krypton"}]"#,
+        r#"[{"version": "v24.22.0", "lts": "Krypton"}, {"version": "v26.1.0", "lts": false}, {"version": "v24.21.0", "lts": "Krypton"}]"#,
     );
     fx.route(
         "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json",
@@ -1095,7 +1096,17 @@ chrome-headless-shell\t155.0.8059.84\tchs.zip\t{}\thttps://storage.googleapis.co
             format!(r#"{{"crate": {{"max_stable_version": "{latest}"}}}}"#),
         );
     }
-    fx.run("outdated", &[])
+    fx
+}
+
+fn outdated_case(
+    s: &Scratch,
+    name: &str,
+    justfile: &str,
+    metadata_fails: bool,
+    swipl: Swipl,
+) -> Output {
+    outdated_fixture(s, name, justfile, metadata_fails, swipl).run("outdated", &[])
 }
 
 #[test]
@@ -1115,7 +1126,7 @@ kani\t0.68.0\t0.68.0\tok
 swipl\t{v}\t{v}\tok
 swipl-image\t{v}@sha256:{IMAGE}\t{v}@sha256:{IMAGE}\tok
 tool:just\t1.58.0\t1.58.0\tok
-tool:node\t24.22.0\t24.22.0\tok
+tool:node\t26.1.0\t26.1.0\tok
 tool:chrome-headless-shell\t155.0.8059.84\t155.0.8059.84\tok
 crate:ext-macro\t1.0.0\t1.0.0\tok
 "
@@ -1261,6 +1272,54 @@ fn outdated_reports_swipl_source_and_image_drift() {
         ["outdated: 9 pins, 1 drift, 2 held, 0 errors"],
         "the planted pre-rule recipe no longer slips through: {}",
         show(&out)
+    );
+}
+
+// Latest node = the highest released version, the Current line included (user ruling): a pin on
+// the LTS line drifts once a newer Current release exists.
+#[test]
+fn outdated_reads_nodes_highest_release() {
+    let s = scratch("outdated-node");
+    let text = justfile();
+    let v = swipl_field(&text, "v=");
+    let node = |name: &str, justfile: &str| {
+        let fx = outdated_fixture(
+            &s,
+            name,
+            justfile,
+            false,
+            Swipl {
+                latest: &v,
+                digest: Some(IMAGE),
+            },
+        );
+        let lock = fx.root.join("rust/tools.lock");
+        put(
+            &lock,
+            fs::read_to_string(&lock)
+                .unwrap()
+                .replace("26.1.0", "24.22.0"),
+        );
+        let out = fx.run("outdated", &[]);
+        String::from_utf8_lossy(&out.stdout)
+            .lines()
+            .find(|l| l.starts_with("tool:node\t"))
+            .unwrap_or_else(|| panic!("{name}: no node row: {}", show(&out)))
+            .to_owned()
+    };
+    assert_eq!(node("lts-pin", &text), "tool:node\t24.22.0\t26.1.0\tdrift");
+    // The pre-rule recipe reads the newest LTS line: the newer Current release passes unseen.
+    let planted = plant(
+        &text,
+        &[(
+            r#"jq -r '[.[].version | ltrimstr("v") | split(".") | map(tonumber)] | max | select(. != null) | map(tostring) | join(".")')"#,
+            r#"jq -r '[.[] | select(.lts != false)][0].version // empty' | sed 's/^v//')"#,
+        )],
+    );
+    assert_eq!(
+        node("lts-pin-planted", &planted),
+        "tool:node\t24.22.0\t24.22.0\tok",
+        "the planted pre-rule recipe no longer slips through"
     );
 }
 

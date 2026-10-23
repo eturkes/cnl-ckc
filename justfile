@@ -504,7 +504,7 @@ outdated:
         case "$url" in
             https://github.com/*) latest=$(latest_tag "$(cut -d/ -f4-5 <<< "$url")" | sed 's/^v//') ;;
             https://static.rust-lang.org/rustup/*) latest=$(get https://static.rust-lang.org/rustup/release-stable.toml | sed -n "s/^version = '\(.*\)'$/\1/p") || latest= ;;
-            https://nodejs.org/dist/*) latest=$(get https://nodejs.org/dist/index.json | jq -r '[.[] | select(.lts != false)][0].version // empty' | sed 's/^v//') || latest= ;;
+            https://nodejs.org/dist/*) latest=$(get https://nodejs.org/dist/index.json | jq -r '[.[].version | ltrimstr("v") | split(".") | map(tonumber)] | max | select(. != null) | map(tostring) | join(".")') || latest= ;;
             https://storage.googleapis.com/chrome-for-testing-public/*) latest=$(get https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version // empty') || latest= ;;
             *) latest= ;;
         esac
