@@ -55,6 +55,11 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [x] 7f9a46ce PR5 release-readiness verdict (MAIN: good milestone once PR0–PR7 land) + versioning rulings (Decisions Publication scope).
 - [x] 82cff19d PR6 binding-first emission (contract `bf`, kernel): compiled bodies run each goal whose referent a later goal binds after that goal → both engines answer targeted patient questions untabled; corpus + fixtures re-derived before the user's review.
 - [x] 0892e399 PR7 versioning + provenance policy per the rulings: REFERENCE § Export + Decisions Schema evolution post-publication rule, `CITATION.cff`, release-notes template; the prior-art survey archived beside its contract.
+- [ ] UP1 actions + runner (contract `up`): upload-artifact v7.0.2, download-artifact v8.0.2, `ubuntu-26.04`; the SWI-Prolog cache keyed on the runner's OS release.
+- [ ] UP2 SWI-Prolog 10.0.2 = the reference runtime + `just outdated` SWI drift (user rulings; contract `up`).
+- [ ] UP3 Node 26.12.1 + `just outdated` newest-release rule (user ruling; contract `up`).
+- [ ] UP4 Python 3.15: `.python-version` + the `just swipl` shim.
+- [ ] UP5 crates held by the Verus macros' requirements (syn, synstructure, convert_case) → `.agent/deferred.md` rows.
 - [ ] PR8 user review of the ACE corpus (reviewer interface) + the human-read spec `rust/ckc-spec/` (user; MAIN waits for the user's word).
 - [ ] PR9 release cut per REFERENCE § Releasing after PR8: closing gate + CI green on the pushed commit, `ckc dist build`, release notes, annotated tag `kb-YYYY-MM-DD`, `CITATION.cff` version/date/DOI (the push, the Zenodo deposit + the arXiv submission = the user's remote actions).
 - [ ] PR10 README cites the arXiv preprint once the user reports it published.

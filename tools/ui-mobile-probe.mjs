@@ -26,7 +26,7 @@ const files = dirs.flatMap(walk).sort();
 if (files.length === 0) fail("no .html pages under the given directories");
 
 // --hide-scrollbars = Playwright's headless default: a classic scrollbar would narrow
-// clientWidth. --no-sandbox: hosts that restrict unprivileged user namespaces (Ubuntu 24.04
+// clientWidth. --no-sandbox: hosts that restrict unprivileged user namespaces (the Ubuntu CI
 // runners) cannot start the sandbox; the inputs are this repo's own rendered pages.
 const profile = mkdtempSync(join(tmpdir(), "ui-mobile-"));
 const chrome = spawn(

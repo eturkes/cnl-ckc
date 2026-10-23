@@ -386,7 +386,7 @@ build:
     cd "{{ ROOT }}/rust" && cargo build --release --locked --offline -q
     @echo "gate: build ok"
 
-# The swipl:9.2.9 image (Debian glibc 2.36) cannot load the runner's glibc-2.39 build.
+# The swipl:9.2.9 image (Debian glibc 2.36) cannot load the runner's glibc-2.43 build.
 # Static musl ckc = the binary of the CI container jobs.
 build-static:
     #!/usr/bin/env bash

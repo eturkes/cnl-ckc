@@ -21,7 +21,7 @@ jobs:
   # its static musl binary (`just build-static`).
   rust:
     if: github.event_name != 'schedule'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,7 +52,8 @@ jobs:
       - name: Install pinned tools
         run: just tools
 
-      # Key = the swipl recipe's version + source sha256.
+      # Key = the runner's OS release (the build links its system libraries; runner.os
+      # reads Linux on every image) + the swipl recipe's version + source sha256.
       - name: Read SWI-Prolog pin
         id: swipl-pin
         run: |
@@ -60,6 +61,8 @@ jobs:
           pin=$(grep -oE 'v=[0-9.]+; sha=[0-9a-f]{64}' justfile | head -n 1)
           [ -n "$pin" ]
           v=${pin#v=}; v=${v%%;*}
+          . /etc/os-release
+          echo "os=$ID-$VERSION_ID" >> "$GITHUB_OUTPUT"
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "sha=${pin##*sha=}" >> "$GITHUB_OUTPUT"
 
@@ -68,7 +71,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .toolchain/swipl-${{ steps.swipl-pin.outputs.version }}
-          key: swipl-${{ runner.os }}-${{ steps.swipl-pin.outputs.version }}-${{ steps.swipl-pin.outputs.sha }}
+          key: swipl-${{ steps.swipl-pin.outputs.os }}-${{ steps.swipl-pin.outputs.version }}-${{ steps.swipl-pin.outputs.sha }}
 
       - name: Install SWI-Prolog build dependencies
         if: steps.swipl-cache.outputs.cache-hit != 'true'
@@ -76,7 +79,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libarchive-dev libdb-dev libedit-dev \
             libgmp-dev libossp-uuid-dev libpcre2-dev libreadline-dev libssl-dev libyaml-dev \
-            ncurses-dev zlib1g-dev
+            libncurses-dev zlib1g-dev
 
       - name: Install SWI-Prolog (just swipl)
         run: just swipl
@@ -91,7 +94,7 @@ jobs:
         run: just build-static
 
       - name: Upload ckc binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ckc
           path: rust/target/x86_64-unknown-linux-musl/release/ckc
@@ -104,7 +107,7 @@ jobs:
   check:
     if: github.event_name != 'schedule'
     needs: rust
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     container:
       image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
     steps:
@@ -150,7 +153,7 @@ jobs:
           echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"
 
       - name: Download ckc binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ckc
           path: ${{ runner.temp }}/ckc-bin
@@ -172,7 +175,7 @@ jobs:
   certify:
     if: github.event_name != 'schedule'
     needs: rust
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     container:
       image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
     steps:
@@ -201,7 +204,7 @@ jobs:
           echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"
 
       - name: Download ckc binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ckc
           path: ${{ runner.temp }}/ckc-bin
@@ -214,7 +217,7 @@ jobs:
   # Weekly: RustSec advisories + license/source policy over the committed Cargo.lock.
   advisories:
     if: github.event_name == 'schedule'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -249,7 +252,7 @@ jobs:
   # Weekly: Kani bounded model checking over the kernel's public exec surface.
   kani:
     if: github.event_name == 'schedule'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     steps:
       - name: Check out repository
@@ -286,7 +289,7 @@ jobs:
   # every lock pin vs upstream latest; red = bump notice, procedure in .claude/rules/rust.md).
   updates:
     if: github.event_name == 'schedule'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
