@@ -23,6 +23,34 @@ gate: (_timed RUST_STEPS + " mobile check certify")
 # Rust chain: format, lint, verify, build, trust-audit, test, dependency audit, secret scan, workflow scan.
 rust: (_timed RUST_STEPS)
 
+# CI gate (.claude/rules/ops.md): the full gate as the ci.yml fan-out on HEAD, pushed to ci/<unit>.
+# Green deletes the branch; red keeps it (fix, amend, rerun). A dirty tree is refused: CI grades HEAD alone.
+ci unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    [[ "{{ unit }}" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "ci: unit must match [A-Za-z0-9._-]+" >&2; exit 2; }
+    status=$(git status --porcelain)
+    [ -z "$status" ] || { echo "ci: working tree differs from HEAD (commit first)" >&2; exit 2; }
+    b="ci/{{ unit }}"; sha=$(git rev-parse HEAD); tree=$(git rev-parse "HEAD^{tree}")
+    git push -q -f origin "HEAD:$b"
+    id=""
+    for _ in $(seq 60); do
+        id=$(gh run list --branch "$b" --commit "$sha" --workflow ci.yml --event push --json databaseId -q '.[0].databaseId')
+        [ -n "$id" ] && break; sleep 5
+    done
+    [ -n "$id" ] || { echo "ci: no run for $sha on $b after 5 min" >&2; exit 2; }
+    echo "ci: run $id, commit $sha, tree $tree"
+    rc=0; gh run watch "$id" --exit-status -i 30 > /dev/null 2>&1 || rc=$?
+    gh run view "$id" --json jobs -q '.jobs[] | select(.conclusion != "skipped")
+        | "time: \(.name) \(.conclusion) \((.completedAt | fromdate) - (.startedAt | fromdate)) s"'
+    if [ "$rc" -ne 0 ]; then
+        gh run view "$id" --log-failed | tail -80
+        echo "ci: run $id red, branch $b kept" >&2; exit 1
+    fi
+    git push -q origin --delete "$b"
+    echo "gate: ci ok"
+
 # Every gate run blocks the critical path, so each step's wall-clock follows its own output, a failed
 # step's included. Steps run in list order without their dependencies (trust's build precedes it).
 _timed steps:

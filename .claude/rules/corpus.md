@@ -12,7 +12,7 @@ Protocol = docs/REFERENCE.md § Operating; supported ACE constructs = the `ace_t
 
 ## Round roles (corpus loop)
 
-MAIN drafts every ACE document; teammates read + attack (fits, offload economics + mechanics = `CLAUDE.md` `Teammates`).
+MAIN drafts every ACE document; teammates read + attack (fits, dispatch economics + mechanics = `CLAUDE.md` `Teammates`).
 - MAIN — ACE per ruled statement batch: knowledge-only (no witness seed facts, proper-name stand-ins, authored queries), validated by `compile` + `check`; lexicon deltas screened against `audit/lexicon-rejects.tsv` (MAIN appends each refusal). Faithfulness = MAIN review, statement by statement. Also MAIN: `ace_to_pl.pl` + lexicon edits, all primary-tree writes, `ckc check` validator pins (`ckc-spec` + fixtures), guideline README + queue updates, id choice, rights rulings, statement batch verdicts, gate reruns, commits.
 - `researcher`, extraction — bulk-reads the source; verbatim extraction evidence with page/byte anchors + an anchored normative-statement inventory. Raw material: MAIN spot-checks verbatim fidelity before adopting.
 - `researcher`, fetch rounds — candidate discovery, rights/licensing quotes, URL verification (brief names its WebSearch allowance + browser access).

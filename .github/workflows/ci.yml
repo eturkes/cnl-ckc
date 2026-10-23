@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, "ci/**"] # ci/<unit> = the CI gate (.claude/rules/ops.md)
   pull_request:
     branches: [main]
   schedule:
