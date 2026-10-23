@@ -1,12 +1,12 @@
 # UP — every dependency + toolchain pin at its latest release for the first release (contract)
 
-Request (user, MAINTAIN): upgrade every dependency + toolchain pin to its latest release; major bumps → changelog breaking changes vs our call sites; a held pin → `.agent/deferred.md` row naming its blocker. Census (`.scratch/deps/outdated.log` + MAIN's upstream checks): Verus 0.2026.10.18, Kani 0.68.0, every `tools.lock` row, the vstd family, `actions/checkout` v7.0.1 + `actions/cache` v6.1.0, the APE + Clex fork bases (= upstream HEAD) = latest; drift = `actions/upload-artifact` v7.0.1 → v7.0.2, `actions/download-artifact` v8.0.1 → v8.0.2, runner `ubuntu-24.04` → `ubuntu-26.04` (GA, runner-images #14747), SWI-Prolog 9.2.9 → 10.0.2 (major), Node 24.22.1 → 26.12.1 (major; Current line), Python 3.13 → 3.15; held = syn 3.0.9, synstructure 0.14.0, convert_case 0.12.0 (`verus_builtin_macros` requires syn ^2.0, synstructure ^0.13.2, convert_case ^0.4).
+Request (user, MAINTAIN): upgrade every dependency + toolchain pin to its latest release; major bumps → changelog breaking changes vs our call sites; a held pin → `.agent/deferred.md` row naming its blocker. Census (`.scratch/deps/outdated.log` + MAIN's upstream checks): Verus 0.2026.10.18, Kani 0.68.0, every `tools.lock` row, the vstd family, `actions/checkout` v7.0.1 + `actions/cache` v6.1.0, the APE + Clex fork bases (= upstream HEAD) = latest; drift = `actions/upload-artifact` v7.0.1 → v7.0.2, `actions/download-artifact` v8.0.1 → v8.0.2, runner `ubuntu-24.04` → `ubuntu-26.04` (GA, runner-images #14747), SWI-Prolog 9.2.9 → 10.0.2 (major), Node 24.22.1 → 26.12.1 (major; Current line), Python 3.13 → 3.15; held by their Verus or Kani release = syn 3.0.9, synstructure 0.14.0, convert_case 0.12.0 (`verus_builtin_macros` requires syn ^2.0, synstructure ^0.13.2, convert_case ^0.4) + the bundled Z3 4.16.0 (latest 5.3.1); Kani 0.68.0's bundled Kissat 4.0.1 (4.0.4), its installer lock's cfg-if 1.0.4 (1.0.5), libc 0.2.189 (0.2.191), objc2 0.6.4 (0.6.5), windows-link 0.2.1 (0.100.0) + its nightly-2026-08-21 (reviewer-1 F2); CBMC 6.11.0, Rust stable 1.99.1 = latest.
 
 ## Rulings
 
 - R1 (user, AskUserQuestion): SWI-Prolog 10.0.2 = the reference runtime, and `just outdated` tracks SWI drift — lifts contract `ci` R-ci2 (9.2.9 hold, container excluded from drift).
 - R2 (user, AskUserQuestion): Node 26.12.1 now; `outdated` reads node's newest release (replaces the newest-LTS rule).
-- R3 (MAIN): `brace_terms(true)` stays out of the writers — no `{}`/1 term reaches the fork's writers or `drs_dump.pl` (APE DRS + emission vocabulary; 0 pinned stderr bytes with a brace), so no gate could observe the option.
+- R3 (MAIN; narrowed on reviewer-1 F3): `brace_terms(true)` stays out of the writers — no `{}`/1 term reaches an admitted product, `drs_dump.pl`'s DRS or a committed fixture (APE DRS + emission vocabulary; 0 pinned bytes with a brace); a reject detail can carry one (a ulex row `noun_sg({a},a,neutr).` → `ape_messages` rc 1), which 10.0.2 spells `{}(a)` (9.2.9: `{a}`) = the same term in SWI 10's portable canonical form (PIP-0105), class + rc unchanged, error lines pinned per probe under the pinned runtime.
 
 ## Tier
 
@@ -25,7 +25,7 @@ UP2 SWI-Prolog 10.0.2 (R1)
 - P2 driver: `ace_to_pl.pl` `main`'s recovery lets `unwind(_)` pass (halt/1 raises `unwind(halt(S))` from 9.3.13; catch/3 rethrows it after the recovery goal) and keeps class `uncaught` rc 2 for every other exception. Red: HEAD's driver under 10.0.2, `ckc compile cdc-2022-opioid` → `ace_to_pl_error(uncaught,unwind(halt(0))).` rc 2. Green: fixed driver → `ckc: compile ok 382 documents`, guidelines/ byte-identical; a genuine uncaught exception (stdout write error) → `ace_to_pl_error(uncaught,…)` rc 2.
 - P3 byte stability under 10.0.2: `ckc compile` + `ckc queries` leave guidelines/ unchanged; `ckc check`, `ckc ui check`, `ckc certify` per guideline + `--cases`, `cargo test` (SWI-backed suites incl. `consumer_recipe`) green with every expected byte unchanged except the version pins.
 - P4 release record: `meta swipl 10.0.2` in ckc-spec `meta_block` + kernel `release_rows::meta` (Verus re-verifies), `release-manifest.tsv`, the `dist_cases` pin.
-- P5 writer deltas recorded, none reaching a committed byte: under `ignore_ops(true)` a `{}`/1 term prints `{}(a)` (swipl-devel e8783f23; R3); floats print shortest with a two-digit exponent (`10000.0` → `1.0e+04`, `1.0e-5` → `1.0e-05`) ⇒ REFERENCE's literal rule (a decimal APE writes with an exponent rejects) covers more spellings, fail-closed; every corpus + fixture float literal prints identically (probe); `variant_sha1/2` differs on compounds (the consumer driver compares within one runtime).
+- P5 writer deltas recorded, none reaching a committed byte: under `ignore_ops(true)` a `{}`/1 term prints `{}(a)` (swipl-devel e8783f23; reachable only in a reject detail, R3); floats print shortest with a two-digit exponent (`10000.0` → `1.0e+04`, `1.0e-5` → `1.0e-05`) ⇒ REFERENCE's literal rule (a decimal APE writes with an exponent rejects) covers more spellings, fail-closed; every corpus + fixture float literal prints identically (probe); `variant_sha1/2` differs on compounds (the consumer driver compares within one runtime).
 - P6 drift (R1): `just outdated` reports `swipl` (the recipe's version vs swi-prolog.org's latest stable) + `swipl-image` (the ci.yml container digest vs Docker Hub's digest of that latest version's tag); `recipes.rs`: a newer upstream → drift rc 1, equal → ok, a failed answer → rc 2, each with its planted pre-rule form slipping through.
 - P7 text: README, REFERENCE, ops.md, rust.md, CLAUDE.local.md, the `probe-pins` docstring + the v1text escape-pin comment (re-probed: ASCII 0–127 escapes identical) name 10.0.2.
 
@@ -39,8 +39,8 @@ UP4 Python 3.15
 - P1 `.python-version` + the `swipl` recipe's shim = 3.15.
 - P2 `.agent/archive/generators/replay` 6/6 identical + `verus-issues.py` output byte-identical, 3.15.1 vs 3.13.17.
 
-UP5 held crates
-- P1 one `.agent/deferred.md` row naming each held crate + `verus_builtin_macros`' requirement on it (one blocker, one acceptance check); Accept = a Verus bump whose macros admit the newer version.
+UP5 held components
+- P1 one `.agent/deferred.md` row per upstream blocker: Verus (the crates `verus_builtin_macros`' requirements hold + the bundled Z3) and Kani (bundled Kissat, the installer lock's crates, its nightly); each names every held component + its latest + the acceptance check.
 
 ## Gate identity
 
