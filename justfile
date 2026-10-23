@@ -114,7 +114,7 @@ tools:
     echo "tools: ok rustc=$tc verus=$(lock verus_release) $(awk -F'\t' 'NR>1{printf "%s=%s ", $1, $2}' "{{ ROOT }}/rust/tools.lock")"
 
 # The swipl shim shadows any system copy; CI's corpus jobs run the digest-pinned swipl:10.0.2 container,
-# its rust job this recipe. Shims: swipl → this prefix, python3 → uv cpython 3.13 where uv supplies it
+# its rust job this recipe. Shims: swipl → this prefix, python3 → uv cpython 3.15 where uv supplies it
 # (scratch + archived migration scripts only); .pin = tarball sha256. 10.0 names the xpce package set GUI.
 # SWI-Prolog 10.0.2: digest-verified source build into the toolchain dir (idempotent).
 swipl:
@@ -137,7 +137,7 @@ swipl:
         printf '%s\n' "$sha" > "$P/.pin"
     fi
     ln -sfn "../swipl-$v/bin/swipl" "$T/bin/swipl"
-    if py=$(uv python find 3.13 2>/dev/null); then ln -sfn "$py" "$T/bin/python3"; fi
+    if py=$(uv python find 3.15 2>/dev/null); then ln -sfn "$py" "$T/bin/python3"; fi
     # Probes run as assignments: set -e ignores a failed command substitution inside an argument.
     ver=$("$T/bin/swipl" --version)
     echo "swipl: ok $ver"

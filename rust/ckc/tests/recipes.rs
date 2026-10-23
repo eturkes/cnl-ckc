@@ -297,7 +297,7 @@ fn swipl_version_probe_fails_the_recipe() {
         "the planted pre-fix swipl recipe no longer slips through: {}",
         show(&out)
     );
-    // A uv that supplies no CPython 3.13 (the CI runner has no uv): swipl installs, python3 stays unlinked.
+    // A uv that supplies no CPython 3.15 (the CI runner has no uv): swipl installs, python3 stays unlinked.
     let fx = Fixture::new(&s, "no-python", &text);
     let prefix = fx.toolchain.join(format!("swipl-{version}"));
     put(&prefix.join(".pin"), format!("{pin}\n"));
