@@ -93,10 +93,14 @@ fn derive() -> Result<Chrome> {
     let code = between(&page, "<script>", "</script>")?;
     let script = format!("<script>{code}</script>");
     let hash = base64(&Sha256::digest(code.as_bytes()));
+    // default-src governs fetches only; framing (clickjacking of the decision
+    // form), form targets and <base> each need their own directive.
     Ok(Chrome {
         css,
         script,
-        csp: format!("default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-{hash}'"),
+        csp: format!(
+            "default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-{hash}'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        ),
     })
 }
 pub(super) fn canonical() -> Result<&'static Chrome> {

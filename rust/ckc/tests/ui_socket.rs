@@ -87,6 +87,22 @@ fn contains(haystack: &[u8], needle: &[u8]) -> bool {
     haystack.windows(needle.len()).any(|w| w == needle)
 }
 
+// default-src covers fetches only: framing (clickjacking of the decision form),
+// form targets + <base> need their own directives (SEC F1).
+fn hardened(response: &Response, what: &str) {
+    let csp = response.header("Content-Security-Policy");
+    for directive in [
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "base-uri 'none'",
+    ] {
+        assert!(
+            csp.split("; ").any(|d| d == directive),
+            "{what}: CSP lacks {directive}: {csp}"
+        );
+    }
+}
+
 struct Response {
     status: u16,
     headers: Vec<(String, String)>,
@@ -304,17 +320,16 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
         page.header("Content-Security-Policy")
             .starts_with("default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-")
     );
+    hardened(&page, page_path);
     for path in [
         "/",
         "/g/alpha/",
         "/g/alpha/records.html",
         "/g/alpha/source/evidence.txt",
     ] {
-        assert_eq!(
-            http(port, "GET", path, &[], b"").unwrap().status,
-            200,
-            "{path}"
-        );
+        let response = http(port, "GET", path, &[], b"").unwrap();
+        assert_eq!(response.status, 200, "{path}");
+        hardened(&response, path);
     }
     let cli = run(
         &[
@@ -351,6 +366,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
     let before = inventory(&guidelines);
     let foreign = http(port, "GET", page_path, &[("Host", "foreign.invalid")], b"").unwrap();
     assert_eq!(foreign.status, 403);
+    hardened(&foreign, "foreign Host 403");
     assert!(
         inventory(&guidelines) == before,
         "a refused request writes nothing"
@@ -375,6 +391,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
         (accepted.status, accepted.header("Location")),
         (303, page_path)
     );
+    hardened(&accepted, "decision 303");
     let ledger = guidelines.join("alpha/audit/adjudication.tsv");
     let after = fs::read(&ledger).unwrap();
     let rows = |b: &[u8]| -> Vec<Vec<u8>> {

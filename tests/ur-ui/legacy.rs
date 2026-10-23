@@ -6,6 +6,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 const OLD_CSP: &str = "ceqWjP6N4e7DIvYMclbfnBzryu3YAwfoDBRiNcC8+hw=";
+// Later recorded migration: SEC5 (security review F1) appends three CSP
+// directives; the replay runs its script after the D10 one.
+const SEC5_CSP: &str = "; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 const PRINT_END: &str =
     ".chip { border: 1px solid #111827; background: none; color: inherit; }\n}\n</style>";
 
@@ -107,10 +110,12 @@ fn repin_csp(value: &str, new_script: &str) -> String {
     let (head, body) = value
         .split_once("\n\n")
         .expect("baseline response boundary");
-    assert!(head.contains(OLD_CSP), "baseline response CSP anchor");
+    let anchor = format!("'sha256-{OLD_CSP}'");
+    assert!(head.contains(&anchor), "baseline response CSP anchor");
+    let hash = base64(&Sha256::digest(new_script.as_bytes()));
     format!(
         "{}\n\n{body}",
-        head.replacen(OLD_CSP, &base64(&Sha256::digest(new_script.as_bytes())), 1)
+        head.replacen(&anchor, &format!("'sha256-{hash}'{SEC5_CSP}"), 1)
     )
 }
 
@@ -466,6 +471,16 @@ fn p7_golden_migration_is_complete_bounded_and_idempotent() {
                     out.status.code(),
                     String::from_utf8_lossy(&out.stderr)
                 ),
+            );
+            let sec5 = root().join(".agent/archive/migrations/sec5-csp-repin.py");
+            let out = command(
+                Path::new("python3"),
+                &base.0,
+                &["-I", sec5.to_str().unwrap(), base.0.to_str().unwrap()],
+            );
+            c.require(
+                out.status.success(),
+                format!("P7 SEC5 migration pass {pass}: rc={:?}", out.status.code()),
             );
             let after = files(&ui);
             compare_migration(

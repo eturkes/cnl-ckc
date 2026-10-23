@@ -278,7 +278,9 @@ bytes before the rename, so the gate and the interface cannot drift
 apart. Pages carry one fixed script, which
 drives the click emphasis on highlights and the line of word readings. The `Content-Security-Policy`
 header names that script by hash, so the browser runs no other
-script, and the page check rejects any other script element.
+script, and the page check rejects any other script element. The same
+header forbids other sites to show the pages inside a frame, and it
+lets the form send a decision to the interface only.
 
 Reviewer names are self-asserted and are not verified. A decision is
 current when the document still matches the version it was recorded

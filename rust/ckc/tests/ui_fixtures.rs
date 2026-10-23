@@ -606,7 +606,7 @@ fn design_case(name: &str) {
             let (headers, body) = response.split_once("\n\n").unwrap();
             assert!(headers.starts_with("HTTP 200\n"), "{label}: HTTP status");
             let csp = format!(
-                "Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-{}'",
+                "Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-{}'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
                 base64(&Sha256::digest(script.as_bytes()))
             );
             assert_eq!(
