@@ -480,7 +480,7 @@ impl Compiler {
     fn new(scratch: &Path) -> Self {
         let version = command(Path::new("swipl"), scratch, &["--version"], "");
         version.require_ok("SWI pin");
-        assert!(version.stdout.contains("version 9.2.9 "));
+        assert!(version.stdout.contains("version 10.0.2 "));
         let stage = scratch.join("ape");
         copy_tree(&root().join("vendor/ape"), &stage);
         fs::copy(

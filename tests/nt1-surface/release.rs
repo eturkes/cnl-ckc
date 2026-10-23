@@ -100,7 +100,7 @@ fn check_results() -> &'static BTreeMap<&'static str, Run> {
         let scratch=Scratch::new("schema-check");let head=git(&root(),&["rev-parse","HEAD"]);
         git(&scratch.0,&["clone","-q","--shared","--no-checkout",root().to_str().unwrap(),"tree"]);
         let tree=scratch.0.join("tree");git(&tree,&["checkout","-q","--detach",head.trim()]);
-        let swipl=scratch.0.join("stop-before-ape");write(&swipl,"#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 9.2.9 for x86_64-linux'; exit 0; }\necho 'nt1 fixture: reached APE stage' >&2\nexit 39\n");
+        let swipl=scratch.0.join("stop-before-ape");write(&swipl,"#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 10.0.2 for x86_64-linux'; exit 0; }\necho 'nt1 fixture: reached APE stage' >&2\nexit 39\n");
         fs::set_permissions(&swipl,fs::Permissions::from_mode(0o755)).unwrap();
         let mut results=BTreeMap::new();
         for mutation in ["regular","absent","stale","symlink","directory","extra"] {
@@ -293,7 +293,7 @@ fn p7_archive_literal_load_line_answers_numeric_query() {
     assert!(schema_at < document_at);
     let version = command(Path::new("swipl"), &bag, &["--version"], "");
     version.require_ok("SWI release smoke pin");
-    assert!(version.stdout.contains("version 9.2.9 "));
+    assert!(version.stdout.contains("version 10.0.2 "));
     // Keep the published line literal; isolate startup files in the shell function.
     let script = format!("swipl() {{ command swipl -f none -F none \"$@\"; }}; {load}");
     let query = "(guideline_property(actual,p,eligible,pos), guideline_satisfies(exactly,18,month,geq,1,year), \\+ guideline_satisfies(exactly,45,day,geq,1,month) -> writeln(nt1_numeric_load_ok), halt(0) ; halt(7)).\n";

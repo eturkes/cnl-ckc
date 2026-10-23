@@ -354,7 +354,7 @@ fn a2_check_scope_key_path_and_row_meter() {
     let stop = scratch.0.join("swipl-stop");
     write(
         &stop,
-        "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 9.2.9 for x86_64-linux'; exit 0; }\necho 'cs1-surface: table stage passed' >&2\nexit 3\n",
+        "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 10.0.2 for x86_64-linux'; exit 0; }\necho 'cs1-surface: table stage passed' >&2\nexit 3\n",
     );
     fs::set_permissions(&stop, fs::Permissions::from_mode(0o755)).unwrap();
     let mut checks = Checks::default();
