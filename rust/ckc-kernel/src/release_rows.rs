@@ -444,7 +444,7 @@ pub fn meta(schema: &[u8], compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
     append(&mut r, lexicon);
     append(
         &mut r,
-        b"\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
+        b"\nmeta\tswipl\t10.0.2\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
     );
     proof {
         reveal_byteslit(b"meta\tcompiler\t");
@@ -452,10 +452,10 @@ pub fn meta(schema: &[u8], compiler: &[u8], lexicon: &[u8]) -> (r: Vec<u8>)
         reveal_byteslit(b"\nmeta\tbase-lexicon\t");
         reveal_strlit("\nmeta\tbase-lexicon\t");
         reveal_byteslit(
-            b"\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
+            b"\nmeta\tswipl\t10.0.2\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
         );
         reveal_strlit(
-            "\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
+            "\nmeta\tswipl\t10.0.2\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n",
         );
         reveal(ascii);
     }

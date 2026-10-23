@@ -113,14 +113,14 @@ tools:
     fi
     echo "tools: ok rustc=$tc verus=$(lock verus_release) $(awk -F'\t' 'NR>1{printf "%s=%s ", $1, $2}' "{{ ROOT }}/rust/tools.lock")"
 
-# The system swipl is too new; CI's corpus jobs run the digest-pinned swipl:9.2.9 container, its rust
-# job this recipe. Shims: swipl → this prefix, python3 → uv cpython 3.13 where uv supplies it (scratch +
-# archived migration scripts only); .pin = tarball sha256.
-# SWI-Prolog 9.2.9: digest-verified source build into the toolchain dir (idempotent).
+# The swipl shim shadows any system copy; CI's corpus jobs run the digest-pinned swipl:10.0.2 container,
+# its rust job this recipe. Shims: swipl → this prefix, python3 → uv cpython 3.13 where uv supplies it
+# (scratch + archived migration scripts only); .pin = tarball sha256. 10.0 names the xpce package set GUI.
+# SWI-Prolog 10.0.2: digest-verified source build into the toolchain dir (idempotent).
 swipl:
     #!/usr/bin/env bash
     set -euo pipefail
-    T="{{ TOOLCHAIN }}"; v=9.2.9; sha=53f428e2d9bbdf30e53b06c9c42def9a13ff82fc36a111d410fc8b0bc889ee2d
+    T="{{ TOOLCHAIN }}"; v=10.0.2; sha=e42cc098f7b8a6051c4f79a99b55162d467098aba60f69649bdc7583f0734b57
     P="$T/swipl-$v"; tgz="$T/dl/swipl-$v.tar.gz"; mkdir -p "$T/dl" "$T/bin"
     if [ ! -x "$P/bin/swipl" ] || [ "$(cat "$P/.pin" 2>/dev/null)" != "$sha" ]; then
         printf '%s  %s\n' "$sha" "$tgz" | sha256sum -c --quiet >/dev/null 2>&1 \
@@ -131,7 +131,7 @@ swipl:
         step() { log=$1; shift; "$@" > "$b/$log" 2>&1 || { tail -n 30 "$b/$log" >&2; exit 1; }; }
         step cmake.log cmake -S "$b/swipl-$v" -B "$b/build" -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$P" -DINSTALL_DOCUMENTATION=OFF \
-            -DSWIPL_PACKAGES_JAVA=OFF -DSWIPL_PACKAGES_X=OFF -DSWIPL_PACKAGES_ODBC=OFF
+            -DSWIPL_PACKAGES_JAVA=OFF -DSWIPL_PACKAGES_GUI=OFF -DSWIPL_PACKAGES_ODBC=OFF
         step build.log ninja -C "$b/build"
         rm -rf "$P"; step install.log ninja -C "$b/build" install
         printf '%s\n' "$sha" > "$P/.pin"
@@ -386,7 +386,7 @@ build:
     cd "{{ ROOT }}/rust" && cargo build --release --locked --offline -q
     @echo "gate: build ok"
 
-# The swipl:9.2.9 image (Debian glibc 2.36) cannot load the runner's glibc-2.43 build.
+# The swipl:10.0.2 image (Debian glibc 2.36) cannot load the runner's glibc-2.43 build.
 # Static musl ckc = the binary of the CI container jobs.
 build-static:
     #!/usr/bin/env bash
@@ -456,10 +456,11 @@ workflows:
 outdated:
     #!/usr/bin/env bash
     set -uo pipefail
-    R="{{ env('CKC_OUTDATED_ROOT', ROOT) }}/rust"
+    O="{{ env('CKC_OUTDATED_ROOT', ROOT) }}"; R="$O/rust"
     pins=0 drift=0 held=0 errors=0
-    for f in Cargo.toml Cargo.lock ckc-kani-harness/Cargo.toml ckc-kani-harness/Cargo.lock tools.lock verus.lock kani.lock; do
-        [ -s "$R/$f" ] || { echo "outdated: missing $R/$f" >&2; exit 2; }
+    for f in rust/Cargo.toml rust/Cargo.lock rust/ckc-kani-harness/Cargo.toml rust/ckc-kani-harness/Cargo.lock \
+        rust/tools.lock rust/verus.lock rust/kani.lock justfile .github/workflows/ci.yml; do
+        [ -s "$O/$f" ] || { echo "outdated: missing $O/$f" >&2; exit 2; }
     done
     tok="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
     get() { curl -sSfL --retry 3 --max-time 60 -A 'cnl-ckc-outdated (https://github.com/eturkes/cnl-ckc)' "$@"; }
@@ -484,6 +485,20 @@ outdated:
     report verus "$(lockval verus.lock verus_release)" "$(latest_tag verus-lang/verus)"
     for k in rustc_toolchain z3_version; do printf '%s\t%s\t-\tfollows verus\n' "$k" "$(lockval verus.lock "$k")"; done
     report kani "$(lockval kani.lock kani_version)" "$(latest_tag model-checking/kani | sed 's/^kani-//')"
+    # SWI-Prolog (user ruling: drift tracked) = the swipl recipe's version vs swi-prolog.org's latest
+    # stable (the 303 that `swipl-latest.tar.gz` answers), and the CI container's `version@digest` (one
+    # value across its jobs) vs Docker Hub's digest of that latest version's tag.
+    sv=$(grep -oE 'v=[0-9.]+; sha=[0-9a-f]{64}' "$O/justfile" | head -n 1 | sed 's/^v=//; s/;.*//')
+    sl=$(get -I https://www.swi-prolog.org/download/stable/src/swipl-latest.tar.gz | tr -d '\r' \
+        | sed -n 's|^[Ll]ocation: .*/swipl-\([0-9][0-9.]*\)\.tar\.gz$|\1|p' | tail -n 1) || sl=
+    report swipl "${sv:-?}" "${sv:+$sl}"
+    img=$(grep -oE 'docker\.io/library/swipl:[0-9.]+@sha256:[0-9a-f]{64}' "$O/.github/workflows/ci.yml" \
+        | sed 's|^docker\.io/library/swipl:||' | sort -u | paste -sd' ' -)
+    hub=
+    if [ -n "$sl" ] && [[ "$img" =~ ^[0-9.]+@sha256:[0-9a-f]{64}$ ]]; then
+        hub=$(get "https://hub.docker.com/v2/repositories/library/swipl/tags/$sl" | jq -r '.digest // empty') || hub=
+    fi
+    report swipl-image "${img:-?}" "${hub:+$sl@$hub}"
     while IFS=$'\t' read -r tool version asset sha url; do
         [ "$tool" = tool ] && continue
         case "$url" in

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Regenerates tests/certify-one/ (contract n25 D1) from the ACE texts below, deterministically:
-# SWI 9.2.9 (`.toolchain/bin` on PATH) + vendor/ape + clex → each case's compiled pl + its DRS
+# SWI 10.0.2 (`.toolchain/bin` on PATH) + vendor/ape + clex → each case's compiled pl + its DRS
 # dump (rust/ckc/prolog/drs_dump.pl, no ulex) + the accepted `ckc certify-one` stdout.
 # Usage: .agent/archive/generators/certify-one-fixtures <repo-root> [<ckc-binary>] → rerun = no change.
 set -euo pipefail

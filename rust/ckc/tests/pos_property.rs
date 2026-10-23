@@ -125,7 +125,7 @@ impl Compiler {
             next: AtomicUsize::new(0),
         });
         let version = run(&compiler.scratch, &["--version".into()], "");
-        assert!(success("SWI pin", &version).contains("version 9.2.9 "));
+        assert!(success("SWI pin", &version).contains("version 10.0.2 "));
         copy_tree(&root().join("vendor/ape"), &compiler.stage);
         if let Some(path) = std::env::var_os("CKC_POS_PROPERTY_COMPILER") {
             fs::copy(path, compiler.stage.join("prolog/ace_to_pl.pl")).unwrap();

@@ -136,7 +136,7 @@ compiler base:
      review-manifest freshness against a full re-derivation, then
      adjudication-ledger validation with its verdict meter; lexicon
      liveness and minimality; the schema's product vocabulary;
-  4. verifies that the resolved SWI-Prolog is exactly 9.2.9;
+  4. verifies that the resolved SWI-Prolog is exactly 10.0.2;
   5. recompiles every guideline twice (byte-determinism);
   6. compares the recompile against the committed Prolog (freshness);
   7. load-checks every compiled document;
@@ -160,11 +160,11 @@ compiler base:
 
 ## Running
 
-The pipeline requires SWI-Prolog 9.2.9 and the pinned Rust toolchain
+The pipeline requires SWI-Prolog 10.0.2 and the pinned Rust toolchain
 that `just tools` installs; `just build` writes the `ckc` program to
 `rust/target/release/ckc`. `SWIPL` names the SWI-Prolog program (default:
-`swipl` on `PATH`). CI pins the SWI 9.2.9 container and runs a
-statically linked `ckc` inside it. `just swipl` builds SWI-Prolog 9.2.9
+`swipl` on `PATH`). CI pins the SWI 10.0.2 container and runs a
+statically linked `ckc` inside it. `just swipl` builds SWI-Prolog 10.0.2
 from source into the toolchain directory. The recipe verifies the source
 archive against its pinned SHA-256 digest. It skips the build when the
 installed copy came from that archive.
@@ -585,7 +585,7 @@ when the facts of a patient make the rules apply. For example, plain
 left-to-right search over the CDC documents and a patient of three
 sentences does not finish the list of every "should" statement. It does
 answer the two dose questions of the gate, whether an opioid dosage
-includes at least 50 or exactly 60 MME per day. With the declaration, SWI-Prolog 9.2.9 lists
+includes at least 50 or exactly 60 MME per day. With the declaration, SWI-Prolog 10.0.2 lists
 every "should" statement that the composition derives in seconds, and
 gives each committed question its committed answer. Some rules derive an
 entity of their own, such as a patient in their conclusion, so a
@@ -600,7 +600,7 @@ patient world of `tests/queries/green/dose-arithmetic`: it evaluates
 each composition again with `tnot/1` in place of `\+`, under the
 well-founded semantics, and requires the same answers and no undefined
 answer. A composition that you extend needs the same check. The gate
-runs this recipe in SWI-Prolog 9.2.9. Other engines are not tested.
+runs this recipe in SWI-Prolog 10.0.2. Other engines are not tested.
 
 The engine of this repository searches without tabling. It answers the
 committed questions and the two dose questions of the gate. A
@@ -958,7 +958,7 @@ declaration names them. The verified engine evaluates them, and
 engine gives exact results when its integers can hold the absolute value
 of each numerator and each numerator multiplied by the other count's
 denominator and by 604800, the number of seconds in one week. SWI-Prolog
-9.2.9 has unbounded integers. A consumer loads that file with the
+10.0.2 has unbounded integers. A consumer loads that file with the
 documents. `ckc compile` writes the
 file, `ckc check` rejects a missing or stale copy, and the release
 archive ships it. A built-in call with an argument of another shape
@@ -1009,7 +1009,7 @@ The verified kernel proves that a derived result never excludes a true
 product or quotient of input values (the theorem `arith_result_sound`). `guidelines/schema.pl` states the same
 built-ins in ISO Prolog; a consumer loads it with the documents. The
 results are exact when the integers of the engine can hold every
-intermediate integer, absolute values and products included. SWI-Prolog 9.2.9 has unbounded integers.
+intermediate integer, absolute values and products included. SWI-Prolog 10.0.2 has unbounded integers.
 
 An emitted rule can feed its own condition. Plain left-to-right Prolog
 then searches without end, and the engine of this repository stops at its

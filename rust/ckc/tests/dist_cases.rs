@@ -1312,7 +1312,7 @@ fn validate_bag(
                     "base-lexicon",
                     digest(&repo.show("vendor/clex/clex_lexicon.pl")?)?,
                 ),
-                ("swipl", "9.2.9".to_owned()),
+                ("swipl", "10.0.2".to_owned()),
                 (
                     "verify",
                     "sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt".to_owned(),

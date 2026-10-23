@@ -3,7 +3,7 @@
 `ckc check` replays them: a full-Clex stage (check/process.rs `stage`), the argv of
 check/red.rs `tail` (docid `red-probe` | the green stem), red pin = stderr, green pin =
 stdout, `<stem>.proof.expect` = stdout of the same argv + `proof`.
-Usage: .agent/archive/generators/probe-pins <repo-root> [--check]   (swipl 9.2.9 on PATH)
+Usage: .agent/archive/generators/probe-pins <repo-root> [--check]   (swipl 10.0.2 on PATH)
 --check = compare only; rc 1 + one `differs <pin>` line per stale pin.
 """
 import shutil

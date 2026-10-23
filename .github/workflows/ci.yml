@@ -78,8 +78,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libarchive-dev libdb-dev libedit-dev \
-            libgmp-dev libossp-uuid-dev libpcre2-dev libreadline-dev libssl-dev libyaml-dev \
-            libncurses-dev zlib1g-dev
+            libgmp-dev libossp-uuid-dev libpcre2-dev libssl-dev libyaml-dev libncurses-dev \
+            zlib1g-dev
 
       - name: Install SWI-Prolog (just swipl)
         run: just swipl
@@ -109,7 +109,7 @@ jobs:
     needs: rust
     runs-on: ubuntu-26.04
     container:
-      image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
+      image: docker.io/library/swipl:10.0.2@sha256:83f308504932364dd1b0a33d927f69ce0df35dfcdaf377308166f8cc41425913
     steps:
       # procps = /bin/kill: `ckc check` kills a timed-out subprocess group with it
       # (its wall-clock probe always does); the image ships no kill binary.
@@ -132,7 +132,7 @@ jobs:
           set -eu
           out=$(swipl --version)
           printf '%s\n' "$out"
-          printf '%s\n' "$out" | grep -Fq "SWI-Prolog version 9.2.9 "
+          printf '%s\n' "$out" | grep -Fq "SWI-Prolog version 10.0.2 "
 
       - name: Verify SWI-Prolog crypto SHA-256
         run: |
@@ -177,7 +177,7 @@ jobs:
     needs: rust
     runs-on: ubuntu-26.04
     container:
-      image: docker.io/library/swipl:9.2.9@sha256:3e4b85b16f1e269c8a3ce3d968c843aa4cd858f7ace2db49398ec9a2b113bf0f
+      image: docker.io/library/swipl:10.0.2@sha256:83f308504932364dd1b0a33d927f69ce0df35dfcdaf377308166f8cc41425913
     steps:
       - name: Install job tooling
         run: |

@@ -205,7 +205,7 @@ impl Compiler {
         let scratch = Scratch::new("stage");
         let version = run(Path::new("swipl"), &scratch.0, &["--version"], b"");
         version.require_ok("SWI pin");
-        assert!(version.stdout.contains("version 9.2.9 "));
+        assert!(version.stdout.contains("version 10.0.2 "));
         let stage = scratch.0.join("ape");
         copy_tree(&root().join("vendor/ape"), &stage);
         fs::copy(

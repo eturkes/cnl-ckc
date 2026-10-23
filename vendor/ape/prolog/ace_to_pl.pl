@@ -114,7 +114,15 @@ main :-
     stream_property(ErrorStream, alias(user_error)),
     catch(run(Input, Output, ErrorStream),
         Error,
-        emit_error(ErrorStream, uncaught, Error, 2)).
+        uncaught(ErrorStream, Error)).
+
+/* halt/1 inside run/3 raises unwind(halt(Status)) (SWI-Prolog >= 9.3.13),
+   which catch/3 rethrows once the recovery goal ends: the recovery stays
+   silent, so the halt completes with its own status. */
+uncaught(_, unwind(_)) :-
+    !.
+uncaught(ErrorStream, Error) :-
+    emit_error(ErrorStream, uncaught, Error, 2).
 
 run(Input, Output, ErrorStream) :-
     prompt(_, ''),

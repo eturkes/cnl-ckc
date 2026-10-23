@@ -159,7 +159,7 @@ impl Compiler {
     fn new(scratch: &Path) -> Self {
         let version = command(Path::new("swipl"), scratch, &["--version".into()], b"");
         assert!(
-            version.ok() && version.stdout.contains("version 9.2.9 "),
+            version.ok() && version.stdout.contains("version 10.0.2 "),
             "SWI pin: {}",
             version.describe()
         );

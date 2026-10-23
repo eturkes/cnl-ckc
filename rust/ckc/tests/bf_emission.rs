@@ -115,7 +115,7 @@ impl Compiler {
             next: AtomicUsize::new(0),
         });
         let version = run(Path::new("swipl"), &c.scratch, &["--version".into()], "");
-        assert!(success("SWI pin", &version).contains("version 9.2.9 "));
+        assert!(success("SWI pin", &version).contains("version 10.0.2 "));
         copy_tree(&root().join("vendor/ape"), &c.stage);
         if let Some(file) = std::env::var_os("CKC_BF_COMPILER") {
             fs::copy(file, c.stage.join("prolog/ace_to_pl.pl")).unwrap();

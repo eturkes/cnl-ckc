@@ -12,8 +12,8 @@ verus! {
 // ruling R21 (no float literals) and ruling R22 (atoms holding any byte
 // >= 0x80 spell quoted, the bytes raw inside the quotes; SWI's own
 // unicode bare/escape classes stay outside the verified surface).
-// Escape spellings are live-probe pins from swipl 9.2.9
-// (.scratch/m5u2/spec-probes/): named \a..\r for 0x07-0x0D, \uXXXX
+// Escape spellings are live-probe pins from swipl 10.0.2 (every ASCII
+// byte inside a quoted atom): named \a..\r for 0x07-0x0D, \uXXXX
 // (4 uppercase hex) for other ASCII control bytes + 0x7F, backslash and
 // quote escaped, every other byte raw. UTF-8 validity of the whole file
 // is checked at the shell boundary, before the kernel sees bytes.

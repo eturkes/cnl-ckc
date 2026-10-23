@@ -109,7 +109,7 @@ program, its formal specification, and its proofs.
 The project supports Linux on x86-64.
 
 1. Install Git, curl, tar, unzip, and a C linker (`cc`).
-2. Install SWI-Prolog 9.2.9. The project pins that exact version.
+2. Install SWI-Prolog 10.0.2. The project pins that exact version.
    `docs/REFERENCE.md` states the build recipe.
 3. Install `just`. Use your package manager, or the release that
    `rust/tools.lock` records.

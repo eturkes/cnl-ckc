@@ -245,10 +245,10 @@ pub(super) fn swipl() -> Result<PathBuf> {
         .split(super::text::space)
         .filter(|s| !s.is_empty())
         .collect();
-    if words.len() < 3 || words[..3] != ["SWI-Prolog", "version", "9.2.9"] {
+    if words.len() < 3 || words[..3] != ["SWI-Prolog", "version", "10.0.2"] {
         return Err(fail(
             "swipl-version",
-            format!("expected 9.2.9, found: {}", super::text::strip(&text)),
+            format!("expected 10.0.2, found: {}", super::text::strip(&text)),
         ));
     }
     Ok(path)

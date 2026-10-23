@@ -276,7 +276,7 @@ impl CheckTree {
         let swipl = dir.join("swipl-stop");
         write(
             &swipl,
-            "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 9.2.9 for x86_64-linux'; exit 0; }\necho 'c1-surface: stage reached' >&2\nexit 3\n",
+            "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 10.0.2 for x86_64-linux'; exit 0; }\necho 'c1-surface: stage reached' >&2\nexit 3\n",
         );
         fs::set_permissions(&swipl, fs::Permissions::from_mode(0o755)).unwrap();
         Self {

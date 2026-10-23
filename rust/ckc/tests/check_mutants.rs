@@ -503,7 +503,7 @@ fn check_scratch_leftover() {
     let swipl = scratch.0.join("swipl");
     fs::write(
         &swipl,
-        "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 9.2.9 for x86_64-linux'; exit 0; }\necho 'fake swipl: stage build' >&2\nexit 3\n",
+        "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 10.0.2 for x86_64-linux'; exit 0; }\necho 'fake swipl: stage build' >&2\nexit 3\n",
     )
     .unwrap();
     fs::set_permissions(&swipl, fs::Permissions::from_mode(0o755)).unwrap();

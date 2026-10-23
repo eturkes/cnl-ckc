@@ -111,7 +111,7 @@ pub open spec fn schema_rows() -> Seq<u8> {
 pub open spec fn meta_block(schema: Seq<u8>, compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {
     schema + ascii("meta\tcompiler\t"@) + compiler + ascii("\nmeta\tbase-lexicon\t"@) + lexicon
         + ascii(
-        "\nmeta\tswipl\t9.2.9\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
+        "\nmeta\tswipl\t10.0.2\nmeta\tverify\tsha256sum -c manifest-sha256.txt tagmanifest-sha256.txt\nmeta\treplay\tcompile: ckc compile <guideline-id>\nmeta\treplay\tcheck: ckc check\nmeta\treplay\tload: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\nmeta\tgenerated\trelease-manifest.tsv\nmeta\tgenerated\tmanifest-sha256.txt\nmeta\tgenerated\ttagmanifest-sha256.txt\n"@,
     )
 }
 

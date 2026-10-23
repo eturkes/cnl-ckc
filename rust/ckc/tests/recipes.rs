@@ -243,18 +243,20 @@ fn recipe<'a>(text: &'a str, name: &str) -> &'a str {
     &body[..end]
 }
 
+// A `key=value` word of the swipl recipe (`v=`, `sha=`).
+fn swipl_field(text: &str, key: &str) -> String {
+    recipe(text, "swipl")
+        .split([' ', ';', '\n'])
+        .find_map(|w| w.strip_prefix(key))
+        .unwrap_or_else(|| panic!("swipl recipe holds no {key}"))
+        .to_owned()
+}
+
 #[test]
 fn swipl_version_probe_fails_the_recipe() {
     let s = scratch("swipl");
     let text = justfile();
-    let field = |key: &str| {
-        recipe(&text, "swipl")
-            .split([' ', ';', '\n'])
-            .find_map(|w| w.strip_prefix(key))
-            .unwrap_or_else(|| panic!("swipl recipe holds no {key}"))
-            .to_owned()
-    };
-    let (version, pin) = (field("v="), field("sha="));
+    let (version, pin) = (swipl_field(&text, "v="), swipl_field(&text, "sha="));
     let line = format!("SWI-Prolog version {version} for x86_64-linux");
     // The cached-prefix path: the pin matches, so the recipe skips the build.
     let case = |name: &str, justfile: &str, fails: bool| {
@@ -939,10 +941,51 @@ esac
 
 const REGISTRY: &str = "registry+https://github.com/rust-lang/crates.io-index";
 
+// The CI container digest of every `outdated` fixture.
+const IMAGE: &str = "6666666666666666666666666666666666666666666666666666666666666666";
+
+// Upstream SWI-Prolog for one `outdated` run: swi-prolog.org's latest stable + Docker Hub's
+// digest of that version's tag (None = no such tag).
+struct Swipl<'a> {
+    latest: &'a str,
+    digest: Option<&'a str>,
+}
+
 // One `outdated` run over a fixture tree: member ckc pins sha2 `=0.11.0` (held by ckc alone),
-// requires zlib-x `^1.0` (a newer major exists), and reaches syn through ext-macro.
-fn outdated_case(s: &Scratch, name: &str, justfile: &str, metadata_fails: bool) -> Output {
+// requires zlib-x `^1.0` (a newer major exists), and reaches syn through ext-macro; both CI
+// container jobs pin the swipl recipe's version at IMAGE.
+fn outdated_case(
+    s: &Scratch,
+    name: &str,
+    justfile: &str,
+    metadata_fails: bool,
+    swipl: Swipl,
+) -> Output {
     let fx = Fixture::new(s, name, justfile);
+    let image = format!(
+        "      image: docker.io/library/swipl:{}@sha256:{IMAGE}\n",
+        swipl_field(justfile, "v=")
+    );
+    put(&fx.root.join(".github/workflows/ci.yml"), image.repeat(2));
+    fx.route(
+        "https://www.swi-prolog.org/download/stable/src/swipl-latest.tar.gz",
+        format!(
+            "HTTP/2 303 \r\nlocation: /download/stable/src/swipl-{}.tar.gz\r\n\r\nHTTP/2 200 \r\n\r\n",
+            swipl.latest
+        ),
+    );
+    if let Some(digest) = swipl.digest {
+        fx.route(
+            &format!(
+                "https://hub.docker.com/v2/repositories/library/swipl/tags/{}",
+                swipl.latest
+            ),
+            format!(
+                r#"{{"name": "{}", "digest": "sha256:{digest}"}}"#,
+                swipl.latest
+            ),
+        );
+    }
     put_exec(&fx.mock.join("cargo"), CARGO);
     put_exec(&fx.mock.join("sleep"), "#!/usr/bin/env bash\nexit 0\n");
     let rust = fx.root.join("rust");
@@ -1059,28 +1102,37 @@ chrome-headless-shell\t155.0.8059.84\tchs.zip\t{}\thttps://storage.googleapis.co
 fn outdated_reports_a_crate_only_own_pins_hold_as_drift() {
     let s = scratch("outdated");
     let text = justfile();
-    let head = "verus\trelease/0.2026.10.04.426d8b0\trelease/0.2026.10.04.426d8b0\tok
+    let v = swipl_field(&text, "v=");
+    let current = || Swipl {
+        latest: &v,
+        digest: Some(IMAGE),
+    };
+    let head = format!(
+        "verus\trelease/0.2026.10.04.426d8b0\trelease/0.2026.10.04.426d8b0\tok
 rustc_toolchain\t1.97.1-x86_64-unknown-linux-gnu\t-\tfollows verus
 z3_version\t4.16.0\t-\tfollows verus
 kani\t0.68.0\t0.68.0\tok
+swipl\t{v}\t{v}\tok
+swipl-image\t{v}@sha256:{IMAGE}\t{v}@sha256:{IMAGE}\tok
 tool:just\t1.58.0\t1.58.0\tok
 tool:node\t24.22.0\t24.22.0\tok
 tool:chrome-headless-shell\t155.0.8059.84\t155.0.8059.84\tok
 crate:ext-macro\t1.0.0\t1.0.0\tok
-";
+"
+    );
     let tail = "crate:syn\t2.0.1\t3.0.0\theld\tby ext-macro 1.0.0
 crate:zlib-x\t1.0.0\t2.0.0\theld\tby ckc 0.1.0
 ";
-    let out = outdated_case(&s, "own-pin", &text, false);
+    let out = outdated_case(&s, "own-pin", &text, false, current());
     assert_eq!(out.status.code(), Some(1), "own pin: {}", show(&out));
     assert_eq!(
         String::from_utf8_lossy(&out.stdout),
         format!(
-            "{head}crate:sha2\t0.11.0\t0.11.1\tdrift\tpinned by ckc 0.1.0 (=0.11.0)\n{tail}outdated: 9 pins, 1 drift, 2 held, 0 errors\n"
+            "{head}crate:sha2\t0.11.0\t0.11.1\tdrift\tpinned by ckc 0.1.0 (=0.11.0)\n{tail}outdated: 11 pins, 1 drift, 2 held, 0 errors\n"
         )
     );
     // An unreadable member requirement set is an error, never a silent `held`.
-    let out = outdated_case(&s, "metadata-fails", &text, true);
+    let out = outdated_case(&s, "metadata-fails", &text, true, current());
     assert_eq!(out.status.code(), Some(2), "metadata fails: {}", show(&out));
     assert!(
         String::from_utf8_lossy(&out.stdout).contains("cargo-metadata:Cargo.toml\t-\t?\terror\n"),
@@ -1095,7 +1147,7 @@ crate:zlib-x\t1.0.0\t2.0.0\theld\tby ckc 0.1.0
             "",
         )],
     );
-    let out = outdated_case(&s, "own-pin-planted", &planted, false);
+    let out = outdated_case(&s, "own-pin-planted", &planted, false, current());
     assert_eq!(
         out.status.code(),
         Some(0),
@@ -1105,6 +1157,110 @@ crate:zlib-x\t1.0.0\t2.0.0\theld\tby ckc 0.1.0
     assert!(
         String::from_utf8_lossy(&out.stdout)
             .contains("crate:sha2\t0.11.0\t0.11.1\theld\tby ckc 0.1.0\n")
+    );
+}
+
+// SWI-Prolog drift (user ruling): the swipl recipe's version vs swi-prolog.org's latest stable,
+// the CI container's version@digest vs Docker Hub's digest of that version's tag. The fixture's
+// sha2 own pin always drifts, so the summary line carries the SWI share of the counts.
+#[test]
+fn outdated_reports_swipl_source_and_image_drift() {
+    let s = scratch("outdated-swipl");
+    let text = justfile();
+    let v = swipl_field(&text, "v=");
+    let newer = "99.0.1";
+    let other = "7".repeat(64);
+    let lines = |out: &Output| -> Vec<String> {
+        String::from_utf8_lossy(&out.stdout)
+            .lines()
+            .filter(|l| l.starts_with("swipl") || l.starts_with("outdated:"))
+            .map(str::to_owned)
+            .collect()
+    };
+    let out = outdated_case(
+        &s,
+        "newer",
+        &text,
+        false,
+        Swipl {
+            latest: newer,
+            digest: Some(&other),
+        },
+    );
+    assert_eq!(out.status.code(), Some(1), "newer: {}", show(&out));
+    assert_eq!(
+        lines(&out),
+        [
+            format!("swipl\t{v}\t{newer}\tdrift"),
+            format!("swipl-image\t{v}@sha256:{IMAGE}\t{newer}@sha256:{other}\tdrift"),
+            "outdated: 11 pins, 3 drift, 2 held, 0 errors".to_owned(),
+        ]
+    );
+    // Docker Hub rebuilt the pinned version's tag: the image alone drifts.
+    let out = outdated_case(
+        &s,
+        "rebuilt",
+        &text,
+        false,
+        Swipl {
+            latest: &v,
+            digest: Some(&other),
+        },
+    );
+    assert_eq!(
+        lines(&out),
+        [
+            format!("swipl\t{v}\t{v}\tok"),
+            format!("swipl-image\t{v}@sha256:{IMAGE}\t{v}@sha256:{other}\tdrift"),
+            "outdated: 11 pins, 2 drift, 2 held, 0 errors".to_owned(),
+        ]
+    );
+    // No Docker Hub tag for the latest release: an error, never ok.
+    let out = outdated_case(
+        &s,
+        "no-tag",
+        &text,
+        false,
+        Swipl {
+            latest: newer,
+            digest: None,
+        },
+    );
+    assert_eq!(out.status.code(), Some(2), "no tag: {}", show(&out));
+    assert_eq!(
+        lines(&out),
+        [
+            format!("swipl\t{v}\t{newer}\tdrift"),
+            format!("swipl-image\t{v}@sha256:{IMAGE}\t?\terror"),
+            "outdated: 11 pins, 2 drift, 2 held, 1 errors".to_owned(),
+        ]
+    );
+    // The pre-rule recipe reports no SWI row: a newer release passes unseen.
+    let planted = plant(
+        &text,
+        &[
+            ("    report swipl \"${sv:-?}\" \"${sv:+$sl}\"\n", ""),
+            (
+                "    report swipl-image \"${img:-?}\" \"${hub:+$sl@$hub}\"\n",
+                "",
+            ),
+        ],
+    );
+    let out = outdated_case(
+        &s,
+        "planted",
+        &planted,
+        false,
+        Swipl {
+            latest: newer,
+            digest: Some(&other),
+        },
+    );
+    assert_eq!(
+        lines(&out),
+        ["outdated: 9 pins, 1 drift, 2 held, 0 errors"],
+        "the planted pre-rule recipe no longer slips through: {}",
+        show(&out)
     );
 }
 
