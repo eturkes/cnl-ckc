@@ -42,6 +42,18 @@ Server, guard + ledger fixes = kernel-tier rigor (no downstream re-check): a red
 
 Each scoped commit: the fast gate of the steps it reaches (`ops.md`), then the full gate on that commit (`just ci <unit>`, else the pool form, else `just gate`). Close: `just gate` | `just ci sec` green on a clean tree; every `.agent/review.md` row adjudicated, ledger archived to `.agent/archive/review-sec.md`.
 
+## Rulings
+
+- R1 (user, AskUserQuestion ×2 + prose): other local accounts are in scope (F3); the fix = a per-launch session the browser receives from `ckc ui serve` itself, as a cookie — the reviewers (clinicians, not technical) must never see, copy or launch a secret string, and nothing may feel improvised; the secret-in-path variant was declined on that ground. Accepted residual (stated in the cookie option + MAIN's design note before the build; the user chose the cookie on UX grounds): browsers send a 127.0.0.1 cookie to every port, so another local account whose page the reviewer opens in the same browser can capture the session.
+- R2 (user): a published static `ckc` for reviewers → `.agent/deferred.md` row.
+- R3 (MAIN): F2 + F5 fold into the session unit: Host, session + method guards run before any snapshot work; with them, cross-site and rebound requests fail cheaply, so no Fetch-Metadata layer.
+
 ## Findings
 
-Appended per finding: id = its row, severity, `file:line`, red (test | repro + rc), fix, acceptance check.
+Per finding: id, rows, severity, `file:line`, red (test | repro + rc), fix, acceptance check.
+
+- F1 (A2, H3) medium — clickjacking: CSP `default-src 'none'; style-src 'unsafe-inline'; script-src …` (`rust/ckc/src/ui/chrome.rs:99`) sets no `frame-ancestors` and no `X-Frame-Options` is sent ⇒ any site frames the decision form (live token) and steers the reviewer's clicks into a forged verdict under their own name. Repro (pinned chrome-headless-shell, `.scratch/sec/frame-probe.mjs` over `ckc ui serve` of HEAD 3d824b36): a file:// page's iframe renders the document page with its form + 64-hex token, rc 0. Red: `ui_socket.rs` `hardened` → `CSP lacks frame-ancestors 'none'`, rc 101. Fix: + `base-uri 'none'; form-action 'self'; frame-ancestors 'none'`. Accept: `hardened` green on every response kind; the repro refuses the frame; golden headers re-pinned by script alone.
+- F2 (A2, E1, T-H) low — pre-guard cost: `respond` (`rust/ckc/src/ui/request.rs:319`) snapshots HEAD (`git archive` + intake) for every request and POST routes also run the fresh derivation (`request.rs:177`) before the kernel's Host + Origin guards ⇒ a web page (cross-site no-cors requests) or a DNS-rebound host keeps the single-threaded server busy (measured: refused POST 1.7 s, foreign-Host POST 1.2 s, GET 2.0 s at load 18). Fix: SEC7 pre-snapshot guards.
+- F3 (A3, D2, T-F1) medium — no local-account boundary: any process of any local account GETs a page (token in the form) and records a decision under any name. Fix: SEC7 session (R1).
+- F4 (A4, D2) low — world-readable snapshots: `Scratch::new` (`rust/ckc/src/ui/common.rs:72`) + the dist scratch (`rust/ckc/src/check/pipeline_release.rs:30`) create `/tmp` dirs 0755 (umask 022) holding the corpus + live ledger (uncommitted decisions + comments) while the repo's home is 0700. Fix: mode 0700.
+- F5 (E1, T-L, T-C) low — local-process exhaustion: an unbounded `Content-Length` body (`rust/ckc/src/ui/serve.rs:94`) + per-read 30 s timeouts (`serve.rs:150`) let a local process exhaust memory or hold the single thread. Fix: SEC7 (session before body read, body cap, request deadline).

@@ -55,9 +55,12 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [x] 7f9a46ce PR5 release-readiness verdict (MAIN: good milestone once PR0–PR7 land) + versioning rulings (Decisions Publication scope).
 - [x] 82cff19d PR6 binding-first emission (contract `bf`, kernel): compiled bodies run each goal whose referent a later goal binds after that goal → both engines answer targeted patient questions untabled; corpus + fixtures re-derived before the user's review.
 - [x] 0892e399 PR7 versioning + provenance policy per the rulings: REFERENCE § Export + Decisions Schema evolution post-publication rule, `CITATION.cff`, release-notes template; the prior-art survey archived beside its contract.
-- [ ] SEC1 security review check set (contract `sec`): threat model + severity + rows S1–P5 in `.agent/review.md`, committed before the manual pass reads code.
+- [x] 3d824b36 SEC1 security review check set (contract `sec`): threat model + severity + rows S1–P5 in `.agent/review.md`, committed before the manual pass reads code.
 - [ ] SEC2 committed scanners (rows S1–S5): `just deny`, `just secrets`, `just workflows` (offline + online), `just outdated`, per-stack scanner coverage.
 - [ ] SEC3 manual pass over remotely reachable code (rows I1–P5): every row adjudicated; each finding above informational = its own fix unit appended here; informational → `.agent/deferred.md`.
+- [ ] SEC5 F1 clickjacking (medium): reviewer CSP + `base-uri 'none'; form-action 'self'; frame-ancestors 'none'`; red `ui_socket.rs` `hardened`; goldens re-pinned by script.
+- [ ] SEC6 F4 world-readable snapshots (low): UI + dist scratch dirs mode 0700.
+- [ ] SEC7 F2 + F3 + F5 (kernel; R1, R3): per-launch session cookie that `ckc ui serve` hands the browser itself (no visible secret), Host + session + method guards before any snapshot, body cap + request deadline.
 - [ ] SEC4 close: ledger → `.agent/archive/review-sec.md`, contract archived, full gate green on a clean tree.
 - [ ] PR8 user review of the ACE corpus (reviewer interface) + the human-read spec `rust/ckc-spec/` (user; MAIN waits for the user's word).
 - [ ] PR9 release cut per REFERENCE § Releasing after PR8: closing gate + CI green on the pushed commit, `ckc dist build`, release notes, annotated tag `kb-YYYY-MM-DD`, `CITATION.cff` version/date/DOI (the push, the Zenodo deposit + the arXiv submission = the user's remote actions).
