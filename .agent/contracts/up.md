@@ -40,7 +40,7 @@ UP4 Python 3.15
 - P2 `.agent/archive/generators/replay` 6/6 identical + `verus-issues.py` output byte-identical, 3.15.1 vs 3.13.17.
 
 UP5 held crates
-- P1 one `.agent/deferred.md` row per held crate naming `verus_builtin_macros`' requirement; Accept = a Verus bump whose macros admit the newer version.
+- P1 one `.agent/deferred.md` row naming each held crate + `verus_builtin_macros`' requirement on it (one blocker, one acceptance check); Accept = a Verus bump whose macros admit the newer version.
 
 ## Gate identity
 
