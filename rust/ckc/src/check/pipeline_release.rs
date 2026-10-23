@@ -3,6 +3,7 @@ use super::process;
 use ckc_kernel::EMember;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
+use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -32,7 +33,7 @@ impl Scratch {
                 std::process::id(),
                 NEXT.fetch_add(1, Ordering::Relaxed)
             ));
-            match fs::create_dir(&path) {
+            match fs::DirBuilder::new().mode(0o700).create(&path) {
                 Ok(()) => return Ok(Self(path)),
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
                 Err(e) => return Err(error(format!("scratch: {e}"))),
@@ -516,4 +517,18 @@ pub(super) fn run() -> Result {
         plan.payload.len() + plan.tags.len()
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    // The release staging tree holds HEAD's guidelines, ledgers included (SEC F4).
+    #[test]
+    fn scratch_is_private() {
+        let scratch = Scratch::new().unwrap();
+        let mode = fs::metadata(&scratch.0).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o700, "{}", scratch.0.display());
+    }
 }

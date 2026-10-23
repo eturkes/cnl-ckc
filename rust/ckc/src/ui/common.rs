@@ -1,5 +1,6 @@
 use std::fs::{self, File};
 use std::io::Read;
+use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
 
 pub(super) type Result<T> = std::result::Result<T, String>;
@@ -69,7 +70,7 @@ impl Scratch {
         for _ in 0..32 {
             let nonce = random_hex(12).map_err(|e| format!("ui: temporary directory: {e}"))?;
             let path = std::env::temp_dir().join(format!("ckc-ui-{nonce}"));
-            match fs::create_dir(&path) {
+            match fs::DirBuilder::new().mode(0o700).create(&path) {
                 Ok(()) => return Ok(Self(path)),
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => (),
                 Err(e) => return Err(format!("ui: temporary directory: {e}")),
@@ -81,5 +82,20 @@ impl Scratch {
 impl Drop for Scratch {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    // The snapshot holds the live ledger (uncommitted decisions + comments) in the
+    // shared temp dir: other accounts must not read it (SEC F4).
+    #[test]
+    fn scratch_is_private() {
+        let scratch = Scratch::new().unwrap();
+        let mode = fs::metadata(&scratch.0).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o700, "{}", scratch.0.display());
     }
 }

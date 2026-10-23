@@ -58,7 +58,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [x] 3d824b36 SEC1 security review check set (contract `sec`): threat model + severity + rows S1–P5 in `.agent/review.md`, committed before the manual pass reads code.
 - [x] 86cc2173 SEC2 committed scanners (rows S1–S5): `just deny`, `just secrets`, `just workflows` (offline + online), `just outdated`, per-stack scanner coverage.
 - [ ] SEC3 manual pass over remotely reachable code (rows I1–P5): every row adjudicated; each finding above informational = its own fix unit appended here; informational → `.agent/deferred.md`.
-- [ ] SEC5 F1 clickjacking (medium): reviewer CSP + `base-uri 'none'; form-action 'self'; frame-ancestors 'none'`; red `ui_socket.rs` `hardened`; goldens re-pinned by script.
+- [x] 45537585 SEC5 F1 clickjacking (medium): reviewer CSP + `base-uri 'none'; form-action 'self'; frame-ancestors 'none'`; red `ui_socket.rs` `hardened`; goldens re-pinned by script.
 - [ ] SEC6 F4 world-readable snapshots (low): UI + dist scratch dirs mode 0700.
 - [ ] SEC7 F2 + F3 + F5 (kernel; R1, R3): per-launch session cookie that `ckc ui serve` hands the browser itself (no visible secret), Host + session + method guards before any snapshot, body cap + request deadline.
 - [ ] SEC4 close: ledger → `.agent/archive/review-sec.md`, contract archived, full gate green on a clean tree.
