@@ -15,6 +15,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub(super) struct Config {
     pub port: u16,
     pub token: Vec<u8>,
+    pub session: Vec<u8>,
     pub now: Vec<u8>,
     pub commit: Option<Vec<u8>>,
     pub fault: bool,
@@ -24,6 +25,7 @@ impl Config {
         Self {
             port,
             token: Vec::new(),
+            session: Vec::new(),
             now: Vec::new(),
             commit: None,
             fault: false,
@@ -41,6 +43,7 @@ pub(super) struct Response {
     pub media: &'static str,
     allow: Vec<u8>,
     location: Vec<u8>,
+    set_cookie: Vec<u8>,
 }
 impl Response {
     fn page(body: Vec<u8>) -> Self {
@@ -50,6 +53,7 @@ impl Response {
             media: "text/html; charset=utf-8",
             allow: Vec::new(),
             location: Vec::new(),
+            set_cookie: Vec::new(),
         }
     }
     pub fn headers(&self) -> Result<Vec<(&'static str, String)>> {
@@ -65,6 +69,9 @@ impl Response {
         }
         if !self.location.is_empty() {
             headers.push(("Location", text(&self.location)));
+        }
+        if !self.set_cookie.is_empty() {
+            headers.push(("Set-Cookie", text(&self.set_cookie)));
         }
         Ok(headers)
     }
@@ -88,6 +95,7 @@ impl From<EResponse> for Response {
             body: r.body,
             allow: r.allow,
             location: r.location,
+            set_cookie: r.set_cookie,
             media: "text/html; charset=utf-8",
         }
     }
@@ -110,6 +118,7 @@ fn empty_request(method: &[u8], path: &[u8]) -> ERequest {
         host: b"127.0.0.1:8377".to_vec(),
         origin: None,
         content_type: Vec::new(),
+        cookie: None,
         body: None,
     }
 }
@@ -120,6 +129,7 @@ pub(super) fn server_error(detail: String) -> Result<Response> {
         &EPostState {
             port: 8377,
             token: Vec::new(),
+            session: Vec::new(),
             models: Err(detail.into_bytes()),
             now: Vec::new(),
             commit: Vec::new(),
@@ -132,6 +142,7 @@ fn not_found() -> Result<Response> {
         &EPostState {
             port: 8377,
             token: Vec::new(),
+            session: Vec::new(),
             models: Ok(Vec::new()),
             now: Vec::new(),
             commit: Vec::new(),
@@ -318,6 +329,11 @@ fn read(corpus: &Corpus, view: &intake::View, req: &ERequest, commit: &[u8]) -> 
     )))
 }
 pub(super) fn respond(root: &Path, req: &ERequest, config: &Config) -> Result<Outcome> {
+    // Host, sign-in, method and session read the request + launch values alone:
+    // they answer before any snapshot work (contract sec7).
+    if let Some(outcome) = ckc_kernel::contract::ui_gate(req, config.port, &config.session) {
+        return gated(outcome);
+    }
     let corpus = match Corpus::committed(root) {
         Ok(corpus) => corpus,
         Err(e) => return server_error(e).map(Outcome::Response),
@@ -337,6 +353,7 @@ pub(super) fn respond(root: &Path, req: &ERequest, config: &Config) -> Result<Ou
     let mut state = EPostState {
         port: config.port,
         token: config.token.clone(),
+        session: config.session.clone(),
         models,
         now,
         commit: snapshot(&corpus, config),
@@ -357,6 +374,12 @@ pub(super) fn respond(root: &Path, req: &ERequest, config: &Config) -> Result<Ou
             &expected_ledger,
             response,
         ),
+    }
+}
+pub(super) fn gated(outcome: EPostOutcome) -> Result<Outcome> {
+    match outcome {
+        EPostOutcome::Refused(response) => Ok(Outcome::Response(response.into())),
+        _ => Err("ui: gate returned a write".into()),
     }
 }
 struct Candidate {
@@ -609,6 +632,7 @@ pub(super) fn parse(args: &[String]) -> Option<Arguments> {
             "--body",
             "--body-hex",
             "--token",
+            "--session",
             "--now",
             "--commit",
             "--fault",
@@ -633,6 +657,12 @@ pub(super) fn parse(args: &[String]) -> Option<Arguments> {
                 "--body" => body = Some(value.as_bytes().to_vec()),
                 "--body-hex" => body = Some(unhex(value)?),
                 "--token" => config.token = value.as_bytes().to_vec(),
+                "--session" => {
+                    if !valid_hex(value, 64) {
+                        return None;
+                    }
+                    config.session = value.as_bytes().to_vec();
+                }
                 "--now" => {
                     if !valid_date(value) {
                         return None;
@@ -665,6 +695,7 @@ pub(super) fn parse(args: &[String]) -> Option<Arguments> {
         .unwrap_or_else(|| "127.0.0.1:8377".into())
         .into_bytes();
     let origin = headers.remove("origin").map(String::into_bytes);
+    let cookie = headers.remove("cookie").map(String::into_bytes);
     let content_type = headers
         .remove("content-type")
         .unwrap_or_else(|| {
@@ -681,6 +712,7 @@ pub(super) fn parse(args: &[String]) -> Option<Arguments> {
         host,
         origin,
         content_type,
+        cookie,
         body,
     };
     Some(Arguments {

@@ -263,9 +263,22 @@ the interface writes, so its own writes are not uncommitted work.
 `ckc check` is the exception: it reads the working tree, because it is
 the gate you run before you commit.
 
-The write path is narrow and guarded. The interface binds the loopback
-address only. It has no accounts and no authentication. The interface
-accepts a decision only when every guard passes. The request must
+The interface binds the loopback address only, and it has no accounts.
+Each start of `ckc ui serve` draws a new random key. The command writes
+a sign-in page that only its own account can read, and it opens that
+page in the browser. The page gives the key to the browser as a cookie.
+The key never appears on a command line or in the terminal while a
+browser opens; when no browser opens, the terminal shows the sign-in
+address. Every request must carry the cookie. The interface refuses a
+request without it, or with a foreign `Host` header, before it reads
+anything else. It never reads a request body larger than 64 KiB, and
+each connection has 10 seconds to send its request. Browsers send a
+cookie for 127.0.0.1 to every port of that address. Another account on
+the same computer can therefore capture the key if the reviewer opens a
+page that this account serves on the computer.
+
+The write path is narrow and guarded. The interface accepts a decision
+only when every guard passes. The request must
 carry the process token and a loopback `Host` header, and any
 `Origin` header must match it. The subject digest must still match a
 fresh derivation from committed state and the derivation at the posted

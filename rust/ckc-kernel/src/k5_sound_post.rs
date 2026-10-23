@@ -303,6 +303,58 @@ pub proof fn handle(req: u::Request, s: u::PostState, g: u::PostGuideline, d: u:
     }
 }
 
+pub proof fn signin(port: nat, session: u::Bytes)
+    ensures
+        good(u::PostOutcome::Refused(u::signin_response(port, session))),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l::l078(Seq::empty());
+    l::f284(Seq::empty());
+    error(303, b::c(78), b::f(284));
+    same_body(u::error_page(303, b::c(78), b::f(284)), u::signin_response(port, session));
+}
+
+pub proof fn session_refusal()
+    ensures
+        good(u::session_refusal()),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l::l281(Seq::empty());
+    l::l282(Seq::empty());
+    refusal(403, b::c(281), u::ui_request_no_review_session(), b::c(282));
+}
+
+pub proof fn gate(req: u::Request, port: nat, session: u::Bytes)
+    ensures
+        match u::gate(req, port, session) {
+            Some(o) => good(o),
+            None => true,
+        },
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::doc_route);
+    hide(ck::nat_bytes);
+    hide(u::forbidden);
+    hide(u::method_response);
+    hide(u::signin_response);
+    hide(u::session_refusal);
+    hide(u::has_cookie);
+    let route = u::doc_route(req.path);
+    if req.host != u::copy_127_0_0_1() + ck::nat_bytes(port) {
+        forbidden(u::ui_request_host_not_allowed());
+    } else if session.len() > 0 && req.method == u::get_cap() && req.path == u::session_path()
+        + session {
+        signin(port, session);
+    } else if req.method != u::get_cap() && (req.method != u::post_cap() || route.is_none()) {
+        method(route.is_some());
+    } else if session.len() > 0 && !u::has_cookie(req.cookie, u::session_cookie(port, session)) {
+        session_refusal();
+    }
+}
+
 pub proof fn post(req: u::Request, s: u::PostState)
     ensures
         good(u::post_outcome(req, s)),
@@ -314,16 +366,12 @@ pub proof fn post(req: u::Request, s: u::PostState)
     hide(u::find_document);
     hide(ck::nat_bytes);
     hide(u::handle_post);
-    hide(u::forbidden);
-    hide(u::method_response);
     hide(u::server_error);
     hide(u::not_found);
+    hide(u::gate);
+    gate(req, s.port, s.session);
     let route = u::doc_route(req.path);
-    if req.host != u::copy_127_0_0_1() + ck::nat_bytes(s.port) {
-        forbidden(u::ui_request_host_not_allowed());
-    } else if req.method != u::get_cap() && (req.method != u::post_cap() || route.is_none()) {
-        method(route.is_some());
-    } else {
+    if u::gate(req, s.port, s.session) is None {
         match s.models {
             Err(e) => server_error(e),
             Ok(gs) => if req.method == u::get_cap() {
@@ -341,6 +389,88 @@ pub proof fn post(req: u::Request, s: u::PostState)
             },
         }
     }
+}
+
+// The redirect page `ckc ui serve` writes: registry pieces, the port as a
+// decimal + the session as an attribute slot inside the refresh target.
+pub proof fn signin_page(port: nat, session: u::Bytes)
+    ensures
+        u::well_escaped(u::signin_page(port, session)),
+        u::visible_bytes_from(u::signin_page(port, session), empty_corpus(), u::copy_registry()),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::lines);
+    let inputs = Seq::empty();
+    l::f040(inputs);
+    l::f041(inputs);
+    l::f042(inputs);
+    l::f043(inputs);
+    l::f285(inputs);
+    l::f230(inputs);
+    h::number(port, inputs, 2);
+    l::f277(inputs);
+    h::attr(session, inputs, 2);
+    l::f011(inputs);
+    h::add(b::f(285), b::f(230), inputs, 0, 2, 2);
+    h::add(b::f(285) + b::f(230), u::number(port), inputs, 0, 2, 2);
+    h::add(b::f(285) + b::f(230) + u::number(port), b::f(277), inputs, 0, 2, 2);
+    h::add(b::f(285) + b::f(230) + u::number(port) + b::f(277), u::attr(session), inputs, 0, 2, 2);
+    h::add(
+        b::f(285) + b::f(230) + u::number(port) + b::f(277) + u::attr(session),
+        b::f(11),
+        inputs,
+        0,
+        2,
+        0,
+    );
+    let refresh = b::f(285) + b::f(230) + u::number(port) + b::f(277) + u::attr(session) + b::f(11);
+    l::f044(inputs);
+    l::f078(inputs);
+    l::f045(inputs);
+    b::add(b::f(44), b::f(78), inputs);
+    b::add(b::f(44) + b::f(78), b::f(45), inputs);
+    let title = b::f(44) + b::f(78) + b::f(45);
+    l::f048(inputs);
+    l::f049(inputs);
+    l::f284(inputs);
+    l::f056(inputs);
+    l::f057(inputs);
+    let parts = seq![
+        b::f(40),
+        b::f(41),
+        b::f(42),
+        b::f(43),
+        refresh,
+        title,
+        b::f(48),
+        b::f(49),
+        b::f(284),
+        b::f(56),
+        b::f(57),
+    ];
+    assert(parts =~= seq![
+        u::fixed_bytes(u::doctype_html()),
+        u::fixed_bytes(u::html_open()),
+        u::fixed_bytes(u::head_open()),
+        u::fixed_bytes(u::meta_open()),
+        u::fixed_bytes(u::meta_http_equiv_refresh_open()) + u::fixed_bytes(u::http_127_0_0_1())
+            + u::number(port) + u::fixed_bytes(u::session_path()) + u::attr(session)
+            + u::fixed_bytes(u::attr_end()),
+        u::fixed_bytes(u::title_open()) + u::fixed_bytes(u::cnl_ckc_reviewer()) + u::fixed_bytes(
+            u::title_close(),
+        ),
+        u::fixed_bytes(u::head_close()),
+        u::fixed_bytes(u::body_open()),
+        u::fixed_bytes(u::p_open_opening_the_review_site_p_close()),
+        u::fixed_bytes(u::body_close()),
+        u::fixed_bytes(u::html_close()),
+    ]);
+    b::lines(parts, inputs);
+    l::f005(inputs, 0);
+    b::add(u::lines(parts), b::f(5), inputs);
+    assert(u::corpus_bytes(empty_corpus()) =~= Seq::<u::Bytes>::empty());
+    h::page(u::signin_page(port, session), empty_corpus());
 }
 
 } // verus!

@@ -9,6 +9,11 @@ const OLD_CSP: &str = "ceqWjP6N4e7DIvYMclbfnBzryu3YAwfoDBRiNcC8+hw=";
 // Later recorded migration: SEC5 (security review F1) appends three CSP
 // directives; the replay runs its script after the D10 one.
 const SEC5_CSP: &str = "; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+// SEC7 adds `--session` to the `ckc ui` usage line after D10.
+const SEC7_USAGE: [&str; 2] = [
+    "[--token <text>] [--now <utc-iso>]",
+    "[--token <text>] [--session <64 hex>] [--now <utc-iso>]",
+];
 const PRINT_END: &str =
     ".chip { border: 1px solid #111827; background: none; color: inherit; }\n}\n</style>";
 
@@ -144,7 +149,9 @@ fn transformed(path: &Path, bytes: &[u8], new_script: &str) -> Vec<u8> {
             && !relative.contains("/worktree/")
             && let Ok(value) = std::str::from_utf8(bytes)
         {
-            return repin_csp(value, new_script).into_bytes();
+            return repin_csp(value, new_script)
+                .replace(SEC7_USAGE[0], SEC7_USAGE[1])
+                .into_bytes();
         }
         return bytes.to_vec();
     }
@@ -481,6 +488,16 @@ fn p7_golden_migration_is_complete_bounded_and_idempotent() {
             c.require(
                 out.status.success(),
                 format!("P7 SEC5 migration pass {pass}: rc={:?}", out.status.code()),
+            );
+            let sec7 = root().join(".agent/archive/migrations/sec7-usage-repin.py");
+            let out = command(
+                Path::new("python3"),
+                &base.0,
+                &["-I", sec7.to_str().unwrap(), base.0.to_str().unwrap()],
+            );
+            c.require(
+                out.status.success(),
+                format!("P7 SEC7 migration pass {pass}: rc={:?}", out.status.code()),
             );
             let after = files(&ui);
             compare_migration(

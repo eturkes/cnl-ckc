@@ -7,11 +7,12 @@ mod copy;
 mod corpus;
 mod fresh;
 mod intake;
+mod open;
 mod pages;
 mod request;
 mod serve;
 
-const USAGE: &str = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--now <utc-iso>] [--commit <40hex>] [--fault after-tmp-write]";
+const USAGE: &str = "ui: usage: expected: ui serve [<port>] [<root>] | ui render <outdir> [<root>] | ui check [<root>] | ui request <method> <path> [<root>] [--header <name:value>]* [--body <text>] [--body-hex <hex>] [--token <text>] [--session <64 hex>] [--now <utc-iso>] [--commit <40hex>] [--fault after-tmp-write]";
 
 // Shell units: committed intake, kernel render/check, request/serve CAS,
 // copy fixture envelope. The fixture suite grades each pending entry red.

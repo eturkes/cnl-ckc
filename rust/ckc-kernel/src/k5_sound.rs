@@ -127,4 +127,18 @@ pub proof fn post_sound_proof(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostS
     crate::k5_sound_post::post(req, s);
 }
 
+pub proof fn signin_page_sound_proof(port: nat, session: ckc_spec::ui::Bytes)
+    ensures
+        ckc_spec::ui::well_escaped(ckc_spec::ui::signin_page(port, session)),
+        ckc_spec::ui::visible_bytes_from(
+            ckc_spec::ui::signin_page(port, session),
+            ckc_spec::ui::Corpus { guidelines: Seq::empty(), token: Seq::empty() },
+            ckc_spec::ui::copy_registry(),
+        ),
+{
+    hide(ckc_spec::ui::copy_registry);
+    hide(ckc_spec::ui::signin_page);
+    crate::k5_sound_post::signin_page(port, session);
+}
+
 } // verus!

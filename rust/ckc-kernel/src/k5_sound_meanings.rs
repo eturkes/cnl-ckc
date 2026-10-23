@@ -190,6 +190,9 @@ proof fn table_row(raw: u::Bytes, r: (u::Bytes, u::Html), inputs: Seq<u::Bytes>)
     b::row(seq![u::cell(u::pl_word(raw, r.0)), u::cell(r.1)], inputs);
 }
 
+// Own solver process: the module's shared query context pushed this one past its rlimit
+// once the copy registry grew (SEC7: 286 rows).
+#[verifier::spinoff_prover]
 pub proof fn section(g: u::Guideline, inputs: Seq<u::Bytes>)
     requires
         corpus::sources(g, inputs),

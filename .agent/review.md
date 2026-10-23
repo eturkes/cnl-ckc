@@ -25,7 +25,7 @@ Check set fixed before the manual pass reads code; surfaces + inputs U1–U5 + s
 | A1 | authz | POST guard completeness: every state-changing route requires token + loopback `Host` + matching `Origin` + digest CAS; bypass via method variants, absent/duplicate/case-variant headers, absolute-form targets, HTTP/1.0, pipelining or keep-alive smuggling, body-length mismatch | pass | spec `post_outcome` (ui.rs:2300) + `handle_post` (ui.rs:2271): Host → method (GET \| POST on a doc route, else 405) → models → route → Origin (present ⇒ exact) → content type → body → form → token (nonempty, equal) → render error → subject + ledger digests → commit attestation; absent Origin still needs the token; HTTP/1.0, one request per connection, first Content-Type/Length kept, body read only on Host + Origin + type match (`ui/serve.rs:84`) |
 | A2 | authz | cross-site browser attacks: CSRF without the token, DNS rebinding, cross-origin reads (CORS, JSONP), clickjacking of the decision form (`frame-ancestors` / `X-Frame-Options`), side effects on GET | open | |
 | A3 | authz | listener scope: 127.0.0.1 alone (no `0.0.0.0`, no `::`), port reuse + hijack races, other local users (no accounts: documented), the `ui request` seam | open | |
-| A4 | privilege | local integrity: temp files + dirs (predictable names in shared `/tmp`, symlink-following writes, modes), ledger + candidate + lock file handling, writes through symlinked working-tree targets | open | |
+| A4 | privilege | local integrity: temp files + dirs (predictable names in shared `/tmp`, symlink-following writes, modes), ledger + candidate + lock file handling, writes through symlinked working-tree targets | fail→fixed f2bdca4f | F4 low: UI snapshot + dist staging dirs were 0755 in the shared temp dir (live ledger copies readable by other accounts) — fixed f2bdca4f (mode 0700; red `scratch_is_private` 0o755 ≠ 0o700 under umask 022); ledger candidate 0600→0644 + lock 0600 under the audit dir; working-tree targets = trusted local state |
 | A5 | privilege | CI: workflow + job `permissions`, fork PRs vs secrets + tokens, `pull_request_target` / `workflow_run` absence, cache + artifact poisoning across trust levels, `ci/**` trigger scope, runner kind | pass | `permissions: contents: read` workflow-wide, `persist-credentials: false`, no `pull_request_target` / `workflow_run`; fork PRs: `first_time_contributors` approval, default token read; caches keyed on lock hashes (PR caches scoped to the PR ref); artifact handoff within one run; GitHub-hosted runners only |
 | T1 | token | process token generation: entropy source, length, per-process uniqueness | pass | 32 bytes `/dev/urandom` → 64 hex per process (`ui/common.rs:64`, `ui/serve.rs:144`) |
 | T2 | token | token handling: comparison, placement (hidden field vs URL), leakage (Referer, logs, static render, error bodies, caching), lifetime | pass | token = hidden form field of document pages only, never a URL; responses `no-store` + `no-referrer`; never logged; static render token empty ⇒ its POST refused; byte compare not constant-time but unreachable from browsers (Origin guard first); local processes read the token from any page (F3) |
@@ -57,31 +57,31 @@ Check set fixed before the manual pass reads code; surfaces + inputs U1–U5 + s
 
 | id | input | sinks reached (`file:line`) | guards (`file:line`) | verdict |
 |---|---|---|---|---|
-| T-M | U1 request method | unknown | unknown | unknown |
-| T-P | U1 request target: path segments (gid, docid, page names), query, absolute form | unknown | unknown | unknown |
-| T-V | U1 HTTP version + framing (request line bytes, CRLF/LF, pipelining, keep-alive) | unknown | unknown | unknown |
-| T-H | U1 `Host` header | unknown | unknown | unknown |
-| T-O | U1 `Origin` header | unknown | unknown | unknown |
-| T-L | U1 `Content-Length`, `Transfer-Encoding`, other headers the server reads | unknown | unknown | unknown |
-| T-B | U1 body bytes (size, encoding, form decoding) | unknown | unknown | unknown |
-| T-F1 | U1 POST field: token | unknown | unknown | unknown |
-| T-F2 | U1 POST field: verdict | unknown | unknown | unknown |
-| T-F3 | U1 POST field: reviewer name | unknown | unknown | unknown |
-| T-F4 | U1 POST field: comment | unknown | unknown | unknown |
-| T-F5 | U1 POST fields: subject + ledger digests | unknown | unknown | unknown |
-| T-F6 | U1 POST field: commit | unknown | unknown | unknown |
-| T-F7 | U1 POST fields: unknown names, duplicates, missing | unknown | unknown | unknown |
-| T-C | U1 connection behavior: slow, idle, many, half-closed | unknown | unknown | unknown |
-| T-G1 | U5 HEAD commit + tree read by the snapshot (`git archive`) | unknown | unknown | unknown |
-| T-G2 | U5 working-tree ledger overlaid on the snapshot | unknown | unknown | unknown |
-| T-K1 | U2 passage + coverage text → pages | unknown | unknown | unknown |
-| T-K2 | U2 ACE + alignment + vocabulary rows → pages + page script | unknown | unknown | unknown |
-| T-K3 | U2 ledger rows (reviewer, comment) → pages, `ckc check`, dist labels | unknown | unknown | unknown |
-| T-K4 | U2 gid/docid names → hrefs, paths, argv | unknown | unknown | unknown |
-| T-K5 | U2 compiled Prolog → pages + shipped KB + consumer load | unknown | unknown | unknown |
-| T-K6 | U2 `rights.tsv` + manifest URLs → README-dist + consumers | unknown | unknown | unknown |
-| T-N1 | U3 downloaded artifacts → execution | unknown | unknown | unknown |
-| T-N2 | U3 upstream metadata (JSON, redirects, text) → shell + lock rows | unknown | unknown | unknown |
-| T-N3 | U3 advisory DB → `just deny` | unknown | unknown | unknown |
-| T-E1 | U4 PR + push content (code, refs, titles) → CI jobs | unknown | unknown | unknown |
-| T-E2 | U4 caches + artifacts between jobs | unknown | unknown | unknown |
+| T-M | U1 request method | kernel `gate`/`post_outcome` method branch → 405 + `Allow` | spec ui.rs `gate` step 3 (GET \| POST on a doc route) | pass |
+| T-P | U1 request target: path segments (gid, docid, page names), query, absolute form | `request::decode_path` → kernel `doc_route` + shell `read` exact matches → `fs::read` of a listed source asset; `install` audit path | gid/docid `valid_id` (`ui/common.rs:13`), `valid_asset` + `media_type` (`ui/intake.rs:335`), kernel `find_guideline`/`find_document` before `install` (`ui/request.rs:446`) | pass |
+| T-V | U1 HTTP version + framing (request line bytes, CRLF/LF, pipelining, keep-alive) | `serve.rs` parse (request line, ≤ 100 headers, lines ≤ 64 KiB) | 3 parts + HTTP/1.0\|1.1, one request per connection (HTTP/1.0 replies), SEC7 deadline 10 s | pass |
+| T-H | U1 `Host` header | kernel Host guard (first refusal) → 403; pre-SEC7 the snapshot + derivation ran first (F2) | `gate` step 1 before any snapshot (SEC7; red `gate_answers_before_the_snapshot` foreign Host 500 → 403) | fail→fixed SEC7 |
+| T-O | U1 `Origin` header | `handle_post` Origin guard → 403; `may_read` keeps a mismatched body unread | present ⇒ = `http://127.0.0.1:<port>` (spec ui.rs:2277); absent still needs the token | pass |
+| T-L | U1 `Content-Length`, `Transfer-Encoding`, other headers the server reads | Content-Length → body read (pre-SEC7 unbounded, F5); Transfer-Encoding + others ignored | SEC7: gate ∧ `may_read` ∧ ≤ 64 KiB, else body None ⇒ the kernel 400 | fail→fixed SEC7 |
+| T-B | U1 body bytes (size, encoding, form decoding) | kernel `parse_form` (UTF-8, ≤ 32 pairs, `+` + `%XX`) | spec ui.rs:2066 | pass |
+| T-F1 | U1 POST field: token | kernel csrf compare → 403 | nonempty ∧ equal (spec ui.rs:2290) | pass |
+| T-F2 | U1 POST field: verdict | ledger verdict field | `approved`\|`rejected` | pass |
+| T-F3 | U1 POST field: reviewer name | ledger reviewer field → records page text, datalist attribute, dist labels | `text_clean` (≥ 0x20, ≠ 0x7F) + escaping (K5) | pass |
+| T-F4 | U1 POST field: comment | ledger comment field → records page text | `text_clean` + escaping | pass |
+| T-F5 | U1 POST fields: subject + ledger digests | CAS compare under the lock (`ui/request.rs:470`) | hex64 \| `absent` | pass |
+| T-F6 | U1 POST field: commit | `derive_at` git argv (`cat-file -e`, `merge-base`, `ls-tree`, `archive`) + attestation | kernel hex40 parse + `valid_hex` (`ui/corpus.rs:31`), ancestry + bundle re-derivation; SEC7 gate first | pass |
+| T-F7 | U1 POST fields: unknown names, duplicates, missing | kernel `parse_fields` → 400 | missing, duplicate, unknown refused | pass |
+| T-C | U1 connection behavior: slow, idle, many, half-closed | single-threaded accept loop: per-read 30 s timeouts let one client hold it (F5) | SEC7 one 10 s deadline per connection (repro: next client 30.2 s → 9.6 s); back-to-back residual → deferred row | fail→fixed SEC7 |
+| T-G1 | U5 HEAD commit + tree read by the snapshot (`git archive`) | `git ls-tree` preflight → `git archive` → `tar --extract` into a fresh temp dir (0755 pre-SEC6, F4) | blobs only, relative, no `..`, under `guidelines/` (`ui/corpus.rs:96`); SEC6 dir 0700 | fail→fixed f2bdca4f |
+| T-G2 | U5 working-tree ledger overlaid on the snapshot | live ledger copied into the snapshot → kernel ledger grammar → pages + CAS | `check_ledger` (intake) + candidate re-validation | pass |
+| T-K1 | U2 passage + coverage text → pages | passages + coverage rows → page Text slots | `checked_text` (controls + bidi refused, `ui/common.rs:41`) + K5 escaping | pass |
+| T-K2 | U2 ACE + alignment + vocabulary rows → pages + page script | ACE, alignment, vocabulary → Text/Attr slots, `data-w`, mark classes; page script reads `data-w` only | align + vocabulary validators, K5 escaping, script without HTML/code sinks | pass |
+| T-K3 | U2 ledger rows (reviewer, comment) → pages, `ckc check`, dist labels | ledger rows → records page, `ckc check` re-derivation at `ace_commit`, dist labels | ledger grammar (hex40 commit), escaping | pass |
+| T-K4 | U2 gid/docid names → hrefs, paths, argv | gid/docid → hrefs (`url_seg`), paths, git pathspecs | `valid_id`, `url_seg` | pass |
+| T-K5 | U2 compiled Prolog → pages + shipped KB + consumer load | compiled Prolog → `<pre>` Text slot; shipped KB loaded by consumers | K1 reader canonical form; 40 declaration directives per document, no goal runs on load | pass |
+| T-K6 | U2 `rights.tsv` + manifest URLs → README-dist + consumers | `rights.tsv` rows → README-dist + NOTICE + manifest `source` rows | field grammar + `clean` (`check/pipeline_release.rs:127`); agent-authored | pass |
+| T-N1 | U3 downloaded artifacts → execution | downloads → execution (`tools`, `swipl`, kani bootstrap, CI just bootstrap) | sha256 pins before use; rustup components by version (P2 deferred row) | pass |
+| T-N2 | U3 upstream metadata (JSON, redirects, text) → shell + lock rows | upstream metadata → lock rows (`bump-*`), report (`outdated`) | jq into variables; `bump-verus` sed sink + missing `--proto` (I2 deferred row) | info→deferred |
+| T-N3 | U3 advisory DB → `just deny` | RustSec DB → `cargo-deny` | fetched fresh over https by cargo-deny | pass |
+| T-E1 | U4 PR + push content (code, refs, titles) → CI jobs | PR + push content → CI jobs | `contents: read`, `persist-credentials: false`, fork approval, no `pull_request_target` | pass |
+| T-E2 | U4 caches + artifacts between jobs | caches (lock-hash keys) + the per-run `ckc` artifact | PR caches scoped to their ref; artifact within one run | pass |

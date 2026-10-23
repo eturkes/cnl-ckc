@@ -284,6 +284,25 @@ pub fn ui_post_outcome(req: &ckc_spec::ui::ERequest, s: &ckc_spec::ui::EPostStat
     crate::k5_impl::ui_post_outcome_impl(req, s)
 }
 
+pub fn ui_gate(req: &ckc_spec::ui::ERequest, port: u16, session: &[u8]) -> (o: Option<
+    ckc_spec::ui::EPostOutcome,
+>)
+    ensures
+        match o {
+            Option::Some(x) => ckc_spec::ui::gate(req@, port as nat, session@) == Option::Some(x@),
+            Option::None => ckc_spec::ui::gate(req@, port as nat, session@) is None,
+        },
+{
+    crate::k5_impl::ui_gate_impl(req, port, session)
+}
+
+pub fn ui_signin_page(port: u16, session: &[u8]) -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::ui::render_page(ckc_spec::ui::signin_page(port as nat, session@)),
+{
+    crate::k5_impl::ui_signin_page_impl(port, session)
+}
+
 pub fn ui_posted_commit(body: &[u8]) -> (out: Option<Vec<u8>>)
     ensures
         match out {
@@ -418,6 +437,19 @@ pub proof fn ui_post_sound(req: ckc_spec::ui::Request, s: ckc_spec::ui::PostStat
         },
 {
     crate::k5_sound::post_sound_proof(req, s)
+}
+
+// The redirect page `ckc ui serve` writes for the browser (contract sec7).
+pub proof fn ui_signin_page_sound(port: nat, session: ckc_spec::ui::Bytes)
+    ensures
+        ckc_spec::ui::well_escaped(ckc_spec::ui::signin_page(port, session)),
+        ckc_spec::ui::visible_bytes_from(
+            ckc_spec::ui::signin_page(port, session),
+            ckc_spec::ui::Corpus { guidelines: Seq::empty(), token: Seq::empty() },
+            ckc_spec::ui::copy_registry(),
+        ),
+{
+    crate::k5_sound::signin_page_sound_proof(port, session)
 }
 
 // M6 emission certification (contract m6, R40–R43). The shell stages APE,

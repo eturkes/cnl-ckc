@@ -58,6 +58,25 @@ pub fn ui_posted_commit_impl(body: &[u8]) -> (out: Option<Vec<u8>>)
     }
 }
 
+pub fn ui_gate_impl(req: &ckc_spec::ui::ERequest, port: u16, session: &[u8]) -> (o: Option<
+    ckc_spec::ui::EPostOutcome,
+>)
+    ensures
+        match o {
+            Option::Some(x) => ckc_spec::ui::gate(req@, port as nat, session@) == Option::Some(x@),
+            Option::None => ckc_spec::ui::gate(req@, port as nat, session@) is None,
+        },
+{
+    crate::k5_post::gate(req, port, session)
+}
+
+pub fn ui_signin_page_impl(port: u16, session: &[u8]) -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::ui::render_page(ckc_spec::ui::signin_page(port as nat, session@)),
+{
+    crate::k5_render::page(&crate::k5_response::signin_page(port, session))
+}
+
 pub fn ui_post_outcome_impl(req: &ckc_spec::ui::ERequest, s: &ckc_spec::ui::EPostState) -> (o:
     ckc_spec::ui::EPostOutcome)
     ensures

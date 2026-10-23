@@ -223,6 +223,81 @@ impl Drop for Scratch {
     }
 }
 
+fn private_dir(path: &Path) -> PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    fs::create_dir_all(path).unwrap();
+    fs::set_permissions(path, fs::Permissions::from_mode(0o700)).unwrap();
+    path.to_path_buf()
+}
+
+// `ckc ui serve` with no browser launcher in reach: it prints the sign-in address.
+fn serve(port: u16, tree: &Path, cwd: &Path, tmp: &Path, run: &Path) -> Command {
+    let mut command = Command::new(program());
+    command
+        .args(["ui", "serve", &port.to_string(), tree.to_str().unwrap()])
+        .current_dir(cwd)
+        .envs(GIT_ENV)
+        .env("TMPDIR", tmp)
+        .env("XDG_RUNTIME_DIR", run)
+        .env_remove("BROWSER")
+        .env_remove("DISPLAY")
+        .env_remove("WAYLAND_DISPLAY")
+        .env_remove("WSL_DISTRO_NAME")
+        .stdin(Stdio::null());
+    command
+}
+
+fn printed_address(stdout: &Path, port: u16) -> String {
+    let prefix = "ui: no browser opened. Open this address: ";
+    let deadline = Instant::now() + Duration::from_secs(20);
+    loop {
+        let text = fs::read_to_string(stdout).unwrap_or_default();
+        if let Some(line) = text.lines().find(|l| l.starts_with(prefix)) {
+            let address = line[prefix.len()..].to_owned();
+            let session = address
+                .strip_prefix(&format!("http://127.0.0.1:{port}/session/"))
+                .unwrap_or_else(|| panic!("sign-in address: {address}"));
+            assert!(
+                session.len() == 64
+                    && session
+                        .bytes()
+                        .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+            );
+            return address;
+        }
+        assert!(Instant::now() < deadline, "server startup: 20 s ({text})");
+        std::thread::sleep(Duration::from_millis(50));
+    }
+}
+
+fn free_port() -> u16 {
+    TcpListener::bind(("127.0.0.1", 0))
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port()
+}
+
+// tests/ui/green/basic/tree committed into a private repository under rust/target.
+fn fixture(name: &str) -> (Scratch, PathBuf, PathBuf) {
+    let work = Scratch(root().join(format!(
+        "rust/target/ui-socket/{}-{name}",
+        std::process::id()
+    )));
+    let _ = fs::remove_dir_all(&work.0);
+    let (tree, tmp) = (work.0.join("tree"), work.0.join("tmp"));
+    fs::create_dir_all(&tmp).unwrap();
+    copy_tree(&root().join("tests/ui/green/basic/tree"), &tree);
+    run(&["git", "init", "-q", "-b", "main"], &tree, &tmp);
+    run(&["git", "add", "-A"], &tree, &tmp);
+    run(
+        &["git", "commit", "-q", "-m", "socket fixture"],
+        &tree,
+        &tmp,
+    );
+    (work, tree, tmp)
+}
+
 #[test]
 fn serve_get_post_cas_and_cleanup_over_loopback() {
     let work = Scratch(root().join(format!("rust/target/ui-socket/{}", std::process::id())));
@@ -270,27 +345,50 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
         .unwrap()
         .port();
     let stderr_path = work.0.join("serve.stderr");
+    let stdout_path = work.0.join("serve.stdout");
+    let run_dir = private_dir(&work.0.join("run"));
     let server = Server(
-        Command::new(program())
-            .args(["ui", "serve", &port.to_string(), tree.to_str().unwrap()])
-            .current_dir(&work.0)
-            .envs(GIT_ENV)
-            .env("TMPDIR", &tmp)
-            .stdout(Stdio::null())
+        serve(port, &tree, &work.0, &tmp, &run_dir)
+            .stdout(File::create(&stdout_path).unwrap())
             .stderr(File::create(&stderr_path).unwrap())
             .spawn()
             .unwrap(),
     );
-    let deadline = Instant::now() + Duration::from_secs(20);
-    let index = loop {
-        match http(port, "GET", "/index.html", &[], b"") {
-            Ok(r) => break r,
-            Err(_) => {
-                assert!(Instant::now() < deadline, "server startup: 20 s");
-                std::thread::sleep(Duration::from_millis(50));
-            }
-        }
-    };
+    let signin = printed_address(&stdout_path, port);
+    // Without the launch cookie every route answers the session page, before any snapshot.
+    let closed = http(port, "GET", "/index.html", &[], b"").unwrap();
+    assert_eq!(closed.status, 403);
+    assert!(contains(
+        &closed.body,
+        b"<title>Open the review site from ckc</title>"
+    ));
+    hardened(&closed, "session 403");
+    let session = signin.rsplit('/').next().unwrap().to_owned();
+    let entered = http(port, "GET", &format!("/session/{session}"), &[], b"").unwrap();
+    assert_eq!(
+        (
+            entered.status,
+            entered.header("Location"),
+            entered.header("Set-Cookie")
+        ),
+        (
+            303,
+            "/",
+            format!("ckc-session-{port}={session}; HttpOnly; SameSite=Lax; Path=/").as_str()
+        ),
+        "sign-in: Lax keeps the cookie on the redirect that follows a file: page"
+    );
+    let cookie = format!("ckc-session-{port}={session}");
+    let other = format!("ckc-session-{port}={}", "0".repeat(64));
+    assert_eq!(
+        http(port, "GET", "/", &[("Cookie", other.as_str())], b"")
+            .unwrap()
+            .status,
+        403,
+        "a cookie of another session"
+    );
+    let jar = [("Cookie", cookie.as_str())];
+    let index = http(port, "GET", "/index.html", &jar, b"").unwrap();
     assert_eq!(index.status, 200);
     let listening: Vec<String> = fs::read_to_string("/proc/net/tcp")
         .unwrap()
@@ -307,7 +405,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
     );
 
     let page_path = "/g/alpha/doc/a-10.html";
-    let page = http(port, "GET", page_path, &[], b"").unwrap();
+    let page = http(port, "GET", page_path, &jar, b"").unwrap();
     assert_eq!(page.status, 200);
     let csrf = field(&page.body, "csrf");
     assert!(
@@ -327,7 +425,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
         "/g/alpha/records.html",
         "/g/alpha/source/evidence.txt",
     ] {
-        let response = http(port, "GET", path, &[], b"").unwrap();
+        let response = http(port, "GET", path, &jar, b"").unwrap();
         assert_eq!(response.status, 200, "{path}");
         hardened(&response, path);
     }
@@ -364,8 +462,16 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
 
     let guidelines = tree.join("guidelines");
     let before = inventory(&guidelines);
-    let foreign = http(port, "GET", page_path, &[("Host", "foreign.invalid")], b"").unwrap();
+    let foreign = http(
+        port,
+        "GET",
+        page_path,
+        &[("Host", "foreign.invalid"), ("Cookie", cookie.as_str())],
+        b"",
+    )
+    .unwrap();
     assert_eq!(foreign.status, 403);
+    assert!(contains(&foreign.body, b"ui: request: host not allowed"));
     hardened(&foreign, "foreign Host 403");
     assert!(
         inventory(&guidelines) == before,
@@ -376,6 +482,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
     let post_headers = [
         ("Content-Type", "application/x-www-form-urlencoded"),
         ("Origin", origin.as_str()),
+        ("Cookie", cookie.as_str()),
     ];
     let hidden = |body: &[u8]| {
         vec![
@@ -469,7 +576,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
 
     // Forced CAS: hold the ledger lock, let a POST stage its candidate, commit a
     // concurrent ledger, release; the POST must refuse and keep those bytes.
-    let fresh = hidden(&http(port, "GET", page_path, &[], b"").unwrap().body);
+    let fresh = hidden(&http(port, "GET", page_path, &jar, b"").unwrap().body);
     let audit = guidelines.join("alpha/audit");
     let lock_path = audit.join(".adjudication.lock");
     let lock = File::options()
@@ -483,10 +590,12 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
     let racing = std::thread::spawn({
         let body = form(&fresh, "racing reviewer");
         let origin = origin.clone();
+        let cookie = cookie.clone();
         move || {
             let headers = [
                 ("Content-Type", "application/x-www-form-urlencoded"),
                 ("Origin", origin.as_str()),
+                ("Cookie", cookie.as_str()),
             ];
             http(port, "POST", page_path, &headers, body.as_bytes()).unwrap()
         }
@@ -596,5 +705,256 @@ fn resource_attribute_text_in_copy_passes_ui_check() {
             String::from_utf8_lossy(&out.stderr)
         );
         assert!(out.stderr.is_empty(), "{label}: stderr");
+    }
+}
+
+// The browser receives the session from a private file the server writes; the
+// opener's argv carries that path alone, never the secret; Enter reopens.
+#[test]
+fn opener_receives_a_private_file_never_the_secret() {
+    use std::os::unix::fs::PermissionsExt;
+    let (work, tree, tmp) = fixture("opener");
+    let args = work.0.join("opener.args");
+    let opener = work.0.join("opener.sh");
+    fs::write(
+        &opener,
+        format!("#!/bin/sh\nprintf '%s\\n' \"$@\" >> '{}'\n", args.display()),
+    )
+    .unwrap();
+    fs::set_permissions(&opener, fs::Permissions::from_mode(0o755)).unwrap();
+    for (label, runtime_mode) in [
+        ("private runtime dir", 0o700),
+        ("shared runtime dir", 0o755),
+    ] {
+        let _ = fs::remove_file(&args);
+        let run_dir = work.0.join(format!("run-{runtime_mode:o}"));
+        fs::create_dir_all(&run_dir).unwrap();
+        fs::set_permissions(&run_dir, fs::Permissions::from_mode(runtime_mode)).unwrap();
+        let port = free_port();
+        let stdout_path = work.0.join(format!("opener-{runtime_mode:o}.stdout"));
+        let mut server = Server(
+            serve(port, &tree, &work.0, &tmp, &run_dir)
+                .env("BROWSER", &opener)
+                .stdin(Stdio::piped())
+                .stdout(File::create(&stdout_path).unwrap())
+                .stderr(Stdio::null())
+                .spawn()
+                .unwrap(),
+        );
+        let deadline = Instant::now() + Duration::from_secs(20);
+        let opened = "ui: the review site is open in your browser. Press Enter to open it again. Press Ctrl+C to stop.";
+        while fs::read_to_string(&stdout_path)
+            .unwrap_or_default()
+            .matches(opened)
+            .count()
+            < 1
+        {
+            assert!(Instant::now() < deadline, "{label}: opened line");
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        let lines = fs::read_to_string(&args).unwrap();
+        let path = PathBuf::from(lines.trim_end());
+        assert_eq!(lines.lines().count(), 1, "{label}: one argument: {lines}");
+        let page = fs::read_to_string(&path).unwrap();
+        let mode = |p: &Path| fs::metadata(p).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode(&path), 0o600, "{label}: file mode");
+        assert_eq!(mode(path.parent().unwrap()), 0o700, "{label}: dir mode");
+        if runtime_mode == 0o700 {
+            assert_eq!(path, run_dir.join(format!("ckc-ui-{port}.html")), "{label}");
+        } else {
+            assert!(
+                path.starts_with(&tmp),
+                "{label}: temp-dir fallback {path:?}"
+            );
+        }
+        let key = "content=\"0; url=";
+        let start = page.find(key).unwrap() + key.len();
+        let address = &page[start..start + page[start..].find('"').unwrap()];
+        let session = address
+            .strip_prefix(&format!("http://127.0.0.1:{port}/session/"))
+            .unwrap();
+        assert!(!lines.contains(session), "{label}: secret in argv");
+        assert!(
+            !fs::read_to_string(&stdout_path).unwrap().contains(session),
+            "{label}: secret on stdout"
+        );
+        let entered = http(port, "GET", &format!("/session/{session}"), &[], b"").unwrap();
+        assert_eq!(entered.status, 303, "{label}: sign-in");
+        server.0.stdin.as_mut().unwrap().write_all(b"\n").unwrap();
+        let deadline = Instant::now() + Duration::from_secs(20);
+        while fs::read_to_string(&args).unwrap().lines().count() < 2 {
+            assert!(Instant::now() < deadline, "{label}: Enter reopens");
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        drop(server);
+    }
+}
+
+// Guards that read the request alone answer before the snapshot: a corpus
+// whose committed tree cannot be extracted still yields their pages.
+#[test]
+fn gate_answers_before_the_snapshot() {
+    let (work, tree, tmp) = fixture("gate");
+    std::os::unix::fs::symlink("README.md", tree.join("guidelines/alpha/link.md")).unwrap();
+    run(&["git", "add", "-A"], &tree, &tmp);
+    run(&["git", "commit", "-q", "-m", "symlink"], &tree, &tmp);
+    let request = |extra: &[&str]| {
+        let mut argv = vec![
+            program().to_str().unwrap().to_owned(),
+            "ui".into(),
+            "request".into(),
+            "GET".into(),
+            "/".into(),
+            tree.to_str().unwrap().to_owned(),
+        ];
+        argv.extend(extra.iter().map(|s| (*s).to_owned()));
+        let out = Command::new(&argv[0])
+            .args(&argv[1..])
+            .current_dir(&work.0)
+            .envs(GIT_ENV)
+            .env("TMPDIR", &tmp)
+            .output()
+            .unwrap();
+        (out.status.code(), out.stdout)
+    };
+    let (rc, out) = request(&[]);
+    assert_eq!(rc, Some(0));
+    assert!(out.starts_with(b"HTTP 500\n"), "snapshot failure control");
+    let (rc, out) = request(&["--header", "Host:foreign.invalid"]);
+    assert_eq!(rc, Some(0));
+    assert!(
+        out.starts_with(b"HTTP 403\n"),
+        "Host refusal before the snapshot"
+    );
+    assert!(contains(&out, b"ui: request: host not allowed"));
+    let session = "a".repeat(64);
+    let (rc, out) = request(&["--session", &session]);
+    assert_eq!(rc, Some(0), "--session accepted");
+    assert!(
+        out.starts_with(b"HTTP 403\n"),
+        "session refusal before the snapshot"
+    );
+    assert!(contains(&out, b"ui: request: no review session"));
+    let cookie = format!("Cookie:ckc-session-8377={session}");
+    let (rc, out) = request(&["--session", &session, "--header", &cookie]);
+    assert_eq!(rc, Some(0));
+    assert!(out.starts_with(b"HTTP 500\n"), "the cookie passes the gate");
+}
+
+// A body past the cap is never read: the decision is refused at once.
+#[test]
+fn oversized_body_is_refused_unread() {
+    let (work, tree, tmp) = fixture("cap");
+    let run_dir = private_dir(&work.0.join("run"));
+    let port = free_port();
+    let stdout_path = work.0.join("cap.stdout");
+    let _server = Server(
+        serve(port, &tree, &work.0, &tmp, &run_dir)
+            .stdout(File::create(&stdout_path).unwrap())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    let signin = printed_address(&stdout_path, port);
+    let cookie = format!("ckc-session-{port}={}", signin.rsplit('/').next().unwrap());
+    let mut stream = TcpStream::connect(("127.0.0.1", port)).unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(5)))
+        .unwrap();
+    let head = format!(
+        "POST /g/alpha/doc/a-10.html HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nOrigin: http://127.0.0.1:{port}\r\nContent-Type: application/x-www-form-urlencoded\r\nCookie: {cookie}\r\nContent-Length: 65537\r\n\r\n"
+    );
+    stream.write_all(head.as_bytes()).unwrap();
+    let start = Instant::now();
+    let mut raw = Vec::new();
+    stream
+        .read_to_end(&mut raw)
+        .expect("answer without waiting for the body");
+    assert!(start.elapsed() < Duration::from_secs(5));
+    assert!(
+        raw.starts_with(b"HTTP/1.0 400 "),
+        "{}",
+        String::from_utf8_lossy(&raw)
+    );
+    assert!(contains(&raw, b"ui: verdict: missing body"));
+}
+
+// One deadline per connection: a client stalled mid-headers is cut, and the
+// next client is served within it.
+#[test]
+fn stalled_client_is_cut_at_the_deadline() {
+    let (work, tree, tmp) = fixture("deadline");
+    let run_dir = private_dir(&work.0.join("run"));
+    let port = free_port();
+    let stdout_path = work.0.join("deadline.stdout");
+    let _server = Server(
+        serve(port, &tree, &work.0, &tmp, &run_dir)
+            .stdout(File::create(&stdout_path).unwrap())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    printed_address(&stdout_path, port);
+    let mut stalled = TcpStream::connect(("127.0.0.1", port)).unwrap();
+    stalled.write_all(b"GET / HTTP/1.1\r\n").unwrap();
+    std::thread::sleep(Duration::from_millis(500));
+    let start = Instant::now();
+    let next = http(port, "GET", "/", &[], b"").unwrap();
+    let waited = start.elapsed();
+    assert_eq!(next.status, 403);
+    assert!(
+        waited < Duration::from_secs(14),
+        "next client waited {waited:?} behind a stalled one"
+    );
+    let mut rest = Vec::new();
+    stalled
+        .set_read_timeout(Some(Duration::from_secs(5)))
+        .unwrap();
+    let _ = stalled.read_to_end(&mut rest);
+    assert!(rest.is_empty() || rest.starts_with(b"HTTP/1.0 400 "));
+}
+
+// A refused POST whose body the gate never read must still deliver its whole
+// answer: closing with unread bytes would reset the connection instead.
+#[test]
+fn refused_body_still_gets_the_whole_answer() {
+    let (work, tree, tmp) = fixture("linger");
+    let run_dir = private_dir(&work.0.join("run"));
+    let port = free_port();
+    let stdout_path = work.0.join("linger.stdout");
+    let _server = Server(
+        serve(port, &tree, &work.0, &tmp, &run_dir)
+            .stdout(File::create(&stdout_path).unwrap())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    printed_address(&stdout_path, port);
+    let origin = format!("http://127.0.0.1:{port}");
+    let stale = format!("ckc-session-{port}={}", "0".repeat(64));
+    let body = vec![b'a'; 60 * 1024];
+    for attempt in 0..20 {
+        let response = http(
+            port,
+            "POST",
+            "/g/alpha/doc/a-10.html",
+            &[
+                ("Content-Type", "application/x-www-form-urlencoded"),
+                ("Origin", origin.as_str()),
+                ("Cookie", stale.as_str()),
+            ],
+            &body,
+        )
+        .unwrap_or_else(|e| panic!("attempt {attempt}: {e}"));
+        assert_eq!(response.status, 403, "attempt {attempt}");
+        assert!(
+            response.body.ends_with(b"</html>\n"),
+            "attempt {attempt}: truncated"
+        );
+        assert_eq!(
+            response.body.len(),
+            response.header("Content-Length").parse::<usize>().unwrap(),
+            "attempt {attempt}"
+        );
     }
 }

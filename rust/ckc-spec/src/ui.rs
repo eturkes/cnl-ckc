@@ -1793,6 +1793,7 @@ pub ghost struct Request {
     pub host: Bytes,
     pub origin: Option<Bytes>,
     pub content_type: Bytes,
+    pub cookie: Option<Bytes>,
     pub body: Option<Bytes>,
 }
 
@@ -1824,9 +1825,12 @@ pub ghost struct PostGuideline {
 }
 
 // commit = the snapshot commit the pages render; empty = filesystem mode.
+// session = the launch secret `ckc ui serve` hands the browser; empty = no
+// session (the `ui request` seam and the static render).
 pub ghost struct PostState {
     pub port: nat,
     pub token: Bytes,
+    pub session: Bytes,
     pub models: Result<Seq<PostGuideline>, Bytes>,
     pub now: Bytes,
     pub commit: Bytes,
@@ -1837,6 +1841,7 @@ pub ghost struct Response {
     pub body: Bytes,
     pub allow: Bytes,
     pub location: Bytes,
+    pub set_cookie: Bytes,
 }
 
 // Prepared is not a successful write. Shell must rehash under its lock and
@@ -1874,6 +1879,7 @@ pub open spec fn error_page(status: nat, title: Bytes, body: Html) -> Response {
         ),
         allow: empty(),
         location: empty(),
+        set_cookie: empty(),
     }
 }
 
@@ -2297,14 +2303,72 @@ pub open spec fn handle_post(
     }
 }
 
+// --- Session (contract sec7). The browser receives the launch secret from
+// `ckc ui serve` itself: a private file redirects to `/session/<secret>`, which
+// sets the cookie. Lax: that first navigation arrives cross-site (from a file),
+// and Strict would withhold the cookie on its redirect.
+pub open spec fn session_cookie(port: nat, session: Bytes) -> Bytes {
+    ckc_session_dash() + check::nat_bytes(port) + copy_3() + session
+}
+
+pub open spec fn cookie_pair(p: Bytes) -> Bytes
+    decreases p.len(),
+{
+    if p.len() > 0 && p[0] == 32 {
+        cookie_pair(p.drop_first())
+    } else {
+        p
+    }
+}
+
+pub open spec fn has_cookie(cookie: Option<Bytes>, want: Bytes) -> bool {
+    match cookie {
+        Option::None => false,
+        Option::Some(c) => check::split_on(c, 59).map_values(|p: Bytes| cookie_pair(p)).contains(
+            want,
+        ),
+    }
+}
+
+pub open spec fn signin_response(port: nat, session: Bytes) -> Response {
+    Response {
+        location: slash(),
+        set_cookie: session_cookie(port, session) + cookie_attributes(),
+        ..error_page(303, cnl_ckc_reviewer(), fixed_bytes(p_open_opening_the_review_site_p_close()))
+    }
+}
+
+pub open spec fn session_refusal() -> PostOutcome {
+    refusal(
+        403,
+        open_the_review_site_from_ckc_cap(),
+        ui_request_no_review_session(),
+        this_browser_has_not_opened_the_cap(),
+    )
+}
+
+// The guards over the request line, headers and launch values alone, read
+// before anything else: the shell answers them before any snapshot work.
+pub open spec fn gate(req: Request, port: nat, session: Bytes) -> Option<PostOutcome> {
+    let route = doc_route(req.path);
+    if req.host != copy_127_0_0_1() + check::nat_bytes(port) {
+        Option::Some(forbidden(ui_request_host_not_allowed()))
+    } else if session.len() > 0 && req.method == get_cap() && req.path == session_path() + session {
+        Option::Some(PostOutcome::Refused(signin_response(port, session)))
+    } else if req.method != get_cap() && (req.method != post_cap() || route.is_none()) {
+        Option::Some(method_response(route.is_some()))
+    } else if session.len() > 0 && !has_cookie(req.cookie, session_cookie(port, session)) {
+        Option::Some(session_refusal())
+    } else {
+        Option::None
+    }
+}
+
 pub open spec fn post_outcome(req: Request, s: PostState) -> PostOutcome {
     let route = doc_route(req.path);
-    if req.host != copy_127_0_0_1() + check::nat_bytes(s.port) {
-        forbidden(ui_request_host_not_allowed())
-    } else if req.method != get_cap() && (req.method != post_cap() || route.is_none()) {
-        method_response(route.is_some())
-    } else {
-        match s.models {
+    match gate(req, s.port, s.session) {
+        Option::Some(o) => o,
+        Option::None => match s.models {
             Result::Err(e) => server_error(e),
             Result::Ok(gs) => if req.method == get_cap() {
                 PostOutcome::Read
@@ -2320,8 +2384,31 @@ pub open spec fn post_outcome(req: Request, s: PostState) -> PostOutcome {
                     },
                 }
             },
-        }
+        },
     }
+}
+
+// The redirect page `ckc ui serve` writes for the browser to open from disk.
+pub open spec fn signin_page(port: nat, session: Bytes) -> Html {
+    lines(
+        seq![
+            fixed_bytes(doctype_html()),
+            fixed_bytes(html_open()),
+            fixed_bytes(head_open()),
+            fixed_bytes(meta_open()),
+            fixed_bytes(meta_http_equiv_refresh_open()) + fixed_bytes(http_127_0_0_1()) + number(
+                port,
+            ) + fixed_bytes(session_path()) + attr(session) + fixed_bytes(attr_end()),
+            fixed_bytes(title_open()) + fixed_bytes(cnl_ckc_reviewer()) + fixed_bytes(
+                title_close(),
+            ),
+            fixed_bytes(head_close()),
+            fixed_bytes(body_open()),
+            fixed_bytes(p_open_opening_the_review_site_p_close()),
+            fixed_bytes(body_close()),
+            fixed_bytes(html_close()),
+        ],
+    ) + fixed_bytes(newline())
 }
 
 // --- Executable mirrors: kernel entry points bind through View. ---
@@ -2365,6 +2452,7 @@ pub struct ERequest {
     pub host: Vec<u8>,
     pub origin: Option<Vec<u8>>,
     pub content_type: Vec<u8>,
+    pub cookie: Option<Vec<u8>>,
     pub body: Option<Vec<u8>>,
 }
 
@@ -2381,6 +2469,10 @@ impl View for ERequest {
                 None => None,
             },
             content_type: self.content_type@,
+            cookie: match self.cookie {
+                Some(b) => Some(b@),
+                None => None,
+            },
             body: match self.body {
                 Some(b) => Some(b@),
                 None => None,
@@ -2469,6 +2561,7 @@ impl View for EPostGuideline {
 pub struct EPostState {
     pub port: u16,
     pub token: Vec<u8>,
+    pub session: Vec<u8>,
     pub models: Result<Vec<EPostGuideline>, Vec<u8>>,
     pub now: Vec<u8>,
     pub commit: Vec<u8>,
@@ -2481,6 +2574,7 @@ impl View for EPostState {
         PostState {
             port: self.port as nat,
             token: self.token@,
+            session: self.session@,
             models: match self.models {
                 Ok(gs) => Ok(gs@.map_values(|g: EPostGuideline| g@)),
                 Err(e) => Err(e@),
@@ -2496,6 +2590,7 @@ pub struct EResponse {
     pub body: Vec<u8>,
     pub allow: Vec<u8>,
     pub location: Vec<u8>,
+    pub set_cookie: Vec<u8>,
 }
 
 impl View for EResponse {
@@ -2507,6 +2602,7 @@ impl View for EResponse {
             body: self.body@,
             allow: self.allow@,
             location: self.location@,
+            set_cookie: self.set_cookie@,
         }
     }
 }
@@ -2888,6 +2984,15 @@ copy_table! {
     hidden_in_this_guideline_the_compiler_reads = "\" hidden>In this guideline, the compiler reads ";
     sp_as_sp = " as ";
     p_open_the_words_sp = "<p>The words ";
+    session_path = "/session/";
+    slash = "/";
+    ckc_session_dash = "ckc-session-";
+    cookie_attributes = "; HttpOnly; SameSite=Lax; Path=/";
+    open_the_review_site_from_ckc_cap = "Open the review site from ckc";
+    this_browser_has_not_opened_the_cap = "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser.";
+    ui_request_no_review_session = "ui: request: no review session";
+    p_open_opening_the_review_site_p_close = "<p>Opening the review site.</p>";
+    meta_http_equiv_refresh_open = "<meta http-equiv=\"refresh\" content=\"0; url=";
 }
 
 verus! {

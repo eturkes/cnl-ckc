@@ -2,6 +2,7 @@ use crate::{
     k4_ledger, k4_render, k4_words, k5_bytes as b, k5_form as form, k5_html as h, k5_ledger,
     k5_model, k5_response as response, k5_route as route, k5_url as url,
 };
+use ckc_spec::check as ck;
 use ckc_spec::replay::ESrc;
 use ckc_spec::ui::{
     self as u, EPostDocument, EPostGuideline, EPostOutcome, EPostState, ERecord, ERequest,
@@ -298,26 +299,113 @@ pub fn handle(req: &ERequest, s: &EPostState, g: &EPostGuideline, d: &EPostDocum
     }
 }
 
+pub fn cookie_pair(p: &[u8]) -> (out: &[u8])
+    ensures
+        out@ == u::cookie_pair(p@),
+{
+    let mut i = 0;
+    proof {
+        assert(p@.skip(0) =~= p@);
+    }
+    while i < p.len() && p[i] == 32
+        invariant
+            i <= p.len(),
+            u::cookie_pair(p@) == u::cookie_pair(p@.skip(i as int)),
+        decreases p.len() - i,
+    {
+        proof {
+            assert(p@.skip(i as int).drop_first() =~= p@.skip(i as int + 1));
+        }
+        i += 1;
+    }
+    &p[i..]
+}
+
+pub fn has_cookie(c: &[u8], want: &[u8]) -> (out: bool)
+    ensures
+        out == u::has_cookie(Some(c@), want@),
+{
+    let parts = b::split(c, 59);
+    let ghost pairs = ck::split_on(c@, 59).map_values(|q: u::Bytes| u::cookie_pair(q));
+    let mut i = 0;
+    while i < parts.len()
+        invariant
+            i <= parts.len(),
+            b::views(parts@) == ck::split_on(c@, 59),
+            pairs == ck::split_on(c@, 59).map_values(|q: u::Bytes| u::cookie_pair(q)),
+            forall|k: int| 0 <= k < i ==> pairs[k] != want@,
+        decreases parts.len() - i,
+    {
+        let pair = cookie_pair(&parts[i]);
+        proof {
+            assert(b::views(parts@)[i as int] == parts@[i as int]@);
+        }
+        if b::equal(pair, want) {
+            proof {
+                assert(pairs[i as int] == want@);
+            }
+            return true;
+        }
+        i += 1;
+    }
+    proof {
+        assert(!pairs.contains(want@));
+    }
+    false
+}
+
+pub fn gate(req: &ERequest, port: u16, session: &[u8]) -> (out: Option<EPostOutcome>)
+    ensures
+        match out {
+            Some(o) => u::gate(req@, port as nat, session@) == Some(o@),
+            None => u::gate(req@, port as nat, session@) is None,
+        },
+{
+    hide(u::forbidden);
+    hide(u::method_response);
+    hide(u::signin_response);
+    hide(u::session_refusal);
+    hide(u::lit);
+    let route = route::document(&req.path);
+    let host = b::cat(b::literal("127.0.0.1:"), &b::nat_bytes(port as u64));
+    if !b::equal(&req.host, &host) {
+        return Some(response::forbidden(&b::literal("ui: request: host not allowed")));
+    }
+    let get = b::equal(&req.method, &b::literal("GET"));
+    let post = b::equal(&req.method, &b::literal("POST"));
+    if session.len() > 0 && get && b::equal(&req.path, &b::cat(b::literal("/session/"), session)) {
+        return Some(EPostOutcome::Refused(response::signin(port, session)));
+    }
+    if !get && (!post || route.is_none()) {
+        return Some(response::method(route.is_some()));
+    }
+    if session.len() > 0 {
+        let want = response::cookie(port, session);
+        let found = match &req.cookie {
+            None => false,
+            Some(c) => has_cookie(c, &want),
+        };
+        if !found {
+            return Some(response::session_refusal());
+        }
+    }
+    None
+}
+
 pub fn outcome(req: &ERequest, s: &EPostState) -> (out: EPostOutcome)
     ensures
         out@ == u::post_outcome(req@, s@),
 {
-    hide(u::forbidden);
-    hide(u::method_response);
+    hide(u::gate);
     hide(u::server_error);
     hide(u::not_found);
     hide(u::handle_post);
     hide(u::lit);
+    if let Some(o) = gate(req, s.port, &s.session) {
+        return o;
+    }
     let route = route::document(&req.path);
-    let host = b::cat(b::literal("127.0.0.1:"), &b::nat_bytes(s.port as u64));
-    if !b::equal(&req.host, &host) {
-        return response::forbidden(&b::literal("ui: request: host not allowed"));
-    }
     let get = b::equal(&req.method, &b::literal("GET"));
-    let post = b::equal(&req.method, &b::literal("POST"));
-    if !get && (!post || route.is_none()) {
-        return response::method(route.is_some());
-    }
     let gs = match &s.models {
         Err(e) => return response::server_error(e),
         Ok(gs) => gs,

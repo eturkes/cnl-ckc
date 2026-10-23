@@ -204,11 +204,12 @@ impl Response {
     }
 }
 
-fn http(port: u16, method: &str, body: &[u8]) -> std::io::Result<Response> {
+fn http(port: u16, method: &str, body: &[u8], cookie: &str) -> std::io::Result<Response> {
     let mut stream = TcpStream::connect(("127.0.0.1", port))?;
     stream.set_read_timeout(Some(Duration::from_secs(20)))?;
-    let mut request =
-        format!("{method} {PAGE} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n");
+    let mut request = format!(
+        "{method} {PAGE} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nCookie: {cookie}\r\nConnection: close\r\n"
+    );
     if method == "POST" {
         request += &format!(
             "Content-Length: {}\r\nContent-Type: application/x-www-form-urlencoded\r\nOrigin: http://127.0.0.1:{port}\r\n",
@@ -226,6 +227,7 @@ fn http(port: u16, method: &str, body: &[u8]) -> std::io::Result<Response> {
 struct Server {
     child: Child,
     port: u16,
+    cookie: String,
 }
 impl Server {
     fn start(case: &Case) -> Self {
@@ -234,7 +236,13 @@ impl Server {
             .local_addr()
             .unwrap()
             .port();
-        let server = Self {
+        // No browser launcher in reach: the server prints the sign-in address,
+        // whose session the requests carry as the launch cookie (contract sec7).
+        let run = case.work.0.join("run");
+        fs::create_dir_all(&run).unwrap();
+        fs::set_permissions(&run, std::os::unix::fs::PermissionsExt::from_mode(0o700)).unwrap();
+        let stdout = case.work.0.join("serve.stdout");
+        let mut server = Self {
             child: Command::new(program())
                 .args([
                     "ui",
@@ -245,15 +253,33 @@ impl Server {
                 .current_dir(&case.work.0)
                 .envs(GIT_ENV)
                 .env("TMPDIR", &case.tmp)
-                .stdout(Stdio::null())
+                .env("XDG_RUNTIME_DIR", &run)
+                .env_remove("BROWSER")
+                .env_remove("DISPLAY")
+                .env_remove("WAYLAND_DISPLAY")
+                .env_remove("WSL_DISTRO_NAME")
+                .stdin(Stdio::null())
+                .stdout(File::create(&stdout).unwrap())
                 .stderr(File::create(case.work.0.join("serve.stderr")).unwrap())
                 .spawn()
                 .unwrap(),
             port,
+            cookie: String::new(),
         };
+        let prefix =
+            format!("ui: no browser opened. Open this address: http://127.0.0.1:{port}/session/");
         let deadline = Instant::now() + Duration::from_secs(20);
+        let session = loop {
+            let text = fs::read_to_string(&stdout).unwrap_or_default();
+            if let Some(line) = text.lines().find(|l| l.starts_with(&prefix)) {
+                break line[prefix.len()..].to_owned();
+            }
+            assert!(Instant::now() < deadline, "server startup: 20 s");
+            std::thread::sleep(Duration::from_millis(25));
+        };
+        server.cookie = format!("ckc-session-{port}={session}");
         loop {
-            match http(port, "GET", b"") {
+            match http(port, "GET", b"", &server.cookie) {
                 Ok(page) => {
                     assert_eq!(page.status, 200, "server GET: {:?}", page.detail());
                     return server;
@@ -267,13 +293,13 @@ impl Server {
     }
 
     fn page(&self) -> Response {
-        let page = http(self.port, "GET", b"").unwrap();
+        let page = http(self.port, "GET", b"", &self.cookie).unwrap();
         assert_eq!(page.status, 200, "GET: {:?}", page.detail());
         page
     }
 
     fn post(&self, body: &str) -> Response {
-        http(self.port, "POST", body.as_bytes()).unwrap()
+        http(self.port, "POST", body.as_bytes(), &self.cookie).unwrap()
     }
 }
 impl Drop for Server {

@@ -19,7 +19,13 @@ pub fn error_page(status: u16, title: &[u8], body: EPage) -> (out: EResponse)
         ]);
     }
     let page = frame::frame(title, h::fixed("cnl-ckc reviewer"), h::lines(&rows));
-    EResponse { status, body: k5_render::page(&page), allow: Vec::new(), location: Vec::new() }
+    EResponse {
+        status,
+        body: k5_render::page(&page),
+        allow: Vec::new(),
+        location: Vec::new(),
+        set_cookie: Vec::new(),
+    }
 }
 
 pub fn annotated(copy: &[u8], detail: &[u8]) -> (out: EPage)
@@ -125,6 +131,101 @@ pub fn not_found() -> (out: EPostOutcome)
             h::fixed("<p>The requested page does not exist.</p>"),
         ),
     )
+}
+
+pub fn cookie(port: u16, session: &[u8]) -> (out: Vec<u8>)
+    ensures
+        out@ == u::session_cookie(port as nat, session@),
+{
+    let name = b::cat(b::literal("ckc-session-"), &b::nat_bytes(port as u64));
+    b::cat(b::cat(name, &b::literal("=")), session)
+}
+
+pub fn signin(port: u16, session: &[u8]) -> (out: EResponse)
+    ensures
+        out@ == u::signin_response(port as nat, session@),
+{
+    let mut response = error_page(
+        303,
+        &b::literal("cnl-ckc reviewer"),
+        h::fixed("<p>Opening the review site.</p>"),
+    );
+    response.location = b::literal("/");
+    response.set_cookie = b::cat(
+        cookie(port, session),
+        &b::literal("; HttpOnly; SameSite=Lax; Path=/"),
+    );
+    response
+}
+
+pub fn session_refusal() -> (out: EPostOutcome)
+    ensures
+        out@ == u::session_refusal(),
+{
+    refusal(
+        403,
+        &b::literal("Open the review site from ckc"),
+        &b::literal("ui: request: no review session"),
+        &b::literal(
+            "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser.",
+        ),
+    )
+}
+
+pub fn signin_page(port: u16, session: &[u8]) -> (out: EPage)
+    ensures
+        out@ == u::signin_page(port as nat, session@),
+{
+    hide(u::lit);
+    let refresh = h::cat(
+        h::cat(
+            h::cat(
+                h::cat(
+                    h::cat(
+                        h::fixed("<meta http-equiv=\"refresh\" content=\"0; url="),
+                        h::fixed("http://127.0.0.1:"),
+                    ),
+                    h::number(port as usize),
+                ),
+                h::fixed("/session/"),
+            ),
+            h::attr(session),
+        ),
+        h::fixed("\">"),
+    );
+    let mut rows = Vec::new();
+    rows.push(h::fixed("<!doctype html>"));
+    rows.push(h::fixed("<html lang=\"en\">"));
+    rows.push(h::fixed("<head>"));
+    rows.push(h::fixed("<meta charset=\"utf-8\">"));
+    rows.push(refresh);
+    rows.push(
+        h::cat(h::cat(h::fixed("<title>"), h::fixed("cnl-ckc reviewer")), h::fixed("</title>")),
+    );
+    rows.push(h::fixed("</head>"));
+    rows.push(h::fixed("<body>"));
+    rows.push(h::fixed("<p>Opening the review site.</p>"));
+    rows.push(h::fixed("</body>"));
+    rows.push(h::fixed("</html>"));
+    proof {
+        assert(h::pages(rows@) =~= seq![
+            u::fixed_bytes(u::doctype_html()),
+            u::fixed_bytes(u::html_open()),
+            u::fixed_bytes(u::head_open()),
+            u::fixed_bytes(u::meta_open()),
+            u::fixed_bytes(u::meta_http_equiv_refresh_open()) + u::fixed_bytes(u::http_127_0_0_1())
+                + u::number(port as nat) + u::fixed_bytes(u::session_path()) + u::attr(session@)
+                + u::fixed_bytes(u::attr_end()),
+            u::fixed_bytes(u::title_open()) + u::fixed_bytes(u::cnl_ckc_reviewer())
+                + u::fixed_bytes(u::title_close()),
+            u::fixed_bytes(u::head_close()),
+            u::fixed_bytes(u::body_open()),
+            u::fixed_bytes(u::p_open_opening_the_review_site_p_close()),
+            u::fixed_bytes(u::body_close()),
+            u::fixed_bytes(u::html_close()),
+        ]);
+    }
+    h::cat(h::lines(&rows), h::fixed("\n"))
 }
 
 } // verus!

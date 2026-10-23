@@ -156,12 +156,20 @@ Run each command in the repository root. The examples call the program
   build `ckc` first.
 - The reviewer site listens on `127.0.0.1` only. To choose the port,
   give a port number to `ckc ui serve`.
+- `BROWSER` names the program that opens the reviewer site. If you do
+  not set it, `ckc ui serve` uses `xdg-open` on a desktop, or `wslview`
+  in WSL.
 
 ## Reviewing
 
-Start the site with `ckc ui serve` and open the
-address that it prints. The site runs only on the local computer, with
-no accounts. Each document page asks one question:
+Start the site with `ckc ui serve` in a terminal window. The site opens
+in your browser. Keep the window open while you review. To open the site
+again, press Enter in that window. To stop the site, press Ctrl+C. If no
+browser opens, open the address that the window shows.
+
+The site runs only on the local computer, with no accounts. Only a
+browser that opened the site from that window can use it. Each document
+page asks one question:
 does the ACE representation appropriately reflect the original
 passage? Record approve or reject, with your name and an optional
 comment. The site records the name as typed and does not verify it.

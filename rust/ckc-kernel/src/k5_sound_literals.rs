@@ -7098,6 +7098,24 @@ pub proof fn l230(inputs: Seq<u::Bytes>)
     b::literal(u::lit("http://127.0.0.1:"@), inputs);
 }
 
+pub proof fn f230(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("http://127.0.0.1:"@), inputs, 2, 2),
+        u::copy_registry()[230] == u::lit("http://127.0.0.1:"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l230(inputs);
+    reveal_strlit("http://127.0.0.1:");
+    is_ascii_chars_encode_utf8("http://127.0.0.1:"@);
+    assert(u::lit("http://127.0.0.1:"@)
+        =~= bs![104u8,116,116,112,58,47,47,49,50,55,46,48,46,48,46,49,58]);
+    assert(cx::scan(bs![104u8,116,116,112,58,47,47,49,50,55,46,48,46,48,46,49,58], 2) == 2)
+        by (compute_only);
+    cx::exact(u::lit("http://127.0.0.1:"@), 2);
+    h::fixed(u::lit("http://127.0.0.1:"@), inputs, 2, 2);
+}
+
 pub proof fn l231(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("ui: verdict: origin not allowed"@)),
@@ -8834,6 +8852,244 @@ pub proof fn f276(inputs: Seq<u::Bytes>)
         by (compute_only);
     cx::exact(u::lit("<p>The words "@), 0);
     h::fixed(u::lit("<p>The words "@), inputs, 0, 0);
+}
+
+pub proof fn l277(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("/session/"@)),
+        u::copy_derived(u::lit("/session/"@), inputs, u::copy_registry()),
+        u::copy_registry()[277] == u::lit("/session/"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[277] == u::lit("/session/"@) && 277 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("/session/"@), inputs);
+}
+
+pub proof fn f277(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("/session/"@), inputs, 2, 2),
+        u::copy_registry()[277] == u::lit("/session/"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l277(inputs);
+    reveal_strlit("/session/");
+    is_ascii_chars_encode_utf8("/session/"@);
+    assert(u::lit("/session/"@) =~= bs![47u8,115,101,115,115,105,111,110,47]);
+    assert(cx::scan(bs![47u8,115,101,115,115,105,111,110,47], 2) == 2) by (compute_only);
+    cx::exact(u::lit("/session/"@), 2);
+    h::fixed(u::lit("/session/"@), inputs, 2, 2);
+}
+
+pub proof fn l278(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("/"@)),
+        u::copy_derived(u::lit("/"@), inputs, u::copy_registry()),
+        u::copy_registry()[278] == u::lit("/"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[278] == u::lit("/"@) && 278 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("/"@), inputs);
+}
+
+pub proof fn l279(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("ckc-session-"@)),
+        u::copy_derived(u::lit("ckc-session-"@), inputs, u::copy_registry()),
+        u::copy_registry()[279] == u::lit("ckc-session-"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[279] == u::lit("ckc-session-"@) && 279 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("ckc-session-"@), inputs);
+}
+
+pub proof fn l280(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("; HttpOnly; SameSite=Lax; Path=/"@)),
+        u::copy_derived(u::lit("; HttpOnly; SameSite=Lax; Path=/"@), inputs, u::copy_registry()),
+        u::copy_registry()[280] == u::lit("; HttpOnly; SameSite=Lax; Path=/"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[280] == u::lit("; HttpOnly; SameSite=Lax; Path=/"@) && 280
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("; HttpOnly; SameSite=Lax; Path=/"@), inputs);
+}
+
+pub proof fn l281(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("Open the review site from ckc"@)),
+        u::copy_derived(u::lit("Open the review site from ckc"@), inputs, u::copy_registry()),
+        u::copy_registry()[281] == u::lit("Open the review site from ckc"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[281] == u::lit("Open the review site from ckc"@) && 281
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("Open the review site from ckc"@), inputs);
+}
+
+pub proof fn l282(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser."@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser."@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[282] == u::lit(
+            "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser."@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[282] == u::lit(
+        "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser."@,
+    ) && 282 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser."@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn l283(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("ui: request: no review session"@)),
+        u::copy_derived(u::lit("ui: request: no review session"@), inputs, u::copy_registry()),
+        u::copy_registry()[283] == u::lit("ui: request: no review session"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[283] == u::lit("ui: request: no review session"@) && 283
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("ui: request: no review session"@), inputs);
+}
+
+pub proof fn l284(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<p>Opening the review site.</p>"@)),
+        u::copy_derived(u::lit("<p>Opening the review site.</p>"@), inputs, u::copy_registry()),
+        u::copy_registry()[284] == u::lit("<p>Opening the review site.</p>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[284] == u::lit("<p>Opening the review site.</p>"@) && 284
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<p>Opening the review site.</p>"@), inputs);
+}
+
+pub proof fn f284(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<p>Opening the review site.</p>"@), inputs, 0, 0),
+        u::copy_registry()[284] == u::lit("<p>Opening the review site.</p>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l284(inputs);
+    reveal_strlit("<p>Opening the review site.</p>");
+    is_ascii_chars_encode_utf8("<p>Opening the review site.</p>"@);
+    assert(u::lit("<p>Opening the review site.</p>"@)
+        =~= bs![60u8,112,62,79,112,101,110,105,110,103,32,116,104,101,32,114,101,118,105,101,119,32,115,105,116,101,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,79,112,101,110,105,110,103,32,116,104,101,32,114,101,118,105,101,119,32,115,105,116,101,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<p>Opening the review site.</p>"@), 0);
+    h::fixed(u::lit("<p>Opening the review site.</p>"@), inputs, 0, 0);
+}
+
+pub proof fn l285(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@)),
+        u::copy_derived(
+            u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[285] == u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[285] == u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@)
+        && 285 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@), inputs);
+}
+
+pub proof fn f285(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<meta http-equiv=\"refresh\" content=\"0; url="@), inputs, 0, 2),
+        u::copy_registry()[285] == u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l285(inputs);
+    reveal_strlit("<meta http-equiv=\"refresh\" content=\"0; url=");
+    is_ascii_chars_encode_utf8("<meta http-equiv=\"refresh\" content=\"0; url="@);
+    assert(u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@)
+        =~= bs![60u8,109,101,116,97,32,104,116,116,112,45,101,113,117,105,118,61,34,114,101,102,114,101,115,104,34,32,99,111,110,116,101,110,116,61,34,48,59,32,117,114,108,61]);
+    assert(cx::scan(
+        bs![60u8,109,101,116,97,32,104,116,116,112,45,101,113,117,105,118,61,34,114,101,102,114,101,115,104,34,32,99,111,110,116,101,110,116,61,34,48,59,32,117,114,108,61],
+        0,
+    ) == 2) by (compute_only);
+    cx::exact(u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@), 0);
+    h::fixed(u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@), inputs, 0, 2);
 }
 
 } // verus!

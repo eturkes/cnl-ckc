@@ -6254,6 +6254,207 @@ pub proof fn literal_276()
     n::clean_bridge("<p>The words "@);
 }
 
+pub open spec fn data_277() -> Seq<nat> {
+    ns![47u32,115,101,115,115,105,111,110,47].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_277()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[277]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l277(Seq::empty());
+    p::all();
+    reveal_strlit("/session/");
+    assert(n::codes("/session/"@) =~= data_277());
+    assert(n::clean(data_277(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("/session/"@);
+}
+
+pub open spec fn data_278() -> Seq<nat> {
+    ns![47u32,].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_278()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[278]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l278(Seq::empty());
+    p::all();
+    reveal_strlit("/");
+    assert(n::codes("/"@) =~= data_278());
+    assert(n::clean(data_278(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("/"@);
+}
+
+pub open spec fn data_279() -> Seq<nat> {
+    ns![99u32,107,99,45,115,101,115,115,105,111,110,45].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_279()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[279]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l279(Seq::empty());
+    p::all();
+    reveal_strlit("ckc-session-");
+    assert(n::codes("ckc-session-"@) =~= data_279());
+    assert(n::clean(data_279(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("ckc-session-"@);
+}
+
+pub open spec fn data_280() -> Seq<nat> {
+    ns![59u32,32,72,116,116,112,79,110,108,121,59,32,83,97,109,101,83,105,116,101,61,76,97,120,59,32,80,97,116,104,61,47].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_280()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[280]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l280(Seq::empty());
+    p::all();
+    reveal_strlit("; HttpOnly; SameSite=Lax; Path=/");
+    assert(n::codes("; HttpOnly; SameSite=Lax; Path=/"@) =~= data_280());
+    assert(n::clean(data_280(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("; HttpOnly; SameSite=Lax; Path=/"@);
+}
+
+pub open spec fn data_281() -> Seq<nat> {
+    ns![79u32,112,101,110,32,116,104,101,32,114,101,118,105,101,119,32,115,105,116,101,32,102,114,111,109,32,99,107,99].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_281()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[281]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l281(Seq::empty());
+    p::all();
+    reveal_strlit("Open the review site from ckc");
+    assert(n::codes("Open the review site from ckc"@) =~= data_281());
+    assert(n::clean(data_281(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("Open the review site from ckc"@);
+}
+
+pub open spec fn data_282() -> Seq<nat> {
+    ns![84u32,104,105,115,32,98,114,111,119,115,101,114,32,104,97,115,32,110,111,116,32,111,112,101,110,101,100,32,116,104,101,32,114,101,118,105,101,119,32,115,105,116,101,32,121,101,116,46,32,73,110,32,116,104,101,32,119,105,110,100,111,119,32,119,104,101,114,101,32,99,107,99,32,117,105,32,115,101,114,118,101,32,114,117,110,115,44,32,112,114,101,115,115,32,69,110,116,101,114,46,32,84,104,101,32,114,101,118,105,101,119,32,115,105,116,101,32,111,112,101,110,115,32,105,110,32,116,104,105,115,32,98,114,111,119,115,101,114,46].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_282()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[282]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l282(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser.",
+    );
+    assert(n::codes(
+        "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser."@,
+    ) =~= data_282());
+    assert(n::clean(data_282(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "This browser has not opened the review site yet. In the window where ckc ui serve runs, press Enter. The review site opens in this browser."@,
+    );
+}
+
+pub open spec fn data_283() -> Seq<nat> {
+    ns![117u32,105,58,32,114,101,113,117,101,115,116,58,32,110,111,32,114,101,118,105,101,119,32,115,101,115,115,105,111,110].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_283()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[283]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l283(Seq::empty());
+    p::all();
+    reveal_strlit("ui: request: no review session");
+    assert(n::codes("ui: request: no review session"@) =~= data_283());
+    assert(n::clean(data_283(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("ui: request: no review session"@);
+}
+
+pub open spec fn data_284() -> Seq<nat> {
+    ns![60u32,112,62,79,112,101,110,105,110,103,32,116,104,101,32,114,101,118,105,101,119,32,115,105,116,101,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_284()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[284]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l284(Seq::empty());
+    p::all();
+    reveal_strlit("<p>Opening the review site.</p>");
+    assert(n::codes("<p>Opening the review site.</p>"@) =~= data_284());
+    assert(n::clean(data_284(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<p>Opening the review site.</p>"@);
+}
+
+pub open spec fn data_285() -> Seq<nat> {
+    ns![60u32,109,101,116,97,32,104,116,116,112,45,101,113,117,105,118,61,34,114,101,102,114,101,115,104,34,32,99,111,110,116,101,110,116,61,34,48,59,32,117,114,108,61].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_285()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[285]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l285(Seq::empty());
+    p::all();
+    reveal_strlit("<meta http-equiv=\"refresh\" content=\"0; url=");
+    assert(n::codes("<meta http-equiv=\"refresh\" content=\"0; url="@) =~= data_285());
+    assert(n::clean(data_285(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<meta http-equiv=\"refresh\" content=\"0; url="@);
+}
+
 } // verus!
 }
 pub mod css {
@@ -11795,7 +11996,7 @@ pub proof fn block_256(i: int)
 
 pub proof fn block_272(i: int)
     requires
-        272 <= i < 277,
+        272 <= i < 286,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -11809,14 +12010,32 @@ pub proof fn block_272(i: int)
         batch_272::literal_274();
     } else if i == 275 {
         batch_272::literal_275();
-    } else {
+    } else if i == 276 {
         batch_272::literal_276();
+    } else if i == 277 {
+        batch_272::literal_277();
+    } else if i == 278 {
+        batch_272::literal_278();
+    } else if i == 279 {
+        batch_272::literal_279();
+    } else if i == 280 {
+        batch_272::literal_280();
+    } else if i == 281 {
+        batch_272::literal_281();
+    } else if i == 282 {
+        batch_272::literal_282();
+    } else if i == 283 {
+        batch_272::literal_283();
+    } else if i == 284 {
+        batch_272::literal_284();
+    } else {
+        batch_272::literal_285();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 277,
+        0 <= i < 286,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -11863,7 +12082,7 @@ pub proof fn literal(i: int)
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 277,
+        u::copy_registry().len() == 286,
 {
     hide(u::lit);
     hide(u::css_text);
