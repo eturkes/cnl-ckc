@@ -208,6 +208,9 @@ const click = async (selector, unmarked = false) => {
 const tap = async (selector) => {
   const point = await location(selector);
   if (!point) throw new TransitionFailure(`tap target absent: ${selector}`);
+  // A touch-only device has no cursor apart from the tap point: Chrome reruns hover at the CDP mouse
+  // position after a scroll, so a cursor parked elsewhere fires mouseout from the tapped mark (pick cleared).
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", ...point }, session);
   await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ ...point, id: 0, radiusX: 1, radiusY: 1, force: 1 }] }, session);
   await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }, session);
 };
