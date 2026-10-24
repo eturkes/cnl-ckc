@@ -101,7 +101,7 @@ Question: does `guidelines/cdc-2022-opioid/source/*.txt` (713 regions, extractio
 
 ## Rerun
 
-`python3 -I .agent/archive/extraction-census/check.py .` → candidates sha256 ok (regenerated from the PDF), validator green, census = codings + adjudication row for row, agreement lines; rc 0. Firing: one `census.tsv` class edit → `rebuild: 1 rows differ`, rc 1. A different pdftotext build can shift spans → candidates sha256 `DIFFERS`.
+`python3 -I .agent/archive/extraction-census/check.py .` → candidates sha256 ok (regenerated from the PDF + the guideline at the census commit 6646052a), validator green, census = codings + adjudication row for row, agreement lines, `map:` line (the CR round: each in-scope row → a region of the live `coverage.tsv` with a ruling, `map.tsv`); rc 0. Firing: one `census.tsv` class edit → `rebuild: 1 rows differ`, rc 1; one dropped `map.tsv` row → `map: … unmapped=1`, rc 1. A different pdftotext build can shift spans → candidates sha256 `DIFFERS`.
 
 ## Limits
 
