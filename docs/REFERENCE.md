@@ -1607,7 +1607,7 @@ To start a release line:
 3. Run `ckc dist build`. Keep the archive and its `.sha256` sidecar.
 4. Write the candidate notes, as in step 10 below. Create the annotated
    tag `kb-YYYY-MM-DD-rc.1` on the commit, with the notes as its
-   message.
+   message. Push the branch and the tag.
 5. Add the review checkout:
    `git worktree add .release/kb-YYYY-MM-DD release/kb-YYYY-MM-DD`.
    In that directory, run
@@ -1636,7 +1636,7 @@ To release the line:
     the content change (`none`, `correction`, or `substantive` when a
     change alters whether a recommendation applies to a patient).
 11. Create the annotated git tag `kb-YYYY-MM-DD` on that commit, with
-    the release notes as its message.
+    the release notes as its message. Push the tag.
 12. Deposit the archive and its sidecar on Zenodo as a new version of
     the project record. Link the preprint that describes the release.
     The version DOI then names the archive bytes.
@@ -1644,9 +1644,11 @@ To release the line:
     and the version DOI.
 14. Merge the line into `main` with
     `git merge --no-ff release/kb-YYYY-MM-DD`. If
-    `release-manifest.tsv` conflicts, run `ckc release-manifest`. If the
-    schema on `main` has changed, compile again. Decisions that bind
-    clauses which `main` has changed read outdated on `main`.
+    `release-manifest.tsv` conflicts, keep either side and commit the
+    merge. If the schema on `main` has changed, compile again and commit.
+    Then run `just amend-manifest`: it reads the release inputs of the
+    new commit. Decisions that bind clauses which `main` has changed
+    read outdated on `main`.
 15. Remove the review checkout:
     `git worktree remove .release/kb-YYYY-MM-DD`.
 
