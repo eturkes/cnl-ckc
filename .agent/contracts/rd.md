@@ -1,0 +1,33 @@
+# RD — reviewer disclosure on the decision form (contract)
+
+Row = `.agent/deferred.md` "Reviewer disclosure" (security review SEC D3): the release payload carries `guidelines/<id>/audit/adjudication.tsv` (ruled product: Decisions `Product`), so each reviewer name + comment becomes public, and ledger batches are committed on the pushed release branch (REFERENCE § Releasing step 7), so they are public in git as well; the decision form never says so. User ruling (AskUserQuestion, pre-release request): "Form states it (Recommended)" = one plain sentence on the decision form: the name and comment are published with the knowledge base and its repository; README § Reviewing mirrors it; REFERENCE § Export records the choice. Names + comments stay in the release.
+
+## Tier
+
+`kernel` (precedent n22, n23): `ckc-spec` ui.rs (copy table + `document_html`) + uninspected `ckc-kernel` impl + proofs (K5 document render fidelity + copy soundness) + goldens (data, re-pinned by script).
+
+## Design
+
+- D1 Copy table: one row appended at the `copy_table!` end (registry index 286; size 286 → 287):
+  `p_open_your_name_and_comment_are_published = "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>";`
+  No class, id or attribute (no new stylesheet rule; the paragraph inherits body text). Sentence case; `ckc ui copy-check` over the literal rc 0 (control `Get started now!` rc 1: `exclamatory`); no internal term (ledger, TSV, digest, git); the two publication destinations named, no claim about when. Passive voice = the records page sibling (`Each reviewer name is recorded as entered and is not verified.`) (the branch push precedes the release).
+- D2 Placement: `document_html` renders D1 once, inside the `<form>`, directly after `</fieldset>` and before `<label for="reviewer">Reviewer name</label>` ⇒ a reviewer meets it before both fields it concerns, in visual and in reading order. Only document pages carry the form ⇒ only document pages carry D1. Print hides it with the form (`form { display: none }` in the print block).
+- D3 Kernel: `k5_document` renders the row at the same position at all three sites that put `fieldset_close` before the reviewer label: the spec-side lists `form_spec` (`k5_document.rs:177`) + `decomposition` (`:503`) and the executable `form` push (`:230–231`); `k5_sound_document` gains `b::f(286)` between `b::f(163)` + `b::f(164)` (`:180–181`), its literal soundness fact in `tail_sound`, and the page proof's fact inventory (`:407–408`, `:533–534`), keeping the concatenation association. Generated files: `k5_sound_literals.rs` + `k5_sound_registry.rs` regenerate from ui.rs (size assertions 286 → 287); `k5_sound_{chrome,encoding,patterns}.rs` stay byte-identical (their CSS, script + token inputs are unchanged); `replay` on the unit commit → identical ×6. Trusted-surface re-pin = `ckc trust-audit --write rust` after formatting, its diff reviewed. Proof budget: a page proof over its rlimit → rust.md remedies (split, hide, short pieces), never a bigger rlimit.
+- D4 Goldens: `.agent/archive/migrations/rd-publication-note.py <repo-root>` (explicit root, idempotent) inserts the D1 line at the exact anchor `</fieldset>\n<label for="reviewer">Reviewer name</label>` (one per file) in every committed golden/expect page file holding the form, outside fixture `tree/` + `worktree/` inputs: measured at aea19af0 = 52 files under `tests/ui/` = 45 document pages (`golden/**/doc/*.html`) + 7 HTTP-200 bodies (basic `request-encoded-200` + `request-query-200`, verdict-get-form `hostile-empty-token`, `hostile-token`, `stale`, `unreviewed`, verdict-subject-drift `get`); none under `rust/ckc/tests/` or `tools/`; no other byte moves; the 122 rows of the 13 `assertions.tsv` files keep their membership.
+- D4u UR frozen oracle (`tests/ur-ui/legacy.rs`): the pre-unit archive `tests/ur-ui/pre-unit-ui.tar.gz` holds the same 52 form carriers and stays byte-identical (`BASE_ARCHIVE_SHA` unchanged); `transformed()` independently inserts the D1 line (from this contract's literal, not from the renderer or the migration) at the D4 anchor of each form carrier, after the D10 + SEC5 + SEC7 transforms; the P7 replay runs `rd-publication-note.py` after `sec7-usage-repin.py` on each pass; the whole-file comparisons + second-pass byte identity stay.
+- D5 Docs: README § Reviewing gains the same fact in README register; REFERENCE § Reviewer interface (form contents) + § Export (the payload ships each reviewer name + comment; the decision form states it) record the ruling; `ui.md` copy-registry size 287; `rust.md` generator size assertion 287; Decisions `Review UI` names the sentence.
+
+## Predicates
+
+- P1 `just verify`: 0 errors, 0 `^warning` lines; every K5 theorem kept (document render fidelity, copy soundness over the 287 entries, escaping, frame soundness).
+- P2 Golden diff = exactly one inserted line per form (the D1 line, directly after `</fieldset>`) in each touched file, nothing else (scripted check over the diff hunks); the migration rerun on the re-pinned tree = no change.
+- P3 Render: `ckc ui render` of the committed corpus → every document page holds D1 exactly once, inside its `<form>`, directly before `<label for="reviewer">`; no index, guideline, records, session/sign-in, error, refusal or 303 page holds it, and those bodies stay byte-identical (a 303 + every refusal = its own `error_page`, never an embedded document). `ckc ui check` green.
+- P4 Suites: `copy_registry.rs` (287 rows; D1's name has a named use outside the table), `ui_fixtures`, `ur_ui`, `n22_viewport`, `n23_separators`, `ui_socket`, `ui_commit` green; `just mobile` green with its red inputs firing; a 390 px and a desktop screenshot of one document page's form inspected (sentence visible between the decision choices and the name field, no sideways scroll); print media: the paragraph hidden with the form (one observed print-media check, recorded).
+- P5 Diff-blind `tester` suite on this committed contract (red on the unfixed revision, green on the unit) + `reviewer` on the kernel diff before the unit commit (rust.md kernel unit flow; `consultant` on this contract first).
+- P6 Full `just gate` green at the unit commit + the CI gate (`just ci rd`).
+
+## Rulings
+
+- R1 (user) form states it; names + comments stay in the release.
+- R2 (user, AskUserQuestion after consultant-1 K7): wording = "…in the knowledge base and its public repository" (both publication destinations named), over the advisor's "…as part of the knowledge base".
+- R3 (MAIN, consultant-1 K3/K4/K5/K6): three kernel sites, the UR frozen-oracle extension, the rust.md size pin, byte-identical non-document bodies.
