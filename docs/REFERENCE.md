@@ -1587,8 +1587,8 @@ leaves `main`. A second line that leaves `main` on the same date adds
 
 - `release/kb-YYYY-MM-DD` is its branch.
 - `kb-YYYY-MM-DD-rc.1`, `kb-YYYY-MM-DD-rc.2`, and so on are its release
-  candidates, as annotated tags. A candidate is not reviewed.
-- `kb-YYYY-MM-DD` is its release, as an annotated tag on the last
+  candidates, as signed annotated tags. A candidate is not reviewed.
+- `kb-YYYY-MM-DD` is its release, as a signed annotated tag on the last
   commit of the line. The release notes and `CITATION.cff` state the
   date of the release.
 
@@ -1600,6 +1600,18 @@ later change of the predicate set or of a predicate meaning on `main`
 takes the next identifier. The first release line is the first
 publication of schema `1`.
 
+Each tag carries the SSH signature of a key in `docs/allowed_signers`,
+and its message is the notes of the candidate or the release. The notes
+name the signer and the SHA-256 fingerprint of the key. They also hold
+one line `<SHA-256>  <file name>` for each published file, so the
+signed tag binds the bytes of these files. To sign, set the public key
+of the signer and create the tag:
+
+```
+git -c gpg.format=ssh -c user.signingkey=<public key file> \
+    tag -s kb-YYYY-MM-DD-rc.1 -F <notes file> <commit>
+```
+
 To start a release line:
 
 1. Commit the snapshot on `main`. `just gate` and CI must be green.
@@ -1607,9 +1619,10 @@ To start a release line:
 3. Run `ckc dist build` and `just release-ckc`. Keep the four files
    in `dist/`: the archive, the reviewer program `ckc-x86_64-linux`,
    and the `.sha256` sidecar of each.
-4. Write the candidate notes, as in step 10 below. Create the annotated
-   tag `kb-YYYY-MM-DD-rc.1` on the commit, with the notes as its
-   message. Push the branch and the tag. Publish a GitHub pre-release
+4. Write the candidate notes, as in step 10 below. Create the signed
+   annotated tag `kb-YYYY-MM-DD-rc.1` on the commit, with the notes as
+   its message. Verify the tag and the four files, as in "To verify a
+   release" below. Push the branch and the tag. Publish a GitHub pre-release
    for the tag, with the notes and the four files of step 3.
 5. Add the review checkout:
    `git worktree add .release/kb-YYYY-MM-DD release/kb-YYYY-MM-DD`.
@@ -1633,15 +1646,17 @@ To release the line:
    counts (`adjudication <id> approved=…`). `just gate` and CI must be
    green on the last commit of the branch.
 10. Run `ckc dist build` and `just release-ckc`. Write the release
-    notes. State the identifier, the date, the archive name and its
-    SHA-256, the SHA-256 of `ckc-x86_64-linux`, the release commit, the
+    notes. State the identifier, the date, the signer and the key
+    fingerprint, the archive name, one `<SHA-256>  <file name>` line
+    for the archive and for `ckc-x86_64-linux`, the release commit, the
     schema identifier, the source edition and digest of each guideline,
     and the review label counts. Classify the change from the previous
     release twice: the schema change (`none`, or the new identifier) and
     the content change (`none`, `correction`, or `substantive` when a
     change alters whether a recommendation applies to a patient).
-11. Create the annotated git tag `kb-YYYY-MM-DD` on that commit, with
-    the release notes as its message. Push the tag. Publish a GitHub
+11. Create the signed annotated git tag `kb-YYYY-MM-DD` on that
+    commit, with the release notes as its message. Verify it, as in "To
+    verify a release" below. Push the tag. Publish a GitHub
     release for the tag, with the notes and the four files of step 10.
 12. Deposit the archive and its sidecar on Zenodo as a new version of
     the project record. Link the preprint that describes the release.
@@ -1660,6 +1675,19 @@ To release the line:
 
 A consumer pins a release tag. A candidate tag serves integration work
 before the review is complete.
+
+To verify a release:
+
+1. In a clone of the repository, run
+   `git -c gpg.ssh.allowedSignersFile=docs/allowed_signers verify-tag kb-YYYY-MM-DD`.
+   The output must report a good signature for an allowed signer. The
+   key fingerprint must equal the fingerprint in the notes and a key
+   that `https://github.com/eturkes.keys` lists.
+2. In the directory of the downloaded files, run
+   `git -C <clone> tag -l --format='%(contents:body)' kb-YYYY-MM-DD | sha256sum -c --ignore-missing`.
+   Each downloaded file must report OK. The other lines of the notes
+   cause one warning about lines that are not formatted as checksums.
+3. Verify the bag of the archive, as in "Export" above.
 
 `ckc-x86_64-linux` is the static `ckc` of the tagged commit. A reviewer
 without the toolchain uses it to run the reviewer interface: it needs

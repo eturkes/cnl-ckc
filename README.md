@@ -127,14 +127,18 @@ To review a release candidate, you do not need these tools. Each
 candidate and each release publishes the reviewer program
 `ckc-x86_64-linux`, which needs Git and tar only:
 
-1. On the release page of the candidate, download `ckc-x86_64-linux`
-   and `ckc-x86_64-linux.sha256`.
-2. In the download directory, run
-   `sha256sum -c ckc-x86_64-linux.sha256`. The line must report OK.
-3. Run `chmod +x ckc-x86_64-linux`.
-4. Clone the branch of the candidate, for example
+1. On the release page of the candidate, download `ckc-x86_64-linux`.
+2. Clone the branch of the candidate, for example
    `git clone --branch release/kb-YYYY-MM-DD https://github.com/eturkes/cnl-ckc`.
-5. In the clone, run `<download directory>/ckc-x86_64-linux ui serve`.
+3. In the clone, run
+   `git -c gpg.ssh.allowedSignersFile=docs/allowed_signers verify-tag kb-YYYY-MM-DD-rc.1`
+   with the tag of the candidate. The output must report a good
+   signature.
+4. In the download directory, run
+   `git -C <clone> tag -l --format='%(contents:body)' kb-YYYY-MM-DD-rc.1 | sha256sum -c --ignore-missing`.
+   The line of `ckc-x86_64-linux` must report OK.
+5. Run `chmod +x ckc-x86_64-linux`.
+6. In the clone, run `<download directory>/ckc-x86_64-linux ui serve`.
    "Reviewing" tells how to review. The site writes your decisions to
    `guidelines/<guideline-id>/audit/adjudication.tsv` in the clone.
 
@@ -197,10 +201,16 @@ compiler reads it. The guideline page lists all of these meanings under
 
 A release of the knowledge base is a git tag with the name
 `kb-YYYY-MM-DD`. Its release notes give the archive name, the SHA-256
-of the archive, and the SHA-256 of the reviewer program. A tag that ends in `-rc.1`, `-rc.2`, and so on
-is a release candidate. The review of a release candidate is not
-complete. To use the knowledge base in other software, pin a release
-tag.
+of the archive, and the SHA-256 of the reviewer program. A tag that
+ends in `-rc.1`, `-rc.2`, and so on is a release candidate. The review
+of a release candidate is not complete. To use the knowledge base in
+other software, pin a release tag.
+
+Each tag carries the SSH signature of the maintainer. To check a tag,
+run `git -c gpg.ssh.allowedSignersFile=docs/allowed_signers verify-tag kb-YYYY-MM-DD`
+in a clone. The output must report a good signature. "Releasing" in
+`docs/REFERENCE.md` states how to check the downloaded files against
+the signed notes.
 
 Each release has its own branch, `release/kb-YYYY-MM-DD`. To review a
 release candidate, start the reviewer site in a checkout of that
