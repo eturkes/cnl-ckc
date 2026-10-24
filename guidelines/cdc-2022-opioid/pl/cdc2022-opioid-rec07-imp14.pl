@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec07-imp14',ace_sha256('2fd0fc58e0b6ab5c7c15f939dc2bb51285a1c4d2cbdaf663582db214c473cc4b'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-rec07-imp14',ace_sha256('2fd0fc58e0b6ab5c7c15f939dc2bb51285a1c4d2cbdaf663582db214c473cc4b'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every clinician should ask a patient about a continued-opioid-preference.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec07-imp14',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec07-imp14',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec07-imp14',1,ref(2),[A]),patient,countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

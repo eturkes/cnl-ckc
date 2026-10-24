@@ -105,6 +105,13 @@ that it was published with.
   - `prolonged-severe-acute-pain-care-mechanism` (neutral);
   - `clinical-practice-organization` and `health-system` carry the
     organization-level naloxone-access and care-coordination duties.
+- `ace/` extraction-census documents — one ACE document per formalized
+  region that the extraction census added (110 documents; docid = the
+  region id lowercased, S57-05 → `s57-05`). They follow the same
+  knowledge-only contract and `audit/projection-notes.tsv` discipline. An
+  example item uses an example-only noun (`a sleep-apnea-example`), and an
+  option claim keeps its option inside `it is possible that`, so that no
+  derived entity matches the rules that read the real noun.
 - `lexicon.ulex` — the guideline's APE user lexicon (domain compounds
   shared by all documents).
 - `pl/cdc2022-opioid-recNN.pl` — Prolog that
@@ -132,14 +139,21 @@ correctly: the clinician review checks that.
 ## Coverage
 
 - Verbatim extraction evidence spans the whole document: pages 3–18, the
-  Box 3 payload (pages 13–14), pages 19–39, and pages 40–63. That is 713
-  payload regions across the four extraction files. The project verified
-  each region as rendered PDF text and held duplicate regions to the
-  source's own repetition count. Physical pages 64–100 hold references,
-  the appendix evidence reviews, and the publication notice. The project's
-  sweep of those pages found no clinical normative statements. The sweep
-  found only an epistemic caution about interpreting findings on p82, plus
-  the standard MMWR access/contact/public-domain notices on p100.
+  Box 3 payload (pages 13–14), pages 19–39, pages 40–63, and two
+  appendix statements on page 82. That is 927 payload regions across five
+  extraction files. The project verified each region as rendered PDF text
+  and held duplicate regions to the source's own repetition count. An
+  extraction census (`.agent/archive/extraction-census/`) coded every PDF
+  text span outside the first 713 regions twice, blind, and adjudicated
+  the disagreements. It found 234 statements with normative force that the
+  first extraction had left out. Each of them is now part of a region:
+  214 new regions, plus the nine tapering conditions that complete S37-14.
+  `map.tsv` in that folder records the region of every census row.
+  Physical pages 64–100 hold references, rosters, the appendix evidence
+  reviews and the publication notice. Of these pages, only page 82 holds
+  statements with normative force (an FDA advisory and a caution about
+  reading one finding). The MMWR access, contact and public-domain notices
+  on page 100 stay outside the evidence.
 - Formalization covers Box 3 at one document per recommendation: twelve
   documents, each preserving its recommendation's exact category/evidence
   parenthetical and simplified action rules. It adds one document per
@@ -148,21 +162,21 @@ correctly: the clinician review checks that.
   recommendation 1–5 rationale region (127 documents). It adds one
   document per formalized recommendation 6–12 body,
   implementation-consideration, special-populations, and conclusion
-  region (176 documents). The rules encode
+  region (176 documents). It adds one document per formalized region that
+  the extraction census added (110 documents). The rules encode
   deontic modality ("should"), conditions, and negation where the source
   region states them. `audit/projection-notes.tsv` (kept/dropped columns)
   and `coverage.tsv` record each document's remaining simplifications per
   region.
-- `coverage.tsv` records one status row per payload region (all 713), and
+- `coverage.tsv` records one status row per payload region (all 927), and
   every region carries a ruling. The statuses are:
-  - `ace(<docid>)` — formalized (382);
+  - `ace(<docid>)` — formalized (492);
   - `restates(<id>)` — verbatim or near-verbatim repetition of another
-    region (213);
-  - `uncovered(<class>: <reason>)` — deliberately not formalized (118;
+    region (246);
+  - `uncovered(<class>: <reason>)` — deliberately not formalized (189;
     classes: heading, process, external, aim, descriptive, notice);
   - `pending` — ruled for formalization with the ACE document not yet
-    authored (0 — the recommendation 6–12 worklist closed with the
-    ace-wave2 documents).
+    authored (0).
 
   Restatement links target the canonical full statement: the Box 3 text
   for recommendation restatements, the main-text list for the guiding
@@ -180,8 +194,22 @@ correctly: the clinician review checks that.
   examples under the table compute the totals that they state.
   No rule adds the doses of several opioids: a total dosage must come
   from the patient data.
+- Pain classes. The document of S9-05 types acute, subacute and chronic
+  pain by duration: a patient whose pain lasts less than 1 month, at least
+  1 and at most 3 months, or more than 3 months has an acute, a subacute or
+  a chronic pain. The rules of the other documents that name a pain class
+  therefore also match a stated pain duration in months.
+- Superseded statements. Recommendation 12 tells clinicians to obtain a
+  waiver to prescribe buprenorphine (`cdc2022-opioid-rec12-imp08`), and
+  regions S39-14, S59-02, S59-08 and S59-11 describe that waiver. The
+  Consolidated Appropriations Act, 2023, §1262, eliminated the waiver
+  requirement from December 29, 2022 (89 FR 7528). The knowledge base keeps
+  these statements as the guideline states them.
 - Ruling tests. A CDC-voice imperative or endorsement with a trailing
-  citation is the guideline's own directive: formalize it.
+  citation is the guideline's own directive: formalize it. A CDC-voice
+  directive whose action is the guideline's own also formalizes when it
+  names a supporting third-party document (S37-14 and its nine
+  conditions).
   `uncovered(external)` is reserved for reporting frames that name a
   third-party body or document (S10-02, S31-06). A region that fuses
   several canonical duties without adding one takes
@@ -228,13 +256,13 @@ correctly: the clinician review checks that.
   (S44-17). Batch-flag sentence counts are advisory; the source text
   governs rule count (S40-01).
 - Reconciliation against an independent 702-sentence census of the same
-  pages is closed and recorded row-by-row in `audit/census-map.tsv`. 694
+  pages is closed and recorded row-by-row in `audit/census-map.tsv`. 695
   census sentences map to evidence regions. The census exposed 27
   sentences as extraction gaps. The project added them as 25 regions, the
   largest being Box 2's "is" bullet list, and verified them with the same
   fidelity checks. 4 rows are page-assignment artifacts whose sentences
-  occur only at pages that other census rows already cover. 4 rows are
-  the deliberately excluded p82/p100 statements above.
+  occur only at pages that other census rows already cover. The p82
+  caution maps to region S82-02. 3 rows are the excluded p100 notices.
 - `audit/projection-notes.tsv` records, per ACE document, what the rule
   keeps from its source region and what it drops or interprets. That
   includes the regions that state a benefit, criticality, or weak

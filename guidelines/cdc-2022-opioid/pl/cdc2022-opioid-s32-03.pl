@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s32-03',ace_sha256('97f3f2c22e585d57213626afe58af45b93e0107a4ca558cb3e537293efc7ce8c'),ulex(sha256(e8b9f2411b72a24bb2298ca9b1abaf93606dc5038829e6a3043fa9931bbc5ef8)),vocabulary(sha256(b5cff67a2f9de9bee846e9e7650affaf95276ff3a26fc00befd8ceb076b0f4ac))).
+guideline_document('cdc2022-opioid-s32-03',ace_sha256('97f3f2c22e585d57213626afe58af45b93e0107a4ca558cb3e537293efc7ce8c'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a clinician prescribes an ER-LA-opioid then a predictable-pharmacokinetic-and-pharmacodynamic-ER-LA-opioid is preferred for an unintentional-overdose-risk-minimization.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s32-03',1,ref(4),[A,B,C]),'predictable-pharmacokinetic-and-pharmacodynamic-ER-LA-opioid',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'ER-LA-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,prescribe), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s32-03',1,ref(4),[A,B,C]),na,eq,1) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'ER-LA-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,prescribe), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

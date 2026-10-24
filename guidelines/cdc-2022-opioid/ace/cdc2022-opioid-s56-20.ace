@@ -1,0 +1,6 @@
+Every medication-taper-sequencing-decision includes a patient-priority-consideration.
+Every medication-taper-sequencing-decision includes a patient-clinical-consideration.
+Every medication-taper-sequencing-decision includes a therapeutic-change-response-consideration.
+Every medication-taper-sequencing-decision includes an other-managing-clinician-consultation.
+If an other-specialist-consultation is needed then every medication-taper-sequencing-decision includes the other-specialist-consultation.
+An other-specialist-example is an addiction-specialist-example.

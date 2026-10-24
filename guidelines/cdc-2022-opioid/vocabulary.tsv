@@ -79,5 +79,16 @@ qualifier	always	usuality
 qualifier	nonjudgmentally	manner
 qualifier	punitively	manner
 qualifier	adversely	manner
+qualifier	clearly	manner
+qualifier	sometimes	usuality
+qualifier	continuously	manner
+qualifier	progressively	manner
+qualifier	commonly	usuality
+qualifier	concurrently	manner
+qualifier	reportedly	possibility
+qualifier	reasonably	manner
+qualifier	disparately	manner
+qualifier	solely	focus
+qualifier	routinely	usuality
 scope	recommendation	cdc-2022-opioid
 exclusion	apply	scope

@@ -4,9 +4,15 @@ Every opioid-pain-clinical-practice-guideline should support an informed-person-
 Every opioid-pain-clinical-practice-guideline applies to a primary-care-clinician.
 Every opioid-pain-clinical-practice-guideline applies to a pain-care-clinician.
 If an outpatient has an age and the age includes at least 18 years then the outpatient is an adult-outpatient.
-Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a pain that lasts for less than 1 month.
-Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a pain that lasts for at least 1 month for at most 3 months.
-Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a pain that lasts for more than 3 months.
+Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has an acute-pain.
+Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a subacute-pain.
+Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a chronic-pain.
+If a patient has a pain that lasts for less than 1 month then the patient has an acute-pain.
+If a patient has a pain that lasts for at least 1 month for at most 3 months then the patient has a subacute-pain.
+If a patient has a pain that lasts for more than 3 months then the patient has a chronic-pain.
+If a patient has an acute-pain then the acute-pain lasts for less than 1 month.
+If a patient has a subacute-pain then the subacute-pain lasts for at least 1 month for at most 3 months.
+If a patient has a chronic-pain then the chronic-pain lasts for more than 3 months.
 Every opioid-pain-clinical-practice-guideline is a flexible-guideline.
 Every opioid-pain-clinical-practice-guideline should support a person-centered-decision.
 Every clinician should consider an expected-health-outcome during a person-centered-decision.
