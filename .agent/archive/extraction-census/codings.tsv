@@ -1,0 +1,1132 @@
+id	main_class	main_disposition	main_reason	coder	coder_class	coder_disposition	coder_reason
+X1-001	scaffolding	-	masthead + contents	1	scaffolding	-	masthead, contents and publication notice
+X2-001	scaffolding	-	suggested citation	1	scaffolding	-	citation template
+X2-002	scaffolding	-	citation fragment	1	scaffolding	-	citation template fragment
+X2-003	scaffolding	-	citation fragment	1	scaffolding	-	citation template fragment
+X2-004	scaffolding	-	masthead staff list	1	scope	restates(S9-05)	adult outpatient pain-care audience
+X3-001	background	-	2016 guideline update history (sentence continues X3-002)	1	background	-	2016 guideline update history
+X3-002	definition	restates(S9-05)	[g:pain-durations] scope + acute/subacute/chronic durations as S9-05's passage; S9-05 ACE omits the class names (finding F-durations)	1	definition	restates(S9-05)	acute, subacute and chronic pain duration definitions
+X3-003	background	-	lists the four recommendation areas (Box 3 headings)	1	scope	uncovered(descriptive)	overview of the four recommendation domains
+X3-004	method	-	GRADE framework	1	method	-	GRADE development framework
+X3-005	method	-	basis of recommendations	1	method	-	evidence and values used to develop recommendations
+X3-006	method	-	BSC + public + peer input	1	method	-	sources of development input
+X3-007	aim	uncovered(aim)	[g:aims] guideline aims (communication, safety, mitigate pain, function, reduce risks); no region carries them	1	aim	uncovered(aim)	guideline goals for communication, pain outcomes and opioid safety
+X3-008	evidence	-	heading + statistic	1	evidence	-	frequency of pain as a reason to seek care
+X3-009	background	-	describes acute pain physiology	1	background	-	acute-pain physiology
+X3-010	definition	restates(S9-05)	[g:pain-durations] acute pain defined as <1 month, as S9-05's passage; S9-05 ACE omits the class name	1	definition	ace	acute pain is usually sudden, time limited and shorter than one month
+X3-011	definition	restates(S9-05)	[g:pain-durations] subacute pain defined as 1–3 months, as S9-05's passage	1	definition	ace	subacute pain lasts 1–3 months and unresolved acute or subacute pain can become chronic
+X3-012	definition	restates(S9-05)	[g:pain-durations] chronic pain >3 months, as S9-05's passage	1	definition	ace	chronic pain typically lasts more than three months and has several possible causes
+X3-013	evidence	-	prevalence statistic (+ survey definition of high-impact chronic pain)	1	definition	ace	high-impact chronic pain limits life or work on most or all days over three months
+X3-014	background	-	effects of pain	1	background	-	effects of chronic pain on life and functioning
+X3-015	evidence	-	economic cost estimate	1	evidence	-	estimated economic cost
+X3-016	background	-	pain complexity	1	background	-	biological, psychological and social determinants of pain
+X3-017	background	-	treatment heterogeneity	1	background	-	heterogeneity of pain and treatment response
+X3-018	background	-	persistent pain	1	background	-	persistent uncontrolled pain
+X3-019	evidence	-	comorbidity	1	evidence	-	co-occurring behavioral conditions
+X3-020	evidence	-	suicide risk association	1	evidence	-	association with suicidal ideation and behavior
+X3-021	evidence	-	death investigation data	1	evidence	-	death-investigation findings
+X4-001	aim	uncovered(aim)	importance of adequately treating persons with pain (cf. S5-01 underscores-importance aim)	1	directive	restates(S18-03)	importance of adequately treating pain
+X4-002	background	-	pain care is a challenge	1	background	-	clinical challenge of pain care
+X4-003	background	-	groups at risk of inadequate treatment	1	evidence	-	groups at risk of inadequate pain treatment
+X4-004	background	-	disparities lead-in	1	evidence	-	data on pain-treatment disparities
+X4-005	evidence	-	disparity finding	1	evidence	-	racial disparity in postpartum assessments
+X4-006	evidence	-	disparity finding	1	evidence	-	racial disparity in acute-pain analgesia
+X4-007	evidence	-	disparity finding	1	evidence	-	racial disparity in referrals and opioid doses
+X4-008	evidence	-	disparity finding	1	evidence	-	adjusted racial and ethnic disparities
+X4-009	evidence	-	disparity finding	1	evidence	-	neighborhood-associated disparities
+X4-010	evidence	-	disparity finding	1	evidence	-	sex-associated pain-management disparities
+X4-011	background	-	geographic disparity claim	1	directive	ace	nonopioid treatments might be preferred for some conditions despite geographic access barriers
+X4-012	evidence	-	rural prescribing finding	1	evidence	-	rural prescribing disparity
+X4-013	evidence	-	safeguards disparity finding	1	evidence	-	racial disparity in overdose rates and prescribing safeguards
+X4-014	evidence	-	study finding	1	evidence	-	study finding
+X4-015	evidence	-	study finding	1	evidence	-	study finding
+X4-016	background	-	access barriers history	1	background	-	historical barriers to therapeutic options
+X4-017	background	-	opioids as mainstay history + trial durations	1	background	-	historical reliance on opioids despite limited long-term evidence
+X4-018	action-claim	uncovered(descriptive)	opioids can be essential yet risky: benefit-risk framing without an action (cf. S21-04)	1	action-claim	ace	opioids can be essential for pain management while carrying substantial risk
+X4-019	evidence	-	2014 AHRQ review finding	1	evidence	-	systematic-review finding
+X4-020	evidence	-	dose-dependent risk finding	1	evidence	-	dose-dependent risk finding
+X4-021	reported	uncovered(external)	FDA boxed-warning labeling change (continues S4-06, external)	1	definition	ace	neonatal abstinence and neonatal opioid withdrawal syndromes describe withdrawal after prenatal exposure
+X5-001	reported	uncovered(external)	FDA 2016 IR labeling change (continues S4-06)	1	reported	uncovered(external)	reports extension of labeling warnings to immediate-release opioids
+X5-002	background	-	diversion risk	1	background	-	potential diversion and nonmedical use of prescribed opioids
+X5-003	evidence	-	prescribing + overdose trend	1	evidence	-	prescribing, overdose and opioid-use-disorder trends
+X5-004	evidence	-	prescribing pattern trend	1	evidence	-	prescribing-pattern trends and associated harms
+X5-005	background	-	2016 guideline release history	1	background	-	2016 guideline origin
+X5-006	background	-	2016 guideline content history	1	background	-	2016 guideline scope history
+X5-007	method	-	2016 guideline method history	1	method	-	2016 guideline development process
+X5-008	aim	uncovered(aim)	goals of the 2016 guideline (historical aims)	1	aim	uncovered(aim)	2016 guideline goals for pain care and prevention of opioid harms
+X5-009	background	-	2016 implementation strategy history	1	background	-	2016 guideline implementation history
+X5-010	evidence	-	prescription decline trend	1	evidence	-	opioid-prescribing trend
+X5-011	evidence	-	association with prescribing decline	1	evidence	-	association between guideline release and prescribing changes
+X5-012	evidence	-	association with nonopioid prescribing	1	evidence	-	association with nonopioid prescribing
+X5-013	reported	uncovered(external)	laws, regulations and policies reflecting the 2016 guideline (cf. S5-04)	1	background	-	historical influence on laws and policies
+X5-014	reported	uncovered(external)	state Medicaid programs used the guideline per the SUPPORT Act (cf. S5-02)	1	reported	uncovered(external)	reports state Medicaid implementation under SUPPORT Act requirements
+X5-015	reported	uncovered(external)	policies inconsistent with the 2016 guideline (cf. S5-04)	1	background	-	history of inconsistent implementation
+X5-016	reported	uncovered(external)	misapplication by policies: tapers, dose thresholds, MOUD, insurer limits, dismissal (cf. S5-04)	1	background	-	historical misapplication of the 2016 guideline
+X5-017	background	-	misapplication caused patient harm	1	action-claim	ace	guideline misapplication has caused undertreatment, withdrawal, psychological distress and overdose
+X6-001	background	-	new evidence emerged	1	method	-	new evidence motivating guideline revision
+X6-002	background	-	evidence topics list	1	method	-	inventory of studies informing the update
+X6-003	evidence	-	opioids remain common treatment	1	evidence	-	common use of opioids despite prescribing decline
+X6-004	evidence	-	use statistics	1	evidence	-	opioid-use and dispensing statistics
+X6-005	evidence	-	prescribing variation	1	evidence	-	unexplained variation in prescribing
+X6-006	evidence	-	misuse prevalence decline	1	evidence	-	declining misuse and disorder prevalence
+X6-007	evidence	-	misuse statistics	1	evidence	-	misuse and disorder prevalence estimates
+X6-008	evidence	-	misuse statistic	1	evidence	-	relative prevalence of prescription-drug misuse
+X6-009	evidence	-	misuse reasons statistic	1	evidence	-	reported reasons for opioid misuse
+X6-010	aim	uncovered(aim)	need for an updated guideline (cf. S5-01)	1	directive	uncovered(process)	need for a guideline update rather than a patient-care action
+X6-011	scope	restates(S9-05)	scope: outpatients ≥18 with acute/subacute/chronic pain, exclusions as S3-03	1	scope	uncovered(descriptive)	fuses the audience in S9-05 with the exclusions in S3-03
+X6-012	method	-	lessons informed process	1	method	-	prior development experience informed the update
+X6-013	background	-	update expands acute + subacute content	1	method	-	new data expanded acute and subacute content
+X6-014	aim	uncovered(aim)	update aims to delineate initial-treatment vs ongoing-therapy recommendations	1	aim	uncovered(aim)	aim to distinguish initial treatment from ongoing opioid care
+X6-015	method	-	five systematic reviews	1	method	-	systematic reviews used for drafting
+X6-016	method	-	review by BSC + peers + public	1	method	-	review and revision process
+X6-017	method	-	patient conversations incorporated	1	method	-	stakeholder input incorporated
+X6-018	scope	uncovered(descriptive)	recommendation language discourages dose thresholds as inflexible standards (drafting rationale; directive at S3-02)	1	directive	restates(B3-06)	avoid dosage increases with diminishing benefit relative to risk
+X6-019	background	-	dosage detail moved to implementation considerations	1	method	-	placement of dosage implementation details
+X6-020	aim	uncovered(aim)	[g:aims] 'The recommendations aim to improve' + Box 1 heading (aim continues at X9-003)	1	fragment	-	aim sentence stem resumes at X9-003 after Box 1
+X7-001	background	-	executive summary heading + 2016 update history	1	background	-	guideline update history interrupted by a citation
+X7-002	scope	restates(S9-05)	audience clinicians + outpatients ≥18 + durations as S9-05 (clinician types = examples)	1	definition	restates(S9-05)	adult outpatient audience and the three pain-duration definitions
+X7-003	background	-	expanded topics in the update	1	method	-	expanded topics in the update
+X7-004	scope	ace	[g:settings] applicable outpatient settings: clinician offices, clinics, urgent care centers; no region names them	1	scope	ace	applicable outpatient settings include offices, clinics and urgent care centers
+X7-005	scaffolding	-	area list stem	1	scaffolding	-	list introduction for recommendation domains
+X7-006	scaffolding	-	area list item	1	scaffolding	-	recommendation-domain label
+X7-007	scaffolding	-	area list item	1	scaffolding	-	recommendation-domain label
+X7-008	scaffolding	-	area list item	1	scaffolding	-	recommendation-domain label
+X7-009	method	-	area list item + GRADE method	1	method	-	domain label plus GRADE development process
+X7-010	method	-	input from conversations + Federal Register comment	1	method	-	patient, caregiver and clinician input
+X7-011	method	-	BSC + federal partner + peer input	1	method	-	advisory, federal and peer-review input
+X7-012	evidence	-	evidence review summary	1	evidence	-	clinical evidence-review finding
+X7-013	evidence	-	evidence review summary	1	evidence	-	reviewed associations for nonpharmacologic therapies
+X7-014	evidence	-	evidence review summary	1	evidence	-	reviewed associations for nonopioid medications
+X7-015	evidence	-	adverse event summary	1	evidence	-	adverse events in the clinical evidence-review summary
+X7-016	evidence	-	evidence review summary	1	evidence	-	reviewed comparative effectiveness and attenuation
+X7-017	evidence	-	harms summary	1	evidence	-	reviewed association between opioid dosage and harms
+X7-018	evidence	-	no validated harm prediction	1	evidence	-	lack of validated prediction in the evidence-review summary
+X7-019	evidence	-	sparse long-term evidence	1	evidence	-	sparse long-term treatment evidence
+X7-020	evidence	-	persistence evidence	1	evidence	-	evidence on persistence of benefit
+X7-021	evidence	-	trial counts	1	evidence	-	trial duration and quality counts
+X7-022	evidence	-	single trial	1	evidence	-	long-term trial count
+X7-023	scaffolding	-	continued-on label	1	scaffolding	-	continuation notice
+X8-001	scaffolding	-	box label	1	scaffolding	-	box label
+X8-002	method	-	public comment count	1	method	-	heading plus public-comment process
+X8-003	method	-	public comment themes	1	method	-	topics of public comments
+X8-004	method	-	public comment concerns	1	method	-	contrasting public concerns about guideline specificity
+X8-005	method	-	comments incorporated	1	method	-	incorporation of public comments
+X8-006	scope	uncovered(descriptive)	summary statements omit specific dosages/durations to prevent misapplication (drafting rationale; directive at S3-02)	1	method	-	rationale for the recommendation format
+X8-007	background	-	specificity lives in implementation considerations	1	action-claim	ace	implementation detail can give clinicians flexibility in weighing treatment benefits and risks
+X8-008	aim	uncovered(aim)	[g:aims] Box 1 aims (same as X3-007)	1	aim	uncovered(aim)	guideline goals for communication, pain outcomes and opioid safety
+X9-001	scaffolding	-	box label	1	scaffolding	-	box label
+X9-002	scaffolding	-	box title	1	scaffolding	-	box title
+X9-003	aim	uncovered(aim)	[g:aims] aims list continued from X6-020 (communication, safety, function, reduce risks)	1	aim	uncovered(aim)	continuation of X6-020 stating guideline goals for pain care and safety
+X9-004	scope	restates(S9-05)	scope + audience + durations as S9-05; exclusions as S3-03	1	definition	uncovered(descriptive)	fuses the definitions and audience in S9-05 with the exclusions in S3-03
+X9-005	scope	ace	[g:scope-audience] recommendations most relevant to clinicians whose practice includes prescribing opioids; borderline (S9-05 names audiences only)	1	scope	ace	recommendations are most relevant to clinicians who can prescribe opioids
+X9-006	directive	ace	[g:scope-audience] guideline promotes integrated pain management + collaboration among clinicians in team-based care; borderline vs S19-04 multidisciplinary approach	1	directive	ace	promotes integrated pain management and collaborative clinical relationships
+X9-007	scope	restates(S9-05)	primary care + other outpatient clinicians (examples) as S9-05	1	scope	restates(S9-05)	primary care and other outpatient pain clinicians are the intended audience
+X9-008	scope	ace	[g:settings] applicable settings: offices, clinics, urgent care centers (same as X7-004)	1	scope	ace	the guideline applies in offices, clinics and urgent care centers
+X9-009	scope	ace	[g:scope-conditions] guideline covers painful acute conditions (low back, neck, musculoskeletal, neuropathic, dental, kidney stone, migraine) + procedural pain; borderline: examples of acute pain (S9-05)	1	scope	ace	guideline use extends to specified acute pain conditions and procedure-related pain
+X9-010	reported	uncovered(external)	NASEM committee prioritized indications for guidelines	1	reported	uncovered(external)	reports National Academies prioritization of conditions for guidelines
+X9-011	definition	restates(S9-05)	[g:pain-durations] acute <1 month, chronic >3 months, subacute between, as S9-05's passage	1	definition	restates(S9-05)	subacute duration lies between acute and chronic duration definitions
+X9-012	definition	restates(S9-04)	durations imply more specificity than real experience (approximate-guide caveat of S9-04)	1	definition	restates(S9-04)	pain-duration boundaries are approximate rather than exact clinical divisions
+X10-001	background	-	2016 focus history	1	background	-	2016 guideline audience history
+X10-002	scope	restates(S9-05)	scope expanded to additional clinicians (S9-05 audiences)	1	scope	restates(S9-05)	scope includes clinicians beyond primary care physicians
+X10-003	evidence	-	prescriber share statistics	1	evidence	-	prescribing proportions by specialty
+X10-004	evidence	-	prescriber rates	1	evidence	-	prescribing rates by specialty
+X10-005	scope	restates(S9-05)	expanded scope reaches dentists, postoperative + ED-discharge prescribing (S9-05 audience; discharge at S7-02)	1	action-claim	ace	expanded outpatient scope can provide evidence-based advice to additional clinician groups
+X10-006	scope	uncovered(descriptive)	recommendations might be relevant for pain specialists (cf. S10-03)	1	scope	ace	many recommendations might also be relevant to pain-management specialists
+X10-007	scope	uncovered(descriptive)	benefit-risk balance might differ for pain specialists (cf. S10-03)	1	background	-	specialist expertise and case mix can differ
+X10-008	scope	uncovered(descriptive)	recommendations address special populations (content statement; the population duties are extracted individually)	1	scope	ace	recommendations address older adults, pregnant persons and populations with special risks
+X10-009	evidence	-	limited pediatric evidence + labeling	1	evidence	-	limited pediatric evidence and labeling information
+X10-010	reported	uncovered(external)	other guidelines for pediatric sickle cell, surgery, AYA palliative care (cf. S10-02)	1	scaffolding	-	cross-references to pediatric pain guidelines
+X10-011	scope	uncovered(descriptive)	some principles might help in excluded contexts; some recommendations irrelevant there (cf. S10-01)	1	action-claim	ace	some guideline principles might help in excluded pain-care settings despite limited relevance
+X10-012	definition	ace	[g:exclusion-terms] palliative care defined per IOM: symptom relief, quality of life, serious advanced illness; the exclusion term of S3-03 has no definition in the KB	1	definition	ace	palliative care relieves symptoms and supports quality of life in serious advanced illness
+X10-013	definition	ace	[g:exclusion-terms] palliative care can begin early in any serious illness (delimits the S3-03 exclusion)	1	directive	ace	palliative care can start early in serious illness requiring advanced symptom management
+X10-014	definition	ace	[g:exclusion-terms] end-of-life care = hospice + terminal illness or high near-term risk of dying, any setting	1	definition	ace	end-of-life care includes hospice, terminal illness and high near-term mortality across settings
+X10-015	scope	uncovered(descriptive)	example: long-term harms might not matter at end of life (exclusion rationale)	1	action-claim	ace	long-term opioid harms might be irrelevant for many patients at the end of life
+X10-016	reported	uncovered(external)	NCCN + ASCO cancer pain guidelines (cf. S10-02)	1	scaffolding	-	cross-references to cancer-pain guidelines
+X10-017	background	-	2018 NCCN/ASCO meeting	1	method	-	interorganizational guideline-review meeting
+X10-018	background	-	meeting found no disagreement among guidelines	1	reported	uncovered(external)	reports expert agreement when guidelines serve their intended populations
+X11-001	reported	uncovered(external)	ASAM OUD guideline pointer (cf. S10-02)	1	scaffolding	-	cross-reference to ASAM opioid-use-disorder guidance
+X11-002	method	-	guideline-development process	1	method	-	evidence reviews underlying the 2016 guideline
+X11-003	method	-	guideline-development process	1	method	-	questions covered by the systematic review
+X11-004	method	-	guideline-development process	1	method	-	scope of the CDC evidence update
+X11-005	method	-	guideline-development process	1	method	-	scope of the contextual evidence review
+X11-006	method	-	guideline-development process	1	method	-	funding of systematic reviews
+X11-007	method	-	guideline-development process	1	method	-	review completion and coverage
+X11-008	method	-	guideline-development process	1	definition	ace	review outcomes are short term at 1–<6 months, intermediate at 6–<12 and long term at ≥12
+X11-009	method	-	guideline-development process	1	method	-	contextual review questions
+X11-010	method	-	guideline-development process	1	method	-	complementary reviews considered
+X11-011	method	-	guideline-development process	1	method	-	placement of an acute-pain evidence question
+X11-012	method	-	guideline-development process	1	method	-	surveillance for additional evidence
+X11-013	method	-	guideline-development process	1	method	-	supplementary contextual evidence review
+X11-014	method	-	guideline-development process	1	method	-	AHRQ evidence-synthesis approach
+X11-015	method	-	guideline-development process	1	definition	ace	AHRQ strength of evidence denotes certainty as high, moderate, low or insufficient
+X11-016	method	-	guideline-development process	1	method	-	factors in evidence grading
+X11-017	method	-	guideline-development process	1	method	-	factors that strengthen evidence grading
+X11-018	scaffolding	-	appendix pointer	1	scaffolding	-	cross-reference to the appendix
+X11-019	method	-	guideline-development process	1	method	-	GRADE framework description
+X11-020	method	-	guideline-development process	1	method	-	use of the ACIP adaptation
+X11-021	method	-	guideline-development process	1	method	-	initial hierarchy for evidence grading
+X12-001	definition	uncovered(process)	[g:evidence-types] evidence type hierarchy 1–4 (grading method)	1	definition	ace	evidence types 1–4 denote specified study designs and limitations
+X12-002	method	-	guideline-development process	1	method	-	evidence-downgrading criteria
+X12-003	method	-	guideline-development process	1	method	-	evidence-upgrading mechanics
+X12-004	method	-	guideline-development process	1	method	-	assignment of a final evidence type
+X12-005	definition	uncovered(process)	[g:evidence-types] meaning of types 1–4 as confidence levels: the source of the vocabulary table type → certainty mapping	1	definition	ace	evidence types 1–4 denote decreasing confidence that the estimate reflects the true effect
+X12-006	method	-	guideline-development process	1	definition	ace	evidence is insufficient when studies are absent or cannot support an effect estimate
+X12-007	method	-	guideline-development process	1	method	-	comparison of grading terminology
+X12-008	method	-	guideline-development process	1	method	-	compatibility of grading approaches
+X12-009	method	-	guideline-development process	1	method	-	translation of review grades
+X12-010	method	-	guideline-development process	1	scaffolding	-	link to evidence-rating tables
+X12-011	definition	uncovered(process)	[g:evidence-types] types 1–4 with AHRQ equivalents	1	definition	ace	study-design evidence types map to specified AHRQ strength levels
+X12-012	method	-	guideline-development process	1	definition	ace	absent or inadequate studies qualify as insufficient evidence
+X12-013	method	-	guideline-development process	1	method	-	quantitative and qualitative synthesis methods
+X12-014	method	-	guideline-development process	1	method	-	recommendation-development framework
+X12-015	method	-	guideline-development process	1	method	-	recommendations derive from reviewed evidence
+X12-016	method	-	guideline-development process	1	method	-	assignment to recommendation categories
+X12-017	method	-	guideline-development process	1	method	-	factors determining a recommendation category
+X12-018	method	-	guideline-development process	1	method	-	additional category-assignment considerations
+X12-019	method	-	guideline-development process	1	method	-	factors favoring category A assignment
+X12-020	method	-	guideline-development process	1	method	-	evidence quality does not alone determine recommendation strength
+X12-021	method	-	guideline-development process	1	directive	uncovered(process)	permits category A recommendations from weaker evidence under specified GRADE conditions
+X12-022	method	-	guideline-development process	1	fragment	-	GRADE justification sentence stem continues in X13-009 after Box 3
+X13-001	scaffolding	-	Box 3 title	1	scaffolding	-	Box 3 title
+X13-009	method	-	guideline-development process	1	reported	uncovered(process)	GRADE examples justify strong recommendations despite low-quality evidence
+X13-010	method	-	guideline-development process	1	method	-	circumstances for assigning category B
+X13-011	method	-	guideline-development process	1	method	-	drafting process interrupted by Box 3
+X14-001	scaffolding	-	Box 3 title (continued)	1	scaffolding	-	continued Box 3 title
+X14-007	fragment	-	Box 3 recommendation 12 piece glued to the area list; B3-16 carries it	1	fragment	-	layout splice of the B3-16 detoxification sentence and X13-011 method text
+X14-008	method	-	guideline-development process	1	method	-	multistep review process
+X14-009	method	-	guideline-development process	1	method	-	request for advisory-committee review
+X14-010	fragment	-	BSC sentence glued to the Box 3 detoxification sentence; B3-16 carries it	1	fragment	-	layout splice whose detoxification prohibition is carried by B3-16
+X14-011	scaffolding	-	label, heading or list item	1	scaffolding	-	recommendation-category heading and criteria label
+X14-012	method	-	guideline-development process	1	scaffolding	-	evidence-type heading and criteria label
+X14-013	definition	uncovered(process)	[g:evidence-types] type 1 evidence (Box 3 legend)	1	definition	ace	type 1 evidence comprises randomized trials or overwhelming observational evidence
+X14-014	definition	uncovered(process)	[g:evidence-types] type 2 evidence (Box 3 legend)	1	definition	ace	type 2 evidence comprises limited randomized trials or exceptionally strong observational evidence
+X14-015	definition	uncovered(process)	[g:evidence-types] type 3 evidence (Box 3 legend)	1	definition	ace	type 3 evidence comprises observational studies or notably limited randomized trials
+X14-016	definition	uncovered(process)	[g:evidence-types] type 4 evidence (Box 3 legend)	1	definition	ace	type 4 evidence comprises experience, markedly limited observational studies or multiply limited trials
+X14-017	method	-	guideline-development process	1	method	-	continuation of the advisory committee role description
+X14-018	method	-	guideline-development process	1	method	-	advisory committee review role
+X14-019	method	-	guideline-development process	1	method	-	advisory committee appointment status
+X14-020	method	-	guideline-development process	1	scaffolding	-	disclosure location notice
+X14-021	method	-	guideline-development process	1	scaffolding	-	link to public meeting records
+X15-001	method	-	guideline-development process	1	method	-	public advisory meeting
+X15-002	method	-	guideline-development process	1	directive	uncovered(process)	CDC requested a workgroup to review the draft and report observations
+X15-003	method	-	guideline-development process	1	method	-	workgroup establishment and nomination process
+X15-004	method	-	guideline-development process	1	method	-	selection of perspectives for workgroup composition
+X15-005	method	-	guideline-development process	1	method	-	announcement and discussion of nominations
+X15-006	method	-	guideline-development process	1	method	-	nominee review and invitations
+X15-007	method	-	guideline-development process	1	method	-	conflict-disclosure review
+X15-008	method	-	guideline-development process	1	method	-	conflict screening and meeting disclosures
+X15-009	method	-	guideline-development process	1	scaffolding	-	disclosure location notice
+X15-010	method	-	guideline-development process	1	method	-	workgroup composition
+X15-011	method	-	guideline-development process	1	method	-	workgroup officer and participant composition
+X15-012	method	-	guideline-development process	1	method	-	workgroup expertise represented
+X15-013	method	-	guideline-development process	1	method	-	workgroup diversity
+X15-014	method	-	guideline-development process	1	method	-	presentation of roster and terms of reference
+X15-015	method	-	guideline-development process	1	method	-	workgroup meeting count
+X15-016	method	-	guideline-development process	1	method	-	preliminary workgroup discussions
+X15-017	method	-	guideline-development process	1	method	-	materials supplied to the workgroup
+X15-018	method	-	guideline-development process	1	method	-	draft review and workgroup report
+X15-019	method	-	guideline-development process	1	definition	uncovered(process)	financial-conflict definition governs workgroup screening rather than clinical care
+X15-020	method	-	guideline-development process	1	aim	uncovered(aim)	workgroup values include integrity, inclusivity and patient-centeredness
+X16-001	method	-	guideline-development process	1	method	-	presentation of workgroup report
+X16-002	method	-	guideline-development process	1	method	-	delivery of advisory recommendations
+X16-003	method	-	guideline-development process	1	method	-	inputs used to revise the draft
+X16-004	scaffolding	-	label, heading or list item	1	scaffolding	-	cross-reference to committee membership lists
+X16-005	scaffolding	-	notice: statements are CDC's own	1	scaffolding	-	statement of authorship and nonendorsement
+X16-006	method	-	guideline-development process	1	method	-	federal partners invited to the workgroup
+X16-007	method	-	guideline-development process	1	method	-	federal advisory representation
+X16-008	method	-	guideline-development process	1	method	-	federal partner review
+X16-009	method	-	guideline-development process	1	method	-	solicitation of community input
+X16-010	method	-	guideline-development process	1	method	-	public-comment topics and count
+X16-011	method	-	guideline-development process	1	method	-	comment synthesis and engagement design
+X16-012	method	-	guideline-development process	1	method	-	purpose of community engagement
+X16-013	method	-	guideline-development process	1	method	-	change to virtual conversations
+X16-014	method	-	guideline-development process	1	method	-	recruitment notice
+X16-015	method	-	guideline-development process	1	method	-	participant selection
+X16-016	method	-	guideline-development process	1	method	-	random waiting-list design
+X16-017	method	-	guideline-development process	1	method	-	regulatory approval of the engagement process
+X16-018	method	-	guideline-development process	1	method	-	conversation modes and participant counts
+X16-019	method	-	guideline-development process	1	method	-	participant diversity
+X16-020	method	-	guideline-development process	1	method	-	recording consent process
+X16-021	method	-	guideline-development process	1	method	-	transcription and anonymization
+X16-022	method	-	guideline-development process	1	method	-	thematic synthesis
+X16-023	method	-	guideline-development process	1	method	-	codesign workshops
+X16-024	method	-	guideline-development process	1	method	-	workshop topics
+X16-025	method	-	guideline-development process	1	method	-	workshop participant backgrounds
+X17-001	method	-	guideline-development process	1	method	-	additional public-comment channels
+X17-002	method	-	guideline-development process	1	method	-	announcement of comment opportunities
+X17-003	method	-	guideline-development process	1	method	-	thematic input reviewed before drafting
+X17-004	method	-	guideline-development process	1	method	-	publication of revised draft for comment
+X17-005	method	-	guideline-development process	1	method	-	public-comment duration
+X17-006	method	-	guideline-development process	1	method	-	comment counts and contributor groups
+X17-007	method	-	guideline-development process	1	method	-	consideration of public comments
+X17-008	method	-	guideline-development process	1	method	-	scientific influence as the rationale for peer review
+X17-009	method	-	guideline-development process	1	method	-	peer-reviewer selection criteria
+X17-010	method	-	guideline-development process	1	method	-	expertise sought for peer review
+X17-011	method	-	guideline-development process	1	method	-	peer-reviewer conflict assessment
+X17-012	method	-	guideline-development process	1	method	-	conflict-screening result
+X17-013	method	-	guideline-development process	1	method	-	publication of reviewer identities
+X17-014	method	-	guideline-development process	1	aim	uncovered(aim)	review goals include scientific quality and prevention of opioid harms
+X17-015	method	-	guideline-development process	1	method	-	consideration of peer-review comments
+X17-016	scope	restates(S9-05)	12 recommendations for outpatients ≥18 with acute/subacute/chronic pain + exclusions, as S9-05 + S3-03	1	definition	uncovered(descriptive)	fuses the definitions and audience in S9-05 with the exclusions in S3-03
+X17-017	method	-	guideline-development process	1	method	-	evidence and opinion used in recommendations
+X17-018	method	-	guideline-development process	1	method	-	placement of expert input
+X17-019	method	-	guideline-development process	1	method	-	annotation of recommendation and evidence categories
+X17-020	method	-	guideline-development process	1	method	-	category A assignment with weaker evidence
+X17-021	method	-	guideline-development process	1	method	-	category B assignment for balanced tradeoffs
+X17-022	method	-	guideline-development process	1	method	-	range of evidence types supporting recommendations
+X18-001	scaffolding	-	label, heading or list item	1	method	-	introduction to the grading assessment
+X18-002	evidence	-	evidence summary	1	evidence	-	comparative associations for nonopioid treatments
+X18-003	evidence	-	evidence summary	1	evidence	-	reviewed benefits and harms of nonpharmacologic interventions
+X18-004	evidence	-	evidence summary	1	evidence	-	comparative persistence of treatment benefits
+X18-005	evidence	-	evidence summary	1	evidence	-	associations for nonopioid drugs
+X18-006	evidence	-	evidence summary	1	evidence	-	reviewed drug-class adverse events
+X18-007	evidence	-	evidence summary	1	evidence	-	comparative opioid and NSAID effectiveness
+X18-008	evidence	-	evidence summary	1	definition	ace	short-term pain and function outcomes cover 1–<6 months
+X18-009	evidence	-	evidence summary	1	evidence	-	observational association with long-term opioid use
+X18-010	evidence	-	evidence summary	1	evidence	-	long-term evidence and randomized-trial findings
+X18-011	evidence	-	evidence summary	1	evidence	-	evidence of dose-related serious harms
+X18-012	evidence	-	evidence summary	1	evidence	-	absence of validated benefit or harm prediction
+X18-013	background	-	discontinuing long-term opioids can be challenging	1	background	-	difficulty of stopping prolonged opioid use
+X18-014	evidence	-	tapering risk association (68); duties at rec 5	1	action-claim	ace	long-term opioid tapering can carry significant risks, especially if rapid or unsupported
+X18-015	method	-	guideline-development process	1	method	-	stakeholder input collected
+X18-016	method	-	guideline-development process	1	reported	uncovered(process)	development feedback included a need for shared patient-clinician decisions
+X18-017	method	-	guideline-development process	1	method	-	public comments invited
+X18-018	method	-	guideline-development process	1	method	-	themes of public comments
+X18-019	scaffolding	-	label, heading or list item	1	method	-	organization of the recommendations
+X18-020	scaffolding	-	label, heading or list item	1	scaffolding	-	introduction to recommendation-domain list
+X18-021	scaffolding	-	label, heading or list item	1	scaffolding	-	recommendation-domain label
+X18-022	scaffolding	-	label, heading or list item	1	scaffolding	-	recommendation-domain label
+X18-023	scaffolding	-	label, heading or list item	1	scaffolding	-	recommendation-domain label
+X18-024	scaffolding	-	label, heading or list item	1	scaffolding	-	recommendation-domain label
+X18-029	fragment	-	p18 list item 4 cut by Box 4; S18-07 carries it	1	fragment	-	sentence stem interrupted by Box 4 and carried in full by S18-07
+X19-001	scaffolding	-	heading or label	1	scaffolding	-	Box 4 title
+X19-006	fragment	-	tail of Box 4 principle 4 (S18-07/S19-05) + list numeral	1	fragment	-	continuation of the misapplication statement carried by S18-07
+X19-007	scaffolding	-	heading or label	1	scaffolding	-	recommendation-domain heading
+X19-008	definition	restates(S9-05)	[g:pain-durations] cross-reference glossing acute <1 month, subacute 1–3, chronic >3 months	1	definition	restates(S9-05)	cross-reference repeats the three pain-duration definitions
+X19-009	scaffolding	-	heading or label	1	scaffolding	-	implementation-considerations heading
+X19-010	action-claim	restates(S22-02)	borderline: rec 1 first implementation bullet = B3-02 claim (nonopioids at least as effective) over S22-02's condition list	1	action-claim	ace	nonopioid therapies match opioid effectiveness for the specified common acute pain conditions
+X20-001	scaffolding	-	heading or label	1	scaffolding	-	supporting-rationale heading
+X20-002	action-claim	ace	[g:rationale-can] evaluation can identify reversible causes + serious etiologies needing urgent action (canonical S20-04 lacks the can-claim)	1	directive	ace	evaluation can identify reversible causes and serious etiologies requiring urgent action
+X20-003	action-claim	ace	[g:rationale-can] diagnosis can help identify interventions to reverse or prevent worsening of acute pain (examples)	1	action-claim	ace	diagnosis can identify interventions that reverse or limit pain and improve function
+X20-004	action-claim	ace	[g:rationale-can] noninvasive nonpharmacologic approaches can improve acute pain + function without serious harms	1	action-claim	ace	noninvasive approaches can improve acute pain and function without serious-harm risk
+X20-005	evidence	-	study or review finding	1	evidence	-	clinical evidence-review findings
+X20-006	background	-	insurance coverage + access barriers	1	background	-	insurance, cost and access barriers
+X20-007	reported	uncovered(external)	OWG experts emphasized improving access to nonopioid modalities	1	reported	uncovered(external)	OWG experts prioritized access to nonopioid pain management
+X20-008	action-claim	ace	[g:rationale-can] many acute pain conditions often can be managed most effectively with nonopioid medications (qualifier + degree beyond B3-02)	1	action-claim	ace	many acute pain conditions can be managed most effectively with nonopioid medications
+X20-009	evidence	-	study or review finding	1	evidence	-	systematic-review finding
+X20-010	evidence	-	study or review finding	1	evidence	-	comparative effectiveness findings
+X20-011	evidence	-	study or review finding	1	evidence	-	limited comparative evidence
+X20-012	evidence	-	study or review finding	1	evidence	-	associations between migraine therapies and outcomes
+X20-013	action-claim	ace	[g:treatment-options] triptans, NSAIDs, antiemetics, dihydroergotamine, acetaminophen = established acute migraine treatments	1	background	-	established migraine-treatment options
+X21-001	reported	uncovered(external)	FDA approvals of lasmiditan + gepants	1	reported	uncovered(external)	reports FDA migraine-drug approvals
+X21-002	evidence	-	study or review finding	1	evidence	-	placebo-comparison findings
+X21-003	scaffolding	-	heading or label	1	scaffolding	-	pregnancy and postpartum heading
+X21-004	evidence	-	study or review finding	1	evidence	-	systematic-review finding
+X21-005	evidence	-	study or review finding	1	evidence	-	evidence-review finding
+X21-006	evidence	-	study or review finding	1	evidence	-	reviewed comparative effectiveness
+X21-007	evidence	-	study or review finding	1	evidence	-	postoperative effectiveness and rescue-use findings
+X21-008	evidence	-	study or review finding	1	evidence	-	insufficient migraine evidence
+X21-009	evidence	-	study or review finding	1	evidence	-	association with short-term adverse events
+X21-010	evidence	-	study or review finding	1	evidence	-	observational association with long-term use
+X21-011	evidence	-	study or review finding	1	evidence	-	observed long-term-use proportions
+X21-012	evidence	-	study or review finding	1	evidence	-	dose and duration associations with long-term use
+X21-013	evidence	-	study or review finding	1	evidence	-	study effect estimates
+X21-014	evidence	-	study or review finding	1	evidence	-	association with medication-overuse headache
+X21-015	evidence	-	study or review finding	1	evidence	-	event frequency and study-design limits
+X21-016	reported	uncovered(external)	postoperative guidelines emphasize multimodal analgesia; opioids often but not always needed (cf. S21-06)	1	reported	uncovered(external)	reports multimodal postoperative guidance from other guidelines
+X22-001	fragment	-	sentence start (continues X22-002)	1	fragment	-	opioid-naive sentence stem continues in X22-002
+X22-002	action-claim	ace	[g:rationale-can] additional opioids for acute pain superimposed on long-term therapy might carry dosage-escalation risks (rationale of S20-01)	1	action-claim	ace	additional opioids for acute-on-chronic pain might carry dose-escalation risks in long-term users
+X22-003	directive	restates(S22-11)	list stem: essential elements of discussion before outpatient opioids for acute pain; items = S22-12..S23-16	1	scaffolding	-	introduction to the essential-communication list
+X23-001	action-claim	ace	[g:rationale-can] limiting opioid use to the minimum needed can help limit tolerance + later withdrawal	1	action-claim	ace	minimal necessary opioid use can limit tolerance and subsequent withdrawal
+X23-002	scaffolding	-	heading or label	1	scaffolding	-	recommendation heading
+X23-003	scaffolding	-	heading or label	1	scaffolding	-	implementation-considerations heading
+X24-001	reported	uncovered(external)	FDA approvals for diabetic neuropathy + postherpetic neuralgia (S24-08 bullet tail)	1	reported	uncovered(external)	reports FDA-approved indications for duloxetine, pregabalin and gabapentin
+X24-002	action-claim	ace	[g:treatment-options] fibromyalgia: tricyclic + SNRI antidepressants, topical diclofenac, pregabalin, gabapentin used to improve pain, function, quality of life (rec 2 implementation bullet)	1	background	-	medications used for fibromyalgia and their treatment purposes
+X24-003	reported	restates(S27-09)	FDA approvals for fibromyalgia, as S27-09 (which adds "recommended")	1	reported	restates(S27-09)	the same three drugs have FDA approval for fibromyalgia
+X24-004	action-claim	ace	[g:key] headache or fibromyalgia: expected benefits of initiating opioids unlikely to outweigh risks regardless of prior therapies (continues S24-15)	1	action-claim	ace	opioid-initiation benefits are unlikely to outweigh risks for headache or fibromyalgia despite prior therapies
+X25-001	scaffolding	-	heading or label	1	scaffolding	-	supporting-rationale heading
+X25-002	reported	uncovered(external)	diagnosis guidelines elsewhere	1	scaffolding	-	cross-reference to diagnostic guidelines
+X25-003	action-claim	ace	[g:rationale-can] diagnosis can help identify disease-specific interventions for chronic pain (examples)	1	action-claim	ace	diagnosis can identify disease-specific interventions that improve pain and function
+X25-004	background	-	pain mechanism categories	1	definition	ace	traditional pain-mechanism categories include neuropathic and nociceptive pain with the named examples
+X25-005	background	-	nociplastic pain category	1	definition	ace	nociplastic pain has augmented central processing and altered modulation as in fibromyalgia
+X25-006	background	-	mechanism has treatment implications	1	background	-	relationship between pain mechanism and medication selection
+X25-007	evidence	-	study or review finding	1	evidence	-	limited benefit or worse outcomes in chronic conditions
+X25-008	action-claim	ace	[g:treatment-options] moderate-severe chronic back or hip/knee OA pain: nonopioid strategy (acetaminophen or NSAIDs first) improves pain with fewer side effects than starting with opioids	1	action-claim	ace	starting nonopioids improves pain with fewer side effects than starting opioids in the specified conditions
+X25-009	directive	ace	NSAIDs potentially inappropriate in older adults with chronic pain (prolonged use); borderline vs S24-06 caution	1	directive	ace	prolonged NSAID use is potentially inappropriate for older adults with chronic pain
+X25-010	action-claim	ace	[g:rationale-can] PT, weight loss for knee OA, CBT, MBSR can improve pain + function without serious harms	1	action-claim	ace	specified noninvasive approaches can improve chronic pain and function without serious-harm risk
+X25-011	evidence	-	study or review finding	1	evidence	-	high-quality exercise-therapy evidence
+X25-012	action-claim	ace	[g:treatment-options] condition-specific nonpharmacologic therapies with sustained benefit (knee/hip OA, low back, neck, fibromyalgia, tension headache)	1	action-claim	ace	specified nonpharmacologic therapies improve pain or function for at least one month without apparent serious harm
+X26-001	action-claim	ace	[g:treatment-options] TMD pain: education + self-care can be effective; occlusal splints; biobehavioral therapy	1	action-claim	ace	education, self-care, selected splints and biobehavioral therapy can help temporomandibular pain
+X26-002	action-claim	ace	[g:rationale-can] active therapies can encourage participation + have more robust sustained evidence than passive ones (rationale of S26-01); borderline restates	1	action-claim	ace	active therapies can support patient participation and pain coping with more sustained benefit than passive therapies
+X26-003	action-claim	ace	[g:rationale-can] physical activity can provide additional benefits such as reducing depression symptoms	1	action-claim	ace	physical activity can prevent or reduce depressive symptoms
+X26-004	background	-	insurance coverage	1	action-claim	ace	noninvasive nonpharmacologic therapies have a favorable benefit-risk profile despite coverage gaps
+X26-005	background	-	access barriers	1	background	-	cost and access barriers
+X26-006	evidence	-	study or review finding	1	evidence	-	randomized-trial finding
+X26-007	evidence	-	study or review finding	1	evidence	-	randomized-trial finding
+X26-008	action-claim	ace	[g:rationale-can] free or low-cost community programs can provide stress reduction (context of S26-08); borderline background	1	action-claim	ace	available low-cost support and education programs can reduce stress and improve mental health
+X26-009	background	-	nonopioid therapies in use	1	background	-	nonopioid drugs used for chronic-pain symptoms
+X26-010	action-claim	ace	[g:precautions] nonopioid pharmacologic therapies carry risks particularly in older adults, pregnancy, cardiovascular/renal/GI/liver disease	1	evidence	-	risk associations in vulnerable populations
+X26-011	action-claim	restates(S21-03)	NSAID GI + coronary events, as S21-03	1	evidence	-	NSAID adverse-event associations
+X26-012	evidence	-	study or review finding	1	evidence	-	drug adverse-event and dosage-reduction findings
+X26-013	evidence	-	study or review finding	1	evidence	-	osteoarthritis treatment effects by follow-up and subgroup
+X27-001	evidence	-	study or review finding	1	evidence	-	moderate-quality effectiveness evidence
+X27-002	evidence	-	study or review finding	1	evidence	-	limited topical-treatment evidence
+X27-003	evidence	-	study or review finding	1	evidence	-	neuropathic-pain treatment associations
+X27-004	reported	uncovered(external)	FDA approvals for diabetic neuropathy + postherpetic neuralgia (same as X24-001)	1	reported	uncovered(external)	reports FDA-approved neuropathic-pain indications
+X27-005	evidence	-	study or review finding	1	evidence	-	fibromyalgia treatment associations
+X27-006	action-claim	ace	[g:treatment-options] tricyclic + SNRI antidepressants can relieve fibromyalgia symptoms	1	action-claim	ace	tricyclic and SNRI antidepressants can relieve fibromyalgia symptoms
+X27-007	directive	ace	tricyclic antidepressants potentially inappropriate for adults ≥65 (anticholinergic effects); borderline vs S24-09 judicious use	1	directive	ace	tricyclic antidepressants are potentially inappropriate at age ≥65 because of anticholinergic effects
+X27-008	evidence	-	study or review finding	1	evidence	-	limited and inconsistent cannabis evidence
+X27-009	evidence	-	study or review finding	1	evidence	-	clinical evidence-review findings
+X27-010	evidence	-	study or review finding	1	evidence	-	opioid-associated serious harms
+X27-011	evidence	-	study or review finding	1	evidence	-	adverse-event discontinuation associations
+X27-012	evidence	-	study or review finding	1	evidence	-	short-term placebo-comparison effect estimates
+X27-013	evidence	-	study or review finding	1	evidence	-	attenuation of pain benefit over time
+X27-014	evidence	-	study or review finding	1	evidence	-	absence of longer-term placebo-controlled trials
+X27-015	evidence	-	study or review finding	1	evidence	-	nonopioid-comparison effect estimates
+X27-016	evidence	-	study or review finding	1	evidence	-	longer-term comparative-trial findings
+X27-017	evidence	-	study or review finding	1	evidence	-	observational risk estimates by study-defined dose group
+X27-018	evidence	-	study or review finding	1	evidence	-	opioid-associated serious harms
+X28-001	reported	uncovered(external)	OWG experts appreciated the recommendation (pain + function, expectations, exit strategies)	1	reported	uncovered(external)	OWG experts endorsed pain-and-function goals, realistic expectations and exit strategies
+X28-002	reported	uncovered(external)	OWG expert disagreement on "may be preferred" vs "are preferred" wording	1	reported	uncovered(external)	reports expert disagreement over how strongly to prefer nonopioid therapies
+X28-003	evidence	-	study or review finding	1	evidence	-	summary of nonopioid benefit and harm evidence
+X28-004	action-claim	ace	[g:key] headache or fibromyalgia: opioid initiation unlikely to outweigh risks regardless of prior therapies (same sentence as X24-004)	1	action-claim	ace	opioid-initiation benefits are unlikely to outweigh risks for headache or fibromyalgia despite prior therapies
+X28-005	evidence	-	study or review finding	1	evidence	-	review found no highly accurate harm-prediction instrument
+X28-006	background	-	predicting benefit vs risk is challenging	1	background	-	difficulty of predicting individual benefit-risk balance
+X28-007	evidence	-	study or review finding	1	evidence	-	patient-reported effects of treatment goals
+X28-008	definition	restates(S44-17)	clinically meaningful improvement = 30% in pain + function, as S44-17	1	definition	restates(S44-17)	clinically meaningful improvement means 30% improvement in both pain and function
+X28-009	action-claim	ace	[g:rationale-can] documenting a treatment plan with functional goals before prescribing will clarify expectations + aims at safety (beyond S24-17); borderline	1	action-claim	ace	documenting a functional treatment plan before prescribing clarifies expectations for opioid use and monitoring
+X29-001	evidence	-	study or review finding	1	evidence	-	patient preferences regarding treatment effects
+X29-002	directive	restates(S24-22)	list stem: essential elements before starting opioid therapy; items extracted	1	scaffolding	-	introduction to the essential-communication list
+X29-003	scaffolding	-	heading or label	1	scaffolding	-	interventional-approaches heading
+X29-004	evidence	-	study or review finding	1	evidence	-	insufficient evidence about repeated injection risks
+X30-001	background	-	common interventional procedures	1	background	-	common interventional procedures and indications
+X30-002	scaffolding	-	pointer to procedure descriptions	1	scaffolding	-	reference to procedure descriptions
+X30-003	evidence	-	study or review finding	1	evidence	-	reported epidural adverse events
+X30-004	scaffolding	-	heading or label	1	scaffolding	-	multimodal-therapy heading
+X30-005	action-claim	ace	[g:rationale-can] multimodal + multidisciplinary biopsychosocial rehabilitation can reduce long-term pain + disability vs usual care	1	action-claim	ace	multimodal rehabilitation can reduce long-term pain and disability more than usual care or physical treatment alone
+X30-006	action-claim	ace	[g:rationale-can] nonpharmacologic therapies can add synergistic benefit to pain medications	1	action-claim	ace	nonpharmacologic therapies can add synergistic benefits to nonopioid or opioid medication
+X30-007	background	-	multimodal access + cost barriers	1	background	-	availability, cost and access barriers to multimodal care
+X30-008	evidence	-	study or review finding	1	evidence	-	evidence comparing rehabilitation intensity
+X30-009	action-claim	ace	[g:rationale-can] medication combinations might give complementary benefit + allow lower doses (neuropathic pain trials)	1	action-claim	ace	medication combinations might add complementary benefits and permit lower individual doses
+X30-010	evidence	-	opioid + gabapentin overdose association (duty at S55-12)	1	evidence	-	association between sedating combinations and overdose
+X30-011	scaffolding	-	heading or label	1	scaffolding	-	domain and recommendation headings
+X30-012	scaffolding	-	heading or label	1	scaffolding	-	implementation-considerations heading
+X31-001	definition	ace	[g:key-definitions] ER/LA opioids = methadone, transdermal fentanyl, ER oxycodone/hydromorphone/hydrocodone/morphine: the term rec 3 uses	1	definition	ace	ER/LA opioids include methadone, transdermal fentanyl and the named extended-release formulations
+X31-002	evidence	-	study or review finding	1	evidence	-	clinical evidence-review findings
+X31-003	evidence	-	study or review finding	1	evidence	-	comparative overdose-risk study
+X31-004	evidence	-	study or review finding	1	evidence	-	absence of evidence favoring scheduled ER/LA use
+X31-005	evidence	-	study or review finding	1	action-claim	ace	scheduled opioid use can produce greater average daily doses than as-needed use
+X31-006	background	-	abuse-deterrent technologies	1	background	-	design purpose of abuse-deterrent technologies
+X31-007	reported	uncovered(external)	FDA guidance: abuse-deterrent formulations do not prevent oral misuse or overdose	1	reported	uncovered(external)	reports FDA guidance on the limitations of abuse-deterrent technologies
+X31-008	action-claim	ace	[g:abuse-deterrent] the abuse-deterrent label does not mean no risk of misuse or OUD	1	definition	ace	the abuse-deterrent label does not mean absence of misuse or opioid-use-disorder risk
+X31-009	evidence	-	study or review finding	1	evidence	-	absence of abuse-deterrence effectiveness studies
+X31-010	reported	uncovered(external)	OWG experts agreed with immediate-release first + ADF evidence discussion	1	reported	uncovered(external)	OWG experts endorsed initial immediate-release opioids and discussion of abuse-deterrence evidence limits
+X31-011	evidence	-	study or review finding	1	evidence	-	inconsistent comparative cohort findings
+X31-012	evidence	-	study or review finding	1	evidence	-	methadone-overdose association
+X31-013	background	-	methadone pharmacology (duty at the rec 3 methadone bullet)	1	evidence	-	methadone adverse-event associations and pharmacologic context
+X31-014	background	-	transdermal fentanyl pharmacokinetics	1	background	-	transdermal fentanyl pharmacology
+X31-015	background	-	mcg/hour dosing can confuse	1	action-claim	ace	unusual microgram-per-hour fentanyl dosing can confuse outpatient use
+X31-016	action-claim	ace	[g:rationale-can] methadone + transdermal fentanyl complexities might increase fatal overdose risk (rationale of the rec 3 familiarity duties); borderline restates	1	action-claim	ace	methadone and fentanyl pharmacologic complexities might raise fatal-overdose risk
+X32-001	background	-	methadone + transdermal fentanyl prescribing is challenging	1	background	-	difficulty of safe prescribing with complex pharmacology
+X32-002	reported	uncovered(external)	prior methadone prescribing guideline	1	scaffolding	-	cross-reference to methadone guidance
+X32-003	scaffolding	-	heading or label	1	scaffolding	-	recommendation heading
+X32-004	scaffolding	-	heading or label	1	scaffolding	-	implementation-considerations heading
+X32-005	action-claim	ace	[g:dose-risk] rec 4 implementation bullet: risks rise continuously with dosage; no threshold below which risks vanish	1	action-claim	ace	opioid risks rise continuously with dosage without a risk-free threshold
+X32-006	action-claim	ace	[g:key] [split at naïve; whole sentence = X32-006+X32-007] lowest starting dose for opioid-naïve patients ≈ 5–10 MME single dose or 20–30 MME/day	1	fragment	-	opioid-naive dose sentence stem continues in X32-007
+X32-007	action-claim	ace	[g:key] [split at naïve] tail of X32-006: starting dose 5–10 MME single dose or 20–30 MME/day	1	definition	ace	the lowest opioid-naive starting dose is often about 5–10 MME once or 20–30 MME daily
+X32-008	scaffolding	-	pointer to the MME table	1	scaffolding	-	cross-reference to the conversion table
+X32-009	action-claim	ace	[g:key] premise of S32-14: many patients gain no benefit from increasing to ≥50 MME/day yet face rising risk	1	action-claim	ace	many patients gain no pain or function benefit at ≥50 MME/day while risk rises
+X32-010	action-claim	ace	[g:key] increases beyond 50 MME/day progressively more likely to yield diminishing returns relative to risks (numeric anchor of B3-06)	1	action-claim	ace	increases beyond 50 MME/day progressively yield less benefit relative to risk
+X32-011	fragment	-	layout residue + table label	1	fragment	-	unreadable suffix adjoining the table heading
+X33-001	fragment	-	MME table cells; S33-01 carries the table in row form	1	scaffolding	-	conversion-table label and cell carried in S33-01
+X33-002	fragment	-	MME table cells + sources; S33-01 carries the table in row form	1	scaffolding	-	conversion-table cells and source citations
+X33-003	scaffolding	-	heading or label	1	definition	ace	mcg/hr means microgram per hour, mg milligram and MME morphine milligram equivalent
+X33-004	fragment	-	layout residue	1	fragment	-	unreadable two-letter word ending
+X33-005	evidence	-	heading + benefits of high doses not established	1	evidence	-	uncertain high-dose opioid benefit evidence
+X33-006	evidence	-	study or review finding	1	evidence	-	few high-dose trials
+X33-007	evidence	-	study or review finding	1	evidence	-	comparative high-dose effect estimate
+X33-008	evidence	-	study or review finding	1	evidence	-	placebo-controlled dose-response findings
+X33-009	evidence	-	study or review finding	1	evidence	-	dose-escalation trial finding
+X33-010	evidence	-	study or review finding	1	action-claim	ace	serious opioid harms rise at higher doses without a dose below which risk is absent
+X33-011	evidence	-	study or review finding	1	evidence	-	observational dose-harm associations
+X33-012	evidence	-	study or review finding	1	evidence	-	patient-reported reliance and ambivalence
+X33-013	evidence	-	study or review finding	1	evidence	-	observational overdose-risk associations
+X33-014	evidence	-	study or review finding	1	evidence	-	adjusted chronic-pain overdose-risk estimates
+X33-015	evidence	-	study or review finding	1	evidence	-	acute-pain overdose-risk estimates
+X33-016	evidence	-	study or review finding	1	evidence	-	interpretation limits of study-selected dose cut points
+X33-017	evidence	-	study or review finding	1	evidence	-	Veterans Health Administration dose comparison
+X33-018	evidence	-	study or review finding	1	evidence	-	FDA staff narrative-review findings
+X34-001	evidence	-	dose-response studies cover full agonists; buprenorphine respiratory effect plateaus	1	action-claim	ace	buprenorphine is unlikely to share continuous dose-overdose risk because respiratory depression plateaus
+X34-002	reported	uncovered(external)	OWG experts: thresholds in the statement would read as absolutes	1	reported	uncovered(external)	OWG experts warned that authoritative dose thresholds could cause harmful tapers
+X34-003	reported	uncovered(external)	experts: no single standard MME formula	1	background	-	expert observation that MME formulas are not standardized
+X34-004	reported	uncovered(external)	experts: thresholds as benchmarks in supporting text	1	reported	uncovered(process)	experts advised putting dosage benchmarks in supporting text
+X34-005	reported	uncovered(external)	experts agreed with separate dosage recommendations	1	reported	uncovered(process)	experts endorsed separate initial-treatment and ongoing-treatment recommendations
+X34-006	action-claim	ace	[g:key] [split at naïve] starting dose sentence repeated in the rationale (same as X32-006)	1	fragment	-	opioid-naive dose sentence stem continues in X34-007
+X34-007	action-claim	ace	[g:key] [split at naïve] tail (same as X32-007)	1	definition	ace	the lowest opioid-naive starting dose is often about 5–10 MME once or 20–30 MME daily
+X34-008	scaffolding	-	pointer to the MME table	1	scaffolding	-	cross-reference to the conversion table
+X34-009	action-claim	ace	[g:rationale-can] lower-dose formulations (e.g., hydrocodone 2.5 mg/acetaminophen 325 mg) can facilitate cautious dosing	1	action-claim	ace	lower-dose formulations can facilitate dosing when extra caution is needed
+X34-010	reported	uncovered(external)	product labeling on tolerance guides patients already taking opioids	1	scaffolding	-	cross-reference to product-label tolerance guidance
+X34-011	action-claim	ace	[g:dose-risk] rapid dosage increases put patients at greater risk for sedation, respiratory depression, overdose	1	action-claim	ace	rapid opioid-dose increases raise sedation, respiratory-depression and overdose risk
+X34-012	action-claim	ace	[g:key] diminishing returns beyond 50 MME/day (same as X32-010)	1	action-claim	ace	increases beyond 50 MME/day progressively yield less benefit relative to risk
+X34-013	scaffolding	-	heading or label	1	scaffolding	-	recommendation heading
+X35-001	scaffolding	-	heading or label	1	scaffolding	-	implementation-considerations heading
+X35-002	background	-	clinicians + patients might disagree on tapering (context of the next bullet)	1	background	-	possible disagreement over tapering
+X35-003	action-claim	ace	[g:rationale-can] patient agreement + interest likely key to successful tapers	1	action-claim	ace	patient agreement and interest likely contribute to successful tapering
+X36-001	evidence	-	study or review finding	1	evidence	-	adverse-event risk in long-term high-dose users
+X36-002	evidence	-	study or review finding	1	evidence	-	discontinuation-associated adverse events
+X36-003	evidence	-	study or review finding	1	evidence	-	association between tapering and termination of care
+X36-004	evidence	-	study or review finding	1	evidence	-	study findings on sustained discontinuation and dose variability
+X36-005	evidence	-	study or review finding	1	evidence	-	comparative suicide and overdose findings
+X36-006	evidence	-	study or review finding	1	evidence	-	study associations with starting and stopping opioids
+X36-007	evidence	-	study or review finding	1	evidence	-	study time courses for overdose and suicide
+X36-008	evidence	-	study or review finding	1	evidence	-	observational heroin-use findings
+X36-009	evidence	-	study or review finding	1	evidence	-	association between shorter discontinuation and greater risk
+X36-010	reported	uncovered(external)	FDA advice: risks of rapid tapering or sudden discontinuation	1	reported	uncovered(external)	reports FDA advice about rapid-taper and sudden-discontinuation harms
+X36-011	evidence	-	study or review finding	1	evidence	-	observational taper-rate risk estimates
+X36-012	evidence	-	study or review finding	1	evidence	-	observational taper-duration risk estimate
+X36-013	evidence	-	study or review finding	1	evidence	-	evidence-review and taper-support intervention findings
+X36-014	evidence	-	study or review finding	1	evidence	-	systematic-review finding
+X36-015	evidence	-	results suggest patient involvement, support, slower tapers might improve outcomes	1	evidence	-	interpretation explicitly attributed to preceding study results
+X36-016	reported	uncovered(external)	OWG experts on managing patients on higher dosages	1	background	-	expert observation about long-term opioid-care complexity
+X36-017	reported	uncovered(external)	expert disagreement: informed consent vs informed discussion before tapering (borderline passage p36)	1	reported	uncovered(external)	experts disagreed about informed consent versus informed discussion before tapering
+X37-001	reported	uncovered(external)	some experts: overemphasizing tapering risks could increase harm	1	reported	uncovered(external)	experts warned that excessive taper-risk emphasis could perpetuate high-dose harms
+X37-002	scaffolding	-	heading or label	1	scaffolding	-	tapering heading
+X37-003	action-claim	ace	[g:rationale-can] continuing long-term opioids might include avoiding tapering risks	1	action-claim	ace	continuing long-term opioids might avoid harms that tapering can cause in some circumstances
+X37-004	background	-	clinicians + patients might disagree on tapering (same as X35-002)	1	background	-	possible disagreement over tapering
+X37-005	action-claim	restates(S38-04)	after slow voluntary reduction patients might improve without worse pain, as S38-04	1	action-claim	ace	slow voluntary dose reduction might improve function and well-being without worsening pain
+X37-006	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): the patient requests dosage reduction or discontinuation	1	reported	uncovered(external)	HHS-aligned taper criterion: the patient requests reduction or discontinuation
+X37-007	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): pain improves + might indicate resolution of an underlying cause	1	reported	uncovered(external)	HHS-aligned taper criterion: improved pain might indicate resolution of its cause
+X37-008	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): opioid therapy has not meaningfully reduced pain or improved function	1	reported	uncovered(external)	HHS-aligned taper criterion: opioids have not meaningfully improved pain or function
+X37-009	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): prolonged treatment (years) with an unclear benefit-risk balance	1	reported	uncovered(external)	HHS-aligned taper criterion: prolonged treatment has an unclear benefit-risk balance
+X37-010	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): higher dosages without evidence of benefit from the higher dosage	1	reported	uncovered(external)	HHS-aligned taper criterion: higher dosage lacks evidence of additional benefit
+X37-011	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): side effects diminish quality of life or impair function	1	reported	uncovered(external)	HHS-aligned taper criterion: side effects impair quality of life or function
+X37-012	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): evidence of opioid misuse exists	1	reported	uncovered(external)	HHS-aligned taper criterion: evidence of opioid misuse exists
+X37-013	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): overdose or other serious event, or warning signs of an impending event	1	reported	uncovered(external)	HHS-aligned taper criterion: overdose, another serious event or warning signs occur
+X37-014	directive	ace	[g:key-taper-conditions] S37-14 "consider tapering … when" list item (S37-14 payload stops at "when"; ruled external): risk-raising medications (e.g., benzodiazepines) or conditions (sleep apnea, liver or kidney disease, fall risk)	1	reported	uncovered(external)	HHS-aligned taper criterion: other medications or conditions increase adverse-outcome risk
+X37-015	action-claim	ace	[g:rationale-can] possibility of dose reduction might provoke substantial anxiety in long-term patients; borderline background	1	action-claim	ace	possible dosage reduction can provoke substantial anxiety in long-term opioid patients
+X37-016	background	-	tapering after years can be especially challenging	1	background	-	physical and psychological dependence complicate tapering
+X38-001	action-claim	ace	[g:rationale-can] tapering more likely to succeed when patients collaborate (beyond S37-17)	1	action-claim	ace	patient collaboration makes successful tapering more likely
+X38-002	scaffolding	-	heading or label	1	scaffolding	-	pretaper advice heading
+X38-003	evidence	-	study or review finding	1	evidence	-	patient-reported adverse symptoms
+X38-004	background	-	increased pain mechanism during taper	1	background	-	mechanism and possible duration of increased pain
+X38-005	scaffolding	-	heading or label	1	scaffolding	-	pain-management heading
+X38-006	action-claim	ace	[g:rationale-can] integrating behavioral + nonopioid therapies before and during a taper can help manage pain + strengthen the relationship	1	action-claim	ace	behavioral and nonopioid therapies before and during tapering can manage pain and strengthen the therapeutic relationship
+X38-007	action-claim	ace	[g:rationale-can] same + mental health treatment improves likelihood of positive tapering outcomes	1	action-claim	ace	pain therapies plus mental-health treatment before and during tapering can improve pain, relationships and taper outcomes
+X38-008	evidence	-	study or review finding	1	evidence	-	mental-health comorbidity prevalence
+X38-009	evidence	-	study or review finding	1	evidence	-	association between depression and taper dropout
+X38-010	evidence	-	study or review finding	1	evidence	-	limited taper-rate evidence
+X38-011	evidence	-	study or review finding	1	evidence	-	emerging taper-rate evidence
+X39-001	action-claim	ace	[g:rationale-can] sudden discontinuation might precipitate substantial withdrawal (rationale of S39-08); borderline	1	action-claim	ace	sudden opioid discontinuation might precipitate substantial withdrawal
+X39-002	action-claim	ace	[g:rationale-can] rapid tapering or sudden discontinuation can increase distress + ED visits + hospitalizations	1	action-claim	ace	rapid tapering or sudden discontinuation can increase distress and acute-care use in physically dependent patients
+X39-003	scaffolding	-	heading or label	1	scaffolding	-	withdrawal-management heading
+X39-004	action-claim	ace	[g:treatment-options] withdrawal medications of S39-11 include alpha-2 agonists for autonomic symptoms	1	action-claim	ace	alpha-2 agonists can manage autonomic withdrawal symptoms such as sweating and tachycardia
+X39-005	evidence	-	study or review finding	1	action-claim	ace	clonidine and lofexidine reduce abrupt heroin or methadone withdrawal more effectively than placebo
+X39-006	evidence	-	study or review finding	1	evidence	-	absence of comparable taper research and reported tizanidine use
+X39-007	action-claim	ace	[g:treatment-options] symptom-specific withdrawal medications (NSAIDs, trazodone, antiemetics, dicyclomine, loperamide)	1	background	-	medications used for particular withdrawal symptoms
+X39-008	action-claim	restates(S39-12)	unanticipated tapering challenges might mean undiagnosed OUD; S39-12 ACE resolves "such challenges" from this sentence	1	background	-	possible undiagnosed disorder in patients struggling to taper
+X39-009	action-claim	ace	[g:buprenorphine] buprenorphine can treat pain + OUD; less respiratory depression + overdose risk	1	action-claim	ace	buprenorphine can treat pain and opioid use disorder with less respiratory depression and overdose risk
+X39-010	action-claim	ace	[g:buprenorphine] buprenorphine overdose still possible, esp. with other respiratory depressants	1	action-claim	ace	buprenorphine overdose remains possible, especially with other respiratory depressants
+X39-011	evidence	-	study or review finding	1	evidence	-	specialty-clinic taper and transition outcomes
+X39-012	reported	uncovered(external)	buprenorphine products approved for pain vs OUD	1	reported	uncovered(external)	reports approval of different buprenorphine products for pain and opioid use disorder
+X40-001	evidence	-	studies described low-dose buprenorphine initiation (borderline passage, p40 form)	1	evidence	-	studies describing low-dose buprenorphine initiation
+X40-002	reported	uncovered(external)	SAMHSA PCSS training + mentors	1	scaffolding	-	pointer to SAMHSA training, assistance and mentoring resources
+X40-003	action-claim	ace	[g:buprenorphine] buprenorphine for pain dosed multiple times daily, unlike once daily for OUD	1	directive	ace	buprenorphine for pain is typically dosed several times daily rather than the once-daily disorder regimen
+X40-004	scaffolding	-	heading or label	1	scaffolding	-	continuing-high-dose heading
+X40-005	background	-	managing opioids + discontinuation can be challenging	1	background	-	difficulty of opioid pain management and discontinuation
+X40-006	background	-	patients without ongoing care risk abrupt discontinuation	1	action-claim	ace	loss of ongoing opioid care can risk abrupt discontinuation and missed life-saving interventions
+X40-007	scaffolding	-	heading or label	1	scaffolding	-	domain and recommendation headings
+X40-008	scaffolding	-	heading or label	1	scaffolding	-	implementation-considerations heading
+X40-009	action-claim	ace	[g:rationale-can] rec 6 implementation bullet: nontraumatic, nonsurgical acute pain can often be managed without opioids	1	action-claim	ace	nontraumatic nonsurgical acute pain can often be managed without opioids
+X40-010	action-claim	restates(S19-13)	opioids sometimes needed for acute pain; S19-13 states their role; borderline (usuality qualifier)	1	action-claim	ace	opioids are sometimes needed to treat acute pain
+X40-011	reported	uncovered(external)	procedure-specific postoperative opioid prescribing recommendations exist	1	scaffolding	-	pointer to procedure-specific postoperative prescribing guidance
+X40-012	action-claim	ace	[g:key] rec 6 implementation bullet: longer opioid durations more likely needed when the injury mechanism predicts prolonged severe pain	1	action-claim	ace	injuries expected to cause prolonged severe pain are more likely to need longer opioid treatment
+X41-001	evidence	-	study or review finding	1	evidence	-	data on improvement of common acute pain
+X41-002	evidence	-	study or review finding	1	evidence	-	insurance-claims findings
+X41-003	evidence	-	study or review finding	1	evidence	-	refill statistics and recovery variation
+X41-004	evidence	-	study or review finding	1	evidence	-	acute-low-back-pain study findings
+X41-005	evidence	-	study or review finding	1	evidence	-	emergency-department survey findings
+X41-006	evidence	-	study or review finding	1	evidence	-	diagnosis-specific opioid-use duration estimates
+X41-007	evidence	-	study or review finding	1	evidence	-	unused-pill statistics
+X41-008	evidence	-	study or review finding	1	evidence	-	Canadian study consumption findings
+X41-009	evidence	-	study or review finding	1	evidence	-	postoperative prescribing and consumption studies
+X41-010	evidence	-	study or review finding	1	evidence	-	study of postoperative consumption and unused pills
+X41-011	evidence	-	study or review finding	1	evidence	-	evidence of patient-level variation in opioid needs
+X41-012	evidence	-	study or review finding	1	evidence	-	postoperative opioid-duration study
+X41-013	evidence	-	study or review finding	1	evidence	-	observational evidence-review findings
+X41-014	background	-	unused opioids = misuse + diversion source	1	background	-	unused opioids as a possible source of misuse and diversion
+X41-015	action-claim	ace	[g:rationale-can] sudden discontinuation might cause significant withdrawal (same as X39-001)	1	action-claim	ace	sudden opioid discontinuation might cause clinically significant withdrawal
+X41-016	action-claim	ace	[g:rationale-can] limiting prescribed duration can minimize the need for a taper	1	action-claim	ace	shorter prescribed opioid duration can reduce the need for a withdrawal-prevention taper
+X42-001	action-claim	ace	[g:rationale-can] nonsurgical nontraumatic acute pain often managed without opioids (same as X40-009)	1	action-claim	ace	common nonsurgical nontraumatic acute pain can often be managed without opioids
+X42-002	action-claim	ace	[g:rationale-can] inpatient opioid course + dosage before discharge can help predict postoperative pain needs	1	action-claim	ace	inpatient and predischarge opioid course and dose can predict ongoing pain-management needs
+X42-003	reported	uncovered(external)	procedure-specific postoperative recommendations (same as X40-011)	1	scaffolding	-	pointer to procedure-specific postoperative prescribing guidance
+X42-004	background	-	navigation barriers when pain outlasts the supply	1	background	-	access barriers when pain outlasts expectations
+X42-005	action-claim	ace	[g:rationale-can] inpatient opioid dosages before discharge can help predict tapering needs	1	action-claim	ace	inpatient and predischarge opioid dose can predict tapering needs to prevent withdrawal
+X42-006	scaffolding	-	heading or label	1	scaffolding	-	cross-reference and recommendation heading
+X42-007	scaffolding	-	heading or label	1	scaffolding	-	implementation-considerations heading
+X43-001	evidence	-	overdose risk doubled at 50–<100 vs <20 MME/day (parenthetical, rec 7)	2	evidence	-	dose-associated overdose risk across studies
+X43-002	evidence	-	study or review finding	2	evidence	-	review and observational-study findings
+X43-003	evidence	-	study or review finding	2	evidence	-	study finding
+X43-004	evidence	-	study or review finding	2	evidence	-	study finding
+X43-005	action-claim	ace	[g:key] patients without pain relief from opioids at 1 month are unlikely to have relief at 6 months (prognosis behind rec 7 reassessment)	2	evidence	-	cited prognostic finding at one and six months
+X43-006	action-claim	ace	[g:rationale-can] reassessment within 1 month gives the chance to modify the plan + taper patients without clear benefit; borderline vs B3-11	2	action-claim	ace	reassessment within one month can improve the plan and minimize long-term opioid risks
+X44-001	action-claim	ace	[g:rationale-can] evaluation within 3 months might allow identifying + mitigating OUD and overdose risk	2	action-claim	ace	evaluation within three months can identify and mitigate disorder and overdose risks
+X44-002	reported	uncovered(external)	OWG experts supported the follow-up time frames	2	reported	uncovered(process)	workgroup endorsement during recommendation development
+X44-003	action-claim	restates(S24-19)	continuing opioids from acute into subacute pain = critical transition point, as S24-19	2	background	-	transition from subacute to chronic pain and long-term opioid therapy
+X44-004	evidence	-	study or review finding	2	evidence	-	review finding
+X44-005	evidence	-	study or review finding	2	evidence	-	cohort association
+X45-001	scaffolding	-	heading or label	2	scaffolding	-	heading
+X45-002	scaffolding	-	heading or label	2	scaffolding	-	heading
+X45-003	reported	uncovered(external)	Prescribe to Prevent naloxone resources	2	scaffolding	-	resource locator
+X45-004	reported	uncovered(external)	SAMHSA resources	2	scaffolding	-	resource locator
+X46-001	scaffolding	-	heading or label	2	scaffolding	-	cross-reference alone
+X46-002	evidence	-	study or review finding	2	evidence	-	review finding on limited evidence
+X46-003	directive	restates(B3-12)	risk factors warrant added risk-mitigation strategies, as recommendation 8	2	directive	ace	risk factors warrant additional risk-mitigation strategies in the management plan
+X46-004	reported	uncovered(external)	OWG experts: naloxone cost; purchase sometimes required to fill opioid prescriptions	2	reported	restates(S45-12)	naloxone cost concerns and purchase requirements already reported
+X46-005	evidence	-	study or review finding	2	evidence	-	heading and case-control association
+X47-001	scaffolding	-	heading or label	2	scaffolding	-	heading
+X47-002	evidence	-	opioid use in pregnancy might be associated with maternal + fetal risks	2	evidence	-	association between opioid exposure and pregnancy risks
+X47-003	evidence	-	study or review finding	2	evidence	-	observational-study associations
+X47-004	evidence	-	study or review finding	2	background	-	neonatal consequence of opioid exposure
+X47-005	reported	uncovered(external)	ACOG: screening, brief intervention + referral improve maternal + infant outcomes	2	reported	uncovered(external)	ACOG reports benefits of universal screening and intervention in pregnancy
+X47-006	action-claim	ace	[g:rationale-can] punitive approaches discourage care-seeking in pregnancy; nonpunitive approaches give better outcomes; borderline reported (ACOG-cited)	2	action-claim	ace	punitive opioid policies discourage care and nonpunitive treatment improves outcomes
+X47-007	evidence	-	study or review finding	2	evidence	-	heading and case-control association
+X48-001	fragment	-	layout residue	2	fragment	-	cut word from the older-adult monitoring duty in S48-05
+X48-002	fragment	-	layout residue	2	fragment	-	cut word from the older-adult monitoring duty in S48-05
+X48-003	background	-	heading + older adults heterogeneous	2	background	-	headings and heterogeneity of older adults
+X48-004	background	-	frail older adults at risk of functional change	2	background	-	frailty and effects of pain on function
+X48-005	background	-	older adults at risk of inadequate treatment	2	background	-	older adults face undertreatment risk
+X48-006	background	-	pain management challenging in older adults	2	background	-	population-specific pain-management challenges
+X48-007	background	-	older adult pharmacokinetic susceptibility (rationale of the ≥65 caution sentence)	2	background	-	age-related pharmacokinetics and susceptibility
+X48-008	background	-	adverse effects in older adults	2	background	-	drug adverse-effect profile
+X48-009	evidence	-	study or review finding	2	evidence	-	case-control association
+X48-010	background	-	cognitive impairment raises medication-error risk	2	background	-	cognitive impairment and medication-error susceptibility
+X48-011	background	-	comorbidities + polypharmacy in older adults	2	background	-	older-adult comorbidity and polypharmacy context
+X48-012	definition	ace	[g:key-definitions] safety critical job = work where performance limits endanger self, coworkers or the public (the term of the S48 safety-critical duty, rec06-12 line 411)	2	definition	ace	a safety-critical job is work where impaired performance endangers people
+X48-013	reported	uncovered(external)	ACOEM: opioid prescription might be incompatible with safety critical employment	2	reported	uncovered(external)	occupational-medicine guidance on opioids and safety-critical employment
+X48-014	scaffolding	-	heading or label	2	scaffolding	-	heading
+X48-015	action-claim	ace	[g:risk-factors] mental health conditions incl. depression might raise OUD + overdose risk	2	evidence	-	cited association of mental-health conditions with opioid risks
+X48-016	action-claim	ace	[g:risk-factors] anxiety disorders → more benzodiazepines, which can exacerbate opioid respiratory depression; borderline (rec 11 regions carry the benzodiazepine risk)	2	action-claim	ace	benzodiazepines can worsen opioid respiratory depression and overdose risk
+X48-017	action-claim	ace	[g:rationale-can] treating depression can improve pain + depression and might decrease overdose risk	2	action-claim	ace	depression treatment can improve symptoms and decrease overdose risk
+X49-001	action-claim	ace	[g:risk-factors] substance use disorders likely raise OUD + overdose risk	2	evidence	-	cited association of substance-use disorders with opioid risks
+X49-002	evidence	-	study or review finding	2	evidence	-	cited prescribing-pattern finding
+X49-003	evidence	-	study or review finding	2	evidence	-	review finding on risk-tool accuracy
+X49-004	evidence	-	study or review finding	2	evidence	-	death-certificate contributory-factor findings
+X49-005	evidence	-	study or review finding	2	evidence	-	screening-question diagnostic-accuracy finding
+X49-006	action-claim	ace	[g:risk-factors] previous overdose substantially raises future overdose risk	2	evidence	-	cross-reference and association of prior overdose with future overdose
+X49-007	evidence	-	study or review finding	2	evidence	-	cohort study findings
+X49-008	evidence	-	study or review finding	2	evidence	-	association of post-overdose medication treatment with reduced mortality
+X50-001	action-claim	ace	[g:rationale-can] naloxone can reverse severe respiratory depression; layperson administration can save lives	2	action-claim	ace	naloxone reverses respiratory depression and lay administration can save lives
+X50-002	action-claim	ace	[g:precautions] naloxone precipitates acute withdrawal in physically dependent patients; borderline background	2	background	-	naloxone withdrawal mechanism
+X50-003	evidence	-	study or review finding	2	evidence	-	reported adverse events and their rarity
+X50-004	evidence	-	study or review finding	2	evidence	-	observational-study association
+X50-005	reported	uncovered(external)	Prescribe to Prevent naloxone resources	2	scaffolding	-	resource locator
+X50-006	scaffolding	-	heading or label	2	scaffolding	-	heading
+X50-007	scaffolding	-	heading or label	2	scaffolding	-	heading
+X50-008	scope	uncovered(descriptive)	category B rationale: PDMP availability varies (borderline passage, p50 form)	2	method	-	rationale for recommendation-category assignment
+X50-009	action-claim	ace	[g:rationale-can] dismissing patients on PDMP information can harm safety + forfeit lifesaving interventions (rationale of the no-dismissal duty)	2	action-claim	ace	PDMP-based dismissal can harm safety and lose lifesaving-care opportunities
+X50-010	action-claim	ace	[g:pdmp] PDMP information can be incorrect (wrong name or birthdate, nickname, identity theft): context of the confirm-with-patient sub-bullet	2	background	-	PDMP data-error mechanisms
+X51-001	definition	uncovered(descriptive)	PDMP = state-run databases of dispensed controlled prescriptions (system description)	2	definition	ace	PDMPs are jurisdiction-run controlled-prescription dispensing databases
+X51-002	action-claim	ace	[g:pdmp] PDMPs do not report nonprescribed opioid use	2	background	-	PDMP data scope
+X51-003	evidence	-	study or review finding	2	evidence	-	review found no effectiveness studies
+X51-004	evidence	-	study or review finding	2	evidence	-	cited overdose-risk comparison by number of prescribers
+X51-005	action-claim	ace	[g:pdmp] PDMP data can help when medication history is otherwise unavailable (care transitions)	2	action-claim	ace	PDMP data can help when medication history is otherwise unavailable
+X51-006	evidence	-	study or review finding	2	evidence	-	survey finding
+X51-007	action-claim	ace	[g:pdmp] PDMP-EHR integration can reduce clinician burden	2	action-claim	ace	integrating PDMPs with health records can reduce clinician burden
+X51-008	background	-	PDMP information used to dismiss patients (harm example)	2	action-claim	ace	PDMP-based dismissal might harm safety and leave pain undertreated
+X51-009	reported	uncovered(external)	OWG experts: PDMP risk scores can breed distrust + stigma	2	reported	uncovered(external)	workgroup experts warn of risk-score distrust and stigma
+X51-010	evidence	-	study or review finding	2	action-claim	ace	proprietary risk-score algorithms might disparately affect disadvantaged groups
+X51-011	evidence	-	study or review finding	2	evidence	-	risk-score validation findings
+X52-001	scope	ace	[g:key] category B rationale with example exception: severe acute pain in the ED during PDMP access failure, waiting would harm (borderline passage p52; an example fact)	2	action-claim	ace	waiting for unavailable PDMP data can harm emergency patients with severe acute pain
+X52-002	scaffolding	-	heading or label	2	scaffolding	-	heading
+X52-003	scaffolding	-	heading or label	2	scaffolding	-	heading
+X52-004	action-claim	ace	[g:rationale-can] rec 10 bullet: dismissal after toxicology results could harm safety (alternative sources, missed SUD treatment)	2	action-claim	ace	toxicology-based dismissal can lead to unsafe drug sourcing and missed treatment
+X52-005	action-claim	ace	[g:tools] rec 10 bullet: available tools cannot reliably identify low-risk patients; borderline (cf. X7-018 evidence summary)	2	evidence	-	risk-tool diagnostic-performance limitation
+X52-006	action-claim	ace	[g:tox] class screening might not detect all drugs in the class	2	background	-	toxicology-class assay detection limits
+X52-007	action-claim	ace	[g:tox] fentanyl absent from widely used opiate-class assays	2	background	-	fentanyl exclusion from common opiate assays
+X52-008	action-claim	ace	[g:tox] opiates immunoassay: morphine reflects morphine, codeine or heroin; misses synthetic + some semisynthetic opioids	2	background	-	opiate-immunoassay analytes and detection limits
+X52-009	action-claim	ace	[g:tox] positive results might reflect metabolites of the prescribed opioid	2	background	-	metabolites explain some positive results
+X53-001	action-claim	ace	[g:tox] discussion before confirmatory testing can yield an explanation + remove the need for it	2	action-claim	ace	discussion before confirmation can explain results and avoid confirmatory testing
+X53-002	action-claim	ace	[g:tox] example: negative test because the patient stopped ineffective opioids (an example fact)	2	background	-	hypothetical explanation of a negative test
+X53-003	evidence	-	study or review finding	2	evidence	-	review found no effectiveness studies
+X53-004	action-claim	ace	[g:risk-factors] concurrent opioids + other opioids, benzodiazepines or heroin can increase overdose risk; borderline (rec 11 regions)	2	action-claim	restates(S52-10)	combined-opioid overdose risk for prescribed illicit opioids and benzodiazepines already stated
+X53-005	action-claim	ace	[g:tox] toxicology tests reveal unreported drug use	2	action-claim	ace	toxicology tests can reveal drug use not reported by patients
+X53-006	action-claim	ace	[g:tox] toxicology tests can show prescribed opioids not taken (diversion or adverse-effect issues)	2	action-claim	ace	toxicology tests can identify nonuse of prescribed opioids and possible diversion
+X53-007	background	-	urine = most common specimen	2	background	-	usual testing specimen
+X53-008	background	-	oral fluid testing exists, protocols less established	2	background	-	oral-fluid testing availability and protocol maturity
+X53-009	reported	uncovered(external)	SAMHSA oral fluid guidelines for federal testing programs	2	reported	uncovered(external)	SAMHSA policy includes oral-fluid specimens in federal testing
+X53-010	action-claim	ace	[g:tox] toxicology results can be associated with harmful practices (stigma, termination from care)	2	action-claim	ace	toxicology results can lead to stigma and inappropriate termination of care
+X53-011	action-claim	ace	[g:tox] false presumptive results not uncommon + often misinterpreted	2	action-claim	ace	misinterpretation can compound false test results and harm patients
+X53-012	action-claim	ace	[g:tox] urine tests do not show how much or what doses were taken	2	background	-	urine toxicology does not quantify doses taken
+X53-013	action-claim	ace	[g:tox] fentanyl absent from widely used assays → false assurance	2	action-claim	ace	fentanyl omission from common assays can provide false assurance
+X53-014	background	-	tailoring panels is hard in many settings	2	background	-	difficulty tailoring available toxicology panels
+X53-015	background	-	testing costs + clinician time	2	action-claim	ace	toxicology testing can burden patients financially and requires clinician time
+X53-016	reported	uncovered(external)	OWG experts: testing bias could harm Black + Hispanic patients	2	reported	uncovered(external)	workgroup experts warn of unequal harms from testing bias
+X53-017	reported	uncovered(external)	experts: costs hit patients least able to pay	2	action-claim	ace	testing costs burden patients with the least ability to pay most
+X53-018	reported	uncovered(external)	some experts: category A could reduce bias	2	reported	uncovered(process)	experts propose category A to reduce testing bias
+X53-019	reported	uncovered(external)	other experts: universal testing would not remove stigma	2	reported	uncovered(process)	experts dispute whether universal testing resolves stigma
+X53-020	reported	uncovered(external)	experts: accuracy, interpretation, cost, delay concerns	2	reported	uncovered(external)	workgroup experts warn of accuracy costs and care-delay problems
+X53-021	action-claim	ace	[g:tools] tools cannot reliably identify low-risk patients (same as X52-005)	2	evidence	-	cited risk-tool diagnostic-performance limitation
+X54-001	action-claim	ace	[g:tox] standardized practice-level testing policies might help destigmatize testing	2	action-claim	ace	routine testing under standardized clinic policies might reduce stigma
+X54-002	action-claim	ace	[g:tox] strategy: collect a specimen every visit, test on a random schedule; borderline background	2	background	-	description of clinics collecting every visit and testing on random schedules
+X54-003	action-claim	ace	[g:tox] asking patients before testing lets them report changes in use (rationale of the ask-first duty)	2	action-claim	ace	asking about unexpected results lets patients explain changes in drug use
+X54-004	action-claim	ace	[g:tox] opiate immunoassay coverage (same as X52-008, with fentanyl/methadone, oxycodone/buprenorphine examples)	2	background	-	opiate-immunoassay analytes and detection limits
+X54-005	action-claim	ace	[g:tox] metabolite caveat (same as X52-009)	2	background	-	metabolites explain some positive results
+X54-006	action-claim	ace	[g:tox] examples: hydromorphone from hydrocodone, oxymorphone from oxycodone	2	background	-	opioid metabolite identities
+X54-007	reported	uncovered(external)	published interpretation guidance	2	scaffolding	-	reference to an interpretation resource
+X54-008	reported	uncovered(external)	oral fluid interpretation review	2	scaffolding	-	reference to an interpretation review
+X54-009	action-claim	ace	[g:tox] discussion before confirmatory testing (same as X53-001)	2	action-claim	ace	discussion before confirmation can explain results and avoid confirmatory testing
+X54-010	action-claim	ace	[g:tox] example (same as X53-002)	2	background	-	hypothetical explanation of a negative test
+X54-011	action-claim	ace	[g:rationale-can] dismissal harms (same as X52-004)	2	action-claim	ace	toxicology-based dismissal can lead to unsafe opioid sourcing and missed treatment
+X54-012	scaffolding	-	heading or label	2	scaffolding	-	heading
+X55-001	scaffolding	-	heading or label	2	scaffolding	-	heading
+X55-002	action-claim	ace	[g:key] rec 11 bullet: concurrent opioid + benzodiazepine risks greater with unpredictable use, higher dosages of both, or alcohol/other substances vs stable low-dose use	2	action-claim	ace	unpredictable higher-dose or alcohol-associated opioid-benzodiazepine use is riskier
+X55-003	action-claim	ace	[g:key] rec 11 bullet: benzodiazepines can be beneficial in specific situations; stopping them can destabilize	2	action-claim	ace	benzodiazepines can benefit patients and their discontinuation can destabilize
+X55-004	background	-	benzodiazepine + opioid CNS depression mechanism	2	action-claim	ace	benzodiazepines can potentiate opioid respiratory depression
+X55-005	evidence	-	study or review finding	2	evidence	-	epidemiologic findings
+X55-006	evidence	-	study or review finding	2	evidence	-	cohort associations
+X55-007	evidence	-	study or review finding	2	evidence	-	case-cohort association
+X55-008	evidence	-	study or review finding	2	evidence	-	review found no effectiveness studies
+X55-009	evidence	-	study or review finding	2	evidence	-	observational-study associations
+X55-010	reported	uncovered(external)	OWG experts: benzodiazepines as risk markers; can help; stopping destabilizes	2	reported	uncovered(external)	workgroup experts distinguish risk markers from causation and note benzodiazepine benefits
+X55-011	reported	uncovered(external)	experts: stable long-term use might be safer than erratic use	2	reported	uncovered(external)	experts consider stable benzodiazepine use safer than erratic use
+X56-001	action-claim	ace	[g:key] benzodiazepines can be beneficial; stopping destabilizes (same as X55-003)	2	action-claim	ace	benzodiazepines can benefit patients and their discontinuation can destabilize
+X56-002	action-claim	ace	[g:key] untreated OUD harm can outweigh combined-medication risks (rationale of the do-not-withhold-MOUD duty)	2	action-claim	ace	untreated opioid-use-disorder harm can outweigh combined-medication risks
+X56-003	directive	ace	[g:key] considerations for individualized opioid/benzodiazepine taper decisions: patient priorities, clinical factors, response, consultation with clinicians + specialists	2	directive	ace	individualized taper decisions consider priorities response and consultation needs
+X56-004	reported	uncovered(external)	benzodiazepine taper examples + withdrawal tips available	2	scaffolding	-	reference to taper and withdrawal resources
+X56-005	action-claim	ace	[g:rationale-can] CBT increases benzodiazepine tapering success	2	action-claim	ace	cognitive behavioral therapy improves benzodiazepine-taper success and can help struggling patients
+X56-006	scaffolding	-	heading or label	2	scaffolding	-	heading
+X56-007	scaffolding	-	heading or label	2	scaffolding	-	heading
+X56-008	aim	uncovered(aim)	rec 12 bullet: OUD is a chronic treatable disease; persons can recover (framing, no directive)	2	action-claim	ace	stigma can deter treatment while opioid-use-disorder recovery remains possible
+X56-009	evidence	-	MOUD associated with reduced overdose + deaths (rec 12 bullet)	2	evidence	-	association of medication treatment with lower mortality
+X57-001	definition	ace	[g:oud-criteria] OUD defined (DSM-5): problematic pattern of opioid use causing clinically significant impairment or distress (borderline passage p57; DSM-5 text: rights check)	2	definition	ace	opioid use disorder is problematic use causing clinically significant impairment or distress
+X57-002	evidence	-	study or review finding	2	evidence	-	association of opioid therapy duration with disorder risk
+X57-003	evidence	-	study or review finding	2	evidence	-	systematic-review addiction-rate estimate
+X57-004	evidence	-	study or review finding	2	evidence	-	study prevalence estimates
+X57-005	definition	ace	[g:oud-criteria] OUD = ≥2 of 11 criteria within a year (list stem + criterion 1 numeral)	2	definition	ace	opioid use disorder requires at least two of eleven criteria within a year
+X57-006	definition	ace	[g:oud-criteria] criterion 1: larger amounts or longer than intended	2	definition	ace	criterion one is opioids taken in greater amounts or longer than intended
+X57-007	definition	ace	[g:oud-criteria] criterion 2: persistent desire or failed attempts to cut down	2	definition	ace	criterion two is persistent desire or failed efforts to control opioid use
+X57-008	definition	ace	[g:oud-criteria] criterion 3: much time obtaining, using or recovering	2	definition	ace	criterion three is much time obtaining using or recovering from opioids
+X57-009	definition	ace	[g:oud-criteria] criterion 4: craving	2	definition	ace	criterion four is opioid craving or strong desire
+X57-010	definition	ace	[g:oud-criteria] criterion 5: failure to fulfill major role obligations	2	definition	ace	criterion five is recurrent opioid use causing major role failures
+X57-011	definition	ace	[g:oud-criteria] criterion 6: continued use despite social or interpersonal problems	2	definition	ace	criterion six is continued use despite opioid-related interpersonal problems
+X57-012	definition	ace	[g:oud-criteria] criterion 7: activities given up or reduced	2	definition	ace	criterion seven is important activities reduced because of opioid use
+X57-013	definition	ace	[g:oud-criteria] criterion 8: use in physically hazardous situations	2	definition	ace	criterion eight is recurrent physically hazardous opioid use
+X57-014	definition	ace	[g:oud-criteria] criterion 9: continued use despite physical or psychological problems	2	definition	ace	criterion nine is continued use despite a known opioid-related health problem
+X57-015	definition	ace	[g:oud-criteria] criterion 10: tolerance (two forms)	2	definition	ace	tolerance is needing markedly more opioid or markedly diminished same-dose effect
+X57-016	definition	ace	[g:oud-criteria] criterion 11: withdrawal (two forms)	2	definition	ace	withdrawal is characteristic syndrome or opioid use to relieve or avoid it
+X57-017	definition	ace	[g:oud-criteria] criteria 10 + 11 not met when opioids are taken solely under appropriate medical supervision	2	definition	ace	tolerance and withdrawal criteria exclude solely medically supervised opioid use
+X57-018	definition	ace	[g:oud-criteria] severity: mild 2–3, moderate 4–5, severe ≥6 criteria (rec 12 offers MOUD "particularly if moderate or severe")	2	definition	ace	disorder severity is mild at two or three criteria moderate at four or five and severe at six or more
+X57-019	definition	ace	[g:key-definitions] FDA-approved OUD medications = buprenorphine, methadone, naltrexone (the medications rec 12 means)	2	reported	uncovered(external)	FDA indications name buprenorphine methadone and naltrexone for opioid use disorder
+X57-020	evidence	-	study or review finding	2	evidence	-	review finding on limited intervention evidence
+X57-021	evidence	-	study or review finding	2	evidence	-	moderate-quality treatment-effectiveness evidence
+X57-022	evidence	-	study or review finding	2	evidence	-	study treatment-effectiveness findings
+X57-023	evidence	-	study or review finding	2	evidence	-	study predictor finding
+X57-024	evidence	-	study or review finding	2	evidence	-	trial termination and outcomes
+X57-025	evidence	-	study or review finding	2	evidence	-	trial comparison finding
+X57-026	evidence	-	study or review finding	2	evidence	-	treatment-mortality associations
+X58-001	background	-	naltrexone pharmacology	2	background	-	naltrexone antagonist mechanism
+X58-002	action-claim	ace	[g:precautions] naltrexone unevaluated with concomitant pain + OUD; opioid pain medications generally cannot be used with naltrexone	2	action-claim	ace	naltrexone generally precludes opioid medications for pain
+X58-003	evidence	-	study or review finding	2	evidence	-	study findings on combined behavioral and medication treatment
+X58-004	evidence	-	study or review finding	2	evidence	-	study treatment comparisons
+X58-005	reported	uncovered(external)	published psychosocial treatment recommendations	2	scaffolding	-	reference to additional psychosocial-treatment recommendations
+X58-006	reported	uncovered(external)	experts: buprenorphine/naloxone likely safe + effective in pregnancy	2	reported	uncovered(external)	experts consider prescribed buprenorphine-naloxone safe and effective during pregnancy
+X59-001	reported	uncovered(external)	April 2021 practice guidelines exempted clinicians from certification requirements (regulation since superseded)	2	reported	uncovered(external)	federal practice guidelines exempt eligible clinicians from certification requirements
+X59-002	reported	uncovered(external)	SAMHSA waiver information (waiver since eliminated)	2	scaffolding	-	reference to waiver information
+X59-003	reported	uncovered(external)	published buprenorphine treatment recommendations	2	scaffolding	-	reference to additional buprenorphine recommendations
+X59-004	background	-	buprenorphine/naloxone formulation	2	background	-	usual formulation and its injection-misuse-deterrent purpose
+X59-005	background	-	naloxone oral absorption + injection withdrawal	2	background	-	naloxone absorption and withdrawal mechanism
+X59-006	background	-	long-acting injectable buprenorphine available	2	background	-	formulation availability history
+X59-007	evidence	-	studies described low-dose (microdosing) buprenorphine initiation; evidence limited (borderline passage p59)	2	evidence	-	limited studies describe low-dose initiation
+X59-008	background	-	home initiation protocols in use by experienced clinicians	2	background	-	description of home-initiation protocols in use
+X59-009	reported	uncovered(external)	DEA 1-day / 3-day supply regulation	2	reported	uncovered(external)	Congress and DEA changed short-term medication-dispensing policy
+X59-010	reported	uncovered(external)	published naltrexone recommendations	2	scaffolding	-	reference to additional naltrexone recommendations
+X59-011	background	-	extended-release naltrexone administration	2	background	-	description of typical injectable-naltrexone administration
+X60-001	reported	uncovered(external)	SAMHSA treatment locators	2	scaffolding	-	treatment-resource locators
+X60-002	background	-	identifying care can be challenging	2	background	-	difficulty locating appropriate care
+X60-003	background	-	treatment capacity often unmet	2	background	-	community treatment-capacity shortfall
+X60-004	reported	uncovered(external)	SAMHSA PCSS	2	scaffolding	-	training and support resource locator
+X60-005	background	-	heading + distinguishing misuse from mild/moderate OUD is hard	2	background	-	heading and difficulty distinguishing misuse from disorder
+X60-006	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	heading
+X61-001	reported	uncovered(external)	ASAM guidance for MOUD patients with planned surgery	2	scaffolding	-	reference to additional ASAM surgery recommendations
+X61-002	method	-	CDC process, plans or research agenda	2	method	-	history of CDC reevaluation plans
+X61-003	method	-	CDC process, plans or research agenda	2	method	-	review funding
+X61-004	method	-	CDC process, plans or research agenda	2	method	-	evidence-review topics
+X61-005	method	-	CDC process, plans or research agenda	2	directive	uncovered(process)	guideline update judged warranted by its evidence reviews
+X61-006	method	-	CDC process, plans or research agenda	2	method	-	reviews supported retaining prior recommendations
+X61-007	background	-	update scope change	2	method	-	reviews prompted expansion of guideline coverage
+X61-008	background	-	new recommendation for patients on ongoing therapy	2	scope	restates(B3-07)	recommendation for patients already receiving opioid therapy
+X61-009	scope	restates(S9-05)	four areas for patients ≥18, exclusions as S3-03	2	scope	uncovered(descriptive)	fuses the adult audience and exclusions already in S9-05 and S3-03
+X61-010	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	outline of the four recommendation sections
+X61-011	scaffolding	-	heading, label, acknowledgments or disclosures	2	method	-	identification of guiding principles
+X61-012	aim	uncovered(descriptive)	summary of the five guiding principles; canonical at S18-03..S18-07, S19-07	2	aim	uncovered(aim)	summary of the guideline implementation principles
+X61-013	background	-	reimbursement barrier	2	evidence	-	cited reimbursement-barrier finding
+X61-014	aim	uncovered(aim)	understanding social determinants is integral to access + quality	2	directive	ace	understanding social determinants is integral to equitable high-quality pain care
+X61-015	background	-	social determinants create inequities	2	background	-	social determinants and health inequities
+X61-016	background	-	historical injustices	2	background	-	historical origins of social determinants
+X61-017	background	-	affected groups	2	background	-	populations experiencing inequity
+X62-001	background	-	health care context influences outcomes	2	background	-	health-context influence on outcomes
+X62-002	background	-	differential access	2	background	-	access and coverage influence on health-care attitudes and use
+X62-003	background	-	bias reinforces disparities	2	action-claim	ace	discriminatory practices by clinicians and systems reinforce health disparities
+X62-004	directive	ace	[g:equity] strategies against inequities: awareness, communication, community health workers, multidisciplinary teams, performance tracking, QI; borderline (S19-07 canonical equity duty)	2	directive	ace	address inequity through awareness communication community workers teams measurement and improvement
+X62-005	scope	restates(S18-07)	examples of misapplication (rigid dose/duration, dismissal, rapid noncollaborative tapers, excluded populations); borderline (examples)	2	scope	uncovered(descriptive)	fuses prohibited rigid policies dismissal tapering and scope expansion without a new duty
+X62-006	scope	restates(S8-12)	voluntary recommendations, as S8-12	2	scope	restates(S8-12)	the guideline recommendations are voluntary
+X62-007	method	-	CDC process, plans or research agenda	2	method	-	planned implementation resources
+X62-008	background	-	2016 dissemination	2	method	-	history of guideline dissemination
+X62-009	background	-	2016 tools	2	method	-	history of implementation resources
+X62-010	method	-	CDC process, plans or research agenda	2	aim	uncovered(aim)	planned resources aim to support health equity
+X62-011	method	-	CDC process, plans or research agenda	2	method	-	planned CDC evidence-sharing with payers
+X62-012	method	-	CDC process, plans or research agenda	2	method	-	description of guideline updating inputs
+X62-013	evidence	-	evidence quality + gaps statement	2	evidence	-	summary of evidence quality and gaps
+X62-014	aim	uncovered(aim)	[g:aims] principal aim: equitable access to safe effective pain care improving function + quality of life while reducing opioid risks	2	aim	uncovered(aim)	equitable safe effective pain care and reduced opioid risks
+X62-015	method	-	CDC process, plans or research agenda	2	method	-	planned evaluation of guideline effects
+X62-016	aim	uncovered(aim)	guideline helps inform decisions + meet each person's needs	2	action-claim	ace	the guideline can inform treatment decisions and help meet individual patient needs
+X62-017	method	-	CDC process, plans or research agenda	2	method	-	planned future guideline update
+X62-018	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	acknowledgments
+X62-019	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	acknowledgments and box label
+X63-001	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic heading
+X63-002	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-003	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-004	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-005	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-006	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-007	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-008	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-009	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-010	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-011	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-012	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-013	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-014	method	-	CDC process, plans or research agenda	2	scaffolding	-	research-topic list item without a recommendation
+X63-015	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	acknowledgments
+X63-016	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X63-017	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X63-018	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X63-019	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X63-020	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X63-021	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X63-022	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X63-023	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X64-001	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X64-002	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X64-003	scaffolding	-	heading, label, acknowledgments or disclosures	2	fragment	-	isolated honorific split from the following disclosure
+X64-004	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X64-005	scaffolding	-	heading, label, acknowledgments or disclosures	2	scaffolding	-	conflict-of-interest disclosure
+X79-001	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	review outcome definitions
+X79-002	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	review follow-up windows
+X79-003	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	review follow-up windows
+X79-004	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	review subgroup questions
+X79-005	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	review questions and intervention scope
+X79-006	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-007	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-008	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-009	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-010	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-011	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-012	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-013	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-014	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-015	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-016	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-017	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-018	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-019	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	introduces the risk-mitigation strategies evaluated by the review
+X79-020	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-021	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-022	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-023	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-024	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-025	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-026	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-027	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-028	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-029	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-030	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-031	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	heading
+X79-032	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-033	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-034	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-035	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-036	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-037	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X79-038	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or candidate intervention list item
+X80-001	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	heading
+X80-002	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-003	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-004	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-005	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-006	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-007	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-008	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-009	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-010	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-011	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-012	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-013	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	scaffolding	-	review-question topic or comparison list item
+X80-014	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	review methods publication and question-list tail
+X80-015	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	search-protocol development
+X80-016	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	review registration
+X80-017	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	database searches
+X80-018	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	databases searched
+X80-019	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	supplemental search methods
+X80-020	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	search dates
+X80-021	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	effect-size categorization method
+X80-022	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	operational small-effect thresholds for evidence synthesis
+X80-023	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	operational moderate-effect thresholds for evidence synthesis
+X80-024	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	operational large-effect threshold for evidence synthesis
+X80-025	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	effect-size thresholds across outcomes
+X80-026	method	-	effect-size interpretation caveat	2	method	-	relation between synthesis bins and clinical-importance thresholds
+X80-027	method	-	effect-size interpretation caveat	2	method	-	heterogeneity in clinical importance of effect sizes
+X80-028	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	dichotomous outcomes evaluated
+X80-029	method	-	evidence-review method (key questions, protocols, effect-size scale)	2	method	-	heading and changes in the evidence-review scope
+X81-001	evidence	-	evidence-review finding	2	evidence	-	trial synthesis of short-term opioid benefits
+X81-002	evidence	-	evidence-review finding	2	evidence	-	dose-response synthesis
+X81-003	evidence	-	evidence-review finding	2	evidence	-	evidence on effect duration
+X81-004	evidence	-	evidence-review finding	2	evidence	-	trial synthesis of sleep and mental-health effects
+X81-005	evidence	-	evidence-review finding	2	evidence	-	comparison across opioid types
+X81-006	evidence	-	evidence-review finding	2	evidence	-	effect comparison across pain types
+X81-007	evidence	-	evidence-review finding	2	evidence	-	association of trial design with estimated effects
+X81-008	evidence	-	evidence-review finding	2	evidence	-	trial synthesis of adverse events
+X81-009	evidence	-	evidence-review finding	2	evidence	-	trial serious-adverse-event findings and limitations
+X81-010	evidence	-	evidence-review finding	2	evidence	-	trial-design association with adverse-event findings
+X81-011	evidence	-	evidence-review finding	2	evidence	-	systematic-review misuse and addiction rates
+X81-012	evidence	-	evidence-review finding	2	evidence	-	review found no long-term placebo-controlled trials
+X81-013	evidence	-	evidence-review finding	2	evidence	-	cohort finding
+X81-014	evidence	-	evidence-review finding	2	evidence	-	observational-study associations
+X81-015	evidence	-	evidence-review finding	2	evidence	-	observational-study dose-risk associations
+X81-016	evidence	-	evidence-review finding	2	evidence	-	observational-study coprescribing associations
+X81-017	evidence	-	evidence-review finding	2	evidence	-	observational-study confounding limitation
+X81-018	evidence	-	evidence-review finding	2	evidence	-	trial synthesis of opioid versus nonopioid outcomes
+X81-019	evidence	-	evidence-review finding	2	evidence	-	trial population and follow-up characteristics
+X81-020	evidence	-	evidence-review finding	2	evidence	-	trial comparison findings
+X81-021	evidence	-	evidence-review finding	2	evidence	-	trial medication exposure and dose data
+X82-001	evidence	-	evidence-review finding	2	evidence	-	trial synthesis of combination-therapy outcomes
+X82-002	evidence	-	evidence-review finding	2	evidence	-	combination-therapy effect estimate
+X82-003	evidence	-	evidence-review finding	2	evidence	-	trial population and intervention characteristics
+X82-004	evidence	-	evidence-review finding	2	evidence	-	absence of long-term evidence
+X82-005	evidence	-	evidence-review finding	2	evidence	-	limited dosing-strategy evidence
+X82-006	evidence	-	evidence-review finding	2	evidence	-	trial comparison and dose difference
+X82-007	evidence	-	evidence-review finding	2	evidence	-	comparative trial findings
+X82-008	evidence	-	evidence-review finding	2	evidence	-	limited inconsistent comparative-risk evidence
+X82-009	evidence	-	evidence-review finding	2	evidence	-	insufficient dosing-strategy evidence
+X82-010	evidence	-	evidence-review finding	2	evidence	-	review finding on short-term fentanyl effects
+X82-011	evidence	-	evidence-review finding	2	evidence	-	trial-design limits and absence of new trials
+X82-012	reported	uncovered(external)	2007 FDA public health advisory on buccal fentanyl	2	reported	uncovered(external)	FDA public-health advisory on buccal-fentanyl deaths and life-threatening harms
+X82-013	method	-	review scope	2	method	-	headings and review condition-intervention scope
+X82-014	method	-	review scope	2	method	-	stakeholder input to review-condition selection
+X82-015	evidence	-	evidence-review finding	2	evidence	-	risk-prediction diagnostic-accuracy evidence
+X82-016	evidence	-	evidence-review finding	2	evidence	-	limited risk-mitigation evidence
+X82-017	evidence	-	evidence-review finding	2	evidence	-	observational-study association
+X82-018	evidence	-	evidence-review finding	2	evidence	-	taper-support trial findings
+X82-019	evidence	-	evidence-review finding	2	evidence	-	cohort mortality associations
+X82-020	evidence	-	caution on interpreting a cohort finding (the p82 caution the README records)	2	directive	uncovered(process)	cautious interpretation of the cohort finding because discontinuation reasons can confound it
+X82-021	evidence	-	evidence-review finding	2	evidence	-	lack of trials and observational taper-duration association
+X82-022	evidence	-	evidence-review finding	2	evidence	-	review found no effectiveness studies
+X82-023	evidence	-	evidence-review finding	2	evidence	-	limitations of opioid-use-disorder treatment evidence
+X82-024	scaffolding	-	condition heading	2	scaffolding	-	heading
+X82-025	evidence	-	evidence-review finding	2	evidence	-	review findings on psychological therapies
+X83-001	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-002	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-003	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-004	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-005	scaffolding	-	condition heading	2	scaffolding	-	heading
+X83-006	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-007	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-008	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-009	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-010	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-011	scaffolding	-	condition heading	2	scaffolding	-	heading
+X83-012	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-013	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-014	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects
+X83-015	scaffolding	-	condition heading	2	scaffolding	-	heading
+X83-016	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-017	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-018	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-019	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-020	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-021	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-022	scaffolding	-	condition heading	2	scaffolding	-	heading
+X83-023	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-024	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-025	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X83-026	evidence	-	evidence-review finding	2	evidence	-	review findings on nonpharmacologic treatment effects and evidence quality
+X84-001	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-002	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-003	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-004	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-005	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-006	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-007	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-008	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-009	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-010	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-011	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-012	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-013	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-014	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment benefits
+X84-015	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-016	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-017	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-018	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-019	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-020	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-021	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-022	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-023	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-024	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-025	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-026	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-027	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-028	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-029	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-030	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-031	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X84-032	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on nonopioid treatment harms
+X85-001	evidence	-	evidence-review or contextual-review finding	2	evidence	-	acute-pain trial scope and follow-up findings
+X85-002	evidence	-	evidence-review or contextual-review finding	2	evidence	-	comparative strength of therapy evidence
+X85-003	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on dental and kidney-stone pain
+X85-004	evidence	-	evidence-review or contextual-review finding	2	evidence	-	inconsistent postoperative-pain findings
+X85-005	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on postoperative medication needs and pain
+X85-006	evidence	-	evidence-review or contextual-review finding	2	evidence	-	trial limitations and generalizability
+X85-007	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-008	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-009	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-010	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-011	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-012	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-013	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-014	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-015	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-016	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-017	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-018	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-019	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-020	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-021	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-022	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-023	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-pain treatments and evidence limitations
+X85-024	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X85-025	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X85-026	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X85-027	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X85-028	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X85-029	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X85-030	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X85-031	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on acute-migraine treatments and evidence limitations
+X86-001	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on migraine therapies and evidence limitations
+X86-002	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on migraine therapies and evidence limitations
+X86-003	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on migraine therapies and evidence limitations
+X86-004	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on migraine therapies and evidence limitations
+X86-005	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on migraine therapies and evidence limitations
+X86-006	scaffolding	-	section heading	2	scaffolding	-	heading
+X86-007	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-008	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-009	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-010	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-011	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-012	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-013	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-014	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-015	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-016	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-017	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-018	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-019	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-020	scaffolding	-	section heading	2	scaffolding	-	heading
+X86-021	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-022	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-023	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-024	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-025	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-026	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-027	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-028	scaffolding	-	section heading	2	scaffolding	-	heading
+X86-029	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-030	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X86-031	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on clinician and patient values and preferences
+X87-001	scaffolding	-	section heading	2	scaffolding	-	heading
+X87-002	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on acute-pain treatment values and preferences
+X87-003	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on acute-pain treatment values and preferences
+X87-004	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on acute-pain treatment values and preferences
+X87-005	scaffolding	-	section heading	2	scaffolding	-	heading
+X87-006	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on acute-pain treatment values and preferences
+X87-007	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on acute-pain treatment values and preferences
+X87-008	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review or survey findings on acute-pain treatment values and preferences
+X87-009	scaffolding	-	section heading	2	scaffolding	-	heading
+X87-010	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-011	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-012	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-013	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-014	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-015	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-016	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-017	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-018	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-019	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-020	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-021	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-022	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X86-032	scaffolding	-	section heading	2	scaffolding	-	heading
+X87-023	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-024	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-025	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-026	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-027	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X87-028	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X86-033	scaffolding	-	section heading	2	scaffolding	-	heading
+X87-029	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review study or model findings on costs and cost-effectiveness
+X88-001	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X88-002	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X88-003	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X87-030	scaffolding	-	section heading	2	scaffolding	-	heading
+X88-004	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X88-005	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X88-006	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X87-031	scaffolding	-	section heading	2	scaffolding	-	heading
+X88-007	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X88-008	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X88-009	evidence	-	evidence-review or contextual-review finding	2	evidence	-	review findings on treatment cost-effectiveness
+X88-010	method	-	surveillance-report method	2	method	-	heading and evidence-surveillance search process
+X88-011	evidence	-	evidence-review or contextual-review finding	2	evidence	-	unchanged findings after the evidence update
+X88-012	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-013	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-014	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-015	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-016	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-017	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-018	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-019	method	-	surveillance-report method	2	method	-	heading and evidence-surveillance search process
+X88-020	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-021	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-022	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X88-023	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-001	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-002	method	-	surveillance-report method	2	method	-	heading and evidence-surveillance search process
+X89-003	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-004	evidence	-	evidence-review or contextual-review finding	2	method	-	comparisons included in updated meta-analyses
+X89-005	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-006	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-007	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-008	method	-	surveillance-report method	2	method	-	heading and evidence-surveillance search process
+X89-009	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-010	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-011	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-012	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-013	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-014	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-015	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-016	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-017	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X89-018	evidence	-	evidence-review or contextual-review finding	2	evidence	-	updated review findings and evidence limitations
+X90-001	method	-	surveillance-report method	2	method	-	headings and evidence-surveillance search process
+X100-001	scaffolding	-	MMWR notice	2	directive	uncovered(notice)	instructions for obtaining the weekly publication
+X100-002	scaffolding	-	MMWR notice	2	directive	uncovered(notice)	permission to use the accessible HTML version
+X100-003	scaffolding	-	MMWR notice	2	directive	uncovered(notice)	instructions for directing publication inquiries
+X100-004	scaffolding	-	MMWR notice	2	directive	uncovered(notice)	public-domain reuse permission and citation request
+X100-005	scaffolding	-	MMWR notice	2	scaffolding	-	service-mark notice
+X100-006	scaffolding	-	MMWR notice	2	scaffolding	-	trade-name nonendorsement notice
+X100-007	scaffolding	-	MMWR notice	2	scaffolding	-	external-link nonendorsement notice
+X100-008	scaffolding	-	MMWR notice	2	scaffolding	-	external-site responsibility disclaimer
+X100-009	scaffolding	-	MMWR notice	2	scaffolding	-	URL-currency notice
+X100-010	scaffolding	-	MMWR notice	2	scaffolding	-	publication identifier

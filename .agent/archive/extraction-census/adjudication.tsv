@@ -1,0 +1,97 @@
+id	class	disposition	reason	basis
+X2-004	scope	restates(S9-05)	masthead + Summary first sentence: audience = clinicians providing pain care for outpatients ≥18, as S9-05	B
+X4-001	aim	restates(S18-03)	importance of adequately treating pain, as S18-03	B
+X4-018	action-claim	ace	[g:rationale-can] opioids can be essential for pain yet carry considerable risk (a can-claim, README ruling tests)	B
+X5-017	action-claim	uncovered(descriptive)	misapplication of the 2016 guideline contributed to patient harm (historical causal claim; duties at S8-10, S18-07)	C
+X6-011	scope	uncovered(descriptive)	fuses S9-05 audience + S3-03 exclusions [R5]	C
+X6-018	directive	restates(B3-06)	describes B3-06: avoid dosage above levels yielding diminishing returns	B
+X6-020	fragment	-	aim sentence stem; continues at X9-003	B
+X8-006	method	-	drafting rationale for omitting specific doses from the statements	B
+X8-007	action-claim	ace	[g:guideline-purpose] implementation detail can give clinicians flexibility in weighing benefits + risks	B
+X9-004	scope	uncovered(descriptive)	fuses S9-05 audience + durations + S3-03 exclusions [R5]	C
+X10-005	action-claim	ace	[g:guideline-purpose] expanded outpatient scope can give evidence-based advice to more clinicians (dentists, postoperative, ED discharge)	B
+X10-008	scope	ace	[g:scope-audience] recommendations address special populations (older adults, pregnant persons, SUD history): applicability data (cf. S9-05 applicability rules)	B
+X10-010	scaffolding	-	pointer to other guidelines [R1]	C
+X10-016	scaffolding	-	pointer to NCCN + ASCO guidelines [R1]	C
+X10-018	reported	uncovered(external)	NCCN/ASCO/ASH/CDC meeting: no disagreement among guidelines in their populations	B
+X11-001	scaffolding	-	pointer to ASAM guideline [R1]	C
+X12-021	directive	uncovered(process)	category A may rest on type 3–4 evidence when advantages clearly outweigh (grading permission)	B
+X13-009	reported	uncovered(process)	GRADE working group situations justifying strong recommendations on low-quality evidence	B
+X17-016	scope	uncovered(descriptive)	fuses S9-05 audience + S3-03 exclusions [R5]	C
+X19-010	action-claim	ace	[g:key] rec 1 implementation bullet: nonopioid therapies at least as effective as opioids for named acute conditions (low back, neck, musculoskeletal injuries, minor surgery, dental, kidney stone, migraine): the condition list is new against B3-02	B
+X25-002	scaffolding	-	pointer to diagnosis guidelines [R1]	C
+X25-004	definition	uncovered(descriptive)	pain mechanism categories neuropathic vs nociceptive; neuropathic examples as S24-08	C
+X25-005	definition	uncovered(descriptive)	nociplastic pain category (not a term the recommendations use)	C
+X28-001	reported	uncovered(process)	OWG appreciated the recommendation [R4]	C
+X28-002	reported	uncovered(process)	OWG wording disagreement [R4]	C
+X31-005	action-claim	ace	[g:rationale-can] time-scheduled opioid use can mean greater total daily dosage than as-needed use	B
+X31-010	reported	uncovered(process)	OWG agreed with the recommendation [R4]	C
+X31-015	action-claim	ace	[g:rationale-can] mcg/hour transdermal fentanyl dosing can confuse outpatient use	B
+X32-002	scaffolding	-	pointer to a methadone guideline [R1]	C
+X32-006	fragment	-	sentence stem split at naïve; X32-007 carries the starting-dose sentence	B
+X33-010	action-claim	ace	[g:dose-risk] serious harms rise at higher dosage with no risk-free point (rationale form of X32-005)	B
+X34-001	action-claim	ace	[g:buprenorphine] buprenorphine unlikely to share the continuous dose-overdose relation (respiratory plateau)	B
+X34-002	reported	uncovered(process)	OWG: thresholds in the statement would read as absolutes [R4]	C
+X34-003	reported	uncovered(process)	experts: no standard MME formula (deliberation) [R4]	C
+X34-004	reported	uncovered(process)	experts: thresholds as benchmarks in supporting text [R4]	C
+X34-005	reported	uncovered(process)	experts: separate dosage recommendations [R4]	C
+X34-006	fragment	-	sentence stem split at naïve; X34-007 carries it	B
+X34-010	scaffolding	-	pointer to product labeling [R1]	B
+X36-016	reported	uncovered(process)	OWG on managing patients on high dosages (deliberation) [R4]	C
+X37-001	reported	uncovered(process)	experts: emphasis of tapering risks in the recommendation [R4]	C
+X39-005	action-claim	ace	[g:treatment-options] clonidine + lofexidine more effective than placebo for abrupt heroin/methadone withdrawal; borderline evidence	B
+X40-002	scaffolding	-	resource pointer (PCSS) [R1]	C
+X40-010	action-claim	ace	opioids sometimes needed for acute pain (usuality qualifier beyond S19-13); borderline	B
+X40-011	scaffolding	-	pointer to procedure-specific postoperative recommendations [R1]	B
+X42-003	scaffolding	-	pointer (same as X40-011) [R1]	B
+X43-005	evidence	-	prognostic association (no relief at 1 month → unlikely at 6) [R2]	B
+X44-002	reported	uncovered(process)	OWG endorsed the follow-up time frames [R4]	B
+X44-003	background	-	patient-state transition risk (S24-19 carries the duty) [R2]	B
+X45-003	scaffolding	-	resource pointer [R1]	B
+X45-004	scaffolding	-	resource pointer [R1]	B
+X46-004	reported	restates(S45-12)	naloxone cost + purchase-to-fill concerns, as S45-12	B
+X48-015	evidence	-	risk-factor association [R2]	B
+X48-016	action-claim	ace	[g:benzo-risk] anxiety disorders → benzodiazepines, which can exacerbate opioid respiratory depression + overdose [R3 exception]	A
+X49-001	evidence	-	risk-factor association [R2]	B
+X49-006	evidence	-	risk-factor association [R2]	B
+X50-002	background	-	naloxone pharmacology [R3]	B
+X50-005	scaffolding	-	resource pointer [R1]	B
+X50-008	method	-	category B assignment rationale	B
+X50-010	background	-	PDMP data-error mechanisms [R3]	B
+X51-002	background	-	PDMP data scope [R3]	B
+X51-008	action-claim	ace	[g:rationale-can] PDMP-based dismissal might harm safety + leave pain undertreated (same content as X50-009)	B
+X51-010	action-claim	ace	[g:pdmp] proprietary PDMP risk-score algorithms might disparately affect women, persons of color, persons in poverty	B
+X52-005	evidence	-	risk-tool performance limitation [R2]	B
+X52-006	background	-	assay detection limit [R3]	B
+X52-007	background	-	assay detection limit [R3]	B
+X52-008	background	-	immunoassay analytes [R3]	B
+X52-009	background	-	metabolite fact [R3]	B
+X53-002	background	-	hypothetical explanation example [R3]	B
+X53-004	action-claim	ace	[g:benzo-risk] concurrent opioids + other opioids, benzodiazepines or heroin can increase overdose risk (S52-10 is the testing duty, no restatement)	A
+X53-011	action-claim	ace	[g:tox] false presumptive results not uncommon + misinterpretation harms patients (consequence) [R3]	A
+X53-012	background	-	urine test does not quantify doses [R3]	B
+X53-013	action-claim	ace	[g:tox] fentanyl omission from common assays → false assurance (consequence for care) [R3]	A
+X53-018	reported	uncovered(process)	expert debate on category A grading [R4]	B
+X53-019	reported	uncovered(process)	expert debate on universal testing + stigma [R4]	B
+X53-021	evidence	-	risk-tool performance limitation (same as X52-005) [R2]	B
+X54-002	background	-	clinic specimen practice described [R3]	B
+X54-004	background	-	immunoassay analytes [R3]	B
+X54-005	background	-	metabolite fact [R3]	B
+X54-006	background	-	metabolite examples [R3]	B
+X54-007	scaffolding	-	publication pointer [R1]	B
+X54-008	scaffolding	-	publication pointer [R1]	B
+X54-010	background	-	hypothetical explanation example [R3]	B
+X55-004	action-claim	ace	[g:benzo-risk] benzodiazepines can potentiate opioid-induced respiratory depression (co-use harm) [R3 exception]	B
+X56-004	scaffolding	-	resource pointer [R1]	B
+X56-008	action-claim	ace	[g:rationale-can] stigma can reduce treatment seeking; OUD is chronic + treatable, persons can recover	B
+X58-005	scaffolding	-	publication pointer [R1]	B
+X59-002	scaffolding	-	resource pointer (waiver since eliminated) [R1]	B
+X59-003	scaffolding	-	publication pointer [R1]	B
+X59-010	scaffolding	-	publication pointer [R1]	B
+X60-001	scaffolding	-	resource locators [R1]	B
+X60-004	scaffolding	-	resource pointer [R1]	B
+X61-001	scaffolding	-	publication pointer (ASAM, surgery) [R1]	B
+X61-009	scope	uncovered(descriptive)	fuses S9-05 audience + S3-03 exclusions [R5]	B
+X62-005	scope	uncovered(descriptive)	fuses misapplication duties (S18-07, S8-10, S3-02, S3-03) with examples [R5]	B
+X62-016	action-claim	ace	[g:guideline-purpose] the guideline can help inform decisions + meet each person's needs	B
+X82-020	directive	uncovered(process)	caution on interpreting a cohort finding (README sweep: non-clinical) [R7]	B
