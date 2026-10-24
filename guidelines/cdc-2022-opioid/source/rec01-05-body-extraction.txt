@@ -3,7 +3,7 @@ recommendations 1–5 body extraction evidence (verbatim rendered text)
 Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
 Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
 PDF locator: physical PDF pages 19–39; physical page 40 used only to complete a statement beginning on page 39; printed MMWR pages 17–37
-Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 304 payloads below.
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 387 payloads below.
 Scaffolding convention: locator lines plus bullet/table glyphs and numeric labels are presentation scaffolding outside payload ranges; each following LF-terminated line is one payload with hard wraps joined, line-end word hyphenation repaired, and true hyphens preserved.
 Table convention: a table region joins its title, its header row and its body rows in reading order, each row as `<cell>: <cell>` and rows separated by `; `, then its notes in print order with their printed `*`, `†`, `§` and `1)` labels; the sources and abbreviations lines under a table are scaffolding.
 
@@ -33,6 +33,10 @@ When diagnosis and severity of acute pain warrant the use of opioids, clinicians
 Clinicians should prescribe and advise opioid use only as needed (e.g., hydrocodone 5 mg/acetaminophen 325 mg, one tablet not more frequently than every 4 hours as needed for moderate to severe pain) rather than on a scheduled basis (e.g., one tablet every 4 hours) and encourage and recommend an opioid taper if opioids are taken around the clock for more than a few days (see Recommendation 6).
 [S19-13 | p19 | Rec 1 > Implementation considerations]
 Opioid therapy has an important role for acute pain related to severe traumatic injuries (including crush injuries and burns), invasive surgeries typically associated with moderate to severe postoperative pain, and other severe acute pain when NSAIDs and other therapies are contraindicated or likely to be ineffective.
+[S19-14 | p19 | Recommendations 1–2 area > Introductory principle]
+(See Recommendation 1 for determining whether or not to initiate opioids for acute pain [i.e., pain lasting <1 month] and Recommendation 2 for determining whether or not to initiate opioids for subacute pain [i.e., pain lasting 1–3 months] or chronic pain [i.e., pain lasting >3 months].)
+[S19-15 | p19 | Rec 1 > Implementation considerations]
+Nonopioid therapies are at least as effective as opioids for many common acute pain conditions, including low back pain, neck pain, pain related to other musculoskeletal injuries (e.g., sprains, strains, tendonitis, and bursitis), pain related to minor surgeries typically associated with minimal tissue injury and mild postoperative pain (e.g., simple dental extraction), dental pain, kidney stone pain, and headaches including episodic migraine.
 [S20-01 | p20 | Rec 1 > Implementation considerations]
 If patients already receiving opioids long term require additional medication for acute pain, nonopioid medications should be used when possible and, if additional opioids are required (e.g., for superimposed severe acute pain), they should be continued only for the duration of pain severe enough to require additional opioids, returning to the patient’s baseline opioid dosage as soon as possible, including a taper to baseline dosage if additional opioids were used around the clock for more than a few days (see Recommendation 6).
 [S20-02 | p20 | Rec 1 > Implementation considerations]
@@ -57,6 +61,18 @@ For acute musculoskeletal injuries other than low back pain, ACP and AAFP recomm
 The American Dental Association (ADA) recommends NSAIDs as first-line treatment for acute dental pain management (123).
 [S20-12 | p20 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
 For acute kidney stone pain, NSAIDs are at least as effective as opioids (124–127), can decrease the ureteral smooth muscle tone and ureteral spasm (128) causing kidney stone pain, and are preferred for kidney stone pain if not contraindicated.
+[S20-13 | p20 | Rec 1 > Supporting rationale]
+Evaluation can identify reversible causes of pain and underlying etiologies with potentially serious sequelae that require urgent action.
+[S20-14 | p20 | Rec 1 > Supporting rationale]
+Diagnosis can help identify interventions to reverse, ameliorate, or prevent worsening of pain and improve function (e.g., surgical intervention to repair structure and function after certain traumatic injuries, bracing to prevent recurrence of acute ankle sprain, fracture immobilization, ice or elevation to reduce swelling, and early mobilization to maintain function) (118).
+[S20-15 | p20 | Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain]
+Noninvasive nonpharmacologic approaches to acute pain have the potential to improve pain and function without risk for serious harms (10).
+[S20-16 | p20 | Rec 1 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Acute Pain]
+Experts from OWG expressed concern about limited access to nonopioid pain management modalities, in part because of lack of availability or lack of coverage by payers, and emphasized improving access to nonopioid pain management modalities as a priority.
+[S20-17 | p20 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+Many acute pain conditions often can be managed most effectively with nonopioid medications (10,122).
+[S20-18 | p20 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+Triptans, NSAIDs, combined triptans with NSAIDs, antiemetics, dihydroergotamine, and acetaminophen are established acute treatments for migraine (11).
 [S21-01 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
 Adverse events related to these newer medications require further study; however, their mechanisms of action are believed to be nonvasoconstrictive (130) and potentially carry lower risks than vasoactive medications in patients with cardiovascular risk factors (11).
 [S21-02 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
@@ -81,6 +97,10 @@ For acute low back pain, ACP found insufficient evidence for effectiveness of op
 ACP and AAFP suggest against treating patients with acute pain from musculoskeletal injuries with opioids, including tramadol (120).
 [S21-12 | p21 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
 ADA recommends NSAIDs as the first-line therapy for acute pain management (see Nonopioid Medications for Acute Pain) (123).
+[S21-13 | p21 | Rec 1 > Supporting rationale > Nonopioid Medications for Acute Pain]
+Lasmiditan, an 5-HT1F receptor agonist, and ubrogepant, a gepant, were approved by FDA in 2019 for the treatment of migraine (129); another gepant, rimegepant, was approved in 2020.
+[S21-14 | p21 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Multiple guidelines that address prescribing for postoperative pain include both nonopioid and opioid treatment options and have emphasized multimodal analgesia, incorporating around-the-clock nonopioid analgesics and nonpharmacologic therapies and noting that systemic opioids often are needed postoperatively but are not required in all patients (148–151).
 [S22-01 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
 The American Headache Society recommends against prescribing opioid or butalbital-containing medications as first-line treatment for recurrent headache disorders (152), and the American Academy of Neurology also recommends against use of both of these classes of medications for treatment of migraine, except as a last resort (153).
 [S22-02 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
@@ -109,6 +129,10 @@ Clinicians should ensure that patients are aware of expected benefits of, common
 Advise patients that short-term opioid use can lead to unintended long-term opioid use and of the importance of working toward planned discontinuation of opioid use as soon as feasible, including a plan to appropriately taper opioids as pain resolves if opioids have been used around the clock for more than a few days (see Recommendation 6).
 [S22-14 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
 Opioid therapy has an important role for acute pain related to severe traumatic injuries (including crush injuries and burns), invasive surgeries typically associated with moderate to severe postoperative pain, and other severe acute pain when NSAIDs and other therapies are contraindicated or likely to be ineffective.
+[S22-15 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Although findings regarding risks for new long-term opioid use after use for acute pain (10) relate specifically to patients who were previously opioid naïve, risks also might be associated with dosage escalation (see Recommendation 4) if patients already treated with long-term opioids are prescribed additional opioid medication for new acute pain superimposed on chronic pain.
+[S22-16 | p22 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Essential elements for communication and discussion with patients before prescribing outpatient opioid therapy for acute pain include the following:
 [S23-01 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
 Review communication mechanisms and protocols patients can use to tell clinicians of severe or uncontrolled pain and to arrange for timely reassessment and management.
 [S23-02 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
@@ -147,6 +171,8 @@ Nonopioid therapies are preferred for subacute and chronic pain. Clinicians shou
 To guide patient-specific selection of therapy, clinicians should evaluate patients and establish or confirm the diagnosis.
 [S23-19 | p23 | Rec 2 > Implementation considerations]
 Clinicians should recommend appropriate noninvasive nonpharmacologic approaches to help manage chronic pain, such as exercise (e.g., aerobic, aquatic, or resistance exercises) or exercise therapy (a prominent modality in physical therapy) for back pain, fibromyalgia, and hip or knee osteoarthritis; weight loss for knee osteoarthritis; manual therapies for hip osteoarthritis; psychological therapy, spinal manipulation, low-level laser therapy, massage, mindfulness-based stress reduction, yoga, acupuncture, and multidisciplinary rehabilitation for low back pain; mind-body practices (e.g., yoga, tai chi, or qigong), massage, and acupuncture for neck pain; cognitive behavioral therapy, myofascial release massage, mindfulness practices, tai chi, qigong, acupuncture, and multidisciplinary rehabilitation for fibromyalgia; and spinal manipulation for tension headache.
+[S23-20 | p23 | Rec 1 > Supporting rationale > Opioid Medication for Acute Pain]
+Limiting opioid use to the minimum needed to manage pain (e.g., taking the opioid only when needed if needed less frequently than every 4 hours and the prescription is written for every 4 hours as needed for pain) can help limit development of tolerance and therefore withdrawal after opioids are discontinued.
 [S24-01 | p24 | Rec 2 > Implementation considerations]
 Physical therapy can be helpful, particularly for patients who have limited access to safe public spaces or public recreation facilities for exercise or whose pain has not improved with low-intensity physical exercise.
 [S24-02 | p24 | Rec 2 > Implementation considerations]
@@ -189,6 +215,14 @@ Clinicians seeing new patients already receiving opioids should establish treatm
 Clinicians should avoid rapid tapering or abrupt discontinuation of opioids (see Recommendation 5).
 [S24-22 | p24 | Rec 2 > Implementation considerations]
 Patient education and discussion before starting opioid therapy are critical so that patient preferences and values can be understood and used to inform clinical decisions.
+[S24-23 | p24 | Rec 2 > Implementation considerations]
+Duloxetine and pregabalin are FDA-approved for the treatment of diabetic peripheral neuropathy, and pregabalin and gabapentin are FDA-approved for treatment of postherpetic neuralgia.
+[S24-24 | p24 | Rec 2 > Implementation considerations]
+In patients with fibromyalgia, tricyclic (e.g., amitriptyline) and SNRI antidepressants (e.g., duloxetine, milnacipran), NSAIDs (e.g., topical diclofenac), and specific anticonvulsants (i.e., pregabalin and gabapentin) are used to improve pain, function, and quality of life.
+[S24-25 | p24 | Rec 2 > Implementation considerations]
+Duloxetine, milnacipran, and pregabalin are FDA-approved for the treatment of fibromyalgia.
+[S24-26 | p24 | Rec 2 > Implementation considerations]
+In other situations (e.g., headache or fibromyalgia), expected benefits of initiating opioids are unlikely to outweigh risks regardless of previous nonpharmacologic and nonopioid pharmacologic therapies used.
 [S25-01 | p25 | Rec 2 > Implementation considerations]
 Clinicians should review available low-cost options for pain management for all patients and particularly for patients who have low incomes, do not have health insurance, or have inadequate insurance.
 [S25-02 | p25 | Rec 2 > Implementation considerations]
@@ -211,6 +245,20 @@ For example, clinicians should consider fall risk when selecting and dosing pote
 Some guidelines recommend topical NSAIDs for localized osteoarthritis (e.g., knee osteoarthritis) over oral NSAIDs in patients aged ≥75 years to minimize systemic effects (166).
 [S25-11 | p25 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
 Previous guidelines have recommended aerobic, aquatic, or resistance exercises for persons with chronic pain, including osteoarthritis of the knee or hip, back pain, and fibromyalgia (119,156,166,171).
+[S25-12 | p25 | Rec 2 > Supporting rationale]
+Diagnosis can help identify disease-specific interventions to reverse, ameliorate, or prevent worsening of pain and improve function (e.g., improving glucose control to prevent progression of diabetic neuropathy; immune-modulating agents for rheumatoid arthritis; physical or occupational therapy to address posture, muscle weakness, or repetitive occupational motions that contribute to musculoskeletal pain; or surgical intervention to relieve severe mechanical or compressive pain) (159).
+[S25-13 | p25 | Rec 2 > Supporting rationale]
+The underlying mechanism for most pain syndromes has traditionally been categorized as neuropathic (e.g., diabetic neuropathy and postherpetic neuralgia) or nociceptive (e.g., osteoarthritis and muscular back pain).
+[S25-14 | p25 | Rec 2 > Supporting rationale]
+More recently, nociplastic pain has been suggested as a third, distinct category of pain with augmented central nervous system pain and sensory processing and altered pain modulation as experienced in conditions such as fibromyalgia (160).
+[S25-15 | p25 | Rec 2 > Supporting rationale]
+For moderate to severe chronic back pain or hip or knee osteoarthritis pain, a nonopioid strategy starting with acetaminophen or NSAIDs results in improved pain intensity with fewer side effects compared with a strategy starting with opioids (74).
+[S25-16 | p25 | Rec 2 > Supporting rationale]
+NSAIDs are potentially inappropriate for use in older adults with chronic pain because of higher risk for adverse effects with prolonged use (165).
+[S25-17 | p25 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Many noninvasive nonpharmacologic approaches, including physical therapy, weight loss for knee osteoarthritis, and behavioral therapies (e.g., cognitive behavioral therapy and mindfulness-based stress reduction), can improve pain and function without risk for serious harms (9).
+[S25-18 | p25 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Other noninvasive nonpharmacologic therapies that improve pain, function, or both for at least 1 month after delivery without apparent risk for serious harm include cognitive behavioral therapy for knee osteoarthritis; manual therapies for hip osteoarthritis; psychological therapy, spinal manipulation, low-level laser therapy, massage, mindfulness-based stress reduction, yoga, acupuncture, and multidisciplinary rehabilitation for low back pain; mind-body practices (e.g., yoga, tai chi, and qigong), massage, and acupuncture for neck pain; cognitive behavioral therapy, myofascial release massage, mindfulness practices, tai chi, qigong, acupuncture, and multidisciplinary rehabilitation for fibromyalgia; and spinal manipulation for tension headache (9).
 [S26-01 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
 Active approaches that engage the patient should be used when possible, with a supplementary role for more passive approaches, to reduce pain and improve function.
 [S26-02 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
@@ -233,6 +281,18 @@ Patients with higher levels of anxiety or fear related to pain or other clinical
 Clinicians should review FDA-approved labeling, including boxed warnings, before initiating treatment with any pharmacologic therapy.
 [S26-11 | p26 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
 Acetaminophen has limited evidence for effectiveness (8) and is no longer considered a first-line treatment for osteoarthritis (161).
+[S26-12 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+For temporomandibular disorder pain, patient education and self-care can be effective, as can occlusal splints for some patients and biobehavioral therapy for prevention of disabling symptoms (172,173).
+[S26-13 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+Exercise, mind-body interventions, and behavioral treatments (including cognitive behavioral therapy and mindfulness practices) can encourage active patient participation in the care plan and help address the effects of pain in the patient’s life; these active therapies have somewhat more robust evidence for sustained improvements in pain and function than more passive treatments (e.g., massage), particularly at longer-term follow-up (9).
+[S26-14 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+In addition, physical activity can provide additional health benefits, such as preventing or reducing symptoms of depression (174).
+[S26-15 | p26 | Rec 2 > Supporting rationale > Noninvasive Nonpharmacologic Approaches to Subacute and Chronic Pain]
+In many locations, free or low-cost patient support, self-help, and educational community-based or employer-sponsored programs are available that can provide stress reduction and other mental health benefits.
+[S26-16 | p26 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Nonopioid pharmacologic therapies are associated with risks, particularly in older adults, pregnant patients, and patients with certain comorbidities such as cardiovascular, renal, gastrointestinal, and liver disease.
+[S26-17 | p26 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+For example, NSAID use has been associated with serious gastrointestinal events and major coronary events (8).
 [S27-01 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
 When patients have an insufficient response to nonpharmacologic interventions (e.g., exercise for arthritis pain), and if a single or a few joints near the surface of the skin (e.g., knee) are affected by osteoarthritis, use of topical NSAIDs is recommended (161).
 [S27-02 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
@@ -255,6 +315,12 @@ Duloxetine, milnacipran, and pregabalin are FDA-approved for and are recommended
 Tricyclic antidepressant amitriptyline often is used and recommended for patients with fibromyalgia (156), although evidence for its effectiveness is limited (8).
 [S27-11 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
 Because patients with chronic pain might experience concurrent depression (181) and depression can exacerbate physical symptoms including pain (182), patients with co-occurring pain and depression might be especially likely to benefit from antidepressant medication (see Recommendation 8).
+[S27-12 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Duloxetine and pregabalin are FDA-approved for the treatment of diabetic neuropathy, and pregabalin and gabapentin are FDA-approved for treatment of postherpetic neuralgia.
+[S27-13 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Tricyclic and SNRI antidepressants also can relieve fibromyalgia symptoms.
+[S27-14 | p27 | Rec 2 > Supporting rationale > Nonopioid Medications for Subacute and Chronic Pain]
+Tricyclic antidepressants are potentially inappropriate for older adults (aged ≥65 years) because of their anticholinergic effects (165).
 [S28-01 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
 Opioids should not be considered first-line or routine therapy for subacute or chronic pain.
 [S28-02 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
@@ -291,6 +357,16 @@ Clinicians seeing new patients already using opioid medication should establish 
 Clinicians should avoid rapid tapering or abrupt discontinuation of opioids (see Recommendation 5).
 [S28-18 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
 Patient education and discussion before starting opioid therapy are critical so that patient preferences and values can be understood and used to inform clinical decisions.
+[S28-22 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+In other situations (e.g., headache or fibromyalgia), expected benefits of initiating opioids are unlikely to outweigh risks regardless of previous nonpharmacologic and nonopioid pharmacologic therapies used.
+[S28-20 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Multiple experts from OWG stated that they appreciated this recommendation because of the importance of highlighting both pain and function, sharing realistic expectations with patients before initiating treatment, and paying attention to tapering and exit strategies.
+[S28-21 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Although some experts reasoned the recommendation statement could state nonopioid therapies “may be preferred” or “may be effective” for chronic pain, others agreed with language that nonopioid therapies “are preferred” for chronic pain because opioid therapies are associated with small short-term benefits compared with placebo, comparable or reduced short-term benefits compared with nonopioid therapies, uncertain long-term benefits, and potential for serious harms.
+[S28-23 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Clinically meaningful improvement has been defined as a 30% improvement in scores for both pain and function (185).
+[S28-24 | p28 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+Although the clinical evidence reviews did not find studies evaluating the effectiveness of written agreements or treatment plans (7), clinicians and patients who clearly document a treatment plan including specific functional goals in advance of prescribing will clarify expectations about how opioids will be prescribed and monitored with an aim to improve patient safety, health, and well-being.
 [S29-01 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
 Review available low-cost options for pain management for all patients, and particularly for patients who have low incomes, do not have health insurance, or have inadequate insurance.
 [S29-02 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
@@ -337,6 +413,8 @@ Because of the possibility that benefits of opioid therapy might diminish or tha
 Office-based interventional approaches, such as arthrocentesis and intra-articular glucocorticoid injection for pain associated with rheumatoid arthritis (186) or osteoarthritis (187) and subacromial corticosteroid injection for rotator cuff disease (188), can provide short-term improvement in pain and function to supplement or facilitate exercise, physical therapy, and other conservative approaches.
 [S29-23 | p29 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
 Interventional pain management specialists offer additional interventions that can alleviate pain as part of a comprehensive pain management approach (6) for patients with indications including back pain, persistent pain after spinal surgery, neuropathic pain, and complex regional pain syndrome.
+[S29-24 | p29 | Rec 2 > Supporting rationale > Opioid Medication for Subacute and Chronic Pain]
+The following elements are essential for communication and discussion with patients before starting opioid therapy:
 [S30-01 | p30 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
 Level of evidence for effectiveness and risks varies by procedure, and additional research is needed to establish the clinical benefits as well as risks of specific interventional procedures for specific pain conditions (6,189) compared with risks of opioid pain medications and other pharmacologic therapies.
 [S30-02 | p30 | Rec 2 > Supporting rationale > Interventional Approaches to Subacute and Chronic Pain]
@@ -371,6 +449,12 @@ Methadone should not be the first choice for an ER/LA opioid.
 Only clinicians who are familiar with methadone’s unique risk profile and who are prepared to educate and closely monitor their patients, including assessing risk for QT prolongation and considering electrocardiographic monitoring, should consider prescribing methadone for pain.
 [S30-17 | p30 | Rec 3 > Implementation considerations]
 Only clinicians who are familiar with the dosing and absorption properties of the ER/LA opioid transdermal fentanyl and are prepared to educate their patients about its use should consider prescribing it.
+[S30-18 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+Multimodal therapies and multidisciplinary biopsychosocial rehabilitation (e.g., combining psychological therapies with exercise) can reduce long-term pain and disability compared with usual care and compared with physical treatments (e.g., exercise) alone.
+[S30-19 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+Nonpharmacologic therapies also can provide synergistic benefits when nonopioid or opioid pain medications are used (6).
+[S30-20 | p30 | Rec 2 > Supporting rationale > Multimodal Therapy for Subacute and Chronic Pain]
+In some cases, medication combinations might provide complementary or synergistic benefits and facilitate lower dosing of individual medications, as has been demonstrated in trials of patients with neuropathic pain (7).
 [S31-01 | p31 | Rec 3 > Supporting rationale]
 In 2014, FDA modified the labeling for ER/LA opioid pain medications, noting serious risks and recommending that ER/LA opioids be reserved for management of pain severe enough to require daily, around-the-clock, long-term opioid treatment when alternative treatment options (e.g., nonopioid analgesics or immediate-release opioids) are ineffective, not tolerated, or would be otherwise inadequate to provide sufficient management of pain and not used as as-needed pain relievers (49).
 [S31-02 | p31 | Rec 3 > Supporting rationale]
@@ -381,6 +465,20 @@ Because of the longer half-life and longer duration of effects (e.g., respirator
 ER/LA opioids should be reserved for severe, continuous pain and should be considered only for patients who have received certain dosages of immediate-release opioids daily (e.g., 60 mg daily of oral morphine, 30 mg daily of oral oxycodone, or equianalgesic dosages of other opioids) for at least 1 week (193).
 [S31-06 | p31 | Rec 3 > Supporting rationale]
 FDA also noted that some ER/LA opioids are only appropriate for opioid-tolerant patients, defined as patients who have received certain dosages of opioids (e.g., 60 mg daily of oral morphine, 30 mg daily of oral oxycodone, or equianalgesic dosages of other opioids) for at least 1 week (193).
+[S31-07 | p31 | Rec 3 > Supporting rationale]
+ER/LA opioids include methadone, transdermal fentanyl, and extended-release versions of opioids such as oxycodone, hydromorphone, hydrocodone, and morphine.
+[S31-08 | p31 | Rec 3 > Supporting rationale]
+Time-scheduled opioid use can be associated with greater total average daily opioid dosage compared with intermittent, as-needed opioid use (194).
+[S31-09 | p31 | Rec 3 > Supporting rationale]
+FDA guidance for industry on evaluation and labeling of these “abuse-deterrent” opioids (195) indicates that these technologies, although they are expected to make manipulation of opioids more difficult or reduce the potent effects of manipulation, do not prevent opioid misuse or overdose through oral intake (the most common route of opioid misuse) and can still be misused by nonoral routes.
+[S31-10 | p31 | Rec 3 > Supporting rationale]
+The “abuse-deterrent” label does not indicate that there is no risk for misuse or opioid use disorder.
+[S31-11 | p31 | Rec 3 > Supporting rationale]
+Experts from OWG agreed with the recommendation for clinicians to initiate opioid treatment with immediate-release opioids instead of with ER/LA opioids and said they appreciated discussion of the lack of evidence for “abuse-deterrent” formulations.
+[S31-12 | p31 | Rec 3 > Supporting rationale]
+In addition, the dosing of transdermal fentanyl is in mcg/hour, which is not typical for a drug used by outpatients and can be confusing.
+[S31-13 | p31 | Rec 3 > Supporting rationale]
+These complexities might increase the risk for fatal overdose when methadone or transdermal fentanyl is prescribed.
 [S32-01 | p32 | Rec 3 > Supporting rationale]
 Clinicians should use additional caution with ER/LA opioids and consider a longer dosing interval when prescribing to patients with renal or hepatic dysfunction because decreased clearance of medications among these patients can lead to accumulation of medications to toxic levels and persistence in the body for longer durations.
 [S32-02 | p32 | Rec 3 > Supporting rationale]
@@ -413,10 +511,20 @@ Therefore, before increasing total opioid dosage to ≥50 MME/day, clinicians sh
 If a decision is made to increase dosage, clinicians should use caution and increase dosage by the smallest practical amount.
 [S32-17 | p32 | Rec 4 > Implementation considerations]
 Clinicians should carefully evaluate a decision to further increase dosage on the basis of individualized assessment of benefits and risks and weighing factors such as diagnosis, incremental benefits for pain and function relative to risks with previous dosage increases, other treatments and effectiveness, and patient values and preferences.
+[S32-19 | p32 | Rec 4 > Implementation considerations]
+Risks of opioid use, including risk for overdose and overdose death, increase continuously with dosage, and there is no single dosage threshold below which risks are eliminated.
+[S32-20 | p32 | Rec 4 > Implementation considerations]
+The lowest starting dose for opioid-naïve patients is often equivalent to a single dose of approximately 5–10 MME or a daily dosage of 20–30 MME/day.
+[S32-21 | p32 | Rec 4 > Implementation considerations]
+Many patients do not experience benefit in pain or function from increasing opioid dosages to ≥50 MME/day but are exposed to progressive increases in risk as dosage increases.
+[S32-22 | p32 | Rec 4 > Implementation considerations]
+Additional dosage increases beyond 50 MME/day are progressively more likely to yield diminishing returns in benefits for pain and function relative to risks to patients as dosage increases further.
 [S33-01 | p33 | Rec 4 > Supporting rationale > Table]
 Morphine milligram equivalent doses for commonly prescribed opioids for pain management. Opioid: Conversion factor*; Codeine: 0.15; Fentanyl transdermal (in mcg/hr): 2.4; Hydrocodone: 1.0; Hydromorphone: 5.0; Methadone: 4.7; Morphine: 1.0; Oxycodone: 1.5; Oxymorphone: 3.0; Tapentadol†: 0.4; Tramadol§: 0.2. * Multiply the dose for each opioid by the conversion factor to determine the dose in MMEs. For example, tablets containing hydrocodone 5 mg and acetaminophen 325 mg taken four times a day would contain a total of 20 mg of hydrocodone daily, equivalent to 20 MME daily; extended-release tablets containing oxycodone 10 mg and taken twice a day would contain a total of 20 mg of oxycodone daily, equivalent to 30 MME daily. The following cautions should be noted: 1) All doses are in mg/day except for fentanyl, which is mcg/hr. 2) Equianalgesic dose conversions are only estimates and cannot account for individual variability in genetics and pharmacokinetics. 3) Do not use the calculated dose in MMEs to determine the doses to use when converting one opioid to another; when converting opioids, the new opioid is typically dosed at a substantially lower dose than the calculated MME dose to avoid overdose because of incomplete cross-tolerance and individual variability in opioid pharmacokinetics. 4) Use particular caution with methadone dose conversions because methadone has a long and variable half-life, and peak respiratory depressant effect occurs later and lasts longer than peak analgesic effect. 5) Use particular caution with transdermal fentanyl because it is dosed in mcg/hr instead of mg/day, and its absorption is affected by heat and other factors. 6) Buprenorphine products approved for the treatment of pain are not included in the table because of their partial µ-receptor agonist activity and resultant ceiling effects compared with full µ-receptor agonists. 7) These conversion factors should not be applied to dosage decisions related to the management of opioid use disorder. † Tapentadol is a µ-receptor agonist and norepinephrine reuptake inhibitor. MMEs are based on degree of µ-receptor agonist activity; however, it is unknown whether tapentadol is associated with overdose in the same dose-dependent manner as observed with medications that are solely µ-receptor agonists. § Tramadol is a µ-receptor agonist and norepinephrine and serotonin reuptake inhibitor. MMEs are based on degree of µ-receptor agonist activity; however, it is unknown whether tramadol is associated with overdose in the same dose-dependent manner as observed with medications that are solely µ-receptor agonists.
 [S33-07 | p33 | Rec 4 > Supporting rationale > Table footnote guidepost statement]
 The recommendations related to opioid dosages are not intended to be used as an inflexible, rigid standard of care; rather, they are intended to be guideposts to help inform clinician-patient decision-making.
+[S33-08 | p33 | Rec 4 > Supporting rationale]
+At the same time, risks for serious harms related to opioid therapy, including opioid misuse, overdose, and death, increase at higher opioid dosage, without a single point below which there is no risk (201).
 [S34-01 | p34 | Rec 4 > Supporting rationale]
 When opioids are used for acute, subacute, or chronic pain, clinicians should start opioids at the lowest possible effective dosage.
 [S34-02 | p34 | Rec 4 > Supporting rationale]
@@ -447,6 +555,24 @@ For example, before increasing long-term opioid therapy dosage to >120 MME/day, 
 Clinicians should be aware of policies related to MME thresholds and associated clinical protocols established by their states.
 [S34-15 | p34 | Rec 5 > Recommendation statement]
 For patients already receiving opioid therapy, clinicians should carefully weigh benefits and risks and exercise care when changing opioid dosage. If benefits outweigh risks of continued opioid therapy, clinicians should work closely with patients to optimize nonopioid therapies while continuing opioid therapy. If benefits do not outweigh risks of continued opioid therapy, clinicians should optimize other therapies and work closely with patients to gradually taper to lower dosages or, if warranted based on the individual circumstances of the patient, appropriately taper and discontinue opioids. Unless there are indications of a life-threatening issue such as warning signs of impending overdose (e.g., confusion, sedation, or slurred speech), opioid therapy should not be discontinued abruptly, and clinicians should not rapidly reduce opioid dosages from higher dosages (recommendation category: B; evidence type: 4).
+[S34-21 | p34 | Rec 4 > Supporting rationale]
+The lowest starting dose for opioid-naïve patients is often equivalent to a single dose of approximately 5–10 MME or a daily dosage of 20–30 MME/day.
+[S34-24 | p34 | Rec 4 > Supporting rationale]
+Additional dosage increases beyond 50 MME/day are progressively more likely to yield diminishing returns in benefits for pain and function relative to risks to patients.
+[S34-16 | p34 | Rec 4 > Supporting rationale]
+These studies examined dose-response risk for overdose for full agonist opioids and not for partial agonist opioids such as buprenorphine, which is unlikely to have the same continuous association between dosage and overdose risk because respiratory depressant effects of buprenorphine reach a plateau (205).
+[S34-17 | p34 | Rec 4 > Supporting rationale]
+Multiple experts from OWG expressed concern that including specific dosage thresholds in a main recommendation statement would emphasize them as authoritative absolutes and would lead to noncollaborative tapers or other potentially harmful consequences.
+[S34-18 | p34 | Rec 4 > Supporting rationale]
+Experts also noted the lack of a single standard formula for calculating MMEs (206).
+[S34-19 | p34 | Rec 4 > Supporting rationale]
+However, experts agreed there is a need for thresholds as benchmarks and suggested including them in the supporting text after the main recommendation statement.
+[S34-20 | p34 | Rec 4 > Supporting rationale]
+Experts also agreed with separating recommendations on dosage into a recommendation applying to patients starting opioids and patients already receiving opioids.
+[S34-22 | p34 | Rec 4 > Supporting rationale]
+Formulations with lower opioid doses (e.g., hydrocodone bitartrate 2.5 mg/acetaminophen 325 mg) are available and can facilitate dosing when additional caution is needed.
+[S34-23 | p34 | Rec 4 > Supporting rationale]
+Although evidence to recommend specific intervals for dosage titration is limited, rapid dosage increases put patients at greater risk for sedation, respiratory depression, and overdose.
 [S35-01 | p35 | Rec 5 > Implementation considerations]
 Clinicians should carefully weigh both the benefits and risks of continuing opioid medications and the benefits and risks of tapering opioids.
 [S35-02 | p35 | Rec 5 > Implementation considerations]
@@ -493,6 +619,8 @@ Clinicians should remain alert to signs of and screen for anxiety, depression, a
 Clinicians should closely monitor patients who are unable to taper and who continue on high-dose or otherwise high-risk opioid regimens (e.g., opioids prescribed concurrently with benzodiazepines) and should work with patients to mitigate overdose risk (e.g., by providing overdose education and naloxone) (see Recommendation 8).
 [S35-23 | p35 | Rec 5 > Implementation considerations]
 When patients have been taking opioids for longer durations (e.g., for ≥1 year), tapers of 10% per month or slower are likely to be better tolerated than more rapid tapers.
+[S35-24 | p35 | Rec 5 > Implementation considerations]
+Patient agreement and interest in tapering is likely to be a key component of successful tapers.
 [S36-01 | p36 | Rec 5 > Implementation considerations]
 Clinicians can use periodic and strategic motivational questions and statements to encourage movement toward appropriate therapeutic changes and functional goals.
 [S36-02 | p36 | Rec 5 > Implementation considerations]
@@ -501,6 +629,12 @@ Clinicians have a responsibility to provide or arrange for coordinated managemen
 Payers, health systems, and state medical boards should not use this clinical practice guideline to set rigid standards or performance incentives related to dose or duration of opioid therapy; should ensure that policies based on cautionary dosage thresholds do not result in rapid tapers or abrupt discontinuation of opioids; and should ensure that policies do not penalize clinicians for accepting new patients who are using prescribed opioids for chronic pain, including those receiving high dosages of opioids, or for refraining from rapidly tapering patients prescribed long-term opioid medications.
 [S36-04 | p36 | Rec 5 > Implementation considerations]
 Although Recommendation 5 specifically refers to patients using long-term opioid therapy for subacute or chronic pain, many of the principles in these implementation considerations and supporting rationale, including communication with patients, pain management, behavioral support, and slower taper rates, also are relevant when discontinuing opioids in patients who have received them for shorter durations (see Recommendations 6 and 7).
+[S36-05 | p36 | Rec 5 > Supporting rationale]
+FDA has advised that risks of rapid tapering or sudden discontinuation of opioids in physically dependent patients include acute withdrawal symptoms, exacerbation of pain, serious psychological distress, and thoughts of suicide (68).
+[S36-06 | p36 | Rec 5 > Supporting rationale]
+Experts from OWG said they appreciated the complexity of managing patients already receiving higher dosages of opioids long-term.
+[S36-07 | p36 | Rec 5 > Supporting rationale]
+Although some experts indicated there should be more consideration of obtaining informed consent before tapering opioids, others believed that informed discussion is more appropriate than informed consent when considering tapering opioids because of clinicians’ overriding responsibility to avoid providing treatment that harms patients.
 [S37-01 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
 The benefits and risks of opioid therapy change over time and should be reevaluated periodically (see Recommendations 6 and 7).
 [S37-02 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
@@ -528,7 +662,7 @@ Benzodiazepines should be tapered gradually because of risks (anxiety, hallucina
 [S37-13 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
 Patients who are not taking prescribed opioids (e.g., patients who are diverting all opioids they obtain) do not require tapers.
 [S37-14 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
-Consistent with the HHS Guide for Clinicians on the Appropriate Dosage Reduction or Discontinuation of Long-Term Opioid Analgesics (219), clinicians should consider tapering to a reduced opioid dosage or tapering and discontinuing opioid therapy and discuss these approaches with patients before initiating changes when
+Consistent with the HHS Guide for Clinicians on the Appropriate Dosage Reduction or Discontinuation of Long-Term Opioid Analgesics (219), clinicians should consider tapering to a reduced opioid dosage or tapering and discontinuing opioid therapy and discuss these approaches with patients before initiating changes when the patient requests dosage reduction or discontinuation, pain improves and might indicate resolution of an underlying cause, opioid therapy has not meaningfully reduced pain or improved function, the patient has been treated with opioids for a prolonged period (e.g., years) and the benefit-risk balance is unclear (e.g., decreased positive effects because of tolerance and symptoms such as reduced focus or memory that might be due to opioids), the patient is receiving higher opioid dosages without evidence of benefit from the higher dosage, the patient experiences side effects that diminish quality of life or impair function, evidence of opioid misuse exists, the patient experiences an overdose or other serious event (e.g., an event leading to hospitalization or injury) or has warning signs for an impending event (e.g., confusion, sedation, or slurred speech), or the patient is receiving medications (e.g., benzodiazepines) or has medical conditions (e.g., sleep apnea, liver disease, kidney disease, or fall risk) that increase risk for adverse outcomes.
 [S37-15 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
 However, patients should be offered the opportunity to reevaluate their continued use of opioids.
 [S37-16 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
@@ -539,6 +673,14 @@ Whenever possible, clinicians should collaborate with patients and share decisio
 Clinicians should review benefits and risks of opioid therapy with the patient and decide whether tapering is appropriate for the patient.
 [S37-19 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
 If the existing opioid regimen does not put the patient at imminent risk for overdose or other injury, tapering does not need to occur immediately, and clinicians can take time to reach agreement with patients (224).
+[S37-20 | p37 | Rec 5 > Supporting rationale]
+Some experts were concerned that overemphasizing risks of tapering could increase harm from continued high-dosage opioid use.
+[S37-21 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Because tapering opioids can be harmful in some circumstances, benefits of continuing opioids in patients who have already received them long-term might include avoiding risks of tapering and discontinuing opioids.
+[S37-22 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+However, after slow, voluntary reduction of long-term opioid dosages, patients might experience improvements in function, quality of life, anxiety, and mood without worsening pain or with decreased pain levels (218).
+[S37-23 | p37 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+For patients already taking opioids long term (both established patients and patients transferring from other clinicians), the possibility of opioid dosage reduction might provoke substantial anxiety.
 [S38-01 | p38 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
 For patients who agree to taper opioids to lower dosages, clinicians should collaborate with the patient on a tapering plan.
 [S38-02 | p38 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
@@ -583,6 +725,12 @@ Tapers can be completed over several months to years depending on the opioid dos
 Longer durations of previous opioid therapy might require longer tapers.
 [S38-22 | p38 | Rec 5 > Supporting rationale > Tapering Rate]
 Tapers of approximately 10% per month or slower are likely to be better tolerated than more rapid tapers when patients have been taking opioids for longer durations (e.g., ≥1 year) (219).
+[S38-23 | p38 | Rec 5 > Supporting rationale > Determining Whether, When, and How to Taper Opioids]
+Tapering is more likely to be successful when patients collaborate in the taper (224).
+[S38-24 | p38 | Rec 5 > Supporting rationale > Pain Management During Tapering]
+Integrating behavioral and nonopioid pain therapies before and during a taper can help manage pain (218) and strengthen the therapeutic relationship between the clinician and patient.
+[S38-25 | p38 | Rec 5 > Supporting rationale > Behavioral Health Support During Tapering]
+Integrating behavioral and nonopioid pain therapies and treatment for comorbid mental health conditions before and during a taper can help manage pain (218), strengthen the therapeutic relationship between the clinician and patient, and improve the likelihood of positive tapering outcomes (228).
 [S39-01 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
 When patients have taken opioids for shorter durations (e.g., weeks to months rather than years), a decrease of 10% of the original dose per week or slower (until approximately 30% of the original dose is reached, followed by a weekly decrease of approximately 10% of the remaining dose) is less likely to trigger withdrawal (225) and can be successful for some patients.
 [S39-02 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
@@ -615,3 +763,21 @@ Although prescription of buprenorphine for treatment of opioid use disorder requ
 To avoid precipitating withdrawal, transitioning any patient taking full agonist opioids to buprenorphine requires specific timing of the initial buprenorphine dose (219) (see Recommendation 12 for application to patients with opioid use disorder).
 [S39-16 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
 Patients should be in mild to moderate withdrawal from full agonist opioids before the first buprenorphine dose (219).
+[S39-17 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+Sudden discontinuation might precipitate substantial opioid withdrawal (71).
+[S39-18 | p39 | Rec 5 > Supporting rationale > Tapering Rate]
+Rapid tapering or sudden discontinuation of opioids in physically dependent patients also can increase risks for psychological distress and opioid-related emergency department visits and hospitalizations (68,71).
+[S39-19 | p39 | Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering]
+These include alpha-2 agonists for the management of autonomic signs and symptoms (e.g., sweating and tachycardia).
+[S39-20 | p39 | Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering]
+Alpha-2 agonists clonidine and lofexidine are more effective than placebo in reducing severity of withdrawal (236) from heroin or methadone in the context of abrupt (not gradual) discontinuation.
+[S39-21 | p39 | Rec 5 > Supporting rationale > Management of Opioid Withdrawal During Tapering]
+Other medications addressing specific symptoms (NSAIDs, acetaminophen, or topical menthol or methyl salicylate for muscle aches; trazodone for sleep disturbance; prochlorperazine, promethazine, or ondansetron for nausea; dicyclomine for abdominal cramping; and loperamide or bismuth subsalicylate for diarrhea) also have been used (232).
+[S39-22 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Some patients with unanticipated challenges to tapering, such as inability to make progress in tapering despite opioid-related harm, might have undiagnosed opioid use disorder.
+[S39-23 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Buprenorphine is a partial agonist opioid that can treat pain and opioid use disorder (239) and has other properties that might be helpful (155), including less respiratory depression (205) and overdose risk than other opioids (155,237).
+[S39-24 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Although overdose is less likely with buprenorphine than with full agonist opioids, overdose is still possible, particularly if buprenorphine is taken concurrently with other respiratory depressants (e.g., full agonist opioids, benzodiazepines, or alcohol) (240).
+[S39-25 | p39 | Rec 5 > Supporting rationale > Challenges to Tapering]
+Different buprenorphine products, available at different formulations and doses, are approved for the treatment of pain and for the treatment of opioid use disorder.

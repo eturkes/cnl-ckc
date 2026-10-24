@@ -2,8 +2,8 @@ CDC Clinical Practice Guideline for Prescribing Opioids for Pain — United Stat
 front matter extraction evidence (verbatim rendered text)
 Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
 Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
-PDF locator: physical PDF pages 3–18; S18-07 continues onto physical page 19
-Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 66 payloads below.
+PDF locator: physical PDF pages 3–18; S18-07 continues onto physical page 19; S6-08 resumes on physical page 9 after Boxes 1 and 2; S12-08 resumes on physical page 13 after Box 3
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 121 payloads below.
 Scaffolding convention: bracketed locator lines and PDF list numerals/bullet glyphs are outside payload regions; wrapped list stems/items are joined in reading order with CDC punctuation retained.
 
 [S3-01 | p3 | Summary]
@@ -14,6 +14,24 @@ Recommendations should not be applied as inflexible standards of care across pat
 
 [S3-03 | p3 | Summary]
 The recommendations do not apply to pain related to sickle cell disease or cancer or to patients receiving palliative or end-of-life care.
+
+[S3-04 | p3 | Summary]
+This guideline provides recommendations for clinicians providing pain care, including those prescribing opioids, for outpatients aged ≥18 years.
+
+[S3-05 | p3 | Summary]
+It updates the CDC Guideline for Prescribing Opioids for Chronic Pain — United States, 2016 (MMWR Recomm Rep 2016;65[No. RR-1]:1–49) and includes recommendations for managing acute (duration of <1 month), subacute (duration of 1–3 months), and chronic (duration of >3 months) pain.
+
+[S3-06 | p3 | Summary]
+This clinical practice guideline is intended to improve communication between clinicians and patients about the benefits and risks of pain treatments, including opioid therapy; improve the effectiveness and safety of pain treatment; mitigate pain; improve function and quality of life for patients with pain; and reduce risks associated with opioid pain therapy, including opioid use disorder, overdose, and death.
+
+[S3-07 | p3 | Introduction > Background]
+Acute pain is usually sudden in onset and time limited (defined in this clinical practice guideline as having a duration of <1 month) and often is caused by injury, trauma, or medical treatments such as surgery (2,3).
+
+[S3-08 | p3 | Introduction > Background]
+Unresolved acute pain or subacute pain (defined in this clinical practice guideline as pain that has been present for 1–3 months) can evolve into chronic pain (4).
+
+[S3-09 | p3 | Introduction > Background]
+Chronic pain typically lasts >3 months (4) and can be the result of an underlying medical disease or condition, injury, medical treatment, inflammation, or unknown cause (2).
 
 [S4-01 | p4 | Introduction > Background]
 Differentially untreated or undertreated pain as a result of clinician biases persists and demands immediate and sustained attention and action (37–40).
@@ -33,6 +51,15 @@ To achieve this aim, it is important that clinicians consider the full range of 
 [S4-06 | p4 | Introduction > Background]
 In 2014, on the basis of accumulating evidence of potential risks to patients, the Food and Drug Administration (FDA) required new safety labeling changes for extended-release and long-acting opioids.
 
+[S4-07 | p4 | Introduction > Background]
+These factors and potentially harmful outcomes associated with chronic pain for some persons add to the clinical complexity and underscore the importance of adequately treating and providing care to persons with pain.
+
+[S4-08 | p4 | Introduction > Background]
+Opioids can be essential medications for the management of pain; however, they carry considerable potential risk.
+
+[S4-09 | p4 | Introduction > Background]
+Changes included a boxed warning on the “risks of addiction, abuse, and misuse, which can lead to overdose and death” and, for patients receiving opioids during pregnancy, the risk for neonatal abstinence syndrome (a group of conditions that can occur when newborns withdraw from certain substances including opioids; withdrawal caused by in utero exposure to opioids also is called neonatal opioid withdrawal syndrome) (49).
+
 [S5-01 | p5 | Introduction > Background]
 The limited evidence of long-term effectiveness of opioids for chronic pain, coupled with risks to patients and to persons using prescription opioids that were not prescribed to them, underscored the importance of reducing inappropriate opioid prescribing while advancing evidence-based pain care to improve the lives of persons living with pain.
 
@@ -45,6 +72,27 @@ At least 17 states have passed laws requiring or recommending the coprescription
 [S5-04 | p5 | Introduction > Background]
 Although some laws, regulations, and policies that appear to support recommendations in the 2016 CDC Opioid Prescribing Guideline might have had positive results for some patients, they are inconsistent with a central tenet of the guideline: that the recommendations are voluntary and intended to be flexible to support, not supplant, individualized, patient-centered care.
 
+[S5-05 | p5 | Introduction > Background]
+In 2016, these warnings were added to the labels for immediate-release opioids (50).
+
+[S5-06 | p5 | Introduction > Background]
+The goals of the guideline were to 1) ensure that clinicians and patients considered safer and more effective pain treatment; 2) improve patient outcomes, such as reduced pain and improved function; and 3) reduce the number of persons who developed opioid use disorder, experienced overdose, or experienced other prescription opioid–related adverse events (56).
+
+[S5-07 | p5 | Introduction > Background]
+Although not the intent of the 2016 CDC Opioid Prescribing Guideline, design and implementation of new laws, regulations, and policies also appeared to reflect its recommendations.
+
+[S5-08 | p5 | Introduction > Background]
+For example, since 2016, consistent with SUPPORT Act requirements (61), some state Medicaid programs have used the guideline and other resources to promote nonopioid options for chronic pain management (62).
+
+[S5-09 | p5 | Introduction > Background]
+Of particular concern, some policies purportedly drawn from the 2016 CDC Opioid Prescribing Guideline have been notably inconsistent with it and have gone well beyond its clinical recommendations (6,66,67).
+
+[S5-10 | p5 | Introduction > Background]
+Such misapplication includes extension to patient populations not covered in the 2016 CDC Opioid Prescribing Guideline (e.g., cancer and palliative care patients), rapid opioid tapers and abrupt discontinuation without collaboration with patients, rigid application of opioid dosage thresholds, application of the guideline’s recommendations for opioid use for pain to medications for opioid use disorder treatment (previously referred to as medication assisted treatment), duration limits by insurers and pharmacies, and patient dismissal and abandonment (66–68).
+
+[S5-11 | p5 | Introduction > Background]
+These actions are not consistent with the 2016 CDC Opioid Prescribing Guideline and have contributed to patient harm, including untreated and undertreated pain, serious withdrawal symptoms, worsening pain outcomes, psychological distress, overdose, and suicidal ideation and behavior (66–71).
+
 [S6-01 | p6 | Introduction > Rationale]
 This clinical practice guideline provides recommendations but does not replace clinical judgment and individualized, patient-centered decision-making.
 
@@ -54,6 +102,21 @@ The recommendations are based on emerging evidence, including observational stud
 [S6-03 | p6 | Introduction > Rationale]
 Flexibility for clinicians and patients is paramount when making patient-centered clinical treatment decisions.
 
+[S6-08 | p6 | Introduction > Rationale]
+The recommendations aim to improve communication between clinicians and patients about the benefits and risks of prescription opioids and other pain treatment strategies; improve the safety and effectiveness of pain treatment; improve pain, function, and quality of life for persons with pain; and reduce the risks associated with opioid pain treatment (including opioid use disorder, overdose, and death) and with other pain treatment.
+
+[S6-04 | p6 | Introduction > Rationale]
+Taken together, these factors underscore the need for an updated clinical practice guideline on appropriate opioid prescribing for pain and pain management.
+
+[S6-05 | p6 | Introduction > Rationale]
+This clinical practice guideline expands and updates the 2016 CDC Opioid Prescribing Guideline to provide evidence-based recommendations for prescribing opioid pain medication for acute, subacute, and chronic pain for outpatients aged ≥18 years, excluding pain management related to sickle cell disease, cancer-related pain treatment, palliative care, and end-of-life care (Boxes 1 and 2).
+
+[S6-06 | p6 | Introduction > Rationale]
+Importantly, the update also aims to clearly delineate recommendations that apply to patients who are being considered for initial treatment with prescription opioids and patients who have been receiving opioids as part of their ongoing pain management.
+
+[S6-07 | p6 | Introduction > Rationale]
+Importantly, to discourage the misapplication of opioid pain medication dosage thresholds as inflexible standards, revised recommendation statement language emphasizes principles such as avoiding increasing dosage above levels likely to yield diminishing returns in benefits relative to risks to patients.
+
 [S7-01 | p7 | BOX 1 > Executive summary]
 These recommendations do not apply to patients experiencing pain associated with the following conditions or settings: pain management related to sickle cell disease, cancer-related pain treatment, palliative care, and end-of-life care.
 
@@ -62,6 +125,12 @@ The recommendations do not apply to providing care to patients who are hospitali
 
 [S7-03 | p7 | BOX 1 > Executive summary]
 These recommendations do apply to prescribing for pain management when patients are discharged from hospitals, emergency departments, or other facilities.
+
+[S7-04 | p7 | BOX 1 > Executive summary]
+This clinical practice guideline updates and expands the CDC Guideline for Prescribing Opioids for Chronic Pain — United States, 2016 (MMWR Recomm Rep 2016;65[No. RR-1]:1–49]) and provides evidence-based recommendations for primary care and other clinicians (including physicians, nurse practitioners and other advanced practice registered nurses, physician assistants, and oral health practitioners) providing pain care, including those prescribing opioids, for outpatients aged ≥18 years with acute (duration of <1 month) pain, subacute (duration of 1–3 months) pain, or chronic (duration of >3 months) pain.
+
+[S7-05 | p7 | BOX 1 > Executive summary]
+Applicable outpatient settings include clinician offices, clinics, and urgent care centers.
 
 [S8-01 | p8 | BOX 1 > Executive summary]
 Recommendation statements emphasize that opioids should be used only when benefits for pain and function are expected to outweigh risks.
@@ -102,6 +171,12 @@ This voluntary clinical practice guideline provides recommendations only and is 
 [S8-13 | p8 | BOX 1 > Executive summary]
 This clinical practice guideline should not be applied as inflexible standards of care across patient populations by health care professionals; health systems; pharmacies; third-party payers; or state, local, or federal organizations or entities.
 
+[S8-14 | p8 | BOX 1 > Executive summary]
+Greater specificity is provided in implementation considerations and supporting rationales, which can offer more flexibility to help clinicians weigh benefits and risks of different therapeutic courses for specific patients.
+
+[S8-15 | p8 | BOX 1 > Executive summary]
+This clinical practice guideline is intended to improve communication between clinicians and patients about the benefits and risks of pain treatment, including opioid therapy for pain; improve the safety and effectiveness of pain treatment; mitigate pain; improve function and quality of life for patients with pain; and reduce risks associated with opioid pain therapy, including opioid use disorder, overdose, and death.
+
 [S9-01 | p9 | BOX 2 > Intended use > prohibited uses]
 This clinical practice guideline is not a replacement for clinical judgment or individualized, person-centered care; intended to be applied as inflexible standards of care across patients or patient populations by health care professionals, health systems, pharmacies, third-party payers, or governmental jurisdictions or to lead to the rapid tapering or abrupt discontinuation of opioids for patients; a law, regulation, or policy that dictates clinical practice or as a substitute for Food and Drug Administration–approved labeling; applicable to management of pain related to sickle cell disease, management of cancer-related pain, or palliative care or end-of-life care; or focused on opioids prescribed for opioid use disorder.
 
@@ -123,6 +198,33 @@ The recommendations do not apply to care provided to patients who are hospitaliz
 [S9-07 | p9 | Scope and Audience]
 These recommendations do apply to prescribing for pain management for patients when they are discharged from hospitals, emergency departments, or other facilities.
 
+[S9-08 | p9 | Scope and Audience]
+This clinical practice guideline is intended for clinicians who are treating outpatients aged ≥18 years with acute (duration of <1 month), subacute (duration of 1–3 months), or chronic (duration of >3 months) pain, and excludes pain management related to sickle cell disease, cancer-related pain treatment, palliative care, and end-of-life care.
+
+[S9-09 | p9 | Scope and Audience]
+The recommendations are most relevant to clinicians whose scope of practice includes prescribing opioids (e.g., physicians, nurse practitioners and other advanced-practice registered nurses, physician assistants, and oral health practitioners).
+
+[S9-10 | p9 | Scope and Audience]
+Because clinicians might work within team-based care, this clinical practice guideline also refers to and promotes integrated pain management and collaborative working relationships among clinicians (e.g., behavioral health specialists such as social workers or psychologists, pharmacists, and registered nurses).
+
+[S9-11 | p9 | Scope and Audience]
+This guideline update includes recommendations for primary care clinicians (e.g., internists and family physicians) and other clinicians managing pain in outpatient settings (e.g., surgeons, emergency medicine clinicians, occupational medicine clinicians, physical medicine and rehabilitation clinicians, and neurologists).
+
+[S9-12 | p9 | Scope and Audience]
+Applicable settings include clinician offices, clinics, and urgent care centers.
+
+[S9-13 | p9 | Scope and Audience]
+In addition to updating recommendations on the basis of new evidence regarding management of chronic pain, this clinical practice guideline is intended to assist clinicians in weighing benefits and risks of prescribing opioid pain medication for painful acute conditions (e.g., low back pain, neck pain, other musculoskeletal pain, neuropathic pain, dental pain, kidney stone pain, and acute episodic migraine) and pain related to procedures (e.g., postoperative pain and pain from oral surgery).
+
+[S9-14 | p9 | Scope and Audience]
+In 2020, several of these indications were prioritized by an ad hoc committee of the National Academies of Sciences, Engineering, and Medicine (86) as those for which evidence-based clinical practice guidelines would help inform prescribing practices, with the greatest potential effect on public health.
+
+[S9-15 | p9 | Scope and Audience]
+This update includes content on management of subacute painful conditions, when duration falls between that typically considered acute (defined as lasting <1 month) and chronic (defined as lasting >3 months).
+
+[S9-16 | p9 | Scope and Audience]
+The durations used to define acute, subacute, and chronic pain might imply more specificity than is found in real-life patient experience, when pain often gradually transitions from acute to chronic.
+
 [S10-01 | p10 | Scope and Audience]
 This does not imply that any other types of pain are more or less worthy of effective treatment, only that clinicians are referred to existing clinical guidelines that more specifically address unique considerations for management of pain related to sickle cell disease, cancer-related pain treatment, palliative care, and end-of-life care.
 
@@ -141,6 +243,39 @@ Other guidelines more specifically address pain management in these situations (
 [S10-06 | p10 | Scope and Audience]
 This clinical practice guideline does not apply to patients undergoing cancer-related pain treatment, palliative care, or end-of-life care because of the unique therapeutic goals, ethical considerations, opportunities for medical supervision, and balance of benefits and risks with opioid therapy in such care.
 
+[S10-07 | p10 | Scope and Audience]
+This clinical practice guideline expands the scope to additional clinicians.
+
+[S10-08 | p10 | Scope and Audience]
+Thus, expanding the scope to outpatient opioid prescribing can provide evidence-based advice for many additional clinicians, including dentists and other oral health providers, clinicians managing postoperative pain in outpatients, and clinicians providing pain management for patients being discharged from emergency departments.
+
+[S10-09 | p10 | Scope and Audience]
+Many principles of pain management are similar whether or not the treating clinician is a pain management specialist, and many of the recommendations might be relevant for pain management specialists.
+
+[S10-10 | p10 | Scope and Audience]
+Pain management specialists often have extensive training and expertise in pain management modalities that other clinicians do not, and they might treat patients with clinical situations that are more complex, less prevalent, and not well addressed by the available evidence; therefore, the balance of benefits and risks to patients might differ when the treating clinician is a pain management specialist.
+
+[S10-11 | p10 | Scope and Audience]
+The recommendations address the use of opioid pain medication in certain special populations (e.g., older adults and pregnant persons) and in populations with conditions posing special risks (e.g., a history of a substance use disorder).
+
+[S10-12 | p10 | Scope and Audience]
+Although some principles in this clinical practice guideline might be helpful in the management of pain related to sickle cell disease, cancer-related pain treatment, palliative care, and end-of-life care, some recommendations might not be relevant for pain management in these contexts.
+
+[S10-13 | p10 | Scope and Audience]
+This clinical practice guideline follows the Institute of Medicine’s definition of palliative care as care that provides relief from pain and other symptoms, supports quality of life, and is focused on patients with serious advanced illness (94).
+
+[S10-14 | p10 | Scope and Audience]
+Palliative care can begin early in the course of treatment for any serious illness that requires advanced management of pain or other distressing symptoms (94).
+
+[S10-15 | p10 | Scope and Audience]
+In this guideline, end-of-life care refers to care for persons in hospice care and others with a terminal illness or at high risk for dying in the near future in hospitals, receiving long-term services and supports (including institutional care and home- and community-based services), or at home.
+
+[S10-16 | p10 | Scope and Audience]
+For example, for many persons at the end of life, serious potential long-term opioid-related harms such as opioid use disorder might not be relevant.
+
+[S10-17 | p10 | Scope and Audience]
+Meeting participants noted that these guidelines applied to different patient populations and target audiences but found no disagreement among recommendations when applied to the appropriate patient and clinical situation (95).
+
 [S11-01 | p11 | Scope and Audience]
 Although this update includes content on pain management for patients with opioid use disorder and one recommendation on management of opioid use disorder as a complication of opioid use, recommendations on opioids used specifically as medications for opioid use disorder are not the focus of this clinical practice guideline.
 
@@ -153,6 +288,21 @@ Category B recommendations indicate that the recommendation might not apply to a
 [S12-03 | p12 | Clinical Practice Guideline Development Methods > Recommendation Development]
 For category B recommendations, clinicians must help patients arrive at a decision consistent with patient values and preferences and specific clinical situations (shared decision-making) (106).
 
+[S12-08 | p12 | Clinical Practice Guideline Development Methods > Recommendation Development]
+The GRADE working group has presented several paradigmatic situations in which strong (category A) recommendations might be justified despite low-quality evidence (e.g., when high-quality evidence suggests equivalence of two alternatives and low-quality evidence suggests harm in one alternative, or when high-quality evidence suggests modest benefits and low- or very low–quality evidence suggests possibility of catastrophic harm) (104).
+
+[S12-04 | p12 | Clinical Practice Guideline Development Methods > ACIP Adapted GRADE Method for Evaluating Quality of Evidence]
+The categories in the hierarchy are type 1 evidence (randomized clinical trials or overwhelming evidence from observational studies), type 2 evidence (randomized clinical trials with important limitations, or exceptionally strong evidence from observational studies), type 3 evidence (observational studies or randomized clinical trials with notable limitations), and type 4 evidence (clinical experience and observations, observational studies with important limitations, or randomized clinical trials with several major limitations) (Box 3).
+
+[S12-05 | p12 | Clinical Practice Guideline Development Methods > ACIP Adapted GRADE Method for Evaluating Quality of Evidence]
+Type 1 evidence indicates high confidence that the true effect is close to the estimate of the effect; type 2 evidence means that the true effect is likely to be close to the estimate of the effect, but there is some uncertainty; type 3 evidence means that confidence in the effect estimate is limited (moderate uncertainty), and the true effect could differ substantially from the estimate of the effect; and type 4 evidence indicates very little confidence in the effect estimate (high uncertainty), and the likelihood is high that the true effect differs from the estimate of the effect (100,103).
+
+[S12-06 | p12 | Clinical Practice Guideline Development Methods > Categorizing the Evidence]
+Evidence was categorized into the following types: type 1 (randomized clinical trials or overwhelming evidence from observational studies; equivalent to AHRQ high strength of evidence), type 2 (randomized clinical trials with important limitations, or exceptionally strong evidence from observational studies; equivalent to AHRQ moderate strength of evidence), type 3 (observational studies, or randomized clinical trials with notable limitations; equivalent to most AHRQ low strength of evidence ratings), or type 4 (clinical experience and observations, observational studies with important limitations, or randomized clinical trials with several major limitations; equivalent to AHRQ low strength of evidence with serious limitations).
+
+[S12-07 | p12 | Clinical Practice Guideline Development Methods > Recommendation Development]
+Although it is desirable for category A recommendations to be based on type 1 or type 2 evidence, category A recommendations can be based on type 3 or type 4 evidence when the advantages of a clinical action clearly outweigh the disadvantages in terms of benefits and harms, values and preferences, and costs, despite uncertainty in effect estimates (104).
+
 [S14-01 | p14 | BOX 3 > Recommendation categories]
 Category A recommendation: Applies to all persons; most patients should receive the recommended course of action.
 
@@ -164,6 +314,18 @@ Clinicians help patients arrive at a decision consistent with patient values and
 
 [S14-04 | p14 | Federal Advisory Committee Review and Recommendation]
 Members are required to complete the Office of Government Ethics Form 450 annually to disclose relevant interests and report on their disclosures during meetings.
+
+[S14-05 | p14 | BOX 3 > Evidence types]
+Type 1 evidence: Randomized clinical trials or overwhelming evidence from observational studies.
+
+[S14-06 | p14 | BOX 3 > Evidence types]
+Type 2 evidence: Randomized clinical trials with important limitations, or exceptionally strong evidence from observational studies.
+
+[S14-07 | p14 | BOX 3 > Evidence types]
+Type 3 evidence: Observational studies or randomized clinical trials with notable limitations.
+
+[S14-08 | p14 | BOX 3 > Evidence types]
+Type 4 evidence: Clinical experience and observations, observational studies with important limitations, or randomized clinical trials with several major limitations.
 
 [S15-01 | p15 | Federal Advisory Committee Review and Recommendation]
 Persons interested in being considered for the workgroup were encouraged to submit self-nominations from December 4, 2019, through February 4, 2020.
@@ -182,6 +344,9 @@ The recommendations are not intended to be implemented as absolute limits of pol
 
 [S17-03 | p17 | Recommendations > Category framing]
 Category A recommendations indicate that most patients should receive the recommended course of action; category B recommendations indicate that different choices will be appropriate for different patients, requiring clinicians to help patients arrive at a decision consistent with patient values and preferences and specific clinical situations.
+
+[S17-04 | p17 | Recommendations]
+This clinical practice guideline includes 12 recommendations for clinicians who are prescribing opioids for outpatients aged ≥18 years with acute (duration of <1 month), subacute (duration of 1–3 months), or chronic (duration of >3 months) pain, excluding pain management related to sickle cell disease, cancer-related pain treatment, palliative care, and end-of-life care (Box 3).
 
 [S18-01 | p18 | Recommendations > Implementation framing]
 The implementation considerations offer practical insights, context, and specific examples meant to further inform clinician-patient decision-making for the respective recommendation and are not meant to be rigidly or inflexibly followed.

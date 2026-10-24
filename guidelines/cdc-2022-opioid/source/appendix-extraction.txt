@@ -1,0 +1,13 @@
+CDC Clinical Practice Guideline for Prescribing Opioids for Pain — United States, 2022
+appendix extraction evidence (verbatim rendered text)
+Primary manifestation: guidelines/cdc-2022-opioid/source/rr7103a1-H.pdf
+Primary artifact SHA-256: f4e5098d13e9b3dc5cc27bb90137df57d3667350b2add885fd367f279402d18d
+PDF locator: physical PDF pages 64–100 (references, rosters, appendix evidence reviews, notices); payloads from page 82
+Region authority: 0-based half-open byte ranges in this UTF-8 file identify the 2 payloads below.
+Scaffolding convention: each bracketed locator line and each blank separator is outside its statement region.
+
+[S82-01 | p82 | Appendix > Opioid Dosing Strategies]
+In 2007, the Food and Drug Administration released a public health advisory due to case reports of deaths and other life-threatening adverse effects in patients prescribed buccal fentanyl (31).
+
+[S82-02 | p82 | Appendix > Risk Mitigation Strategies]
+Findings should be interpreted with caution because of potential confounding related to the reason for discontinuation.

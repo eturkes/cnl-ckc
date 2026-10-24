@@ -19,18 +19,22 @@ Rep 2022;71(No. RR-3):1–95. DOI `http://dx.doi.org/10.15585/mmwr.rr7103a1`.
 - `source/front-matter-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 3–18 (Summary, Introduction,
   Box 1, Box 2, Scope and Audience, Methods, category framing, guiding
-  principles; 66 payload regions). SHA-256
-  `aa3306c0eeb15dac65c55103bfdcbf4d64c46c85b5c82bc1c0dd40867281168b`.
+  principles; 121 payload regions). SHA-256
+  `0eabcb0b3beee46df3de0a059f1aa98abafbd6d4f46ac895c038fce3d8458775`.
 - `source/rec01-05-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 19–39 (Box 4 and the
   recommendation 1–5 subsections: restated statements, supporting
-  rationale, implementation considerations; 304 payload regions). SHA-256
-  `227fd695ae78dc9e52a297419fa2fb1ccb7ac1c8a7b7236d10be6357c8ae5014`.
+  rationale, implementation considerations; 387 payload regions). SHA-256
+  `742ad9d7882c83da08ac7af3b2237a5f6fe3cc39849a4805a604f9c993b6a8c4`.
 - `source/rec06-12-body-extraction.txt` — verbatim extraction of the
   normative statements on physical PDF pages 40–63 (recommendation 6–12
-  subsections and end matter through the Conclusion; 327 payload regions).
+  subsections and end matter through the Conclusion; 401 payload regions).
   SHA-256
-  `0b6b3f1f2612e3d8ee17f0aa19a244dbeabeae2fee3b7ad7a9b214ab8d4857d6`.
+  `35068e04c199d443fa268b826cc5fefa1e25f05d3ab1ebe9c57c711d94e88fcc`.
+- `source/appendix-extraction.txt` — verbatim extraction of the
+  statements on physical PDF pages 64–100 that carry normative force
+  (the appendix evidence reviews on page 82; 2 payload regions). SHA-256
+  `aa9b62df229edb16537a705125c13ac4bfc475624d4dcfc3e589911ce875ccfd`.
 
 Each extraction file's header states its locator and scaffolding
 conventions. The statement payloads are byte-range regions of the file.

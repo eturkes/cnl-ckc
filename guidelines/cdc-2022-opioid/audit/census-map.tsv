@@ -4,7 +4,7 @@
 # the evidence region carrying that sentence. Text matching is exact/near-exact on rendered text;
 # where audit and evidence disagreed on two-column reading order (p48) the exact text match rules.
 # page-artifact rows were adjudicated by per-page occurrence counts of normalized payloads in the
-# PDF text layer. All 702 census rows are dispositioned: 698 mapped, 4 excluded.
+# PDF text layer. All 702 census rows are dispositioned: 699 mapped, 3 excluded.
 p003.C01	S3-03	gap-closed: region added after census reconciliation
 p003.C02	S3-01	mapped
 p003.C03	S3-02	mapped
@@ -703,7 +703,7 @@ p062.C01	S62-01	mapped
 p062.C02	S62-02	mapped
 p062.C03	S62-03	mapped
 p062.C04	S62-04	mapped
-p082.C01	-	excluded: epistemic caution about interpreting appendix findings, disclosed in README
+p082.C01	S82-02	gap-closed: region added after the extraction census
 p100.C01	-	excluded: MMWR access notice, disclosed in README
 p100.C02	-	excluded: MMWR contact notice, disclosed in README
 p100.C03	-	excluded: MMWR public-domain notice, disclosed in README
