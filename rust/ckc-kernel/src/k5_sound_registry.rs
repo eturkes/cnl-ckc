@@ -6455,6 +6455,34 @@ pub proof fn literal_285()
     n::clean_bridge("<meta http-equiv=\"refresh\" content=\"0; url="@);
 }
 
+pub open spec fn data_286() -> Seq<nat> {
+    ns![60u32,112,62,89,111,117,114,32,110,97,109,101,32,97,110,100,32,99,111,109,109,101,110,116,32,97,114,101,32,112,117,98,108,105,115,104,101,100,32,119,105,116,104,32,121,111,117,114,32,100,101,99,105,115,105,111,110,32,105,110,32,116,104,101,32,107,110,111,119,108,101,100,103,101,32,98,97,115,101,32,97,110,100,32,105,116,115,32,112,117,98,108,105,99,32,114,101,112,111,115,105,116,111,114,121,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_286()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[286]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l286(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>",
+    );
+    assert(n::codes(
+        "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+    ) =~= data_286());
+    assert(n::clean(data_286(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+    );
+}
+
 } // verus!
 }
 pub mod css {
@@ -11996,7 +12024,7 @@ pub proof fn block_256(i: int)
 
 pub proof fn block_272(i: int)
     requires
-        272 <= i < 286,
+        272 <= i < 287,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -12028,14 +12056,16 @@ pub proof fn block_272(i: int)
         batch_272::literal_283();
     } else if i == 284 {
         batch_272::literal_284();
-    } else {
+    } else if i == 285 {
         batch_272::literal_285();
+    } else {
+        batch_272::literal_286();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 286,
+        0 <= i < 287,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -12082,7 +12112,7 @@ pub proof fn literal(i: int)
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 286,
+        u::copy_registry().len() == 287,
 {
     hide(u::lit);
     hide(u::css_text);

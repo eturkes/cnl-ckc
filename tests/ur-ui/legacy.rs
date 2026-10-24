@@ -14,6 +14,10 @@ const SEC7_USAGE: [&str; 2] = [
     "[--token <text>] [--now <utc-iso>]",
     "[--token <text>] [--session <64 hex>] [--now <utc-iso>]",
 ];
+// RD (contract rd D1/D4) puts the publication sentence between the decision choices and the
+// reviewer name of every form; the replay runs its script after SEC7.
+const RD_ANCHOR: &str = "</fieldset>\n<label for=\"reviewer\">Reviewer name</label>\n";
+const RD_NOTE: &str = "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>\n";
 const PRINT_END: &str =
     ".chip { border: 1px solid #111827; background: none; color: inherit; }\n}\n</style>";
 
@@ -181,6 +185,15 @@ fn transformed(path: &Path, bytes: &[u8], new_script: &str) -> Vec<u8> {
         );
     }
     remove_sections(label, &mut text);
+    assert!(
+        text.matches(RD_ANCHOR).count() <= 1,
+        "{label}: baseline form anchor"
+    );
+    text = text.replacen(
+        RD_ANCHOR,
+        &RD_ANCHOR.replacen("</fieldset>\n", &format!("</fieldset>\n{RD_NOTE}"), 1),
+        1,
+    );
     repin_csp(&text, new_script).into_bytes()
 }
 
@@ -498,6 +511,16 @@ fn p7_golden_migration_is_complete_bounded_and_idempotent() {
             c.require(
                 out.status.success(),
                 format!("P7 SEC7 migration pass {pass}: rc={:?}", out.status.code()),
+            );
+            let rd = root().join(".agent/archive/migrations/rd-publication-note.py");
+            let out = command(
+                Path::new("python3"),
+                &base.0,
+                &["-I", rd.to_str().unwrap(), base.0.to_str().unwrap()],
+            );
+            c.require(
+                out.status.success(),
+                format!("P7 RD migration pass {pass}: rc={:?}", out.status.code()),
             );
             let after = files(&ui);
             compare_migration(

@@ -1728,6 +1728,7 @@ pub open spec fn document_html(
             fixed_bytes(label_open_input_open_approved_label_close()),
             fixed_bytes(label_open_input_open_rejected_label_close()),
             fixed_bytes(fieldset_close()),
+            fixed_bytes(p_open_your_name_and_comment_are_published()),
             fixed_bytes(label_open_reviewer_name_label_close()),
             fixed_bytes(input_type_text_id_reviewer_name()) + attr(
                 latest_name(records(g), empty(), empty()),
@@ -2993,6 +2994,7 @@ copy_table! {
     ui_request_no_review_session = "ui: request: no review session";
     p_open_opening_the_review_site_p_close = "<p>Opening the review site.</p>";
     meta_http_equiv_refresh_open = "<meta http-equiv=\"refresh\" content=\"0; url=";
+    p_open_your_name_and_comment_are_published = "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>";
 }
 
 verus! {

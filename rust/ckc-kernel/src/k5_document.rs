@@ -175,6 +175,7 @@ pub open spec fn form_spec(
         u::fixed_bytes(u::label_open_input_open_approved_label_close()),
         u::fixed_bytes(u::label_open_input_open_rejected_label_close()),
         u::fixed_bytes(u::fieldset_close()),
+        u::fixed_bytes(u::p_open_your_name_and_comment_are_published()),
         u::fixed_bytes(u::label_open_reviewer_name_label_close()),
         u::fixed_bytes(u::input_type_text_id_reviewer_name()) + u::attr(
             u::latest_name(u::records(g), u::empty(), u::empty()),
@@ -228,6 +229,11 @@ pub fn form(g: &EGuideline, d: &EDocument, m: &model::Model, token: &[u8], commi
         ),
     );
     out.push(h::fixed("</fieldset>"));
+    out.push(
+        h::fixed(
+            "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>",
+        ),
+    );
     out.push(h::fixed("<label for=\"reviewer\">Reviewer name</label>"));
     out.push(
         h::cat(
@@ -501,6 +507,7 @@ pub proof fn decomposition(
         u::fixed_bytes(u::label_open_input_open_approved_label_close()),
         u::fixed_bytes(u::label_open_input_open_rejected_label_close()),
         u::fixed_bytes(u::fieldset_close()),
+        u::fixed_bytes(u::p_open_your_name_and_comment_are_published()),
         u::fixed_bytes(u::label_open_reviewer_name_label_close()),
         u::fixed_bytes(u::input_type_text_id_reviewer_name()) + u::attr(
             u::latest_name(u::records(g), u::empty(), u::empty()),

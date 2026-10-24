@@ -192,6 +192,9 @@ page asks one question:
 does the ACE representation appropriately reflect the original
 passage? Record approve or reject, with your name and an optional
 comment. The site records the name as typed and does not verify it.
+Your name and comment are published with your decision in the
+knowledge base and its public repository. The form states this above
+the name field.
 A word with a solid underline in the ACE text has a fixed meaning in
 the vocabulary table of the guideline. Select the word to see how the
 compiler reads it. The guideline page lists all of these meanings under

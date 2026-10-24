@@ -1,0 +1,8 @@
+# RD P3 byte identity; base 065d814b1acc43992bfbb36f4b356da411d7b61e.
+# Sign-in URL alone normalizes to @SIGNIN_URL@; HTTP pins hash bodies.
+cbc3ee5e58344a0612e98d8b738019c4d3250a960648df240c83ae0a0d4f3efd	session-403
+85c15ef1ed77bab9e7a8fbc6c7b8c0720ee22e346363e08338b1da8ca5ffba41	session-303
+8f751f40d5480554c9c6b195a1d1a8d7cfc484a1f4e4a17d8cf8765d6ea70642	signin
+0fa23e40dc2049de472c5b78a6668cd40b7d899aa075a6f756c6968e2cbd20e4	green/unicode-digit-region/golden/g/alpha/index.html
+fe8ea844d93f19ad70bc761d957e993542fdeb836493c59d65260dbe328a8e74	green/unicode-digit-region/golden/g/alpha/records.html
+62acaefdb8a2898f7cfca69e28be89c47613dd7c952d7db459d0cdaacf6bb026	green/unicode-digit-region/golden/index.html

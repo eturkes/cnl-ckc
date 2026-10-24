@@ -178,6 +178,7 @@ pub open spec fn tail_parts(
         b::f(161),
         b::f(162),
         b::f(163),
+        b::f(286),
         b::f(164),
         b::f(165) + u::attr(name) + b::f(166),
         u::roster(g),
@@ -406,6 +407,7 @@ proof fn tail_sound(
     l::f162(inputs);
     l::f163(inputs);
     l::f164(inputs);
+    l::f286(inputs);
     l::f165(inputs);
     l::f166(inputs);
     l::f167(inputs);
@@ -532,6 +534,7 @@ pub proof fn page(
     l::f162(inputs);
     l::f163(inputs);
     l::f164(inputs);
+    l::f286(inputs);
     l::f165(inputs);
     l::f166(inputs);
     l::f167(inputs);

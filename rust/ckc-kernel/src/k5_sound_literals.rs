@@ -9092,4 +9092,87 @@ pub proof fn f285(inputs: Seq<u::Bytes>)
     h::fixed(u::lit("<meta http-equiv=\"refresh\" content=\"0; url="@), inputs, 0, 2);
 }
 
+pub proof fn l286(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[286] == u::lit(
+            "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[286] == u::lit(
+        "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+    ) && 286 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f286(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[286] == u::lit(
+            "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l286(inputs);
+    reveal_strlit(
+        "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+    );
+    assert(u::lit(
+        "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+    )
+        =~= bs![60u8,112,62,89,111,117,114,32,110,97,109,101,32,97,110,100,32,99,111,109,109,101,110,116,32,97,114,101,32,112,117,98,108,105,115,104,101,100,32,119,105,116,104,32,121,111,117,114,32,100,101,99,105,115,105,111,110,32,105,110,32,116,104,101,32,107,110,111,119,108,101,100,103,101,32,98,97,115,101,32,97,110,100,32,105,116,115,32,112,117,98,108,105,99,32,114,101,112,111,115,105,116,111,114,121,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,89,111,117,114,32,110,97,109,101,32,97,110,100,32,99,111,109,109,101,110,116,32,97,114,101,32,112,117,98,108,105,115,104,101,100,32,119,105,116,104,32,121,111,117,114,32,100,101,99,105,115,105,111,110,32,105,110,32,116,104,101,32,107,110,111,119,108,101,100,103,101,32,98,97,115,101,32,97,110,100,32,105,116,115,32,112,117,98,108,105,99,32,114,101,112,111,115,105,116,111,114,121,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
 } // verus!

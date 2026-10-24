@@ -192,7 +192,10 @@ beside the exact source passage it was written from, its compiled
 Prolog, and its decision history. A reviewer answers one question per
 document: does the ACE representation appropriately reflect the
 original passage? The answer, the reviewer name, and an optional
-comment append to `guidelines/<id>/audit/adjudication.tsv`.
+comment append to `guidelines/<id>/audit/adjudication.tsv`. The form
+states, between the decision and the name field, that the name and the
+comment are published with the decision in the knowledge base and its
+public repository.
 
 The pages fit the screen of a phone. Each page sets its layout width
 to the width of the screen. On a screen narrower than 40rem, a table
@@ -1563,7 +1566,10 @@ whole. A `reconstructable` guideline ships without its `source/` files;
 the manifest lists them as `source` rows with fetch URLs. A `restricted`
 guideline is held back and appears as a document count alone. The
 manifest carries a review label for every shipped document. A rejected
-or contested verdict blocks the build.
+or contested verdict blocks the build. Each shipped guideline includes
+its decision ledger `audit/adjudication.tsv`, with the name and the
+comment of each reviewer. The decision form states this to every
+reviewer.
 
 The build is deterministic: one commit yields byte-identical archives on
 any machine. `ckc check` rebuilds the archive twice, compares the
