@@ -1,6 +1,7 @@
+import sys
 from pathlib import Path
 import ast,re
-R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust')
+R=Path(sys.argv[1]).resolve()/'rust'
 s=(R/'ckc-spec/src/ui.rs').read_text()
 class _Entry:
     def __init__(self, lit, fn): self._g = (None, lit, fn)

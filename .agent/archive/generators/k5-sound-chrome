@@ -1,5 +1,6 @@
+import sys
 from pathlib import Path
-R=Path('/home/eturkes/Projects/cnl-ckc/.scratch/worktrees/prod-k5sound/rust')
+R=Path(sys.argv[1]).resolve()/'rust'
 s=(R/'ckc-spec/src/ui.rs').read_text()
 def bs(raw):return 'bs!['+str(raw[0])+'u8,'+','.join(map(str,raw[1:]))+']'
 out=['use crate::{k5_sound_context as cx,k5_sound_escape as h,k5_sound_literals as l};','use ckc_spec::ui as u;','use vstd::prelude::*;','use vstd::utf8::*;','#[cfg(verus_keep_ghost_body)]\nmacro_rules! bs { ($($x:expr),* $(,)?) => { seq![$($x),*] }; }','verus! {','broadcast use {vstd::seq::group_seq_axioms,vstd::seq_lib::group_seq_properties};']

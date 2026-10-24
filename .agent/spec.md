@@ -49,7 +49,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s (the N8 bump's rerun: rc 124 at 1200 s).
 - [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): #3147, #3158, #3159, #3160 fixed + canary cases in the N8 bump; waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3154–#3157 (#3157 closed on Verus main by PR 3271, unreleased).
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling); the CDC guideline until the first publication, other guidelines after it (Publication scope).
-- [ ] RR1 test fail-fast (deferred row; pre-release request): `just test` runs every binary (`--no-fail-fast`) + names each failed one.
+- [x] 83ffd544 RR1 test fail-fast (deferred row; pre-release request): `just test` runs every binary (`--no-fail-fast`) + names each failed one.
 - [ ] RR2 absolute home paths in tracked files (deferred row; portability law): repo-relative archive text, k5-sound generators take the repo root.
 - [ ] RR3 published static `ckc` for reviewers (deferred row, security review R2): path-trimmed reproducible musl build, release assets + digest, README reviewer path.
 - [ ] RR4 signed release tags (deferred row, security review P4; user ruling: SSH-signed, MAIN signs with the user's key): allowed signers, § Releasing, consumer verify command.
