@@ -1575,29 +1575,83 @@ scope.
 
 ### Releasing
 
-A release is a dated snapshot of the knowledge base. Its identifier is
-`kb-YYYY-MM-DD`, the date of the release. A second release on the same
-date adds `.2`, `.3`, and so on. The archive keeps its commit name; the
-release record outside the archive binds the identifier to the archive
-bytes. Every document ships with its review label; the build blocks a
-rejected or a contested document only.
+A release is a dated snapshot of the knowledge base. A release line
+takes the snapshot from `main` to its publication. Development
+continues on `main` while the line exists. The line receives only
+three kinds of commits: review decisions, corrections of rejected
+documents, and the release record.
 
-1. Commit the release state. `just gate` and CI must be green.
-2. Run `ckc dist build`. Keep the archive and its `.sha256` sidecar.
-3. Write the release notes. State the identifier, the date, the archive
-   name and its SHA-256, the release commit, the schema identifier, the
-   source edition and digest of each guideline, and the review label
-   counts. Classify the change from the previous release twice: the
-   schema change (`none`, or the new identifier) and the content change
-   (`none`, `correction`, or `substantive` when a change alters whether
-   a recommendation applies to a patient).
-4. Create the annotated git tag `kb-YYYY-MM-DD` on the release commit,
-   with the release notes as its message.
-5. Deposit the archive and its sidecar on Zenodo as a new version of
-   the project record. Link the preprint that describes the release.
-   The version DOI then names the archive bytes.
-6. Update `CITATION.cff`: the version, the release date, and the
-   version DOI.
+A release line has the identifier `kb-YYYY-MM-DD`, the date when it
+leaves `main`. A second line that leaves `main` on the same date adds
+`.2`, `.3`, and so on. These names belong to the line:
+
+- `release/kb-YYYY-MM-DD` is its branch.
+- `kb-YYYY-MM-DD-rc.1`, `kb-YYYY-MM-DD-rc.2`, and so on are its release
+  candidates, as annotated tags. A candidate is not reviewed.
+- `kb-YYYY-MM-DD` is its release, as an annotated tag on the last
+  commit of the line. The release notes and `CITATION.cff` state the
+  date of the release.
+
+The archive keeps its commit name; the release record outside the
+archive binds the identifier to the archive bytes. Every document ships
+with its review label; the build blocks a rejected or a contested
+document only. A line freezes the schema identifier that it carries: a
+later change of the predicate set or of a predicate meaning on `main`
+takes the next identifier. The first release line is the first
+publication of schema `1`.
+
+To start a release line:
+
+1. Commit the snapshot on `main`. `just gate` and CI must be green.
+2. Create the branch `release/kb-YYYY-MM-DD` on that commit.
+3. Run `ckc dist build`. Keep the archive and its `.sha256` sidecar.
+4. Write the candidate notes, as in step 10 below. Create the annotated
+   tag `kb-YYYY-MM-DD-rc.1` on the commit, with the notes as its
+   message.
+5. Add the review checkout:
+   `git worktree add .release/kb-YYYY-MM-DD release/kb-YYYY-MM-DD`.
+   In that directory, run
+   `CKC_TOOLCHAIN=<repository root>/.toolchain just build`.
+
+To review on the line:
+
+6. In `.release/kb-YYYY-MM-DD`, run `rust/target/release/ckc ui serve`.
+   The decisions go to the ledgers of that checkout.
+7. Commit each batch of decisions on the branch. Then run
+   `just amend-manifest` in the checkout, with `CKC_TOOLCHAIN` set as in
+   step 5.
+8. If a document is rejected, correct it on the branch and review it
+   again. A corrected state gets the next candidate tag.
+
+To release the line:
+
+9. Confirm that the review is complete: `ckc check` prints the label
+   counts (`adjudication <id> approved=…`). `just gate` and CI must be
+   green on the last commit of the branch.
+10. Run `ckc dist build`. Write the release notes. State the identifier,
+    the date, the archive name and its SHA-256, the release commit, the
+    schema identifier, the source edition and digest of each guideline,
+    and the review label counts. Classify the change from the previous
+    release twice: the schema change (`none`, or the new identifier) and
+    the content change (`none`, `correction`, or `substantive` when a
+    change alters whether a recommendation applies to a patient).
+11. Create the annotated git tag `kb-YYYY-MM-DD` on that commit, with
+    the release notes as its message.
+12. Deposit the archive and its sidecar on Zenodo as a new version of
+    the project record. Link the preprint that describes the release.
+    The version DOI then names the archive bytes.
+13. Update `CITATION.cff` on the branch: the version, the release date,
+    and the version DOI.
+14. Merge the line into `main` with
+    `git merge --no-ff release/kb-YYYY-MM-DD`. If
+    `release-manifest.tsv` conflicts, run `ckc release-manifest`. If the
+    schema on `main` has changed, compile again. Decisions that bind
+    clauses which `main` has changed read outdated on `main`.
+15. Remove the review checkout:
+    `git worktree remove .release/kb-YYYY-MM-DD`.
+
+A consumer pins a release tag. A candidate tag serves integration work
+before the review is complete.
 
 ## Licensing
 

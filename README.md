@@ -178,6 +178,20 @@ the vocabulary table of the guideline. Select the word to see how the
 compiler reads it. The guideline page lists all of these meanings under
 "Word meanings".
 
+## Releases
+
+A release of the knowledge base is a git tag with the name
+`kb-YYYY-MM-DD`. Its release notes give the archive name and the
+SHA-256 of the archive. A tag that ends in `-rc.1`, `-rc.2`, and so on
+is a release candidate. The review of a release candidate is not
+complete. To use the knowledge base in other software, pin a release
+tag.
+
+Each release has its own branch, `release/kb-YYYY-MM-DD`. To review a
+release candidate, start the reviewer site in a checkout of that
+branch. Development continues on `main`. `docs/REFERENCE.md` states the
+release procedure in "Releasing".
+
 ## Technical reference
 
 `docs/REFERENCE.md` states the pipeline, the checks, the compiled

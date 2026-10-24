@@ -1,6 +1,7 @@
 /.claude/settings.local.json
 /CLAUDE.local.md
 /.scratch/
+/.release/
 /.toolchain/
 /dist/
 .goal.tmp.*/
