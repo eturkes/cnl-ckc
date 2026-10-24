@@ -49,12 +49,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s (the N8 bump's rerun: rc 124 at 1200 s).
 - [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): #3147, #3158, #3159, #3160 fixed + canary cases in the N8 bump; waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3154–#3157 (#3157 closed on Verus main by PR 3271, unreleased).
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling); the CDC guideline until the first publication, other guidelines after it (Publication scope).
-- [x] 83ffd544 RR1 test fail-fast (deferred row; pre-release request): `just test` runs every binary (`--no-fail-fast`) + names each failed one.
-- [x] c81f0b14 RR2 absolute home paths in tracked files (deferred row; portability law): repo-relative archive text, k5-sound generators take the repo root.
-- [x] 4910f7ff RR3 published static `ckc` for reviewers (deferred row, security review R2): path-trimmed reproducible musl build, release assets + digest, README reviewer path.
-- [x] 3726eed9 RR4 signed release tags (deferred row, security review P4; user ruling: SSH-signed, MAIN signs with the user's key): allowed signers, § Releasing, consumer verify command.
-- [ ] RR5 reviewer disclosure (deferred row, security review D3; user ruling: the form states it; kernel contract `rd`).
-- [ ] SUP supersession semantics (Decisions Supersession): its own request after CR, phase per `CLAUDE.md` Routing at its start; first case = rec12-imp08 + the four external waiver regions (S39-14, S59-02, S59-08, S59-11).
+- [ ] SUP supersession semantics (Decisions Supersession): IMPLEMENT (routed at the pre-release request: a schema revision re-derives the whole corpus, as every earlier one did); first case = rec12-imp08 + the four external waiver regions (S39-14, S59-02, S59-08, S59-11).
 - [ ] SKO Skolem role entities (deferred row; user ruling at the pre-release request: before the cut): its own corpus session after SUP (`ops.md` Corpus loop), census + rules re-authored, consumer-recipe counts before/after.
 - [ ] RC1 cut the first release line after SUP + SKO per `docs/REFERENCE.md` § Releasing steps 1–5: main's head gate- + CI-green, `release/kb-<date>`, `kb-<date>-rc.1` + candidate notes, `ckc dist build` + `just release-ckc`, the signed tag verified per § Releasing, the review worktree + its `ckc`, the launch command handed to the user; the remote side (tag push, GitHub pre-release with the archive + sidecar) on the user's go; breaking work on main starts after the cut.
 - [ ] PR8 user review of the ACE corpus on the release line (§ Releasing steps 6–8): MAIN commits ledger batches on the user's request, corrects rejected documents on the branch, tags the next candidate; the `ckc-spec` review left the release path (`.agent/deferred.md`).
@@ -64,5 +59,8 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 
 ## Phase
 
-MAINTAIN — release: supersession, first release line, review, release (Tasks SUP, RC1, PR8–PR10)
+IMPLEMENT — supersession semantics (Tasks SUP)
 > Mark the current state of the repo for pre-release. I will use it to develop https://github.com/eturkes/cnl-ckc-demo, which I will also prepare for pre-release. In parallel to developing that repo, I will review the ACE using the `cnl-ckc` review UI. Once that review is done, I will inform you, and that will comprise the full release. I will then pass that release to `cnl-ckc-demo` and transition that to full-release as well. Meanwhile to all this going on, I want you to be able to continue with breaking change development, so we need to decide on a system for pre-release and then full release, whether this be a Git tag/release, or some other mechanism.
+> Address all `.agent/deferred.md` rows relevant for pre-release of this repo. Once you have confirmed everything is complete, make the pre-release.
+> User rulings (AskUserQuestion, pre-release request): SUP first, as ruled — "Option 2. Let's not worry about `cnl-ckc-demo` for now, that will come after SUP is completed."; Skolem role entities before the cut (Tasks SKO).
+Suspended: MAINTAIN — release: Skolem role entities, first release line, review, release (Tasks SKO, RC1, PR8–PR10)
