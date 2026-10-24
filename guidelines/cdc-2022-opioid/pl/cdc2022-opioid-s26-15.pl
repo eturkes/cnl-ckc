@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s26-15',ace_sha256(dc5bfb69e493d3658591e1b3cdba73597587064b3f4aa70c6f4181c2f585e3e3),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s26-15',ace_sha256(dc5bfb69e493d3658591e1b3cdba73597587064b3f4aa70c6f4181c2f585e3e3),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every free-or-low-cost-patient-support-program can provide a stress-reduction and can provide an other-mental-health-benefit.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s26-15',1,box(1),[A]),can) :- guideline_entity(actual,A,'free-or-low-cost-patient-support-program',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s26-15',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s26-15',1,ref(2),[A]),'stress-reduction',countable) :- guideline_entity(actual,A,'free-or-low-cost-patient-support-program',countable), guideline_cardinality(actual,A,na,eq,1).

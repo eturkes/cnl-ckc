@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s60-07',ace_sha256(b9828aa3c9d74d870ba9232773b2282090e83b134540ba5125d08a8d68e5a5d4),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s60-07',ace_sha256(b9828aa3c9d74d870ba9232773b2282090e83b134540ba5125d08a8d68e5a5d4),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a clinician prescribes an opioid then the clinician should identify a substance-use-disorder-treatment-resource in a community.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s60-07',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,prescribe), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s60-07',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s60-07',1,ref(4),[A,B,C]),'substance-use-disorder-treatment-resource',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,prescribe), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

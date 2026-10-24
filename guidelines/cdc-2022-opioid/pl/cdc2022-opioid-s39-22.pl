@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s39-22',ace_sha256('3a17b9118d97935e66a619a256bcf3e527150a34eb8bdc1d48a0e465f7f0c419'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s39-22',ace_sha256('3a17b9118d97935e66a619a256bcf3e527150a34eb8bdc1d48a0e465f7f0c419'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a taper-progress-failure-despite-opioid-related-harm then the patient can possibly have an undiagnosed-opioid-use-disorder.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s39-22',1,box(1),[A,B,C]),can) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'taper-progress-failure-despite-opioid-related-harm',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s39-22',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s39-22',1,ref(4),[A,B,C]),'undiagnosed-opioid-use-disorder',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'taper-progress-failure-despite-opioid-related-harm',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

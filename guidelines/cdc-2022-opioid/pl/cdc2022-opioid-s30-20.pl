@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s30-20',ace_sha256('82389c848558e0df8074a68b5ab2a155f9ea9a8649d0493d9d33d16c54750d16'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s30-20',ace_sha256('3f851de8864e6f2802a999ad78812aea09dbb63cf0cf66c5447497c2a0bce6f9'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every medication-combination can sometimes provide a complementary-or-synergistic-benefit.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s30-20',1,box(1),[A]),can) :- guideline_entity(actual,A,'medication-combination',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s30-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-20',1,ref(2),[A]),'complementary-or-synergistic-benefit',countable) :- guideline_entity(actual,A,'medication-combination',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -57,9 +57,9 @@ guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s30-20',2,box(1),[A]
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s30-20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-20',2,ref(3),[A]),facilitate) :- guideline_entity(actual,A,'medication-combination',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s30-20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-20',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,'medication-combination',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s30-20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-20',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s30-20',2,ref(2),[A])) :- guideline_entity(actual,A,'medication-combination',countable), guideline_cardinality(actual,A,na,eq,1).
-% S3: Every neuropathic-pain-trial demonstrates a complementary-or-synergistic-medication-combination-benefit.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(2),[A]),'complementary-or-synergistic-medication-combination-benefit',countable) :- guideline_entity(actual,A,'neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(3),[A]),demonstrate) :- guideline_entity(actual,A,'neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(3),[A]),1,A) :- guideline_entity(actual,A,'neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(2),[A])) :- guideline_entity(actual,A,'neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
+% S3: Every cited-neuropathic-pain-trial demonstrates a complementary-or-synergistic-medication-combination-benefit.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(2),[A]),'complementary-or-synergistic-medication-combination-benefit',countable) :- guideline_entity(actual,A,'cited-neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'cited-neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(3),[A]),demonstrate) :- guideline_entity(actual,A,'cited-neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(3),[A]),1,A) :- guideline_entity(actual,A,'cited-neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s30-20',3,ref(2),[A])) :- guideline_entity(actual,A,'cited-neuropathic-pain-trial',countable), guideline_cardinality(actual,A,na,eq,1).

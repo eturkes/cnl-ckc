@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s53-16',ace_sha256('295e11a1d71e7d6ada613910729e03e9123e3b20c6af2338458dbb6ce084d2fc'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s53-16',ace_sha256('295e11a1d71e7d6ada613910729e03e9123e3b20c6af2338458dbb6ce084d2fc'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every false-positive-presumptive-result is a not-uncommon-result.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s53-16',1,ref(2),[A]),'not-uncommon-result',countable) :- guideline_entity(actual,A,'false-positive-presumptive-result',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s53-16',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'false-positive-presumptive-result',countable), guideline_cardinality(actual,A,na,eq,1).

@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec03-imp06',ace_sha256('6ea43397d8d0e28fa55c2ca6d51096beee4300118ccea986fc236d7d0762d7e6'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-rec03-imp06',ace_sha256('6ea43397d8d0e28fa55c2ca6d51096beee4300118ccea986fc236d7d0762d7e6'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If there is a clinician then it is recommended that the clinician does not select a methadone-treatment for a first-choice-ER-LA-decision.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec03-imp06',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec03-imp06',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec03-imp06',1,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

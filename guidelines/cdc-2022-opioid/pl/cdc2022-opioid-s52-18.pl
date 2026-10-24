@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s52-18',ace_sha256('60b27178e68c5ab535409565018982e8584d1a32cab9cd7a754b0f27b1ae5782'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s52-18',ace_sha256(ed0a72c34a572eea7e446bcd4288420cfd5ad11030c9f67b3a9289c9f25007b6),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every PDMP-review-recommendation-category-B-rating acknowledges a PDMP-availability-variation and acknowledges a circumstance-variation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(2),[A]),'PDMP-availability-variation',countable) :- guideline_entity(actual,A,'PDMP-review-recommendation-category-B-rating',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-review-recommendation-category-B-rating',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -52,20 +52,20 @@ guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,r
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(5),[A]),acknowledge) :- guideline_entity(actual,A,'PDMP-review-recommendation-category-B-rating',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(5),[A]),1,A) :- guideline_entity(actual,A,'PDMP-review-recommendation-category-B-rating',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(5),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(4),[A])) :- guideline_entity(actual,A,'PDMP-review-recommendation-category-B-rating',countable), guideline_cardinality(actual,A,na,eq,1).
-% S2: A PDMP-access-failure-exception-example involves a severe-acute-pain-emergency-department-patient and involves a PDMP-system-access-failure and involves an hours-long-prescription-wait-adverse-effect.
+% S2: A PDMP-access-failure-exception-example involves a severe-acute-pain-emergency-department-patient-example and involves a PDMP-system-access-failure-example and involves an hours-long-prescription-wait-adverse-effect-example.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(1),[]),'PDMP-access-failure-exception-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(2),[]),'severe-acute-pain-emergency-department-patient',countable).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(2),[]),'severe-acute-pain-emergency-department-patient-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(2),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(3),[]),involve).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(2),[])).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(4),[]),'PDMP-system-access-failure',countable).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(4),[]),'PDMP-system-access-failure-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(4),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(5),[]),involve).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(4),[])).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(6),[]),'hours-long-prescription-wait-adverse-effect',countable).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(6),[]),'hours-long-prescription-wait-adverse-effect-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(6),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(7),[]),involve).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(7),[]),1,'$guideline_id'(product,'cdc2022-opioid-s52-18',2,ref(1),[])).

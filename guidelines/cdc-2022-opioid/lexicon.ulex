@@ -1217,7 +1217,6 @@ noun_sg('minimum-needed-opioid-use-limitation','minimum-needed-opioid-use-limita
 noun_sg('tolerance-development-limitation','tolerance-development-limitation',neutr).
 noun_sg('post-discontinuation-withdrawal-limitation','post-discontinuation-withdrawal-limitation',neutr).
 noun_sg('minimum-needed-opioid-use-example','minimum-needed-opioid-use-example',neutr).
-noun_sg('every-4-hours-as-needed-prescription','every-4-hours-as-needed-prescription',neutr).
 noun_sg('opioid-example','opioid-example',neutr).
 noun_sg('gabapentin','gabapentin',neutr).
 noun_sg('tricyclic-antidepressant-example','tricyclic-antidepressant-example',neutr).
@@ -1288,7 +1287,7 @@ noun_sg('gastrointestinal-disease','gastrointestinal-disease',neutr).
 noun_sg('liver-disease','liver-disease',neutr).
 noun_sg('fibromyalgia-symptom','fibromyalgia-symptom',neutr).
 noun_sg('anticholinergic-effect','anticholinergic-effect',neutr).
-noun_sg('clinical-evidence-review','clinical-evidence-review',neutr).
+noun_sg('guideline-clinical-evidence-review','guideline-clinical-evidence-review',neutr).
 noun_sg('written-agreement-or-treatment-plan-effectiveness-study','written-agreement-or-treatment-plan-effectiveness-study',neutr).
 adv(clearly,clearly).
 noun_sg('treatment-plan','treatment-plan',neutr).
@@ -1308,7 +1307,6 @@ noun_sg('nonopioid-pain-medication','nonopioid-pain-medication',neutr).
 noun_sg('synergistic-benefit','synergistic-benefit',neutr).
 noun_sg('complementary-or-synergistic-benefit','complementary-or-synergistic-benefit',neutr).
 noun_sg('lower-individual-medication-dosing','lower-individual-medication-dosing',neutr).
-noun_sg('neuropathic-pain-trial','neuropathic-pain-trial',neutr).
 noun_sg('complementary-or-synergistic-medication-combination-benefit','complementary-or-synergistic-medication-combination-benefit',neutr).
 noun_sg('extended-release-opioid','extended-release-opioid',neutr).
 noun_sg('extended-release-opioid-example','extended-release-opioid-example',neutr).
@@ -1341,7 +1339,6 @@ noun_sg('progressively-diminishing-benefit-return-relative-to-patient-risk','pro
 noun_sg('opioid-misuse-risk','opioid-misuse-risk',neutr).
 noun_sg('death-risk','death-risk',neutr).
 noun_sg('risk-free-single-dosage-point','risk-free-single-dosage-point',neutr).
-noun_sg('dose-response-overdose-risk-study','dose-response-overdose-risk-study',neutr).
 noun_sg('partial-agonist-opioid','partial-agonist-opioid',neutr).
 noun_sg('continuous-dosage-overdose-risk-association','continuous-dosage-overdose-risk-association',neutr).
 noun_sg('buprenorphine-respiratory-depressant-effect','buprenorphine-respiratory-depressant-effect',neutr).
@@ -1518,7 +1515,6 @@ noun_sg('clinician-burden-reduction','clinician-burden-reduction',neutr).
 noun_sg('PDMP-information-based-patient-dismissal-report','PDMP-information-based-patient-dismissal-report',neutr).
 noun_sg('clinician-practice','clinician-practice',neutr).
 noun_sg('untreated-or-undertreated-pain','untreated-or-undertreated-pain',neutr).
-noun_sg('proprietary-nonpublic-algorithm','proprietary-nonpublic-algorithm',neutr).
 adv(reportedly,reportedly).
 noun_sg('PDMP-risk-score','PDMP-risk-score',neutr).
 noun_sg('patient-EHR-information','patient-EHR-information',neutr).
@@ -1533,9 +1529,6 @@ noun_sg('PDMP-review-recommendation-category-B-rating','PDMP-review-recommendati
 noun_sg('PDMP-availability-variation','PDMP-availability-variation',neutr).
 noun_sg('circumstance-variation','circumstance-variation',neutr).
 noun_sg('PDMP-access-failure-exception-example','PDMP-access-failure-exception-example',neutr).
-noun_sg('severe-acute-pain-emergency-department-patient','severe-acute-pain-emergency-department-patient',human).
-noun_sg('PDMP-system-access-failure','PDMP-system-access-failure',neutr).
-noun_sg('hours-long-prescription-wait-adverse-effect','hours-long-prescription-wait-adverse-effect',neutr).
 noun_sg('toxicology-result-basis','toxicology-result-basis',neutr).
 noun_sg('adverse-patient-safety-consequence','adverse-patient-safety-consequence',neutr).
 noun_sg('opioid-or-other-drug','opioid-or-other-drug',neutr).
@@ -1573,7 +1566,6 @@ noun_sg('toxicology-testing-destigmatization','toxicology-testing-destigmatizati
 noun_sg('medication-and-substance-use','medication-and-substance-use',neutr).
 noun_sg('drug-use-change-information-opportunity','drug-use-change-information-opportunity',neutr).
 noun_sg('concurrent-opioid-and-benzodiazepine-use','concurrent-opioid-and-benzodiazepine-use',neutr).
-noun_sg('unpredictable-medication-use','unpredictable-medication-use',neutr).
 noun_sg('greater-than-stable-lower-dosage-use-risk','greater-than-stable-lower-dosage-use-risk',neutr).
 noun_sg('higher-dosage-opioid-and-benzodiazepine-combination','higher-dosage-opioid-and-benzodiazepine-combination',neutr).
 noun_sg('other-substance-use','other-substance-use',neutr).
@@ -1601,16 +1593,16 @@ noun_sg('problematic-opioid-use-pattern','problematic-opioid-use-pattern',neutr)
 noun_sg('clinically-significant-impairment-or-distress','clinically-significant-impairment-or-distress',neutr).
 noun_sg('DSM-IV-opioid-abuse-or-dependence-diagnosis','DSM-IV-opioid-abuse-or-dependence-diagnosis',neutr).
 noun_pl('opioid-use-disorder-criteria','opioid-use-disorder-criterion',neutr).
-noun_sg('larger-or-longer-than-intended-opioid-use','larger-or-longer-than-intended-opioid-use',neutr).
+noun_sg('often-larger-or-longer-than-intended-opioid-use','often-larger-or-longer-than-intended-opioid-use',neutr).
 noun_sg('opioid-use-disorder-criterion','opioid-use-disorder-criterion',neutr).
 noun_sg('persistent-desire-or-unsuccessful-attempt-to-control-opioid-use','persistent-desire-or-unsuccessful-attempt-to-control-opioid-use',neutr).
 noun_sg('great-time-for-opioid-obtaining-use-or-recovery','great-time-for-opioid-obtaining-use-or-recovery',neutr).
 noun_sg('opioid-craving','opioid-craving',neutr).
-noun_sg('role-obligation-failing-recurrent-opioid-use','role-obligation-failing-recurrent-opioid-use',neutr).
-noun_sg('continued-opioid-use-despite-social-or-interpersonal-problems','continued-opioid-use-despite-social-or-interpersonal-problems',neutr).
-noun_sg('activity-reducing-opioid-use','activity-reducing-opioid-use',neutr).
+noun_sg('major-work-school-or-home-role-obligation-failing-recurrent-opioid-use','major-work-school-or-home-role-obligation-failing-recurrent-opioid-use',neutr).
+noun_sg('continued-opioid-use-despite-persistent-or-recurrent-opioid-caused-social-or-interpersonal-problems','continued-opioid-use-despite-persistent-or-recurrent-opioid-caused-social-or-interpersonal-problems',neutr).
+noun_sg('important-social-occupational-or-recreational-activity-reducing-opioid-use','important-social-occupational-or-recreational-activity-reducing-opioid-use',neutr).
 noun_sg('physically-hazardous-recurrent-opioid-use','physically-hazardous-recurrent-opioid-use',neutr).
-noun_sg('continued-opioid-use-despite-physical-or-psychological-problems','continued-opioid-use-despite-physical-or-psychological-problems',neutr).
+noun_sg('continued-opioid-use-despite-known-persistent-or-recurrent-likely-opioid-caused-physical-or-psychological-problems','continued-opioid-use-despite-known-persistent-or-recurrent-likely-opioid-caused-physical-or-psychological-problems',neutr).
 noun_sg('opioid-tolerance-criterion','opioid-tolerance-criterion',neutr).
 noun_sg('opioid-withdrawal-criterion','opioid-withdrawal-criterion',neutr).
 noun_sg('markedly-increased-opioid-amount','markedly-increased-opioid-amount',neutr).
@@ -1678,7 +1670,6 @@ noun_sg('patient-quality-of-life','patient-quality-of-life',neutr).
 noun_sg('at-least-opioid-equal-acute-low-back-pain-effectiveness','at-least-opioid-equal-acute-low-back-pain-effectiveness',neutr).
 noun_sg('at-least-opioid-equal-acute-neck-pain-effectiveness','at-least-opioid-equal-acute-neck-pain-effectiveness',neutr).
 noun_sg('at-least-opioid-equal-other-musculoskeletal-injury-pain-effectiveness','at-least-opioid-equal-other-musculoskeletal-injury-pain-effectiveness',neutr).
-noun_sg('at-least-opioid-equal-minor-surgery-pain-effectiveness','at-least-opioid-equal-minor-surgery-pain-effectiveness',neutr).
 noun_sg('at-least-opioid-equal-acute-dental-pain-effectiveness','at-least-opioid-equal-acute-dental-pain-effectiveness',neutr).
 noun_sg('at-least-opioid-equal-kidney-stone-pain-effectiveness','at-least-opioid-equal-kidney-stone-pain-effectiveness',neutr).
 noun_sg('at-least-opioid-equal-acute-headache-effectiveness','at-least-opioid-equal-acute-headache-effectiveness',neutr).
@@ -1692,3 +1683,14 @@ noun_sg('pregnant-person-care-seeking','pregnant-person-care-seeking',neutr).
 noun_sg('postpartum-person-care-seeking','postpartum-person-care-seeking',neutr).
 noun_sg('parenting-person-care-seeking','parenting-person-care-seeking',neutr).
 noun_sg('opioid-prescribing-scope-of-practice-clinician-group','opioid-prescribing-scope-of-practice-clinician-group',neutr).
+noun_sg('every-4-hours-as-needed-prescription-example','every-4-hours-as-needed-prescription-example',neutr).
+noun_sg('person-living-in-poverty','person-living-in-poverty',human).
+noun_sg('severe-acute-pain-emergency-department-patient-example','severe-acute-pain-emergency-department-patient-example',human).
+noun_sg('PDMP-system-access-failure-example','PDMP-system-access-failure-example',neutr).
+noun_sg('hours-long-prescription-wait-adverse-effect-example','hours-long-prescription-wait-adverse-effect-example',neutr).
+noun_sg('at-least-opioid-equal-minimal-injury-minor-surgery-pain-effectiveness','at-least-opioid-equal-minimal-injury-minor-surgery-pain-effectiveness',neutr).
+noun_sg('cited-neuropathic-pain-trial','cited-neuropathic-pain-trial',neutr).
+noun_sg('cited-dose-response-overdose-risk-study','cited-dose-response-overdose-risk-study',neutr).
+noun_sg('PDMP-risk-score-algorithm','PDMP-risk-score-algorithm',neutr).
+noun_sg('unpredictable-opioid-or-benzodiazepine-use','unpredictable-opioid-or-benzodiazepine-use',neutr).
+noun_pl('buprenorphine-doses','buprenorphine-dose',neutr).

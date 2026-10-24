@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s42-15',ace_sha256(eff0a2cb103dd4ca4b8c406e42993976b0eb90efc591a539ec1a366c51979ac4),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s42-15',ace_sha256(eff0a2cb103dd4ca4b8c406e42993976b0eb90efc591a539ec1a366c51979ac4),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If some MME-units-per-day X are included by an opioid-dosage then the opioid-dosage defines a half-dosage-target that equals some target-MME-units-per-day Y and Y = X * 0.5.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s42-15',1,ref(4),[A,B,C]),'half-dosage-target',countable) :- guideline_entity(actual,A,'MME-unit-per-day',countable), guideline_cardinality(actual,A,na,D,E), guideline_entity(actual,B,'opioid-dosage',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,include), guideline_arg(actual,C,1,B), guideline_arg(actual,C,2,A), guideline_product(D,E,exactly,rational(1,2),F,G).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s42-15',1,ref(4),[A,B,C]),na,eq,1) :- guideline_entity(actual,A,'MME-unit-per-day',countable), guideline_cardinality(actual,A,na,D,E), guideline_entity(actual,B,'opioid-dosage',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,include), guideline_arg(actual,C,1,B), guideline_arg(actual,C,2,A), guideline_product(D,E,exactly,rational(1,2),F,G).

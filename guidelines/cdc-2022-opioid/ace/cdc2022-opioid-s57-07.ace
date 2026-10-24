@@ -1,3 +1,5 @@
-If a patient meets at least 2 opioid-use-disorder-criteria and meets at most 3 opioid-use-disorder-criteria then the patient has a mild-opioid-use-disorder.
-If a patient meets at least 4 opioid-use-disorder-criteria and meets at most 5 opioid-use-disorder-criteria then the patient has a moderate-opioid-use-disorder.
-If a patient meets at least 6 opioid-use-disorder-criteria then the patient has a severe-opioid-use-disorder.
+If a patient meets exactly 2 opioid-use-disorder-criteria during at most 1 year then the patient has a mild-opioid-use-disorder.
+If a patient meets exactly 3 opioid-use-disorder-criteria during at most 1 year then the patient has a mild-opioid-use-disorder.
+If a patient meets exactly 4 opioid-use-disorder-criteria during at most 1 year then the patient has a moderate-opioid-use-disorder.
+If a patient meets exactly 5 opioid-use-disorder-criteria during at most 1 year then the patient has a moderate-opioid-use-disorder.
+If a patient meets at least 6 opioid-use-disorder-criteria during at most 1 year then the patient has a severe-opioid-use-disorder.

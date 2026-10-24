@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp04',ace_sha256(cf99c16b55b526d00df1e746b27f470fc2e795b50c0a1bfcd49faf9d9d63e9b5),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-rec05-imp04',ace_sha256(cf99c16b55b526d00df1e746b27f470fc2e795b50c0a1bfcd49faf9d9d63e9b5),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a continued-opioid-benefit matches a continued-opioid-risk then a shared-decision-making particularly is important with a patient.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp04',1,ref(4),[A,B,C]),'shared-decision-making',countable) :- guideline_entity(actual,A,'continued-opioid-benefit',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'continued-opioid-risk',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,match), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp04',1,ref(4),[A,B,C]),na,eq,1) :- guideline_entity(actual,A,'continued-opioid-benefit',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'continued-opioid-risk',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,match), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

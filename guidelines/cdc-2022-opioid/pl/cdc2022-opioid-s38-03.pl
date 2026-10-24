@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s38-03',ace_sha256('523ad0a42a1058354a28126496ef0eae03ec44f4fb734a11f4605a8a71d90105'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s38-03',ace_sha256('523ad0a42a1058354a28126496ef0eae03ec44f4fb734a11f4605a8a71d90105'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every clinician may discuss a continued-opioid-benefit-perception with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s38-03',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s38-03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s38-03',1,ref(2),[A]),'continued-opioid-benefit-perception',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

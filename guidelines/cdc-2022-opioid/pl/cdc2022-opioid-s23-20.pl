@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s23-20',ace_sha256('9b5919ee8860e3a625e8b9e94e6a6b339dad68200e0ca83a601ff742f82c0656'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s23-20',ace_sha256('83e1e8905cc8582e7be4c88f39a8d0aca62061bb3bde484b54ba48bd57b3e79b'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every minimum-needed-opioid-use-limitation can help a tolerance-development-limitation.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-20',1,box(1),[A]),can) :- guideline_entity(actual,A,'minimum-needed-opioid-use-limitation',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-20',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-20',1,ref(2),[A]),'tolerance-development-limitation',countable) :- guideline_entity(actual,A,'minimum-needed-opioid-use-limitation',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -55,10 +55,10 @@ guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s23-20',2,box(1),[
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s23-20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-20',2,ref(3),[A]),help) :- guideline_entity(actual,A,'minimum-needed-opioid-use-limitation',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s23-20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-20',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,'minimum-needed-opioid-use-limitation',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s23-20',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-20',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s23-20',2,ref(2),[A])) :- guideline_entity(actual,A,'minimum-needed-opioid-use-limitation',countable), guideline_cardinality(actual,A,na,eq,1).
-% S3: A minimum-needed-opioid-use-example has an every-4-hours-as-needed-prescription and uses an opioid-example at an interval of more than 4 hours.
+% S3: A minimum-needed-opioid-use-example has an every-4-hours-as-needed-prescription-example and uses an opioid-example at an interval of more than 4 hours.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(1),[]),'minimum-needed-opioid-use-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(2),[]),'every-4-hours-as-needed-prescription',countable).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(2),[]),'every-4-hours-as-needed-prescription-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(2),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(3),[]),have).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s23-20',3,ref(1),[])).

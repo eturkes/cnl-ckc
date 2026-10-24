@@ -40,7 +40,7 @@
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s47-21',ace_sha256('2b8d1140d74bd1baee7a69ee92b50f2e8af427a9e9191a24b730e01ac4c650ac'),ulex(sha256('45608095e3f77853fdabcce148a9eb7633a8ae776353b8f008c753b846886588')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s47-21',ace_sha256('2b8d1140d74bd1baee7a69ee92b50f2e8af427a9e9191a24b730e01ac4c650ac'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every opioid-use-criminalization discourages a pregnant-person-care-seeking.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',1,ref(2),[A]),'pregnant-person-care-seeking',countable) :- guideline_entity(actual,A,'opioid-use-criminalization',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-use-criminalization',countable), guideline_cardinality(actual,A,na,eq,1).
