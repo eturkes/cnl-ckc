@@ -1467,3 +1467,78 @@ fn test_recipe_names_a_binary_that_dies_without_a_result() {
     );
     assert!(!fx.root.join("rust/target/test.log").exists());
 }
+
+// Mock cargo with two failing binaries, honoring `--no-fail-fast` as cargo does: without it,
+// the run stops after the first failing binary.
+const CARGO_TWO_FAILURES: &str = r#"#!/usr/bin/env bash
+nff=0
+for a in "$@"; do [ "$a" = --no-fail-fast ] && nff=1; done
+cat <<'LOG'
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.40s
+     Running tests/aaa_fail.rs (target/debug/deps/aaa_fail-33c9abcd291590e3)
+a1 --- FAILED
+failures:
+    a1
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p ckc --test aaa_fail`
+LOG
+[ "$nff" = 1 ] || exit 101
+cat <<'LOG'
+     Running tests/bbb_fail.rs (target/debug/deps/bbb_fail-56fa083047ca9c05)
+b1 --- FAILED
+failures:
+    b1
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p ckc --test bbb_fail`
+     Running tests/ccc_ok.rs (target/debug/deps/ccc_ok-00112867f077590f)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: 2 targets failed:
+    `-p ckc --test aaa_fail`
+    `-p ckc --test bbb_fail`
+LOG
+exit 101
+"#;
+
+#[test]
+fn test_recipe_reports_every_failing_binary() {
+    let s = scratch("test-every-binary");
+    let text = justfile();
+    let case = |name: &str, justfile: &str| {
+        let fx = Fixture::new(&s, name, justfile);
+        put_exec(&fx.mock.join("cargo"), CARGO_TWO_FAILURES);
+        fs::create_dir_all(fx.root.join("rust")).unwrap();
+        fx.run("test", &[])
+    };
+    let out = case("two-failures", &text);
+    assert_eq!(out.status.code(), Some(101), "two failures: {}", show(&out));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    for line in [
+        "test: 3 binaries, 4 passed, 3 failed, 0 ignored\n",
+        "test: failed: aaa_fail (1 failed)\n",
+        "test: failed: bbb_fail (2 failed)\n",
+        "error: test failed, to rerun pass `-p ckc --test bbb_fail`\n",
+    ] {
+        assert!(stdout.contains(line), "missing {line:?}: {}", show(&out));
+    }
+    // The fail-fast recipe stops at the first failing binary: the second one goes unreported.
+    let planted = plant(
+        &text,
+        &[(
+            "--offline --no-fail-fast -- --quiet",
+            "--offline -- --quiet",
+        )],
+    );
+    let out = case("two-failures-planted", &planted);
+    assert_eq!(out.status.code(), Some(101), "planted: {}", show(&out));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("test: failed: aaa_fail (1 failed)\n") && !stdout.contains("bbb_fail"),
+        "the planted fail-fast recipe no longer hides the second failure: {}",
+        show(&out)
+    );
+}
