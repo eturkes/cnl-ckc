@@ -387,17 +387,33 @@ build:
     @echo "gate: build ok"
 
 # The swipl:10.0.2 image (Debian glibc 2.36) cannot load the runner's glibc-2.43 build.
-# Static musl ckc = the binary of the CI container jobs.
+# Static musl ckc = the binary of the CI container jobs + the reviewer program of a release.
+# Panic locations name the vendored crates by absolute path; remapping the checkout path keeps
+# it out of the binary, so every checkout of a commit builds the same bytes.
 build-static:
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}/rust"
-    cargo build --release --locked --offline -q -p ckc --target x86_64-unknown-linux-musl
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="--remap-path-prefix={{ ROOT }}=cnl-ckc" \
+        cargo build --release --locked --offline -q -p ckc --target x86_64-unknown-linux-musl
     bin=target/x86_64-unknown-linux-musl/release/ckc
     if readelf -lW "$bin" | grep -q INTERP || readelf -dW "$bin" | grep -q NEEDED; then
         echo "build-static: $bin is dynamically linked" >&2; exit 1
     fi
+    if grep -qF "{{ ROOT }}" "$bin"; then
+        echo "build-static: $bin holds the checkout path {{ ROOT }}" >&2; exit 1
+    fi
     echo "gate: build-static ok"
+
+# Reviewer program of a release (docs/REFERENCE.md § Releasing): the static ckc as
+# <dest>/ckc-x86_64-linux + its sha256sum sidecar; prints the sidecar line.
+release-ckc dest="dist": build-static
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    mkdir -p "{{ dest }}"
+    install -m 0755 rust/target/x86_64-unknown-linux-musl/release/ckc "{{ dest }}/ckc-x86_64-linux"
+    cd "{{ dest }}" && sha256sum ckc-x86_64-linux | tee ckc-x86_64-linux.sha256
 
 trust: build
     cd "{{ ROOT }}/rust" && ./target/release/ckc trust-audit

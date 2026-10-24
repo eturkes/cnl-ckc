@@ -123,6 +123,21 @@ The project supports Linux on x86-64.
    lists the packages.
 5. Run `just build`. The program is `rust/target/release/ckc`.
 
+To review a release candidate, you do not need these tools. Each
+candidate and each release publishes the reviewer program
+`ckc-x86_64-linux`, which needs Git and tar only:
+
+1. On the release page of the candidate, download `ckc-x86_64-linux`
+   and `ckc-x86_64-linux.sha256`.
+2. In the download directory, run
+   `sha256sum -c ckc-x86_64-linux.sha256`. The line must report OK.
+3. Run `chmod +x ckc-x86_64-linux`.
+4. Clone the branch of the candidate, for example
+   `git clone --branch release/kb-YYYY-MM-DD https://github.com/eturkes/cnl-ckc`.
+5. In the clone, run `<download directory>/ckc-x86_64-linux ui serve`.
+   "Reviewing" tells how to review. The site writes your decisions to
+   `guidelines/<guideline-id>/audit/adjudication.tsv` in the clone.
+
 ## Run
 
 Run each command in the repository root. The examples call the program
@@ -181,8 +196,8 @@ compiler reads it. The guideline page lists all of these meanings under
 ## Releases
 
 A release of the knowledge base is a git tag with the name
-`kb-YYYY-MM-DD`. Its release notes give the archive name and the
-SHA-256 of the archive. A tag that ends in `-rc.1`, `-rc.2`, and so on
+`kb-YYYY-MM-DD`. Its release notes give the archive name, the SHA-256
+of the archive, and the SHA-256 of the reviewer program. A tag that ends in `-rc.1`, `-rc.2`, and so on
 is a release candidate. The review of a release candidate is not
 complete. To use the knowledge base in other software, pin a release
 tag.
