@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s50-18',ace_sha256('04027fedd66f5e6978dacd426b2a5d2733d969309942e3ac4065dac6c4e16db9'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a clinician dismisses a patient on a PDMP-information-basis then the clinician can adversely affect a patient-safety and can cause a missed-lifesaving-information-opportunity and can cause a missed-lifesaving-intervention-opportunity.

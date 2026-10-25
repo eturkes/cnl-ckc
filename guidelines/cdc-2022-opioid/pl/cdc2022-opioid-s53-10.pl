@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s53-10',ace_sha256('4d7868b68dff4f9e5165e8c08def50af5f90ecc78ffa0a62e6b68bdda49a96b2'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a clinician discusses a toxicology-result with a patient before a specific-confirmatory-testing then the clinician can sometimes obtain a candid-substance-presence-or-absence-explanation from the patient and can sometimes remove a same-visit-confirmatory-testing-need.

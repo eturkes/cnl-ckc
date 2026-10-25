@@ -4264,6 +4264,155 @@ pub open spec fn scope_pass(tab: Option<Env>, roots: Seq<Root>, gs: Seq<Group>) 
     }
 }
 
+// --- superseded statements (contract sup1 D2–D5: a table row naming the document) ---
+// A superseded document keeps its clauses (ex nunc: the statement held before its
+// supersession took effect). Every group holding a should|must|may edge gains, on
+// each clause, `guideline_evaluation_date(V), guideline_satisfies(exactly, V, less,
+// Date)`: an earlier evaluation date the consumer states = a necessary condition.
+// Every sentence bundle ends with `guideline_supersession(DocId, S, source(Citation,
+// Url), Date)`, outside the groups (no obligation, no '$guideline_id' identity).
+pub open spec fn superseding_of(rows: Seq<(Seq<u8>, Superseding)>, docid: Seq<u8>) -> Option<
+    Superseding,
+>
+    decreases rows.len(),
+{
+    if rows.len() == 0 {
+        Option::None
+    } else if rows[0].0 == docid {
+        Option::Some(rows[0].1)
+    } else {
+        superseding_of(rows.drop_first(), docid)
+    }
+}
+
+pub open spec fn supersession_record(docid: Seq<u8>, s: nat, sup: Superseding) -> Term {
+    lit(
+        "guideline_supersession"@,
+        seq![
+            Term::Atom(docid),
+            Term::Int(s as int),
+            Term::Comp(ascii("source"@), seq![Term::Atom(sup.citation), Term::Atom(sup.url)]),
+            Term::Int(sup.date as int),
+        ],
+    )
+}
+
+pub open spec fn date_goals(v: Term, date: nat) -> Seq<BodyItem> {
+    seq![
+        BodyItem::Pos(lit("guideline_evaluation_date"@, seq![v])),
+        BodyItem::Pos(
+            lit(
+                "guideline_satisfies"@,
+                seq![atom("exactly"@), v, atom("less"@), Term::Int(date as int)],
+            ),
+        ),
+    ]
+}
+
+// The cs1 scope guard (authors cannot spell a reserved name, so no other body
+// item has this shape).
+pub open spec fn scope_guard_item(it: BodyItem) -> bool {
+    match it {
+        BodyItem::Naf(gs) => gs.len() == 1 && is_comp(gs[0], "guideline_exclusion"@, 1),
+        _ => false,
+    }
+}
+
+// D4: the date goals after every body goal; a trailing scope guard stays last.
+pub open spec fn date_guarded(body: Seq<BodyItem>, goals: Seq<BodyItem>) -> Seq<BodyItem> {
+    if body.len() > 0 && scope_guard_item(body.last()) {
+        body.drop_last() + goals + seq![body.last()]
+    } else {
+        body + goals
+    }
+}
+
+pub open spec fn item_nvars(it: BodyItem) -> nat {
+    match it {
+        BodyItem::Pos(t) => nvars(t),
+        BodyItem::Naf(gs) => nvars_all(gs),
+    }
+}
+
+pub open spec fn body_nvars(b: Seq<BodyItem>) -> nat
+    decreases b.len(),
+{
+    if b.len() == 0 {
+        0
+    } else {
+        max_nat(item_nvars(b[0]), body_nvars(b.drop_first()))
+    }
+}
+
+// 1 + the largest variable index of the clauses: a variable no clause holds.
+pub open spec fn clauses_nvars(cs: Seq<DocClause>) -> nat
+    decreases cs.len(),
+{
+    if cs.len() == 0 {
+        0
+    } else {
+        max_nat(max_nat(nvars(cs[0].head), body_nvars(cs[0].body)), clauses_nvars(cs.drop_first()))
+    }
+}
+
+pub open spec fn has_deontic_edge(g: Group) -> bool {
+    exists|i: int| 0 <= i < g.clauses.len() && deontic_edge(#[trigger] g.clauses[i].head)
+}
+
+// D4 over one group: the witness pairs gain V ↦ Date − 1 (a numeric replay
+// witness below Date, not always a calendar date).
+pub open spec fn date_group(g: Group, date: nat) -> Group {
+    if !has_deontic_edge(g) {
+        g
+    } else {
+        let v = Term::Var(clauses_nvars(g.clauses));
+        Group {
+            k: g.k,
+            pairs: g.pairs.push((v, Term::Int(date as int - 1))),
+            clauses: g.clauses.map_values(
+                |c: DocClause|
+                    DocClause { head: c.head, body: date_guarded(c.body, date_goals(v, date)) },
+            ),
+        }
+    }
+}
+
+pub open spec fn root_deontic(roots: Seq<Root>) -> bool {
+    exists|i: int|
+        0 <= i < roots.len() && match #[trigger] roots[i] {
+            Root::Anchored(c) => has_deontic(c),
+            Root::Boxed(c) => has_deontic(c),
+            Root::Rule(_, _) => false,
+        }
+}
+
+// D2 + D4 + D5 over one translated sentence, after the scope pass: the guarded
+// groups + the sentence's record.
+pub open spec fn supersession_pass(
+    tab: Option<Env>,
+    docid: Seq<u8>,
+    s: nat,
+    roots: Seq<Root>,
+    gs: Seq<Group>,
+) -> Result<(Seq<Group>, Seq<DocClause>), Term> {
+    match tab {
+        Option::None => Result::Ok((gs, Seq::empty())),
+        Option::Some(env) => match superseding_of(env.tab.supersessions, docid) {
+            Option::None => Result::Ok((gs, Seq::empty())),
+            Option::Some(sup) => if root_deontic(roots) {
+                Result::Err(s1_shape("supersession_shape"@, "root_deontic"@))
+            } else {
+                Result::Ok(
+                    (
+                        gs.map_values(|g: Group| date_group(g, sup.date)),
+                        seq![fact_clause(supersession_record(docid, s, sup))],
+                    ),
+                )
+            },
+        },
+    }
+}
+
 // --- canonical variable numbering per emitted line ---
 pub open spec fn renumber(t: Term, fs: Seq<nat>) -> Term
     decreases t,
@@ -4305,6 +4454,9 @@ pub open spec fn canon_clause(c: DocClause) -> DocClause {
 pub ghost struct Projected {
     pub s: nat,
     pub groups: Seq<Group>,
+    pub records: Seq<
+        DocClause,
+    >,  // sup1 D2: after the groups' clauses, no obligation
 }
 
 pub open spec fn err_at(s: nat, why: Term) -> Term {
@@ -4355,21 +4507,30 @@ pub open spec fn project_from(
                 } else {
                     match scope_pass(tab, of_sentence(tagged, s as int), gs0) {
                         Result::Err(e) => Result::Err(err_at(s, e)),
-                        Result::Ok(gs) => match project_from(
-                            tagged,
-                            s + 1,
-                            count,
-                            docid,
-                            map2,
-                            base,
+                        Result::Ok(gs1) => match supersession_pass(
                             tab,
-                            dims2,
-                            srcs,
+                            docid,
+                            s,
+                            of_sentence(tagged, s as int),
+                            gs1,
                         ) {
-                            Result::Err(e) => Result::Err(e),
-                            Result::Ok(rest) => Result::Ok(
-                                seq![Projected { s, groups: gs }] + rest,
-                            ),
+                            Result::Err(e) => Result::Err(err_at(s, e)),
+                            Result::Ok((gs, records)) => match project_from(
+                                tagged,
+                                s + 1,
+                                count,
+                                docid,
+                                map2,
+                                base,
+                                tab,
+                                dims2,
+                                srcs,
+                            ) {
+                                Result::Err(e) => Result::Err(e),
+                                Result::Ok(rest) => Result::Ok(
+                                    seq![Projected { s, groups: gs, records }] + rest,
+                                ),
+                            },
                         },
                     }
                 }
@@ -4570,7 +4731,9 @@ pub open spec fn srcs_of(sentences: Term, lines: Seq<Seq<u8>>) -> Seq<Src> {
 pub open spec fn bundle_matches(b: Bundle, p: Projected, line: Seq<u8>) -> bool {
     &&& b.s == p.s
     &&& b.text == line
-    &&& b.clauses == group_clauses(p.groups).map_values(|c: DocClause| canon_clause(c))
+    &&& b.clauses == (group_clauses(p.groups) + p.records).map_values(
+        |c: DocClause| canon_clause(c),
+    )
 }
 
 pub open spec fn first_mismatch(

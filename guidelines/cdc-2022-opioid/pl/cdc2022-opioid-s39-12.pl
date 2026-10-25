@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s39-12',ace_sha256('523ebc5f8379eb13158c4e06130917a83fae93e8d31d5c284c3b07f2831b96b5'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a taper-progress-failure-despite-opioid-related-harm then every clinician should conduct a DSM-5-opioid-use-disorder-assessment for the patient.

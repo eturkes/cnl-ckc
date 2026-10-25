@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s6-02',ace_sha256('308189cdaa04e1d925fa7fb1bcab7e1e323a01f15c8409ae1a0488dcbce6c9cc'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: Every clinician should consider a recommendation during a clinician-patient-relationship.

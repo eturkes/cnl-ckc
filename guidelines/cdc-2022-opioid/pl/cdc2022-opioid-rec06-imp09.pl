@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec06-imp09',ace_sha256(f01011d774496b0cf67515fb3ab2ff3d1cb27e3b104b38257440c2bc06998a70),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a pain and the pain relates to a common-nontraumatic-nonsurgical-pain-cause and the patient needs an opioid then a shorter-opioid-course during a few-day-period often can be sufficient for the patient.

@@ -228,9 +228,10 @@ pub open spec fn tail_bytes(t: Term) -> Seq<u8>
 }
 
 // --- ABI indicators (order = the emitted declaration block; contracts c1 D2,
-// s1 D1, s2 D1, nt1 D2, cs1 D2): schema version, the document record, the seven
-// primitives (2..8), the temporal annotations (9..14), the strength annotations
-// (15..17), the unit annotation (18), the scope exclusion record (19).
+// s1 D1, s2 D1, nt1 D2, cs1 D2, sup1 D2/D3): schema version, the document record,
+// the seven primitives (2..8), the temporal annotations (9..14), the strength
+// annotations (15..17), the unit annotation (18), the scope exclusion record (19),
+// the supersession record (20), the consumer's evaluation date (21).
 pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
     if i == 0 {
         (ascii("guideline_schema_version"@), 1)
@@ -270,21 +271,25 @@ pub open spec fn indicator(i: int) -> (Seq<u8>, nat) {
         (ascii("guideline_qualifier"@), 4)
     } else if i == 18 {
         (ascii("guideline_unit"@), 3)
-    } else {
+    } else if i == 19 {
         (ascii("guideline_exclusion"@), 1)
+    } else if i == 20 {
+        (ascii("guideline_supersession"@), 4)
+    } else {
+        (ascii("guideline_evaluation_date"@), 1)
     }
 }
 
 pub open spec fn indicator_count() -> int {
-    20
+    22
 }
 
-// The semantic indicators (positions 2..19) are the only head predicates of
+// The semantic indicators (positions 2..21) are the only head predicates of
 // bundle clauses and, with the comparison built-ins (`compare.rs`), the only
 // body predicates (contract R14: foreign or variable body goals are
 // grammar-unrepresentable), in any document (contracts c1 D2, nt1 D7).
 pub open spec fn is_semantic_pred(name: Seq<u8>, arity: nat) -> bool {
-    exists|i: int| 2 <= i < 20 && #[trigger] indicator(i) == (name, arity)
+    exists|i: int| 2 <= i < 22 && #[trigger] indicator(i) == (name, arity)
 }
 
 // --- clause lines ---

@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('measure--alias-duration',ace_sha256('564d49cc3abc923cccf11249438f9f44e1b734e1c6ee62853845267cd787bf2c'),ulex(sha256('29762127aa5c112935a3e23843a9793168210e6e977026b17b197641eb14e090')),vocabulary(sha256(fa2b699b93e9514e800aea9786f1dbaff5a813bda5bf6477c423aae18ac12041))).
 % S1: If a patient has a surgery then the patient waits for at most 3 d.

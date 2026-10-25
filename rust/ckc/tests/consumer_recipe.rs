@@ -187,7 +187,7 @@ fn recipe_tables_every_schema_predicate() {
         .split(',')
         .map(|p| p.trim().to_owned())
         .collect();
-    assert_eq!(declared.len(), 20, "{}: schema declarations", doc.display());
+    assert_eq!(declared.len(), 22, "{}: schema declarations", doc.display());
     assert_eq!(
         tabled,
         declared,

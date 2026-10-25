@@ -556,7 +556,8 @@ pub fn bundle_matches(
     if !bytes_eq(&meta.text, line) {
         return false;
     }
-    let projected = group_clauses(arena, &p.groups);
+    let grouped = group_clauses(arena, &p.groups);
+    let projected = crate::m6_project::concat_clauses(arena, &grouped, &p.records);
     let ghost start = arena.nodes@;
     let canon = canon_many(arena, &projected);
     proof {

@@ -343,14 +343,17 @@ The six time annotations (`guideline_interval/6`,
 `guideline_recurrence_window/7`, `guideline_range/3`), the three
 strength annotations (`guideline_grade/5`, `guideline_preference/4`,
 `guideline_qualifier/4`), the unit annotation `guideline_unit/3` and
-the scope exclusion record `guideline_exclusion/1` complete the
-vocabulary. The comparison built-ins
+the scope exclusion record `guideline_exclusion/1`, the supersession
+record `guideline_supersession/4` and the evaluation date
+`guideline_evaluation_date/1` complete the vocabulary. The comparison built-ins
 `guideline_satisfies/4` and `guideline_satisfies/6` test the conditions
 of rules and questions; the section "Comparison conditions" below defines
 them. The arithmetic built-ins `guideline_product/6` and
 `guideline_quotient/6` compute a quantity from other quantities; the
 section "Arithmetic built-ins" below defines them. The section "Scope exclusions" below defines the exclusion record
-and the guard that it adds to recommendation rules. The sections "Vocabulary table and time
+and the guard that it adds to recommendation rules. The section
+"Superseded statements" below defines the supersession record, the
+evaluation date and the guard that blocks a superseded statement. The sections "Vocabulary table and time
 annotations" and "Strength annotations" below define them. In the record, `H` is the SHA-256 of the raw ACE bytes,
 `U` the SHA-256 of the guideline's user lexicon, and `T` the SHA-256
 of its raw `vocabulary.tsv` bytes. `none` means that the file does not
@@ -421,7 +424,7 @@ document-local. Negation-as-failure in a consequent or a root fact
 rejects; assertion-by-absence is meaningless.
 
 A universally quantified sentence becomes one Horn clause per
-consequent condition. All clauses of a rule variant share one logical body; each clause line renders it with its own canonical variable letters, so two lines of one variant are equal up to variable renaming. In a document whose vocabulary table names a scope, each `should`, `must` or `may` operator edge clause ends with one more goal, the scope guard (section "Scope exclusions"). A nested `if … then if … then …` consequent curries into
+consequent condition. All clauses of a rule variant share one logical body; each clause line renders it with its own canonical variable letters, so two lines of one variant are equal up to variable renaming. In a document whose vocabulary table names a scope, each `should`, `must` or `may` operator edge clause ends with one more goal, the scope guard (section "Scope exclusions"). In a superseded document, every clause of a variant that holds a `should`, `must` or `may` edge ends with two more goals, the supersession guard, before the scope guard (section "Superseded statements"). A nested `if … then if … then …` consequent curries into
 one rule whose antecedent concatenates the nested domains. An
 antecedent that contains one disjunction splits into two variants whose
 bodies are the shared conditions plus that arm. The bundle keeps one
@@ -445,7 +448,7 @@ one vocabulary, a rule body consumes another document's facts or heads
 by ordinary resolution.
 
 Every document opens with the same declaration block: `multifile`
-and `discontiguous` for all 20 indicators, whether or not it
+and `discontiguous` for all 22 indicators, whether or not it
 populates them. After the block come `guideline_schema_version(1).`,
 the document record, and then, per sentence, a
 `% S<n>: <verbatim sentence>` comment with that sentence's contiguous
@@ -595,7 +598,7 @@ guidelines that it combines, and the facts of one patient. Before the
 first document loads, declare every schema predicate as tabled:
 
 ```prolog
-:- table guideline_schema_version/1, guideline_document/4, guideline_entity/4, guideline_cardinality/5, guideline_event/3, guideline_arg/4, guideline_pp/4, guideline_property/4, guideline_operator/3, guideline_interval/6, guideline_recurrence/4, guideline_frequency/5, guideline_order/4, guideline_recurrence_window/7, guideline_range/3, guideline_grade/5, guideline_preference/4, guideline_qualifier/4, guideline_unit/3, guideline_exclusion/1.
+:- table guideline_schema_version/1, guideline_document/4, guideline_entity/4, guideline_cardinality/5, guideline_event/3, guideline_arg/4, guideline_pp/4, guideline_property/4, guideline_operator/3, guideline_interval/6, guideline_recurrence/4, guideline_frequency/5, guideline_order/4, guideline_recurrence_window/7, guideline_range/3, guideline_grade/5, guideline_preference/4, guideline_qualifier/4, guideline_unit/3, guideline_exclusion/1, guideline_supersession/4, guideline_evaluation_date/1.
 ```
 
 Without tabling, a standard engine does not finish a broad question
@@ -609,6 +612,12 @@ gives each committed question its committed answer. Some rules derive an
 entity of their own, such as a patient in their conclusion, so a
 derived statement can concern that entity and not the patient of the
 loaded facts. Match each statement to the referents of the patient.
+
+A superseded document derives its `should`, `must` and `may`
+statements only once the program states an evaluation date before the
+effective date, for example `guideline_evaluation_date(20221201).`
+(section "Superseded statements"). A program that presents current
+guidance states today's date or no date.
 
 The documents use `\+` for negation as failure. Under tabling, `\+` is
 correct when no goal depends on its own negation. For a recursion
@@ -686,7 +695,17 @@ folder it must equal the name of that folder. An `exclusion` row names
 the verb that an exclusion denies of that noun; its value is always
 `scope`. A table holds at most one row of each of these two kinds, and
 it holds both rows or neither. The section "Scope exclusions" below
-uses them.
+uses them. A `supersession` row names a superseded document, and a
+`superseded` row a superseded passage without a document of its own;
+for these two kinds the second field is a document identifier or a
+passage identifier, not a lemma. The value of both kinds holds the
+effective date as eight digits YYYYMMDD (a proleptic Gregorian date),
+one space, the URL of the superseding source (`https://` and at least
+one more byte, no space: write a space in a URL as `%20`), one space and
+the citation of the source (text without control characters and without
+a space at either end). A document has at most one `supersession` row,
+and a passage at most one `superseded` row. The section "Superseded
+statements" below uses them.
 
 A lemma is one or more bytes above 0x20, none of them 0x7F, that form
 valid UTF-8. A noun occurs in at most one `unit`, `strength`,
@@ -1203,6 +1222,89 @@ without a guard. The check covers the composition that it reads; a
 program that loads another set of documents must run it again on that
 set. It does not prove that the other negations of the documents
 terminate.
+
+### Superseded statements
+
+A guideline can state a requirement that later law, regulation or
+guidance replaced. The 2022 CDC guideline, for example, tells clinicians
+to obtain a waiver to prescribe buprenorphine, and the Consolidated
+Appropriations Act, 2023 eliminated that waiver on December 29, 2022.
+The knowledge base keeps such a statement as the guideline states it and
+records the supersession inside the document. By default, the knowledge
+base no longer derives the `should`, `must` and `may` statements of a
+superseded document.
+
+A row of the vocabulary table names the superseded document (section
+"Vocabulary table and time annotations"):
+
+```
+supersession	cdc2022-opioid-rec12-imp08	20221229 https://www.govinfo.gov/content/pkg/PLAW-117publ328/html/PLAW-117publ328.htm Consolidated Appropriations Act, 2023 (Public Law 117-328), Division FF, section 1262(a)(1)
+```
+
+A `superseded` row has the same value and names a passage without a
+document of its own, for example a passage that reports third-party
+policy. It changes no compiled document.
+
+| Predicate | Meaning |
+| --- | --- |
+| `guideline_supersession(DocId, S, source(Citation, Url), Date)` | sentence `S` of document `DocId` is superseded from `Date` (an integer YYYYMMDD) by the source at `Url`, cited as `Citation` |
+| `guideline_evaluation_date(Date)` | the date for which a program evaluates its composition, an integer YYYYMMDD; the program states it as a fact |
+
+Every sentence block of a superseded document ends with its
+`guideline_supersession` record. Every clause of a variant that holds a
+`should`, `must` or `may` edge ends with the supersession guard; when the
+clause also carries the scope guard, the scope guard stays last:
+
+```
+..., guideline_evaluation_date(V), guideline_satisfies(exactly, V, less, 20221229).
+```
+
+The guard makes an earlier evaluation date a necessary condition of the
+statement. The other conditions of the statement and the scope guard
+still apply. A composition without an evaluation date, or with a date on
+or after the effective date, derives none of these statements. A program
+that wants the statement as the guideline states it, for example to audit
+care that was given before the effective date, states a date before the
+effective date:
+
+```prolog
+guideline_evaluation_date(20221201).
+```
+
+The records derive in every composition, so a program can show why a
+statement no longer derives. A rule of another document that reads the
+content of a blocked statement stops deriving with it. A `can` statement,
+an asserted rule and a fact of a superseded document keep deriving; their
+records still mark them.
+
+State one valid date per composition. The knowledge base does not check
+the date: the guard compares numbers, so any number below the effective
+date unblocks the statement, and with several date facts one date below
+the effective date is enough. A term that is not a number blocks the
+statement.
+
+The proof obligation of a guarded variant takes the witness
+`guideline_evaluation_date(Date − 1)`, a number below the effective date.
+The guard also takes part in the search order of the engine in this
+repository. Its comparison is a built-in whose input is still unbound
+when the search reaches it, so it can end the wait of an operator goal
+earlier (section "Query answers"). In a composition that reaches a
+guarded clause, the engine can therefore find a different first proof,
+and a bound can cut a different branch. The rule of section "Query
+answers" holds for the guarded clauses too: when the search ends in both
+orders, it gives the same answers.
+
+A sentence of a superseded document that holds a `should`, `must` or
+`may` box in a fact rejects with
+`unsupported, supersession_shape(root_deontic, S)`: a fact has no body
+that a guard can extend. In a scoped document the scope check reports
+first.
+
+`ckc check` checks the rows against the coverage ledger: a `supersession`
+row names a document of the guideline, and a `superseded` row names a
+coverage region without its own document. A violation reports
+`ckc: supersession: guidelines/<id>/vocabulary.tsv: supersession document at row <n>`
+or `… superseded region at row <n>`.
 
 ### Question projection
 

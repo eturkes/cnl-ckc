@@ -622,18 +622,23 @@ pub proof fn groups_prefix(before: Seq<ENode>, after: Seq<ENode>, gs: Seq<Group>
 pub struct Projected {
     pub s: usize,
     pub groups: Vec<Group>,
+    pub records: Vec<Clause>,
 }
 
 impl View for Projected {
     type V = spec::Projected;
 
     open spec fn view(&self) -> Self::V {
-        spec::Projected { s: self.s as nat, groups: group_models(self.groups@) }
+        spec::Projected {
+            s: self.s as nat,
+            groups: group_models(self.groups@),
+            records: clause_models(self.records@),
+        }
     }
 }
 
 pub open spec fn projected_valid(nodes: Seq<ENode>, p: &Projected) -> bool {
-    groups_valid(nodes, p.groups@)
+    groups_valid(nodes, p.groups@) && clauses_valid(nodes, p.records@)
 }
 
 pub open spec fn projections_valid(nodes: Seq<ENode>, ps: Seq<Projected>) -> bool {
@@ -654,6 +659,7 @@ pub proof fn projections_prefix(before: Seq<ENode>, after: Seq<ENode>, ps: Seq<P
     assert forall|i: int| 0 <= i < ps.len() implies #[trigger] projected_valid(after, &ps[i]) by {
         assert(projected_valid(before, &ps[i]));
         groups_prefix(before, after, ps[i].groups@);
+        clauses_prefix(before, after, ps[i].records@);
     }
 }
 

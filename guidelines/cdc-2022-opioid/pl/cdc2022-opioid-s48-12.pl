@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s48-12',ace_sha256('70b15b6cd28591a2da30eea4b87405cdf3055121c850fa63d6e3b20f2356698f'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a chronic-pain and has a depression and a tricyclic-antidepressant is not provably contraindicated for the patient then every clinician should consider the tricyclic-antidepressant for an analgesic-effect and should consider the tricyclic-antidepressant for an antidepressant-effect.

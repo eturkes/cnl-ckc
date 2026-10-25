@@ -9,9 +9,9 @@ use crate::m6_payload::{first_nonground, obligations, print_payload, reject, rej
 use crate::m6_project::project;
 use crate::m6_symbols::Sym;
 use crate::m6_term::*;
-use crate::v1_term_impl::EV1Class;
 #[cfg(verus_keep_ghost)]
 use crate::v1_term_impl::*;
+use crate::v1_term_impl::{EBundleMeta, EV1Class};
 use ckc_spec::emit as spec;
 use ckc_spec::replay::{self, EOut};
 use ckc_spec::term::Term;
@@ -169,6 +169,99 @@ fn srcs_of(arena: &ETermArena, sentences: &T, lines: &Vec<Vec<u8>>) -> (out: Vec
     out
 }
 
+// Isolate projection/output from intake's byte-parser quantifiers.
+pub open spec fn comparison_output(
+    docid: Seq<u8>,
+    bs: Seq<v1text::Bundle>,
+    ps: Seq<spec::Projected>,
+    lines: Seq<Seq<u8>>,
+) -> replay::Out {
+    match spec::first_mismatch(bs, ps, lines, 0) {
+        Some(s) => spec::certify_reject(
+            docid,
+            Term::Comp(v1text::ascii("clauses"@), seq![Term::Int(s as int)]),
+        ),
+        None => {
+            let obs = spec::obligations(ps, docid);
+            match spec::first_nonground(obs) {
+                Some(o) => spec::certify_reject(
+                    docid,
+                    Term::Comp(
+                        v1text::ascii("nonground_obligation"@),
+                        seq![o.s, spec::variant_slot(0)],
+                    ),
+                ),
+                None => replay::ok(replay::print_payload(obs)),
+            }
+        },
+    }
+}
+
+#[verifier::spinoff_prover]
+fn compare_projection(
+    arena: &mut ETermArena,
+    ms: &Vec<EBundleMeta>,
+    actual: &Vec<Clause>,
+    ps: &Vec<Projected>,
+    lines: &Vec<Vec<u8>>,
+    docid: &Vec<u8>,
+) -> (out: EOut)
+    requires
+        arena_ok(old(arena)),
+        bundle_metas_ok(ms@),
+        clauses_valid(old(arena).nodes@, actual@),
+        clause_models(actual@) == doc_clause_models(bundle_meta_models(ms@)),
+        projections_valid(old(arena).nodes@, ps@),
+        ms.len() == ps.len(),
+        ms.len() == lines.len(),
+    ensures
+        out@ == comparison_output(
+            docid@,
+            bundle_meta_models(ms@),
+            project_models(ps@),
+            crate::m6_custody::lines_model(lines@),
+        ),
+{
+    hide(spec::first_mismatch);
+    hide(spec::obligations);
+    hide(spec::first_nonground);
+    hide(replay::print_payload);
+    hide(clauses_valid);
+    hide(projected_valid);
+    let ghost before_match = arena.nodes@;
+    if let Some(s) = first_mismatch(arena, ms, actual, ps, lines) {
+        let why = slot(arena, &Sym::Clauses, s);
+        return reject(arena, docid, &why);
+    }
+    proof {
+        projections_prefix(before_match, arena.nodes@, ps@);
+    }
+    let obs = obligations(arena, ps, docid);
+    if let Some(i) = first_nonground(arena, &obs) {
+        proof {
+            assert(crate::m6_payload::ob_valid(arena.nodes@, &obs@[i as int]));
+            reveal(replay::ob_term);
+        }
+        let oa = args(arena, &obs[i].term);
+        proof {
+            assert(obs@[i as int].term@ == replay::ob_term(obs@[i as int]@));
+            assert(ckc_spec::engine::args_of(replay::ob_term(obs@[i as int]@)).len() == 5);
+            assert(oa.len() == 5);
+            assert(valid(arena.nodes@, &oa@[1]));
+        }
+        let sentence = oa[1].cp();
+        let ghost before = arena.nodes@;
+        let variant = slot(arena, &Sym::Variant, 0);
+        proof {
+            prefix(before, arena.nodes@, &sentence);
+        }
+        let why = c2(arena, &Sym::NongroundObligation, &sentence, &variant);
+        return reject(arena, docid, &why);
+    }
+    let bytes = print_payload(arena, &obs);
+    EOut { rc: 0, out: bytes, err: Vec::new() }
+}
+
 #[verifier::spinoff_prover]
 pub fn certify_doc_impl(
     ace: &[u8],
@@ -193,6 +286,9 @@ pub fn certify_doc_impl(
         ),
 {
     hide(spec::project);
+    hide(comparison_output);
+    hide(clauses_valid);
+    hide(projected_valid);
     hide(spec::srcs_of);
     hide(spec::first_mismatch);
     hide(spec::obligations);
@@ -286,38 +382,11 @@ pub fn certify_doc_impl(
     proof {
         clauses_prefix(before_project, arena.nodes@, actual@);
     }
-    let ghost before_match = arena.nodes@;
-    if let Some(s) = first_mismatch(&mut arena, &parsed.bundles, &actual, &ps, &lines) {
-        let why = slot(&mut arena, &Sym::Clauses, s);
-        return reject(&arena, docid, &why);
-    }
+    let out = compare_projection(&mut arena, &parsed.bundles, &actual, &ps, &lines, &parsed.docid);
     proof {
-        projections_prefix(before_match, arena.nodes@, ps@);
+        reveal(comparison_output);
     }
-    let obs = obligations(&mut arena, &ps, &parsed.docid);
-    if let Some(i) = first_nonground(&arena, &obs) {
-        proof {
-            assert(crate::m6_payload::ob_valid(arena.nodes@, &obs@[i as int]));
-            reveal(replay::ob_term);
-        }
-        let oa = args(&arena, &obs[i].term);
-        proof {
-            assert(obs@[i as int].term@ == replay::ob_term(obs@[i as int]@));
-            assert(ckc_spec::engine::args_of(replay::ob_term(obs@[i as int]@)).len() == 5);
-            assert(oa.len() == 5);
-            assert(valid(arena.nodes@, &oa@[1]));
-        }
-        let sentence = oa[1].cp();
-        let ghost before = arena.nodes@;
-        let variant = slot(&mut arena, &Sym::Variant, 0);
-        proof {
-            prefix(before, arena.nodes@, &sentence);
-        }
-        let why = c2(&mut arena, &Sym::NongroundObligation, &sentence, &variant);
-        return reject(&arena, docid, &why);
-    }
-    let bytes = print_payload(&arena, &obs);
-    EOut { rc: 0, out: bytes, err: Vec::new() }
+    out
 }
 
 } // verus!

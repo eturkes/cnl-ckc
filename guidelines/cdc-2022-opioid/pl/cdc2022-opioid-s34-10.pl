@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s34-10',ace_sha256('8f0d72eaea9819419bb6e81ffc21e8e52b9230d5d45e13c9ddecdebf1b2484c0'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a combined-opioid-dosage and the combined-opioid-dosage includes at least 50 MME-units-per-day then every clinician should increase a follow-up-frequency and should offer a naloxone-dose to the patient and should provide an opioid-overdose-education to the patient and should offer a naloxone-dose to a patient-household-member and should provide an opioid-overdose-education to a patient-household-member.

@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('root-exact--interval',ace_sha256(e4c02eef035ed312cce1604e2975a0e268d941e64ec469798cb7e50a9a0f6c2d),ulex(none),vocabulary(sha256(f7862a1c88a249e2145a2a935a320aa33a572012bb6e486e8a8800a25690164d))).
 % S1: A man takes exactly 1 tablet at an interval of exactly 4 hours.

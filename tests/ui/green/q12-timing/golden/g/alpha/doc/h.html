@@ -200,7 +200,7 @@ p.reading { display: none; }
 </section>
 <section>
 <details>
-<summary>Compiled Prolog (64 lines)</summary>
+<summary>Compiled Prolog (68 lines)</summary>
 <pre>% h.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
@@ -242,6 +242,10 @@ p.reading { display: none; }
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document(h,ace_sha256('4df4fcbad1e2e681f1442a6eee96714414c7f4c3e8b7b85b21c5d8e4da335aec'),ulex(none),vocabulary(sha256(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb))).
 % S1: A man reads a book.

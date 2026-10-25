@@ -448,6 +448,7 @@ pub fn project_all(
     hide(spec::sentence_groups);
     hide(spec::group_clauses);
     hide(spec::scope_pass);
+    hide(spec::supersession_pass);
     let ghost start = arena.nodes@;
     let mut out = Vec::new();
     let mut map = Vec::new();
@@ -587,7 +588,31 @@ pub fn project_all(
             Ok(gs) => gs,
             Err(e) => return Err(err_at(arena, s, &e, Ghost(start))),
         };
-        let p = Projected { s, groups };
+        proof {
+            roots_prefix(before_scope, arena.nodes@, roots@);
+        }
+        let ghost before_supersession = arena.nodes@;
+        let superseded = crate::m6_supersession::supersession_pass(
+            arena,
+            tab,
+            docid,
+            s,
+            &roots,
+            groups,
+        );
+        proof {
+            crate::k2_load::prefix_chain(start, before_supersession, arena.nodes@);
+            tags_prefix(before_supersession, arena.nodes@, tagged@);
+            crate::m6_numeral::srcs_prefix(before_supersession, arena.nodes@, srcs@);
+            projections_prefix(before_supersession, arena.nodes@, out@);
+            map_prefix(before_supersession, arena.nodes@, map2@);
+            prefix_all(before_supersession, arena.nodes@, dims2@);
+        }
+        let (groups, records) = match superseded {
+            Ok(pair) => pair,
+            Err(e) => return Err(err_at(arena, s, &e, Ghost(start))),
+        };
+        let p = Projected { s, groups, records };
         let ghost future = spec::project_from(
             tag_models(tagged@),
             i as nat + 2,

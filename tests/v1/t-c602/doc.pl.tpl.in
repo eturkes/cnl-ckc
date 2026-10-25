@@ -1,4 +1,4 @@
-@@sha256 91789ff9c8b536b2be118d3d89754e6a2ce3dacd6355328ec989a41157be41e3
+@@sha256 8a4b70da16a7895734f0eac019352d09b9e00624ba8af286950f72a505aacbf3
 % doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
@@ -40,6 +40,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none),vocabulary(none)).
 % S1: Suite engine probe.

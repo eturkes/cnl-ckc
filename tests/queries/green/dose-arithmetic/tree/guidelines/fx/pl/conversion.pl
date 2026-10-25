@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document(conversion,ace_sha256(aa034b2f731bf64e678fc3c0ec5f3ef4f4fc8b58eb7a3f319ad0baef3a7b61fe),ulex(sha256(ea08df2c0364239536194c128dd430bbd88114b5508f5ab45882331c92505c99)),vocabulary(sha256('05eeed04deb22824331a3748ab69daba7285d901ff655fc1df56792e87853e5a'))).
 % S1: If some codeine-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 0.15.

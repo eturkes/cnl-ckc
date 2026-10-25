@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document(combined,ace_sha256('8438cd72484303275d7f76f976c0f2832b0fa059bc4b92e01799a5109ae73e75'),ulex(none),vocabulary(sha256('9d191cb72f69734c00293ae7ac5e03ef0a09d957001f4d5d7690c024ecd4b73a'))).
 % S1: usually,ideally usually.

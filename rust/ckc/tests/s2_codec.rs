@@ -10,7 +10,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-const INDICATORS: [(&str, usize); 20] = [
+const INDICATORS: [(&str, usize); 22] = [
     ("guideline_schema_version", 1),
     ("guideline_document", 4),
     ("guideline_entity", 4),
@@ -31,6 +31,8 @@ const INDICATORS: [(&str, usize); 20] = [
     ("guideline_qualifier", 4),
     ("guideline_unit", 3),
     ("guideline_exclusion", 1),
+    ("guideline_supersession", 4),
+    ("guideline_evaluation_date", 1),
 ];
 const CLASSES: [(&str, &str); 7] = [
     ("usuality", "usually"),
@@ -347,8 +349,8 @@ fn c1a_eighteen_indicators_replace_seventeen() {
         "doc",
         &["guideline_entity(actual,a,patient,countable)".into()],
     );
-    c.check("20-pair block", &text);
-    c.mutation("19-pair block", &text, &pair("guideline_qualifier", 4), "");
+    c.check("22-pair block", &text);
+    c.mutation("21-pair block", &text, &pair("guideline_qualifier", 4), "");
     c.finish();
 }
 fn position_clause(literal: &str, position: usize) -> String {
@@ -444,7 +446,7 @@ fn c1c_declaration_and_literal_boundaries() {
         &["guideline_entity(actual,a,patient,countable)".into()],
     );
     let pairs: Vec<_> = INDICATORS.iter().map(|&(n, a)| pair(n, a)).collect();
-    for count in 0..20 {
+    for count in 0..22 {
         c.mutation(
             &format!("count={count}"),
             &text,
@@ -453,12 +455,12 @@ fn c1c_declaration_and_literal_boundaries() {
         );
     }
     c.mutation(
-        "count=21",
+        "count=23",
         &text,
         &declarations(),
         &(declarations() + &pairs[17]),
     );
-    for i in 0..19 {
+    for i in 0..21 {
         c.mutation(
             &format!("swapped-pairs-{i}"),
             &text,

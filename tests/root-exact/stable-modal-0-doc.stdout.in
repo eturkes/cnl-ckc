@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('root-exact-stable-modal',ace_sha256(cf18d663376f63039464e3aaaa03bd5184c5be32839d3ee29d4efcd74da47bd7),ulex(sha256('9cfaa91b8eb133f080bf5e9cd8d9c1ba4a8204918639a392eb9a5352ee7ab0d0')),vocabulary(none)).
 % S1: A man can see exactly 2 dogs.

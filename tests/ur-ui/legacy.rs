@@ -40,6 +40,40 @@ fn baseline() -> Scratch {
         ],
     );
     ok(&out, "pre-unit fixture extraction");
+    // Keep the archive frozen; port its document + rendered-code blocks at run time.
+    let anchor = ":- discontiguous(guideline_exclusion/1).\n";
+    let pairs = ":- multifile(guideline_supersession/4).\n:- discontiguous(guideline_supersession/4).\n:- multifile(guideline_evaluation_date/1).\n:- discontiguous(guideline_evaluation_date/1).\n";
+    let ui = scratch.0.join("tests/ui");
+    let mut carriers = 0;
+    let mut pages = 0;
+    for (path, bytes) in files(&ui) {
+        let Ok(text) = std::str::from_utf8(&bytes) else {
+            continue;
+        };
+        if text.contains(anchor) {
+            assert_eq!(text.matches(anchor).count(), 1, "{}", path.display());
+            let mut ported = text.replacen(anchor, &format!("{anchor}{pairs}"), 1);
+            let summary = "<summary>Compiled Prolog (";
+            if let Some((_, tail)) = text.split_once(summary) {
+                assert_eq!(text.matches(summary).count(), 1);
+                let lines = tail.split_once(" lines)</summary>").unwrap().0;
+                let count: usize = lines.parse().unwrap();
+                ported = ported.replacen(
+                    &format!("{summary}{lines} lines)</summary>"),
+                    &format!(
+                        "{summary}{} lines)</summary>",
+                        count + pairs.lines().count()
+                    ),
+                    1,
+                );
+                pages += 1;
+            }
+            write(&ui.join(path), ported);
+            carriers += 1;
+        }
+    }
+    assert_eq!(carriers, 26, "frozen document + rendered-code block census");
+    assert_eq!(pages, 12, "frozen compiled-code line-count census");
     scratch
 }
 

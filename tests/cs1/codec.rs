@@ -54,9 +54,9 @@ fn lcp(a: &[u8], b: &[u8]) -> usize {
 fn b1_twenty_indicators_replace_nineteen_at_the_exact_frontier() {
     let mut c = Cases::new("B1-block");
     let text = document("doc", &["guideline_event(actual,e,wait)".into()]);
-    c.check("20 indicators", &text);
+    c.check("22 indicators", &text);
     let pairs: Vec<_> = INDICATORS.iter().map(|&(n, a)| pair(n, a)).collect();
-    for count in 0..20 {
+    for count in 0..22 {
         c.mutation(
             &format!("{count} indicators"),
             &text,
@@ -68,7 +68,7 @@ fn b1_twenty_indicators_replace_nineteen_at_the_exact_frontier() {
         c.mutation(&format!("missing pair {i}"), &text, p, "");
         c.mutation(&format!("duplicate pair {i}"), &text, p, &p.repeat(2));
     }
-    for i in 0..19 {
+    for i in 0..21 {
         c.mutation(
             &format!("swapped pairs {i}"),
             &text,

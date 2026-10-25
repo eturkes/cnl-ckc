@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('range--duration',ace_sha256(a06a8210d907eccc0a9193a53ad5c34b37b290cd60d1487760e998817bfca316),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256('24f9752224fcecc844f72322d0844d101a96e07fe3643cd98b9a4e96e6f7ad44'))).
 % S1: If a patient has a surgery then the patient waits for at least 8 hours to 12 hours.

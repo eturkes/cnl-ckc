@@ -31,6 +31,8 @@ const INDICATORS: &[(&str, usize)] = &[
     ("qualifier", 4),
     ("unit", 3),
     ("exclusion", 1),
+    ("supersession", 4),
+    ("evaluation_date", 1),
 ];
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

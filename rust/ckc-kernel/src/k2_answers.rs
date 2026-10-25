@@ -25,7 +25,7 @@ pub fn semantic_name(name: &Vec<u8>, arity: usize) -> (out: bool)
         reveal(ckc_spec::v1text::is_semantic_pred);
         reveal(ckc_spec::v1text::indicator_count);
     }
-    let end: usize = 20;
+    let end: usize = 22;
     let mut i = 2usize;
     while i < end
         invariant
@@ -573,11 +573,11 @@ pub fn parsed_term_count(
                     ".pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n",
                 );
                 reveal(ckc_spec::v1text::ascii);
-                assert(ckc_spec::v1text::doc_line1(doc.docid).len() >= 42);
-                assert(parsed.clauses.len() + 42 <= bytes.len());
+                assert(ckc_spec::v1text::doc_line1(doc.docid).len() >= 46);
+                assert(parsed.clauses.len() + 46 <= bytes.len());
                 reveal(ckc_spec::v1text::indicator_count);
             }
-            parsed.clauses.len() + 42
+            parsed.clauses.len() + 46
         },
         crate::v1_term_impl::EV1Class::Query => 2,
         _ => 1,

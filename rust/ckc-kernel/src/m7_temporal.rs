@@ -1,4 +1,7 @@
 use crate::k4_bytes::{append, copy, eq, split, starts_with};
+#[cfg(verus_keep_ghost)]
+use crate::m7_supersession::sup_rows;
+use crate::m7_supersession::{ESuperseding, clone_rows};
 use ckc_spec::check::*;
 #[cfg(verus_keep_ghost)]
 use ckc_spec::v1text::{all_in, ascii, udec_bytes};
@@ -25,6 +28,8 @@ pub struct EVocabulary {
     pub qualifiers: Vec<(Vec<u8>, Vec<u8>)>,
     pub scopes: Vec<(Vec<u8>, Vec<u8>)>,
     pub exclusions: Vec<Vec<u8>>,
+    pub supersessions: Vec<(Vec<u8>, ESuperseding)>,
+    pub superseded: Vec<(Vec<u8>, ESuperseding)>,
 }
 
 pub open spec fn pairs_view(v: Seq<(Vec<u8>, Vec<u8>)>) -> Seq<(Seq<u8>, Seq<u8>)> {
@@ -54,6 +59,8 @@ impl View for EVocabulary {
             qualifiers: pairs_view(self.qualifiers@),
             scopes: pairs_view(self.scopes@),
             exclusions: lemmas_view(self.exclusions@),
+            supersessions: sup_rows(self.supersessions@),
+            superseded: sup_rows(self.superseded@),
         }
     }
 }
@@ -833,6 +840,8 @@ pub fn clone_tab(t: &EVocabulary) -> (r: EVocabulary)
         qualifiers: clone_pairs(&t.qualifiers),
         scopes: clone_pairs(&t.scopes),
         exclusions: clone_lemmas(&t.exclusions),
+        supersessions: clone_rows(&t.supersessions),
+        superseded: clone_rows(&t.superseded),
     }
 }
 
@@ -844,6 +853,7 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
     proof {
         literals();
         scope_literals();
+        crate::m7_supersession::literals();
         assert(byte_rows(f@).len() == f@.len());
     }
     if line.len() > 0 && line[0] == 0x23 {
@@ -1059,6 +1069,35 @@ pub fn add_row_exec(t: &EVocabulary, line: &[u8]) -> (r: Result<EVocabulary, Vec
         r.exclusions.push(copy(&f[1]));
         proof {
             assert(lemmas_view(r.exclusions@) =~= lemmas_view(t.exclusions@).push(f@[1]@));
+        }
+        Ok(r)
+    } else if eq(&f[0], b"supersession") || eq(&f[0], b"superseded") {
+        let document = eq(&f[0], b"supersession");
+        if document && !crate::v1_term_impl::name_ok_exec(&f[1]) {
+            return why(b"supersession document");
+        }
+        let sup = match crate::m7_supersession::superseding_exec(&f[2]) {
+            Some(s) => s,
+            None => return why(b"supersession value"),
+        };
+        if document && crate::m7_supersession::key_in(&t.supersessions, &f[1]) {
+            return why(b"duplicate supersession");
+        }
+        if !document && crate::m7_supersession::key_in(&t.superseded, &f[1]) {
+            return why(b"duplicate superseded");
+        }
+        let mut r = clone_tab(t);
+        let ghost s = sup@;
+        if document {
+            r.supersessions.push((copy(&f[1]), sup));
+            proof {
+                assert(sup_rows(r.supersessions@) =~= sup_rows(t.supersessions@).push((f@[1]@, s)));
+            }
+        } else {
+            r.superseded.push((copy(&f[1]), sup));
+            proof {
+                assert(sup_rows(r.superseded@) =~= sup_rows(t.superseded@).push((f@[1]@, s)));
+            }
         }
         Ok(r)
     } else {
@@ -1280,6 +1319,8 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         qualifiers: Vec::new(),
         scopes: Vec::new(),
         exclusions: Vec::new(),
+        supersessions: Vec::new(),
+        superseded: Vec::new(),
     };
     let mut i = 0usize;
     proof {
@@ -1297,6 +1338,8 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         assert(t@.qualifiers =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
         assert(t@.scopes =~= Seq::<(Seq<u8>, Seq<u8>)>::empty());
         assert(t@.exclusions =~= Seq::<Seq<u8>>::empty());
+        assert(t@.supersessions =~= Seq::<(Seq<u8>, Superseding)>::empty());
+        assert(t@.superseded =~= Seq::<(Seq<u8>, Superseding)>::empty());
         assert(t@ == e0);
         assert(rows.skip(0) =~= rows);
     }
@@ -1359,6 +1402,14 @@ pub fn parse_vocabulary_exec(bytes: &[u8]) -> (r: Result<(EVocabulary, usize), V
         Some(why) => Err(why),
         None => Ok((t, n)),
     }
+}
+
+pub fn check_supersession_impl(path: &[u8], bytes: &[u8], c: &ckc_spec::check::ECoverage) -> (r:
+    ckc_spec::check::EVerdict)
+    ensures
+        r@ == ckc_spec::vocabulary::supersession_check(path@, bytes@, c@.rows),
+{
+    crate::m7_supersession::check(path, bytes, c)
 }
 
 pub fn check_vocabulary_impl(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EVerdict)

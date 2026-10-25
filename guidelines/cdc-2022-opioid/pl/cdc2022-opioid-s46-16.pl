@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s46-16',ace_sha256('22e12a14e85f7f4cbfd1d3eb06c44c6e715f446bf18081fd85c1d856e46d1162'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a clinician prescribes an opioid to a patient and the patient has a mild-sleep-disordered-breathing then the clinician should carefully monitor the patient and should cautiously titrate an opioid-dosage for the patient.

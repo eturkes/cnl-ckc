@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s40-01',ace_sha256(ef01088213835e0fc5cc163858d23cd81b2c2498fc1c99add20a1909d136c9b4),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient takes a short-acting-full-agonist-opioid and the short-acting-full-agonist-opioid has a last-dose and a clinician plans a first-buprenorphine-dose for the patient then the clinician should wait for at least 8 hours to 12 hours after the last-dose before the first-buprenorphine-dose and the patient should wait for at least 8 hours to 12 hours after the last-dose before the first-buprenorphine-dose.

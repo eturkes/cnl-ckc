@@ -5,7 +5,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-pub const INDICATORS: [(&str, usize); 20] = [
+pub const INDICATORS: [(&str, usize); 22] = [
     ("guideline_schema_version", 1),
     ("guideline_document", 4),
     ("guideline_entity", 4),
@@ -26,6 +26,8 @@ pub const INDICATORS: [(&str, usize); 20] = [
     ("guideline_qualifier", 4),
     ("guideline_unit", 3),
     ("guideline_exclusion", 1),
+    ("guideline_supersession", 4),
+    ("guideline_evaluation_date", 1),
 ];
 static SERIAL: AtomicUsize = AtomicUsize::new(0);
 

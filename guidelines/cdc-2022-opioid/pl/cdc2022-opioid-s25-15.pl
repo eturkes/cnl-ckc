@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s25-15',ace_sha256('171a4d378160205acc6aa8fbbcdb3d3b51874742bcbbc45d2ee8eb5295fbf9f5'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a moderate-to-severe-chronic-back-pain then an acetaminophen-or-NSAID-first-nonopioid-strategy outperforms an opioid-first-strategy in a pain-intensity-improvement and outperforms an opioid-first-strategy in a side-effect-reduction.

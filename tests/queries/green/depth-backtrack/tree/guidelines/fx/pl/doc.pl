@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document(doc,ace_sha256('8647489d63cfcde8184eb52d11768ae0aeed396bf4c03d5e4ef108d354040ca7'),ulex(none),vocabulary(none)).
 % S1: Synthetic attributed fixture sentence.

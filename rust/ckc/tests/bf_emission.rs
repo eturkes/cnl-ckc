@@ -32,7 +32,19 @@ fn fixture(id: &str, name: &str) -> PathBuf {
     root().join("tests/bf/probes").join(id).join(name)
 }
 fn text(id: &str, name: &str) -> String {
-    fs::read_to_string(fixture(id, name)).unwrap()
+    let text = fs::read_to_string(fixture(id, name)).unwrap();
+    if name == "before.pl.in" && id != "question" {
+        // Frozen pre-bf products gain only the sup1 declaration pairs.
+        let anchor = ":- discontiguous(guideline_exclusion/1).\n";
+        assert_eq!(text.matches(anchor).count(), 1);
+        text.replacen(
+            anchor,
+            &format!("{anchor}:- multifile(guideline_supersession/4).\n:- discontiguous(guideline_supersession/4).\n:- multifile(guideline_evaluation_date/1).\n:- discontiguous(guideline_evaluation_date/1).\n"),
+            1,
+        )
+    } else {
+        text
+    }
 }
 fn quote(path: &Path) -> String {
     format!(

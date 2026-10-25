@@ -48,9 +48,9 @@ fn terms() -> Vec<String> {
 fn p1_nineteen_declarations_and_exact_block_boundaries() {
     let mut c = Cases::new("P1-declarations");
     let text = document("doc", &["guideline_event(actual,e,wait)".into()]);
-    c.check("20 declarations", &text);
+    c.check("22 declarations", &text);
     let pairs: Vec<_> = INDICATORS.iter().map(|&(n, a)| pair(n, a)).collect();
-    for count in 0..20 {
+    for count in 0..22 {
         c.mutation(
             &format!("{count} declarations"),
             &text,
@@ -62,7 +62,7 @@ fn p1_nineteen_declarations_and_exact_block_boundaries() {
         c.mutation(&format!("missing pair {i}"), &text, pair, "");
         c.mutation(&format!("duplicate pair {i}"), &text, pair, &pair.repeat(2));
     }
-    for i in 0..19 {
+    for i in 0..21 {
         c.mutation(
             &format!("swapped pairs {i}"),
             &text,
@@ -134,7 +134,12 @@ fn p1_builtins_are_body_literals_not_heads() {
         }
         let lit = literal("guideline_satisfies", arity);
         let text = document("doc", std::slice::from_ref(&lit));
-        let at = text.rfind(&lit).unwrap() + "guideline_".len();
+        let at = text.rfind(&lit).unwrap()
+            + INDICATORS[2..]
+                .iter()
+                .map(|(name, _)| lcp(lit.as_bytes(), format!("{name}(").as_bytes()))
+                .max()
+                .unwrap();
         c.reject_at(&format!("builtin /{arity} head"), &text, at);
         for wrong in [0, 1, 2, 3, 5, 7] {
             for at in 1..4 {

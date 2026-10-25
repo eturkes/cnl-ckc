@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec07-imp12',ace_sha256('8ff043735afcce50851ab5d96667a26b618b61d2c1798b5d960cad282165b378'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a clinician conducts a follow-up with a patient then the clinician should review a patient-perspective with the patient and should review a patient-goal with the patient and should determine a continued-opioid-goal-attainment for the patient and should assess a sustained-pain-improvement for the patient and should assess a sustained-function-improvement for the patient and should assess a common-opioid-adverse-event for the patient and should assess a serious-opioid-adverse-event for the patient and should assess a serious-opioid-adverse-event-warning-sign for the patient and should assess an opioid-use-disorder-sign for the patient.

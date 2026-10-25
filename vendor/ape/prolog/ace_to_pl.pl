@@ -40,13 +40,18 @@
 %   with its scope + exclusion pair an exclusion rule's record
 %   guideline_exclusion(Key) and \+ guideline_exclusion(Key) on every
 %   should/must/may edge clause (contract cs1; the cs1_ prefix),
+%   with a supersession row naming the document a record
+%   guideline_supersession(DocId, S, source(Citation, Url), Date) ending every
+%   sentence block and guideline_evaluation_date(V), guideline_satisfies(exactly,
+%   V, less, Date) on every clause of each should/must/may variant, before the
+%   scope guard (contract sup1; the sup1_ prefix),
 %   and, with or without a table, a rule consequent's formula `Y = E` as a
 %   guideline_product/6 | guideline_quotient/6 chain whose result is Y's
 %   cardinality (contract da2; the da2_ prefix),
 %   and admits relation/3 leaves + upper-bound condition lists in questions;
 %   rejects add unsupported temporal_shape(Why,S), grade_shape(Why,S),
 %   preference_shape(Why,S), qualifier_shape(Why,S), scope_shape(Why,S),
-%   formula_shape(Why,S) and the load class
+%   supersession_shape(root_deontic,S), formula_shape(Why,S) and the load class
 %   vocabulary_load (exit 2). Law = docs/REFERENCE.md "Compiled Prolog schema".
 % The composition consumption modes (check, aggregate-check, recursion-check,
 % answer, trace) run in the verified Rust kernel as `ckc v1 <mode>`.
@@ -771,7 +776,7 @@ vocabulary_header(Codes) :-
     atom_codes('# format: kind\tlemma\tvalue\n', Codes).
 
 read_vocabulary(File, table(Units, Relations, Spacings, Windows, Frequencies,
-        Approximations, Ranges, Strength, Digest)) :-
+        Approximations, Ranges, Strength, Supersession, Digest)) :-
     setup_call_cleanup(
         open(File, read, Stream, [type(binary)]),
         read_stream_to_codes(Stream, Bytes),
@@ -782,9 +787,10 @@ read_vocabulary(File, table(Units, Relations, Spacings, Windows, Frequencies,
     ( Body \== [] -> true ; v2_bad(no_rows) ),
     ( append(Lines, [0'\n], Body) -> true ; v2_bad(final_newline) ),
     split_lf(Lines, Rows),
-    v2_rows(Rows, 1, t([], [], [], [], [], [], [], k([], [], [], [], [], [], [])),
+    v2_rows(Rows, 1, t([], [], [], [], [], [], [], k([], [], [], [], [], [], []),
+          s([], [])),
         t(Units, Relations, Spacings, Windows, Frequencies, Approximations, Ranges,
-          Strength)),
+          Strength, Supersession)),
     v2_pairing(Strength).
 
 /* cs1 D1: the scope + exclusion rows come as a pair; a lone row reports
@@ -815,7 +821,7 @@ v2_rows([Row|Rows], N, T0, T) :-
    row (a noun that is no unit, frame or grade noun + the guideline key) and
    one exclusion row (its verb) (cs1 D1). K = k(Strengths, Evidences,
    Preferences, Alternatives, Qualifiers, Scope, Exclusion). */
-v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
+v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0, Sup0), T) :-
     K0 = k(GS0, GE0, P0, Alt0, Q0, Sc0, Ex0),
     ( Row = [0'#|_] -> v2_bad(row(N, comment)) ; true ),
     v2_split_tab(Row, Fields),
@@ -834,7 +840,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(U0, [Lemma-Unit], U),
-        T = t(U, R0, S0, W0, F0, A0, G0, K0)
+        T = t(U, R0, S0, W0, F0, A0, G0, K0, Sup0)
     ; Kind == relation ->
         ( v2_closed_id(V, [duration, within, after, before], Role) ->
             true
@@ -846,7 +852,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(R0, [Lemma-Role], R),
-        T = t(U0, R, S0, W0, F0, A0, G0, K0)
+        T = t(U0, R, S0, W0, F0, A0, G0, K0, Sup0)
     ; ( Kind == spacing ; Kind == window ) ->
         ( v2_lemma(V, Frame) -> true ; v2_bad(row(N, frame_lemma)) ),
         ( ( memberchk(Lemma-Frame, S0) ; memberchk(Lemma-Frame, W0)
@@ -858,9 +864,9 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ( memberchk(Lemma, Alt0) -> v2_bad(row(N, duplicate_preposition)) ; true ),
         ( Kind == spacing ->
             append(S0, [Lemma-Frame], S),
-            T = t(U0, R0, S, W0, F0, A0, G0, K0)
+            T = t(U0, R0, S, W0, F0, A0, G0, K0, Sup0)
         ; append(W0, [Lemma-Frame], W),
-          T = t(U0, R0, S0, W, F0, A0, G0, K0)
+          T = t(U0, R0, S0, W, F0, A0, G0, K0, Sup0)
         )
     ; Kind == frequency ->
         ( atom_codes(period, V) -> true ; v2_bad(row(N, frequency_value)) ),
@@ -870,7 +876,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(F0, [Lemma], F),
-        T = t(U0, R0, S0, W0, F, A0, G0, K0)
+        T = t(U0, R0, S0, W0, F, A0, G0, K0, Sup0)
     ; Kind == approximation ->
         ( atom_codes(about, V) -> true ; v2_bad(row(N, approximation_value)) ),
         ( ( memberchk(Lemma, A0) ; memberchk(Lemma, P0) ; memberchk(Lemma-_, Q0) ) ->
@@ -878,7 +884,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(A0, [Lemma], A),
-        T = t(U0, R0, S0, W0, F0, A, G0, K0)
+        T = t(U0, R0, S0, W0, F0, A, G0, K0, Sup0)
     ; Kind == range ->
         ( atom_codes(minimum, V) -> true ; v2_bad(row(N, range_value)) ),
         ( ( memberchk(Lemma, G0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma, F0)
@@ -887,7 +893,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(G0, [Lemma], G),
-        T = t(U0, R0, S0, W0, F0, A0, G, K0)
+        T = t(U0, R0, S0, W0, F0, A0, G, K0, Sup0)
     ; ( Kind == strength ; Kind == evidence ) ->
         ( Kind == strength ->
             Ids = [strong, conditional], Why = strength_value
@@ -902,9 +908,9 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ),
         ( Kind == strength ->
             append(GS0, [Lemma-Value], GS),
-            T = t(U0, R0, S0, W0, F0, A0, G0, k(GS, GE0, P0, Alt0, Q0, Sc0, Ex0))
+            T = t(U0, R0, S0, W0, F0, A0, G0, k(GS, GE0, P0, Alt0, Q0, Sc0, Ex0), Sup0)
         ; append(GE0, [Lemma-Value], GE),
-          T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE, P0, Alt0, Q0, Sc0, Ex0))
+          T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE, P0, Alt0, Q0, Sc0, Ex0), Sup0)
         )
     ; Kind == preference ->
         ( atom_codes(preferred, V) -> true ; v2_bad(row(N, preference_value)) ),
@@ -913,7 +919,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(P0, [Lemma], P),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P, Alt0, Q0, Sc0, Ex0))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P, Alt0, Q0, Sc0, Ex0), Sup0)
     ; Kind == alternative ->
         ( atom_codes(alternative, V) -> true ; v2_bad(row(N, alternative_value)) ),
         ( ( memberchk(Lemma, Alt0) ; memberchk(Lemma-_, R0) ; memberchk(Lemma-_, S0)
@@ -922,7 +928,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(Alt0, [Lemma], Alt),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt, Q0, Sc0, Ex0))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt, Q0, Sc0, Ex0), Sup0)
     ; Kind == qualifier ->
         ( v2_closed_id(V, [usuality, ideality, focus, manner, force, possibility,
               applicability], Class) ->
@@ -935,7 +941,7 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         append(Q0, [Lemma-Class], Q),
-        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt0, Q, Sc0, Ex0))
+        T = t(U0, R0, S0, W0, F0, A0, G0, k(GS0, GE0, P0, Alt0, Q, Sc0, Ex0), Sup0)
     ; Kind == scope ->
         ( v2_scope_key(V, Key) -> true ; v2_bad(row(N, scope_value)) ),
         ( Sc0 \== [] -> v2_bad(row(N, duplicate_scope)) ; true ),
@@ -945,14 +951,83 @@ v2_row(Row, N, t(U0, R0, S0, W0, F0, A0, G0, K0), T) :-
         ; true
         ),
         T = t(U0, R0, S0, W0, F0, A0, G0,
-            k(GS0, GE0, P0, Alt0, Q0, [scope(Lemma, Key, N)], Ex0))
+            k(GS0, GE0, P0, Alt0, Q0, [scope(Lemma, Key, N)], Ex0), Sup0)
     ; Kind == exclusion ->
         ( atom_codes(scope, V) -> true ; v2_bad(row(N, exclusion_value)) ),
         ( Ex0 \== [] -> v2_bad(row(N, duplicate_exclusion)) ; true ),
         T = t(U0, R0, S0, W0, F0, A0, G0,
-            k(GS0, GE0, P0, Alt0, Q0, Sc0, [exclusion(Lemma, N)]))
+            k(GS0, GE0, P0, Alt0, Q0, Sc0, [exclusion(Lemma, N)]), Sup0)
+    ; Kind == supersession ->
+        ( v2_scope_key(L, DocId) -> true ; v2_bad(row(N, supersession_document)) ),
+        ( v2_superseding(V, Sup) -> true ; v2_bad(row(N, supersession_value)) ),
+        Sup0 = s(Docs0, Passages0),
+        ( memberchk(DocId-_, Docs0) -> v2_bad(row(N, duplicate_supersession)) ; true ),
+        append(Docs0, [DocId-Sup], Docs),
+        T = t(U0, R0, S0, W0, F0, A0, G0, K0, s(Docs, Passages0))
+    ; Kind == superseded ->
+        ( v2_superseding(V, Sup) -> true ; v2_bad(row(N, supersession_value)) ),
+        Sup0 = s(Docs0, Passages0),
+        ( memberchk(Lemma-_, Passages0) -> v2_bad(row(N, duplicate_superseded)) ; true ),
+        append(Passages0, [Lemma-Sup], Passages),
+        T = t(U0, R0, S0, W0, F0, A0, G0, K0, s(Docs0, Passages))
     ; v2_bad(row(N, kind))
     ).
+
+/* sup1 D1: a supersession value = `<date> <url> <citation>` (spec
+   vocabulary.rs superseding): the url token ends at the first space after the
+   date. Sup = sup(Date, Url, Citation), Date = the integer YYYYMMDD. */
+v2_superseding(V, sup(Date, Url, Citation)) :-
+    length(DateCodes, 8),
+    append(DateCodes, [0' |Rest], V),
+    v2_date(DateCodes, Date),
+    append(UrlCodes, [0' |CitationCodes], Rest),
+    \+ memberchk(0' , UrlCodes),
+    !,
+    v2_url(UrlCodes),
+    v2_citation(CitationCodes, Codes),
+    atom_codes(Url, UrlCodes),
+    atom_codes(Citation, Codes).
+
+/* Eight ASCII digits YYYYMMDD naming a proleptic Gregorian date (years 0000-9999). */
+v2_date(Codes, Date) :-
+    forall(member(C, Codes), ( C >= 0'0, C =< 0'9 )),
+    Codes = [Y1, Y2, Y3, Y4, M1, M2, D1, D2],
+    v2_digits([Y1, Y2, Y3, Y4], 0, Y),
+    v2_digits([M1, M2], 0, M),
+    v2_digits([D1, D2], 0, D),
+    M >= 1, M =< 12,
+    v2_month_length(Y, M, Length),
+    D >= 1, D =< Length,
+    v2_digits(Codes, 0, Date).
+
+v2_digits([], V, V).
+v2_digits([C|Cs], V0, V) :-
+    V1 is V0 * 10 + C - 0'0,
+    v2_digits(Cs, V1, V).
+
+v2_month_length(Y, 2, Length) :-
+    !,
+    ( ( Y mod 4 =:= 0, Y mod 100 =\= 0 ; Y mod 400 =:= 0 ) -> Length = 29 ; Length = 28 ).
+v2_month_length(_, M, 30) :-
+    memberchk(M, [4, 6, 9, 11]),
+    !.
+v2_month_length(_, _, 31).
+
+/* `https://` and at least one more byte, every byte in 0x21-0x7E. */
+v2_url(Codes) :-
+    atom_codes('https://', Scheme),
+    append(Scheme, [_|_], Codes),
+    forall(member(C, Codes), ( C >= 0x21, C =< 0x7e )).
+
+/* Valid UTF-8 without a control or DEL byte, no space at either end; Codes =
+   its decoded text. */
+v2_citation(Bytes, Codes) :-
+    Bytes = [First|_],
+    First =\= 0x20,
+    last(Bytes, Last),
+    Last =\= 0x20,
+    forall(member(B, Bytes), ( B >= 0x20, B =\= 0x7f )),
+    catch(decode_utf8(Bytes, Codes, 0), _, fail).
 
 /* cs1 D1: a guideline key = the docid grammar (spec v1text name_ok). */
 v2_scope_key([C|Cs], Key) :-
@@ -980,7 +1055,7 @@ v2_closed_id(Codes, Ids, Id) :-
     !.
 
 v2_table(T) :-
-    nb_current(ace_to_pl_vocabulary, table(U, R, S, W, F, A, G, _, _)),
+    nb_current(ace_to_pl_vocabulary, table(U, R, S, W, F, A, G, _, _, _)),
     T = t(U, R, S, W, F, A, G).
 
 /* ---------- v2 annotation pass (contract m7t D4/D5) ----------
@@ -1259,7 +1334,7 @@ v2_ann_inner(range(E, H, _), Scope, Anns, Ctx, '$guideline_range'(L, H)) :-
    classify document-wide (v3_plain); a violation reports at its item;
    question mode never runs it. */
 s1_strength(S, Where, Items0, Items) :-
-    ( nb_current(ace_to_pl_vocabulary, table(U, R, Sp, W, F, A, G, K, _)) ->
+    ( nb_current(ace_to_pl_vocabulary, table(U, R, Sp, W, F, A, G, K, _, _)) ->
         s1_items(Items0, t(U, R, Sp, W, F, A, G), K, S, Where, Items0, Items)
     ; Items = Items0
     ).
@@ -1796,7 +1871,7 @@ v3_about_target(frequency(_, _, W, _), W, W).
 /* Every record (document /4, question /5) ends in vocabulary(none) |
    vocabulary(sha256(T)), T = the digest of the raw table bytes (c1 D2/D3). */
 vocabulary_record(Record0, Record) :-
-    ( nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _, _, Digest)) ->
+    ( nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _, _, _, Digest)) ->
         Wrapper = vocabulary(sha256(Digest))
     ; Wrapper = vocabulary(none)
     ),
@@ -1830,8 +1905,9 @@ vocabulary_record(Record0, Record) :-
    invalid_drs_shape, condition_shape(C), sentence_shape(Conds).
    See docs/REFERENCE.md "Compiled Prolog schema". */
 
-/* Uniform declaration block (F2, c1 D2, s1 D1, s2 D1, nt1 D2, cs1 D2): every
-   document declares all 20 indicators regardless of population or table. */
+/* Uniform declaration block (F2, c1 D2, s1 D1, s2 D1, nt1 D2, cs1 D2, sup1
+   D2/D3): every document declares all 22 indicators regardless of population
+   or table. */
 v1_indicators([
     guideline_schema_version/1,
     guideline_document/4,
@@ -1852,7 +1928,9 @@ v1_indicators([
     guideline_preference/4,
     guideline_qualifier/4,
     guideline_unit/3,
-    guideline_exclusion/1
+    guideline_exclusion/1,
+    guideline_supersession/4,
+    guideline_evaluation_date/1
 ]).
 
 v1_translate_document(Emit, DocId, Bytes, Text, UlexDigest, Sentences, Drs,
@@ -2063,7 +2141,8 @@ v1_translate_groups([S-Group|Groups], DocId, Map0, Dims0,
         true
     ; reject(unsupported, grade_shape(duplicate_dimension, S))
     ),
-    cs1_scope_pass(Group, S, SGroups0, SGroups),
+    cs1_scope_pass(Group, S, SGroups0, SGroups1),
+    sup1_pass(Group, S, DocId, SGroups1, SGroups),
     v1_translate_groups(Groups, DocId, Map, Dims, Bundles).
 
 /* ---------- cs1 scope exclusions (contract cs1 D2-D5: a table with the
@@ -2076,7 +2155,7 @@ v1_translate_groups([S-Group|Groups], DocId, Map0, Dims0,
    rejects scope_shape(Why, S). DRS read via arg/3 + == only. */
 cs1_scope(Noun, Verb, Key) :-
     nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _,
-        k(_, _, _, _, _, [scope(Noun, Key, _)], [exclusion(Verb, _)]), _)).
+        k(_, _, _, _, _, [scope(Noun, Key, _)], [exclusion(Verb, _)]), _, _)).
 
 cs1_scope_pass(Group, S, SGroups0, SGroups) :-
     ( cs1_scope(Noun, Verb, Key) ->
@@ -2282,6 +2361,57 @@ cs1_guard(Key, clause(Head, Goals), clause(Head, Goals2)) :-
       memberchk(Op, [should, must, may]) ->
         append(Goals, [naf([], [guideline_exclusion(Key)])], Goals2)
     ; Goals2 = Goals
+    ).
+
+/* ---------- sup1 superseded statements (contract sup1 D2-D5: a table row
+   naming this document) ----------
+   After the scope pass: every group holding a should|must|may edge gains
+   guideline_evaluation_date(V), guideline_satisfies(exactly, V, less, Date) on
+   each clause (before a trailing scope guard), its witness pairs V-(Date - 1);
+   the sentence's record guideline_supersession(DocId, S, source(Citation, Url),
+   Date) follows as a group of kind supersession, which v1_prove_groups skips
+   (no obligation); rejects supersession_shape(root_deontic, S). */
+sup1_superseding(DocId, Sup) :-
+    nb_current(ace_to_pl_vocabulary, table(_, _, _, _, _, _, _, _, s(Docs, _), _)),
+    memberchk(DocId-Sup, Docs).
+
+sup1_pass(Group, S, DocId, SGroups0, SGroups) :-
+    ( sup1_superseding(DocId, sup(Date, Url, Citation)) ->
+        ( member(Item, Group),
+          cs1_root_deontic(Item) ->
+            reject(unsupported, supersession_shape(root_deontic, S))
+        ; true
+        ),
+        maplist(sup1_group(Date), SGroups0, SGroups1),
+        append(SGroups1, [group(supersession, 0, [],
+            [clause(guideline_supersession(DocId, S, source(Citation, Url), Date), [])])],
+            SGroups)
+    ; SGroups = SGroups0
+    ).
+
+sup1_group(Date, group(Kind, K, Pairs, Clauses0), Group) :-
+    ( member(clause(Head, _), Clauses0),
+      cs1_deontic_edge(Head) ->
+        W is Date - 1,
+        maplist(sup1_guard(V, Date), Clauses0, Clauses),
+        append(Pairs, [V-W], Pairs1),
+        Group = group(Kind, K, Pairs1, Clauses)
+    ; Group = group(Kind, K, Pairs, Clauses0)
+    ).
+
+cs1_deontic_edge(Head) :-
+    functor(Head, guideline_operator, 3),
+    arg(3, Head, Op),
+    atom(Op),
+    memberchk(Op, [should, must, may]).
+
+sup1_guard(V, Date, clause(Head, Goals0), clause(Head, Goals)) :-
+    Guard = [guideline_evaluation_date(V), guideline_satisfies(exactly, V, less, Date)],
+    ( append(Front, [Last], Goals0),
+      subsumes_term(naf([], [guideline_exclusion(_)]), Last) ->
+        append(Front, Guard, Goals1),
+        append(Goals1, [Last], Goals)
+    ; append(Goals0, Guard, Goals)
     ).
 
 v1_groups_clause_count([], 0).
@@ -4628,6 +4758,9 @@ v1_prove_bundles([bundle(S, SGroups)|Bundles], DocId, Payload) :-
     append(Head, Tail, Payload).
 
 v1_prove_groups([], _, _, []).
+v1_prove_groups([group(supersession, _, _, _)|Groups], DocId, S, Obligations) :-
+    !,
+    v1_prove_groups(Groups, DocId, S, Obligations).
 v1_prove_groups([Group|Groups], DocId, S, [Obligation|Obligations]) :-
     v1_group_obligation(Group, DocId, S, Obligation),
     v1_check_obligation(Obligation),

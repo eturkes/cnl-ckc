@@ -16803,7 +16803,7 @@ proof fn decls_end(out: Seq<u8>)
 fn decls_block() -> (r: Vec<u8>)
     ensures
         r@ == ckc_spec::v1text::decls_from(0),
-        r@.len() == 1512,
+        r@.len() == 1686,
 {
     let mut out: Vec<u8> = Vec::new();
     proof {
@@ -17032,6 +17032,28 @@ fn decls_block() -> (r: Vec<u8>)
     push_decl_pair(&mut out, name, 1, Ghost(19int));
     proof {
         decls_step(before, 19);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_supersession";
+    proof {
+        reveal_strlit("guideline_supersession");
+        reveal_byteslit(b"guideline_supersession");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_supersession"@));
+    }
+    push_decl_pair(&mut out, name, 4, Ghost(20int));
+    proof {
+        decls_step(before, 20);
+    }
+    let ghost before = out@;
+    let name: &[u8] = b"guideline_evaluation_date";
+    proof {
+        reveal_strlit("guideline_evaluation_date");
+        reveal_byteslit(b"guideline_evaluation_date");
+        assert(name@ =~= ckc_spec::v1text::ascii("guideline_evaluation_date"@));
+    }
+    push_decl_pair(&mut out, name, 1, Ghost(21int));
+    proof {
+        decls_step(before, 21);
         decls_end(out@);
     }
     out
@@ -18047,6 +18069,25 @@ fn exclusion_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     arity == 1 && vec_slice_equal(name, exclusion)
 }
 
+fn supersession_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
+    ensures
+        r == ((ckc_spec::v1text::indicator(20) == (name@, arity as nat)) || (
+        ckc_spec::v1text::indicator(21) == (name@, arity as nat))),
+{
+    let supersession: &[u8] = b"guideline_supersession";
+    let date: &[u8] = b"guideline_evaluation_date";
+    proof {
+        reveal_strlit("guideline_supersession");
+        reveal_byteslit(b"guideline_supersession");
+        reveal_strlit("guideline_evaluation_date");
+        reveal_byteslit(b"guideline_evaluation_date");
+        reveal(ckc_spec::v1text::ascii);
+        assert(supersession@ =~= ckc_spec::v1text::ascii("guideline_supersession"@));
+        assert(date@ =~= ckc_spec::v1text::ascii("guideline_evaluation_date"@));
+    }
+    arity == 4 && vec_slice_equal(name, supersession) || arity == 1 && vec_slice_equal(name, date)
+}
+
 fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     ensures
         r == ckc_spec::v1text::is_semantic_pred(name@, arity as nat),
@@ -18057,11 +18098,12 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
     let s1 = strength_pred_exec(name, arity);
     let unit = unit_pred_exec(name, arity);
     let exclusion = exclusion_pred_exec(name, arity);
+    let supersession = supersession_pred_exec(name, arity);
     proof {
         reveal(ckc_spec::v1text::is_semantic_pred);
         if ckc_spec::v1text::is_semantic_pred(name@, arity as nat) {
             let i = choose|i: int|
-                2 <= i < 20 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
+                2 <= i < 22 && ckc_spec::v1text::indicator(i) == (name@, arity as nat);
             if i < 9 {
                 assert(base);
             } else if i < 11 {
@@ -18072,12 +18114,14 @@ fn semantic_pred_exec(name: &Vec<u8>, arity: usize) -> (r: bool)
                 assert(s1);
             } else if i == 18 {
                 assert(unit);
-            } else {
+            } else if i == 19 {
                 assert(exclusion);
+            } else {
+                assert(supersession);
             }
         }
     }
-    base || ann || q12 || s1 || unit || exclusion
+    base || ann || q12 || s1 || unit || exclusion || supersession
 }
 
 pub open spec fn literal_wf(term: Term, body: bool) -> bool {
@@ -18286,7 +18330,7 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
         name[0] == 0x67,
 {
     reveal(ckc_spec::v1text::is_semantic_pred);
-    let i = choose|i: int| 2 <= i < 20 && ckc_spec::v1text::indicator(i) == (name, arity);
+    let i = choose|i: int| 2 <= i < 22 && ckc_spec::v1text::indicator(i) == (name, arity);
     reveal(ckc_spec::v1text::indicator);
     if i == 2 {
         reveal_strlit("guideline_entity");
@@ -18339,9 +18383,14 @@ proof fn semantic_pred_name_first(name: Seq<u8>, arity: nat)
     } else if i == 18 {
         reveal_strlit("guideline_unit");
         reveal(ckc_spec::v1text::ascii);
-    } else {
-        assert(i == 19);
+    } else if i == 19 {
         reveal_strlit("guideline_exclusion");
+        reveal(ckc_spec::v1text::ascii);
+    } else if i == 20 {
+        reveal_strlit("guideline_supersession");
+        reveal(ckc_spec::v1text::ascii);
+    } else {
+        reveal_strlit("guideline_evaluation_date");
         reveal(ckc_spec::v1text::ascii);
     }
 }
@@ -22004,6 +22053,10 @@ fn semantic_arity(name: &[u8]) -> (r: Option<usize>) {
         Some(3)
     } else if crate::k4_bytes::eq(name, b"guideline_exclusion") {
         Some(1)
+    } else if crate::k4_bytes::eq(name, b"guideline_supersession") {
+        Some(4)
+    } else if crate::k4_bytes::eq(name, b"guideline_evaluation_date") {
+        Some(1)
     } else {
         None
     }
@@ -22112,6 +22165,16 @@ fn pred_name_reject_at(bytes: &[u8], start: usize, body: bool) -> (r: usize)
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_qualifier", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_unit", 0x28), bytes.len());
     raise_at(&mut best, fixed_reject_at(bytes, start, b"guideline_exclusion", 0x28), bytes.len());
+    raise_at(
+        &mut best,
+        fixed_reject_at(bytes, start, b"guideline_supersession", 0x28),
+        bytes.len(),
+    );
+    raise_at(
+        &mut best,
+        fixed_reject_at(bytes, start, b"guideline_evaluation_date", 0x28),
+        bytes.len(),
+    );
     if body {
         raise_at(
             &mut best,
@@ -22170,7 +22233,9 @@ fn literal_name_at(bytes: &[u8], start: usize, body: bool) -> (r: bool) {
         || crate::k4_bytes::starts_with(rest, b"guideline_preference(")
         || crate::k4_bytes::starts_with(rest, b"guideline_qualifier(");
     base || timing || strength || crate::k4_bytes::starts_with(rest, b"guideline_unit(")
-        || crate::k4_bytes::starts_with(rest, b"guideline_exclusion(") || body && (
+        || crate::k4_bytes::starts_with(rest, b"guideline_exclusion(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_supersession(")
+        || crate::k4_bytes::starts_with(rest, b"guideline_evaluation_date(") || body && (
     crate::k4_bytes::starts_with(rest, b"guideline_satisfies(") || crate::k4_bytes::starts_with(
         rest,
         b"guideline_product(",

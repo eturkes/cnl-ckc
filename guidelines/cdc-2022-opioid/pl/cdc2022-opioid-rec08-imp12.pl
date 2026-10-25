@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec08-imp12',ace_sha256('8be5f541bae73c4cbe5a7af9600edb73274a4f739b6be22d8624a7d490a5a03a'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a renal-insufficiency and a clinician prescribes an opioid to the patient then the clinician should prescribe the opioid cautiously to the patient and should increase a patient-monitoring for the patient and should minimize an opioid-risk for the patient.

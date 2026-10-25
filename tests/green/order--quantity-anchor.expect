@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('order--quantity-anchor',ace_sha256('163e7ba7fd0921299ea5ad97b74dffb09d6d461c4eb7e3b8f1a61b0a48395567'),ulex(sha256('11f86b4c1ed254dbd1c205689cf1613f6beffa11d71298024cbe815609d2fb8f')),vocabulary(sha256(c058a3dfa8cf288d37e663be0948539f77e302371f329257103e927753ce14f9))).
 % S1: If a man waits for 3 days then the man sleeps after the days.

@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s23-07',ace_sha256(eddb7313ce5c7b1b2fb7f67ab9d9349f8af24d0ba256bb44a73486600b526bf9),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a prolonged-around-the-clock-opioid-use for a few-day-period then every clinician should provide an opioid-taper-plan to the patient for a withdrawal-minimization and should discuss an opioid-taper-plan with the patient for a withdrawal-minimization.

@@ -77,8 +77,8 @@ fn p7_twenty_declarations_stay_exact_and_exclude_builtins() {
         "codec",
         &["guideline_entity(actual,p,rational,countable)".into()],
     );
-    c.check("20-indicator control; rational lemma remains data", &text);
-    assert_eq!(declarations().lines().count(), 40);
+    c.check("22-indicator control; rational lemma remains data", &text);
+    assert_eq!(declarations().lines().count(), 44);
     for name in ["guideline_product", "guideline_quotient"] {
         for arity in [4, 6] {
             c.mutation(

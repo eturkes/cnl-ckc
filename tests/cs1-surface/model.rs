@@ -36,6 +36,8 @@ pub const INDICATORS: &[(&str, usize)] = &[
     ("guideline_qualifier", 4),
     ("guideline_unit", 3),
     ("guideline_exclusion", 1),
+    ("guideline_supersession", 4),
+    ("guideline_evaluation_date", 1),
 ];
 pub fn declarations() -> String {
     INDICATORS
@@ -45,7 +47,15 @@ pub fn declarations() -> String {
 }
 pub fn without_block(text: &str) -> String {
     text.lines()
-        .filter(|l| !l.contains("(guideline_exclusion/1)"))
+        .filter(|l| {
+            ![
+                "(guideline_exclusion/1)",
+                "(guideline_supersession/4)",
+                "(guideline_evaluation_date/1)",
+            ]
+            .iter()
+            .any(|indicator| l.contains(indicator))
+        })
         .map(|l| format!("{l}\n"))
         .collect()
 }

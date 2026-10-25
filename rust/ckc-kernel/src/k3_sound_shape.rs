@@ -28,10 +28,12 @@ pub proof fn semantic_arity(name: Seq<u8>, arity: nat)
         is_semantic_pred(name, arity) || ckc_spec::compare::is_builtin(name, arity),
     ensures
         arity == 1 || 3 <= arity <= 7,
-        arity == 1 ==> name == ascii("guideline_exclusion"@),
+        arity == 1 ==> name == ascii("guideline_exclusion"@) || name == ascii(
+            "guideline_evaluation_date"@,
+        ),
 {
     if is_semantic_pred(name, arity) {
-        let i = choose|i: int| 2 <= i < 20 && indicator(i) == (name, arity);
+        let i = choose|i: int| 2 <= i < 22 && indicator(i) == (name, arity);
     }
 }
 

@@ -21,7 +21,16 @@ verus! {
 // qualifier rows map an adverb, or the adjective of a copula, to the function
 // class of the qualifier it carries; the scope row names the noun that stands
 // for the guideline's recommendations as a whole + the guideline's key, the
-// exclusion row the verb an exclusion denies of that noun (contract cs1 D1).
+// exclusion row the verb an exclusion denies of that noun (contract cs1 D1);
+// a supersession row names a superseded document, a superseded row a superseded
+// passage without a document of its own, each with its superseding source
+// (contract sup1 D1: field 2 = a document or passage id, not a lemma).
+pub ghost struct Superseding {
+    pub date: nat,  // effective date, the integer YYYYMMDD
+    pub url: Seq<u8>,
+    pub citation: Seq<u8>,
+}
+
 pub ghost struct Vocabulary {
     pub units: Seq<(Seq<u8>, Seq<u8>)>,
     pub relations: Seq<(Seq<u8>, Seq<u8>)>,
@@ -37,6 +46,8 @@ pub ghost struct Vocabulary {
     pub qualifiers: Seq<(Seq<u8>, Seq<u8>)>,  // adverb | copula adjective → class
     pub scopes: Seq<(Seq<u8>, Seq<u8>)>,  // scope noun → guideline key (at most one)
     pub exclusions: Seq<Seq<u8>>,  // exclusion verb lemmas (at most one)
+    pub supersessions: Seq<(Seq<u8>, Superseding)>,  // superseded docid → its source
+    pub superseded: Seq<(Seq<u8>, Superseding)>,  // superseded passage → its source
 }
 
 pub open spec fn vocabulary_header() -> Seq<u8> {
@@ -117,7 +128,7 @@ pub open spec fn row_count(t: Vocabulary) -> nat {
     t.units.len() + t.relations.len() + t.spacings.len() + t.windows.len() + t.frequencies.len()
         + t.approximations.len() + t.ranges.len() + t.strengths.len() + t.evidences.len()
         + t.preferences.len() + t.alternatives.len() + t.qualifiers.len() + t.scopes.len()
-        + t.exclusions.len()
+        + t.exclusions.len() + t.supersessions.len() + t.superseded.len()
 }
 
 pub open spec fn empty_table() -> Vocabulary {
@@ -136,6 +147,89 @@ pub open spec fn empty_table() -> Vocabulary {
         qualifiers: Seq::empty(),
         scopes: Seq::empty(),
         exclusions: Seq::empty(),
+        supersessions: Seq::empty(),
+        superseded: Seq::empty(),
+    }
+}
+
+// --- supersession rows (contract sup1 D1) ---
+pub open spec fn sup_keys(rows: Seq<(Seq<u8>, Superseding)>) -> Seq<Seq<u8>> {
+    rows.map_values(|r: (Seq<u8>, Superseding)| r.0)
+}
+
+// The decimal value of ASCII digits.
+pub open spec fn digits_value(s: Seq<u8>) -> nat
+    decreases s.len(),
+{
+    if s.len() == 0 {
+        0
+    } else {
+        digits_value(s.drop_last()) * 10 + (s.last() as int - 0x30) as nat
+    }
+}
+
+pub open spec fn leap_year(y: nat) -> bool {
+    (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+}
+
+pub open spec fn month_length(y: nat, m: nat) -> nat {
+    if m == 2 {
+        if leap_year(y) {
+            29
+        } else {
+            28
+        }
+    } else if m == 4 || m == 6 || m == 9 || m == 11 {
+        30
+    } else {
+        31
+    }
+}
+
+// Eight ASCII digits YYYYMMDD naming a Gregorian calendar date.
+pub open spec fn date_ok(d: Seq<u8>) -> bool {
+    &&& d.len() == 8
+    &&& all_in(d, |b: u8| is_digit_b(b))
+    &&& 1 <= digits_value(d.subrange(4, 6)) <= 12
+    &&& 1 <= digits_value(d.subrange(6, 8))
+    &&& digits_value(d.subrange(6, 8)) <= month_length(
+        digits_value(d.take(4)),
+        digits_value(d.subrange(4, 6)),
+    )
+}
+
+// `https://` and at least one more byte, every byte in 0x21–0x7E.
+pub open spec fn url_ok(u: Seq<u8>) -> bool {
+    u.len() > 8 && u.take(8) == ascii("https://"@) && all_in(u, |b: u8| 0x21 <= b && b <= 0x7E)
+}
+
+// Text without a control or DEL byte, valid UTF-8, no space at either end.
+pub open spec fn citation_ok(c: Seq<u8>) -> bool {
+    &&& c.len() > 0
+    &&& all_in(c, |b: u8| b >= 0x20 && b != 0x7F)
+    &&& valid_utf8(c)
+    &&& c[0] != 0x20
+    &&& c.last() != 0x20
+}
+
+// A supersession value = `<date> <url> <citation>` (the url holds no space).
+pub open spec fn superseding(v: Seq<u8>) -> Option<Superseding> {
+    if v.len() < 9 || v[8] != 0x20 {
+        Option::None
+    } else {
+        let rest = v.skip(9);
+        let n = crate::replay::first_byte(rest, 0x20, 0);
+        if n >= rest.len() {
+            Option::None
+        } else {
+            let url = rest.take(n as int);
+            let citation = rest.skip(n as int + 1);
+            if date_ok(v.take(8)) && url_ok(url) && citation_ok(citation) {
+                Option::Some(Superseding { date: digits_value(v.take(8)), url, citation })
+            } else {
+                Option::None
+            }
+        }
     }
 }
 
@@ -303,6 +397,28 @@ pub open spec fn add_row(t: Vocabulary, line: Seq<u8>) -> Result<Vocabulary, Seq
         } else {
             Result::Ok(Vocabulary { exclusions: t.exclusions.push(f[1]), ..t })
         }
+    } else if f[0] == ascii("supersession"@) {
+        if !name_ok(f[1]) {
+            Result::Err(ascii("supersession document"@))
+        } else {
+            match superseding(f[2]) {
+                Option::None => Result::Err(ascii("supersession value"@)),
+                Option::Some(s) => if sup_keys(t.supersessions).contains(f[1]) {
+                    Result::Err(ascii("duplicate supersession"@))
+                } else {
+                    Result::Ok(Vocabulary { supersessions: t.supersessions.push((f[1], s)), ..t })
+                },
+            }
+        }
+    } else if f[0] == ascii("superseded"@) {
+        match superseding(f[2]) {
+            Option::None => Result::Err(ascii("supersession value"@)),
+            Option::Some(s) => if sup_keys(t.superseded).contains(f[1]) {
+                Result::Err(ascii("duplicate superseded"@))
+            } else {
+                Result::Ok(Vocabulary { superseded: t.superseded.push((f[1], s)), ..t })
+            },
+        }
     } else {
         Result::Err(ascii("kind"@))
     }
@@ -429,6 +545,52 @@ pub open spec fn vocabulary_check(path: Seq<u8>, bytes: Seq<u8>) -> Verdict {
             ),
         },
         Result::Err(why) => fail("vocabulary"@, path + ascii(": "@) + why),
+    }
+}
+
+// sup1 D1: the corpus law over a guideline table: a superseded document has its
+// coverage row `ace(<docid>)`; a superseded passage is a coverage region without
+// its own document. The first violation in row order reports.
+pub open spec fn sup_violation(lines: Seq<Seq<u8>>, rows: Seq<Row>, n: nat) -> Option<Seq<u8>>
+    decreases lines.len(),
+{
+    if lines.len() == 0 {
+        Option::None
+    } else {
+        let f = split_on(lines[0], 0x09);
+        if f.len() == 3 && f[0] == ascii("supersession"@) && !(exists|i: int|
+            0 <= i < rows.len() && #[trigger] rows[i].status == Status::Ace(f[1])) {
+            Option::Some(ascii("supersession document at row "@) + udec_bytes(n))
+        } else if f.len() == 3 && f[0] == ascii("superseded"@) && !(exists|i: int|
+            0 <= i < rows.len() && #[trigger] rows[i].id == f[1] && !(rows[i].status is Ace)) {
+            Option::Some(ascii("superseded region at row "@) + udec_bytes(n))
+        } else {
+            sup_violation(lines.drop_first(), rows, n + 1)
+        }
+    }
+}
+
+// `ckc check` section after the coverage ledger: path = the repo-relative table
+// path; a table without supersession rows, a fixture table and a table the
+// grammar section rejects print nothing here.
+pub open spec fn supersession_check(path: Seq<u8>, bytes: Seq<u8>, rows: Seq<Row>) -> Verdict {
+    match parse_vocabulary(bytes) {
+        Result::Err(_) => Verdict::Ok(Seq::empty()),
+        Result::Ok(t) => if guideline_of(path) is None || t.supersessions.len() + t.superseded.len()
+            == 0 {
+            Verdict::Ok(Seq::empty())
+        } else {
+            match sup_violation(body_lines(bytes.skip(vocabulary_header().len() as int)), rows, 1) {
+                Option::Some(why) => fail("supersession"@, path + ascii(": "@) + why),
+                Option::None => Verdict::Ok(
+                    ascii("ckc: supersession ok "@) + path + ascii(" "@) + udec_bytes(
+                        t.supersessions.len(),
+                    ) + ascii(" documents "@) + udec_bytes(t.superseded.len()) + ascii(
+                        " passages\n"@,
+                    ),
+                ),
+            }
+        },
     }
 }
 

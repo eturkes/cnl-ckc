@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document(h,ace_sha256(d3b600c6172d4ccbc62a6e5182a1ec940df74338c4ed2fe2254d79a96342187f),ulex(none),vocabulary(sha256('7be1567b05a1cd388735c0a412c76ec9b22e5bd4880ac05a140bb78ff6923a9d'))).
 % S1: Every man waits after 3 days of a visit.

@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-rec09-imp14',ace_sha256('4246c80c6a894f73eea7abeec4837ce61035befc6f3cc6f4b199aaa13a89f4f4'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a clinician manages a patient and an other-clinician manages the patient then the clinician should communicate with the other-clinician and should discuss a patient-need with the other-clinician and should prioritize a patient-goal and should weigh a concurrent-opioid-benzodiazepine-exposure-risk and should coordinate a care with the other-clinician for the patient.

@@ -656,6 +656,15 @@ pub fn check_vocabulary(path: &[u8], bytes: &[u8]) -> (r: ckc_spec::check::EVerd
     crate::m7_temporal::check_vocabulary_impl(path, bytes)
 }
 
+// sup1 D1: the supersession rows' corpus law (`ckc check` section after the coverage ledger).
+pub fn check_supersession(path: &[u8], bytes: &[u8], c: &ckc_spec::check::ECoverage) -> (r:
+    ckc_spec::check::EVerdict)
+    ensures
+        r@ == ckc_spec::vocabulary::supersession_check(path@, bytes@, c@.rows),
+{
+    crate::m7_temporal::check_supersession_impl(path, bytes, c)
+}
+
 // M5.4 pipeline (contract m5u4 P1): the alignment resolver (occurrence-form
 // input → committed align table, or the exact fail message) and the release
 // manifest (meta block + sorted member/source/label rows) as pure functions of

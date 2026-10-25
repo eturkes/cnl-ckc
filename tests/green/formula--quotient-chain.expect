@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('formula--quotient-chain',ace_sha256('76bc0c39711c82c91cfc720c44ca3cc26daa4e1a933d40329b8fc0c2ad0b6fe9'),ulex(none),vocabulary(none)).
 % S1: If a patient weighs some kilograms X and the patient receives some milligrams Z then the patient receives some doses Y and Y = (Z / X) * 2.

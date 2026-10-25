@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('doc-id',ace_sha256('50d37c6003b789975dc29ca154c819734f6145121deade51ec69075f7a1396e0'),ulex(sha256('3b9b7da19ca2e65b147b8463d15c838cfd4e5945522746211f801550f7420e74')),vocabulary(none)).
 % S1: A structural clause.

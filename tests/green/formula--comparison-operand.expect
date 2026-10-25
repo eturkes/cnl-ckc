@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('formula--comparison-operand',ace_sha256(e3b46149c99500c2613528d8f674126f114f0bffc91552f5fb67ebff6e291556),ulex(none),vocabulary(sha256(a90693af0fd8988dcfb5dccf97a1d10ac1df3ef87e603d37617f4316daf494ff))).
 % S1: If a patient receives exactly 40 milligrams X then the patient receives some doses Y and Y = X / 20.

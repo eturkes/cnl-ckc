@@ -195,7 +195,7 @@ p.reading { display: none; }
 </section>
 <section>
 <details>
-<summary>Compiled Prolog (49 lines)</summary>
+<summary>Compiled Prolog (53 lines)</summary>
 <pre>% h.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
@@ -237,6 +237,10 @@ p.reading { display: none; }
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document(h,ace_sha256(d3b600c6172d4ccbc62a6e5182a1ec940df74338c4ed2fe2254d79a96342187f),ulex(none),vocabulary(sha256('670651837132a2fb284088f9dae3f578349cff3317f0fd681c5ae4603b169a0b'))).
 % S1: Every man waits after 3 days of a visit.

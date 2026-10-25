@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('formula--product',ace_sha256(a7acd6c9a881bc1d7d9f8aec2edb8a41243de132887c4859f0e84839f509a4aa),ulex(sha256(d820d127e653924d6eb02df1bae983ec7f3f2807925cdd79896f99522a297dec)),vocabulary(none)).
 % S1: If an opioid-dosage contains some oxycodone-milligrams-per-day X then the opioid-dosage includes some MME-units-per-day Y and Y = X * 1.5.

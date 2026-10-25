@@ -2,6 +2,7 @@ use super::common::*;
 use super::{
     adjudication, census, coverage, functors, inventories::Guideline, lexicon, projection,
 };
+use ckc_kernel::ECoverage;
 pub(super) fn check(g: &Guideline) -> Result {
     // The table grammar reads one small file; it runs before the corpus ledgers and the
     // lexicon (a full Clex pass, the costliest section), so a table defect stops the run early.
@@ -25,6 +26,7 @@ pub(super) fn check(g: &Guideline) -> Result {
         functors::check(&g.path, id)?;
     }
     let c = coverage::check(g, true)?;
+    supersession_rows(g, &c)?;
     let status = coverage::statuses(&c);
     for (id, region) in pairs {
         let actual = status.get(&region).map(String::as_str).unwrap_or("");
@@ -44,6 +46,20 @@ pub(super) fn check(g: &Guideline) -> Result {
     census::check(&g.path, &status)?;
     adjudication::check(g, &c)?;
     lexicon::check(g)
+}
+
+// sup1 D1: a superseded document has its coverage row `ace(<docid>)`; a superseded
+// passage is a coverage region without its own document.
+fn supersession_rows(g: &Guideline, c: &ECoverage) -> Result {
+    let Some(path) = &g.vocabulary else {
+        return Ok(());
+    };
+    let bytes = corpus(path, "vocabulary")?;
+    let rel = format!("guidelines/{}/vocabulary.tsv", name(&g.path));
+    coverage::meter(&coverage::verdict(
+        ckc_kernel::contract::check_supersession(rel.as_bytes(), &bytes, c),
+    )?);
+    Ok(())
 }
 
 // c1 D4: the vocabulary.tsv grammar section (the kernel parses the same bytes

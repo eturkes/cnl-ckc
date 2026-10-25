@@ -80,6 +80,7 @@ pub enum Sym {
     GuidelineArg,
     GuidelineCardinality,
     GuidelineEntity,
+    GuidelineEvaluationDate,
     GuidelineEvent,
     GuidelineExclusion,
     GuidelineFrequency,
@@ -97,6 +98,7 @@ pub enum Sym {
     GuidelineRecurrence,
     GuidelineRecurrenceWindow,
     GuidelineSatisfies,
+    GuidelineSupersession,
     GuidelineUnit,
     HeadVariableNotBoundInBody,
     Ideality,
@@ -167,8 +169,10 @@ pub enum Sym {
     SharedQuantity,
     Should,
     SomeWord,
+    Source,
     Strength,
     Subject,
+    SupersessionShape,
     Target,
     TemporalShape,
     Ulex,
@@ -270,6 +274,7 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::GuidelineArg => ckc_spec::v1text::ascii("guideline_arg"@),
         Sym::GuidelineCardinality => ckc_spec::v1text::ascii("guideline_cardinality"@),
         Sym::GuidelineEntity => ckc_spec::v1text::ascii("guideline_entity"@),
+        Sym::GuidelineEvaluationDate => ckc_spec::v1text::ascii("guideline_evaluation_date"@),
         Sym::GuidelineEvent => ckc_spec::v1text::ascii("guideline_event"@),
         Sym::GuidelineExclusion => ckc_spec::v1text::ascii("guideline_exclusion"@),
         Sym::GuidelineFrequency => ckc_spec::v1text::ascii("guideline_frequency"@),
@@ -287,6 +292,7 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::GuidelineRecurrence => ckc_spec::v1text::ascii("guideline_recurrence"@),
         Sym::GuidelineRecurrenceWindow => ckc_spec::v1text::ascii("guideline_recurrence_window"@),
         Sym::GuidelineSatisfies => ckc_spec::v1text::ascii("guideline_satisfies"@),
+        Sym::GuidelineSupersession => ckc_spec::v1text::ascii("guideline_supersession"@),
         Sym::GuidelineUnit => ckc_spec::v1text::ascii("guideline_unit"@),
         Sym::HeadVariableNotBoundInBody => ckc_spec::v1text::ascii(
             "head_variable_not_bound_in_body"@,
@@ -361,8 +367,10 @@ pub open spec fn symbol(s: &Sym) -> Seq<u8> {
         Sym::SharedQuantity => ckc_spec::v1text::ascii("shared_quantity"@),
         Sym::Should => ckc_spec::v1text::ascii("should"@),
         Sym::SomeWord => ckc_spec::v1text::ascii("some"@),
+        Sym::Source => ckc_spec::v1text::ascii("source"@),
         Sym::Strength => ckc_spec::v1text::ascii("strength"@),
         Sym::Subject => ckc_spec::v1text::ascii("subject"@),
+        Sym::SupersessionShape => ckc_spec::v1text::ascii("supersession_shape"@),
         Sym::Target => ckc_spec::v1text::ascii("target"@),
         Sym::TemporalShape => ckc_spec::v1text::ascii("temporal_shape"@),
         Sym::Ulex => ckc_spec::v1text::ascii("ulex"@),
@@ -464,6 +472,7 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::GuidelineArg => bytes_guidelinearg(),
         Sym::GuidelineCardinality => bytes_guidelinecardinality(),
         Sym::GuidelineEntity => bytes_guidelineentity(),
+        Sym::GuidelineEvaluationDate => bytes_guidelineevaluationdate(),
         Sym::GuidelineEvent => bytes_guidelineevent(),
         Sym::GuidelineExclusion => bytes_guidelineexclusion(),
         Sym::GuidelineFrequency => bytes_guidelinefrequency(),
@@ -481,6 +490,7 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::GuidelineRecurrence => bytes_guidelinerecurrence(),
         Sym::GuidelineRecurrenceWindow => bytes_guidelinerecurrencewindow(),
         Sym::GuidelineSatisfies => bytes_guidelinesatisfies(),
+        Sym::GuidelineSupersession => bytes_guidelinesupersession(),
         Sym::GuidelineUnit => bytes_guidelineunit(),
         Sym::HeadVariableNotBoundInBody => bytes_headvariablenotboundinbody(),
         Sym::Ideality => bytes_ideality(),
@@ -551,8 +561,10 @@ pub fn symbol_bytes(s: &Sym) -> (out: Vec<u8>)
         Sym::SharedQuantity => bytes_sharedquantity(),
         Sym::Should => bytes_should(),
         Sym::SomeWord => bytes_someword(),
+        Sym::Source => bytes_source(),
         Sym::Strength => bytes_strength(),
         Sym::Subject => bytes_subject(),
+        Sym::SupersessionShape => bytes_supersessionshape(),
         Sym::Target => bytes_target(),
         Sym::TemporalShape => bytes_temporalshape(),
         Sym::Ulex => bytes_ulex(),
@@ -1637,6 +1649,20 @@ fn bytes_guidelineentity() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_guidelineevaluationdate() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("guideline_evaluation_date"@),
+{
+    let b: &[u8] = b"guideline_evaluation_date";
+    proof {
+        reveal_byteslit(b"guideline_evaluation_date");
+        reveal_strlit("guideline_evaluation_date");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_evaluation_date"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_guidelineevent() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("guideline_event"@),
@@ -1871,6 +1897,20 @@ fn bytes_guidelinesatisfies() -> (out: Vec<u8>)
         reveal_strlit("guideline_satisfies");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_satisfies"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_guidelinesupersession() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("guideline_supersession"@),
+{
+    let b: &[u8] = b"guideline_supersession";
+    proof {
+        reveal_byteslit(b"guideline_supersession");
+        reveal_strlit("guideline_supersession");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("guideline_supersession"@));
     }
     slice_to_vec(b)
 }
@@ -2855,6 +2895,20 @@ fn bytes_someword() -> (out: Vec<u8>)
     slice_to_vec(b)
 }
 
+fn bytes_source() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("source"@),
+{
+    let b: &[u8] = b"source";
+    proof {
+        reveal_byteslit(b"source");
+        reveal_strlit("source");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("source"@));
+    }
+    slice_to_vec(b)
+}
+
 fn bytes_strength() -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::v1text::ascii("strength"@),
@@ -2879,6 +2933,20 @@ fn bytes_subject() -> (out: Vec<u8>)
         reveal_strlit("subject");
         reveal(ckc_spec::v1text::ascii);
         vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("subject"@));
+    }
+    slice_to_vec(b)
+}
+
+fn bytes_supersessionshape() -> (out: Vec<u8>)
+    ensures
+        out@ == ckc_spec::v1text::ascii("supersession_shape"@),
+{
+    let b: &[u8] = b"supersession_shape";
+    proof {
+        reveal_byteslit(b"supersession_shape");
+        reveal_strlit("supersession_shape");
+        reveal(ckc_spec::v1text::ascii);
+        vstd::assert_seqs_equal!(b@ == ckc_spec::v1text::ascii("supersession_shape"@));
     }
     slice_to_vec(b)
 }

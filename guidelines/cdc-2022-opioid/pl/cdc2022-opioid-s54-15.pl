@@ -39,6 +39,10 @@
 :- discontiguous(guideline_unit/3).
 :- multifile(guideline_exclusion/1).
 :- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
 guideline_document('cdc2022-opioid-s54-15',ace_sha256('12b777e280d1b2ebb16e304a83bc7c5a43e6db68b5c6b7bf7b3d442324e6bc27'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
 % S1: If a patient has a prescribed-opioid and has a prescribed-opioid-nonuse and at least 2 negative-tests verify the prescribed-opioid-nonuse and a confirmatory-test verifies the prescribed-opioid-nonuse then every clinician may discontinue the prescribed-opioid and may discuss a safe-unused-opioid-disposal-option with the patient.
