@@ -694,7 +694,8 @@ mutants target +files:
     CARGO_NET_OFFLINE=true cargo mutants --in-place --no-config --cargo-arg=--locked --cargo-arg=--offline \
         "${args[@]}" --output "$out" ${filter:+-- -- $filter}
 
-# Phone layout (n22): every `ckc ui render` page loads at 390 px in the pinned headless browser
+# Phone layout (n22): every `ckc ui render` page of HEAD + of the superseded-statement fixture
+# tree tests/sup4-ui/mobile (contract sup4 D7) loads at 390 px in the pinned headless browser
 # (tools/ui-mobile-probe.mjs under the pinned node). The recipe's own red inputs run every time:
 # the render with its viewport meta stripped must fail on every page, with its narrow-screen
 # table rule stripped on at least one. CKC_BIN names a prebuilt binary.
@@ -708,6 +709,14 @@ mobile:
     probe() { "{{ TOOLCHAIN }}/bin/node" tools/ui-mobile-probe.mjs "{{ TOOLCHAIN }}/bin/chrome-headless-shell" "$1"; }
     "$bin" ui render "$w/pages" >/dev/null
     probe "$w/pages"
+    tree() { # copy + materialize a fixture tree (`.pl.in` → `.pl`, fresh review manifest)
+        cp -a "$1" "$w/$2"
+        while IFS= read -r -d '' input; do mv "$input" "${input%.in}"; done < <(find "$w/$2" -name '*.pl.in' -print0)
+        "$bin" derive-review-manifest "$w/$2/guidelines/alpha" > "$w/$2/guidelines/alpha/audit/review-manifest.tsv"
+    }
+    tree tests/sup4-ui/mobile/tree superseded-tree
+    "$bin" ui render "$w/superseded-pages" "$w/superseded-tree" >/dev/null
+    probe "$w/superseded-pages"
     n=$(find "$w/pages" -name '*.html' | wc -l)
     red() { # name anchor min-bad: the anchor sits on every page; stripped, ≥ min-bad pages fail (rc 1)
         cp -a "$w/pages" "$w/$1"
@@ -721,9 +730,7 @@ mobile:
     }
     red no-viewport-meta '<meta name="viewport" content="width=device-width, initial-scale=1">' "$n"
     red no-narrow-table-rule '@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }' 1
-    cp -a tests/ur-ui/browser/tree "$w/reading-tree"
-    while IFS= read -r -d '' input; do mv "$input" "${input%.in}"; done < <(find "$w/reading-tree" -name '*.pl.in' -print0)
-    "$bin" derive-review-manifest "$w/reading-tree/guidelines/alpha" > "$w/reading-tree/guidelines/alpha/audit/review-manifest.tsv"
+    tree tests/ur-ui/browser/tree reading-tree
     "$bin" ui render "$w/reading-pages" "$w/reading-tree" >/dev/null
     reading() { "{{ TOOLCHAIN }}/bin/node" tools/ui-reading-probe.mjs "{{ TOOLCHAIN }}/bin/chrome-headless-shell" "$1"; }
     reading "$w/reading-pages"

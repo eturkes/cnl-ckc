@@ -101,7 +101,7 @@ pub open spec fn head_parts(g: u::Guideline, d: u::Document) -> Seq<u::Html> {
         seq![b::f(148), b::f(149), b::f(86)]
     } else {
         Seq::empty()
-    }) + (if shown {
+    }) + u::superseded_notice(g, id) + (if shown {
         seq![b::f(150), u::fixed_bytes(u::script_html())]
     } else if u::reading_words(g, d).len() > 0 {
         seq![u::fixed_bytes(u::script_html())]
@@ -242,6 +242,7 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     hide(u::frame);
     hide(u::css_text);
     hide(u::script_html);
+    hide(u::superseded_notice);
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let region = u::coverage_field(g, id, 0);
@@ -319,6 +320,7 @@ proof fn head_sound(g: u::Guideline, d: u::Document, inputs: Seq<u::Bytes>)
     h::text(u::tally_text(u::tally(g, id)), inputs);
     b::chip(k, inputs);
     chrome::script_html(inputs);
+    crate::k5_sound_superseded::notice(g, id, inputs);
     three(b::f(97), heading, b::f(98), inputs);
     five(b::f(114), u::text(u::document_title(g, id)), b::f(36), u::chip(k), b::f(115), inputs);
     three(b::f(245), provenance, b::f(126), inputs);
@@ -445,6 +447,231 @@ proof fn tail_sound(
     three(b::f(179), u::hjoin(nav, b::f(36)), b::f(52), inputs);
 }
 
+// Each mirror is matched before the final page's sequence algebra.
+#[verifier::spinoff_prover]
+proof fn head_equiv(g: u::Guideline, d: u::Document)
+    ensures
+        head_parts(g, d) == crate::k5_document::leading_spec(
+            g,
+            d,
+            match u::alignment(g, d) {
+                Some(model) => model.count > 0,
+                None => false,
+            },
+        ),
+{
+    hide(u::lit);
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::title);
+    hide(u::document_title);
+    hide(u::coverage_field);
+    hide(u::state);
+    hide(u::tally);
+    hide(u::tally_text);
+    hide(u::history);
+    hide(u::alignment);
+    hide(u::superseded_notice);
+    hide(u::script_html);
+    hide(u::unprefix);
+    hide(ck::ends);
+    hide(u::url_seg);
+    hide(u::link);
+    hide(u::hjoin);
+    hide(u::chip);
+    let inputs = Seq::<u::Bytes>::empty();
+    l::l137(inputs);
+    l::l138(inputs);
+    l::l141(inputs);
+    l::l245(inputs);
+    l::l246(inputs);
+    l::l247(inputs);
+    l::l024(inputs);
+    l::l147(inputs);
+    l::l150(inputs);
+    l::l097(inputs);
+    l::l098(inputs);
+    l::l114(inputs);
+    l::l115(inputs);
+    l::l036(inputs);
+    l::l099(inputs);
+    l::l126(inputs);
+    l::l148(inputs);
+    l::l149(inputs);
+    l::l086(inputs);
+    let shown = match u::alignment(g, d) {
+        Some(model) => model.count > 0,
+        None => false,
+    };
+    assert(head_parts(g, d) =~= crate::k5_document::leading_spec(g, d, shown));
+}
+
+proof fn mid_equiv(g: u::Guideline, d: u::Document)
+    ensures
+        mid_parts(g, d) + u::reading_line(g, d) + seq![b::f(86)]
+            == crate::k5_document::passages_spec(g, d),
+{
+    hide(u::lit);
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::aligned_text);
+    hide(u::ace_html);
+    hide(u::reading_line);
+    let inputs = Seq::<u::Bytes>::empty();
+    l::l080(inputs);
+    l::l086(inputs);
+    l::l151(inputs);
+    l::l152(inputs);
+    l::l153(inputs);
+    l::l154(inputs);
+    assert(mid_parts(g, d) + u::reading_line(g, d) + seq![b::f(86)]
+        =~= crate::k5_document::passages_spec(g, d));
+}
+
+#[verifier::spinoff_prover]
+proof fn tail_equiv(
+    g: u::Guideline,
+    d: u::Document,
+    prev: u::Bytes,
+    next: u::Bytes,
+    token: u::Bytes,
+    commit: u::Bytes,
+)
+    ensures
+        tail_parts(g, d, prev, next, token, commit) == seq![b::f(86)]
+            + crate::k5_document::form_spec(g, d, token, commit)
+            + crate::k5_document::compiled_spec(d, prev, next),
+{
+    hide(u::lit);
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::latest_name);
+    hide(u::roster);
+    hide(u::url_seg);
+    hide(u::splitline_count);
+    hide(u::chars);
+    hide(u::link);
+    hide(u::hjoin);
+    hide(u::number);
+    let inputs = Seq::<u::Bytes>::empty();
+    l::l036(inputs);
+    l::l144(inputs);
+    l::l145(inputs);
+    l::l146(inputs);
+    l::l086(inputs);
+    l::l080(inputs);
+    l::l153(inputs);
+    l::l155(inputs);
+    l::l156(inputs);
+    l::l157(inputs);
+    l::l158(inputs);
+    l::l159(inputs);
+    l::l160(inputs);
+    l::l161(inputs);
+    l::l162(inputs);
+    l::l163(inputs);
+    l::l164(inputs);
+    l::l286(inputs);
+    l::l165(inputs);
+    l::l166(inputs);
+    l::l167(inputs);
+    l::l168(inputs);
+    l::l169(inputs);
+    l::l170(inputs);
+    l::l171(inputs);
+    l::l239(inputs);
+    l::l011(inputs);
+    l::l172(inputs);
+    l::l173(inputs);
+    l::l174(inputs);
+    l::l175(inputs);
+    l::l176(inputs);
+    l::l177(inputs);
+    l::l178(inputs);
+    l::l179(inputs);
+    l::l052(inputs);
+    assert(tail_parts(g, d, prev, next, token, commit) =~= seq![b::f(86)]
+        + crate::k5_document::form_spec(g, d, token, commit) + crate::k5_document::compiled_spec(
+        d,
+        prev,
+        next,
+    ));
+}
+
+proof fn decomposition(
+    g: u::Guideline,
+    d: u::Document,
+    prev: u::Bytes,
+    next: u::Bytes,
+    token: u::Bytes,
+    commit: u::Bytes,
+)
+    ensures
+        u::document_html(g, d, prev, next, token, commit) == u::frame(
+            u::document_title(g, d.bundle.docid),
+            b::f(180) + u::text(u::title(g)) + b::f(181) + u::text(
+                u::coverage_field(g, d.bundle.docid, 0),
+            ),
+            u::lines(
+                head_parts(g, d) + mid_parts(g, d) + u::reading_line(g, d) + tail_parts(
+                    g,
+                    d,
+                    prev,
+                    next,
+                    token,
+                    commit,
+                ),
+            ),
+        ),
+{
+    hide(u::lit);
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::document_html);
+    hide(u::title);
+    hide(u::document_title);
+    hide(u::coverage_field);
+    hide(u::alignment);
+    hide(u::reading_line);
+    hide(u::frame);
+    hide(u::lines);
+    hide(crate::k5_document::body_spec);
+    hide(crate::k5_document::leading_spec);
+    hide(crate::k5_document::passages_spec);
+    hide(crate::k5_document::form_spec);
+    hide(crate::k5_document::compiled_spec);
+    hide(head_parts);
+    hide(mid_parts);
+    hide(tail_parts);
+    let shown = match u::alignment(g, d) {
+        Some(model) => model.count > 0,
+        None => false,
+    };
+    head_equiv(g, d);
+    mid_equiv(g, d);
+    tail_equiv(g, d, prev, next, token, commit);
+    crate::k5_document::body_groups(g, d, prev, next, token, commit, shown);
+    crate::k5_document::decomposition(g, d, prev, next, token, commit);
+    let parts = head_parts(g, d) + mid_parts(g, d) + u::reading_line(g, d) + tail_parts(
+        g,
+        d,
+        prev,
+        next,
+        token,
+        commit,
+    );
+    assert(parts =~= crate::k5_document::leading_spec(g, d, shown)
+        + crate::k5_document::passages_spec(g, d) + crate::k5_document::form_spec(
+        g,
+        d,
+        token,
+        commit,
+    ) + crate::k5_document::compiled_spec(d, prev, next));
+    let inputs = Seq::<u::Bytes>::empty();
+    l::l180(inputs);
+    l::l181(inputs);
+}
+
 pub proof fn page(
     g: u::Guideline,
     d: u::Document,
@@ -491,68 +718,17 @@ pub proof fn page(
     hide(u::frame);
     hide(u::css_text);
     hide(u::script_html);
+    hide(u::superseded_notice);
+    hide(u::document_html);
+    hide(head_parts);
+    hide(mid_parts);
+    hide(tail_parts);
     let id = d.bundle.docid;
     let k = u::state(g, id);
     let region = u::coverage_field(g, id, 0);
     let name = u::latest_name(u::records(g), u::empty(), u::empty());
     corpus::document(g, d, inputs);
     m::own(id, inputs);
-    l::f137(inputs);
-    l::f138(inputs);
-    l::f141(inputs);
-    l::f245(inputs);
-    l::f246(inputs);
-    l::f247(inputs);
-    l::f024(inputs);
-    l::f147(inputs);
-    l::f150(inputs);
-    l::f144(inputs);
-    l::f145(inputs);
-    l::f146(inputs);
-    l::f097(inputs);
-    l::f098(inputs);
-    l::f114(inputs);
-    l::f115(inputs);
-    l::f036(inputs);
-    l::f099(inputs);
-    l::f126(inputs);
-    l::f148(inputs);
-    l::f149(inputs);
-    l::f086(inputs);
-    l::f080(inputs);
-    l::f151(inputs);
-    l::f152(inputs);
-    l::f153(inputs);
-    l::f154(inputs);
-    l::f155(inputs);
-    l::f156(inputs);
-    l::f157(inputs);
-    l::f158(inputs);
-    l::f159(inputs);
-    l::f160(inputs);
-    l::f161(inputs);
-    l::f162(inputs);
-    l::f163(inputs);
-    l::f164(inputs);
-    l::f286(inputs);
-    l::f165(inputs);
-    l::f166(inputs);
-    l::f167(inputs);
-    l::f168(inputs);
-    l::f169(inputs);
-    l::f170(inputs);
-    l::f171(inputs);
-    l::f239(inputs);
-    l::f011(inputs);
-    l::f172(inputs);
-    l::f173(inputs);
-    l::f174(inputs);
-    l::f175(inputs);
-    l::f176(inputs);
-    l::f177(inputs);
-    l::f178(inputs);
-    l::f179(inputs);
-    l::f052(inputs);
     l::f180(inputs);
     l::f181(inputs);
     head_sound(g, d, inputs);
@@ -579,6 +755,7 @@ pub proof fn page(
     }
     m::document_title(g, id, inputs);
     b::frame(u::document_title(g, id), crumbs, u::lines(parts), inputs);
+    decomposition(g, d, prev, next, token, commit);
     assert(u::document_html(g, d, prev, next, token, commit) == u::frame(
         u::document_title(g, id),
         crumbs,

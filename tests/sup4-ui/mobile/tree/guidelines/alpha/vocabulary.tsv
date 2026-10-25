@@ -1,0 +1,7 @@
+# format: kind	lemma	value
+superseded	r20	20240229 https://example.test/law?a=1&b='2' Example Act & <Rules> "2024" – § 5
+supersession	a-2	20221229 https://example.test/act Consolidated Example Act, section 12, a long citation that wraps on a phone screen because it holds many words
+superseded	r21	00000229 https://example.test/old Ancient rule
+supersession	absent-doc	99991231 https://example.test/none No document
+superseded	r1	20230101 https://example.test/collide Collision
+unit	hour	hour

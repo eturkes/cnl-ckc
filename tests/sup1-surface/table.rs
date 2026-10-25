@@ -525,7 +525,7 @@ fn p1_fork_row_laws_and_fixture_docid_exemption() {
     checks.finish("P1 fork row grammar + fixture exemption");
 }
 #[test]
-fn p1_ui_new_rows_have_no_reading_or_guideline_page_effect() {
+fn p1_ui_new_rows_have_no_reading_and_add_the_superseded_section() {
     let scratch = Scratch::new("page-intake");
     let tree = ui_tree(&scratch);
     let base = table(&["unit\thour\thour".into()]);
@@ -548,14 +548,32 @@ fn p1_ui_new_rows_have_no_reading_or_guideline_page_effect() {
         before.stdout.contains("<h2>Status</h2>"),
         "positive guideline page control"
     );
+    // Contract sup4 D4 (D8 re-contract): the rows add exactly the superseded-passages
+    // section before Documents; every other byte stays the baseline's.
+    let document = |id: &str| {
+        let href = format!("<a href=\"doc/{id}.html\">");
+        let at = before.stdout.find(&href).expect("baseline document link");
+        let end = at + before.stdout[at..].find("</a>").unwrap() + "</a>".len();
+        before.stdout[at..end].to_owned()
+    };
+    let cells = |passage: &str, doc: &str| {
+        format!(
+            "<tr><td>{passage}</td><td>{doc}</td><td><a href=\"{URL}\">Act</a></td><td>{}-{}-{}</td></tr>",
+            &DATE.to_string()[..4],
+            &DATE.to_string()[4..6],
+            &DATE.to_string()[6..]
+        )
+    };
+    let anchor = "<section>\n<h2>Documents</h2>";
     let mut checks = Checks::default();
-    for (label, rows) in [
+    for (label, rows, body) in [
         (
             "matching",
             vec![
                 row("supersession", "a-2", &valid()),
                 row("superseded", "r20", &valid()),
             ],
+            [cells("r2", &document("a-2")), cells("r20", "")],
         ),
         (
             "unmatched",
@@ -563,14 +581,31 @@ fn p1_ui_new_rows_have_no_reading_or_guideline_page_effect() {
                 row("supersession", "absent-document", &valid()),
                 row("superseded", "absent-region", &valid()),
             ],
+            [cells("", ""), cells("absent-region", "")],
         ),
     ] {
         let mut rows = rows;
         rows.insert(0, "unit\thour\thour".into());
         write(tree.join("guidelines/alpha/vocabulary.tsv"), table(&rows));
-        checks.output(&request(), &before, label);
+        let section = [
+            "<section>",
+            "<h2>Superseded passages</h2>",
+            "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>",
+            "<table class=\"compact\">",
+            "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>",
+            &format!("<tbody>{}</tbody>", body.join("\n")),
+            "</table>",
+            "</section>",
+        ]
+        .join("\n");
+        assert_eq!(before.stdout.matches(anchor).count(), 1, "Documents anchor");
+        let want = Run {
+            stdout: before.stdout.replacen(anchor, &format!("{section}\n{anchor}"), 1),
+            ..before.clone()
+        };
+        checks.output(&request(), &want, label);
     }
-    checks.finish("P1 UI intake + unchanged guideline page");
+    checks.finish("P1 UI intake + the superseded-passages section");
 }
 #[test]
 fn p1_check_corpus_cross_ledger_and_meter() {

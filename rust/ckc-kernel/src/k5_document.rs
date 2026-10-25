@@ -1,7 +1,8 @@
 use crate::{
     k5_bytes as b, k5_chrome as chrome, k5_document_data as data, k5_frame as frame,
     k5_highlight as bytes, k5_html as h, k5_meanings as meanings, k5_model as model,
-    k5_payload as payload, k5_records as records, k5_titles as titles, k5_url as url,
+    k5_payload as payload, k5_records as records, k5_superseded as superseded, k5_titles as titles,
+    k5_url as url,
 };
 use ckc_spec::check as ck;
 use ckc_spec::ui::{self as u, EDocument, EGuideline, EPage};
@@ -337,7 +338,7 @@ pub open spec fn body_spec(
         ]
     } else {
         Seq::empty()
-    }) + (if shown {
+    }) + u::superseded_notice(g, id) + (if shown {
         seq![
             u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
@@ -401,6 +402,7 @@ pub proof fn decomposition(
     hide(u::aligned_text);
     hide(u::ace_html);
     hide(u::reading_line);
+    hide(u::superseded_notice);
     hide(u::tally);
     hide(u::tally_text);
     hide(u::state);
@@ -477,7 +479,7 @@ pub proof fn decomposition(
         ]
     } else {
         Seq::empty()
-    }) + (if shown {
+    }) + u::superseded_notice(g, id) + (if shown {
         seq![
             u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
@@ -579,7 +581,7 @@ pub open spec fn leading_spec(g: u::Guideline, d: u::Document, shown: bool) -> S
         ]
     } else {
         Seq::empty()
-    }) + (if shown {
+    }) + u::superseded_notice(g, id) + (if shown {
         seq![
             u::fixed_bytes(u::p_open_label_open_input_open_highlighting_label_close_try()),
             u::fixed_bytes(u::script_html()),
@@ -649,6 +651,7 @@ pub proof fn body_groups(
     hide(u::aligned_text);
     hide(u::ace_html);
     hide(u::reading_line);
+    hide(u::superseded_notice);
     hide(u::tally);
     hide(u::tally_text);
     hide(u::state);
@@ -677,6 +680,7 @@ pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool, wor
     hide(u::tally_text);
     hide(u::records);
     hide(u::decisions);
+    hide(u::superseded_notice);
     let id = &d.bundle.docid;
     let k = model::state(g, m, id);
     let prov = provenance(g, id);
@@ -739,6 +743,13 @@ pub fn leading(g: &EGuideline, d: &EDocument, m: &model::Model, shown: bool, wor
             ),
         );
         body.push(h::fixed("</section>"));
+    }
+    let ghost before = h::pages(body@);
+    let mut notice = superseded::notice(g, id);
+    let ghost added = h::pages(notice@);
+    body.append(&mut notice);
+    proof {
+        assert(h::pages(body@) =~= before + added);
     }
     if shown {
         body.push(
@@ -854,6 +865,7 @@ pub fn page(
     hide(u::frame);
     hide(u::lit);
     hide(u::document_html);
+    hide(u::superseded_notice);
     hide(body_spec);
     hide(leading_spec);
     hide(passages_spec);

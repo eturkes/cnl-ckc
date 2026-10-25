@@ -1631,6 +1631,22 @@ pub proof fn l062(inputs: Seq<u::Bytes>)
     b::literal(u::lit(", "@), inputs);
 }
 
+pub proof fn f062(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(", "@), inputs, 0, 0),
+        u::copy_registry()[62] == u::lit(", "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l062(inputs);
+    reveal_strlit(", ");
+    is_ascii_chars_encode_utf8(", "@);
+    assert(u::lit(", "@) =~= bs![44u8,32]);
+    assert(cx::scan(bs![44u8,32], 0) == 0) by (compute_only);
+    cx::exact(u::lit(", "@), 0);
+    h::fixed(u::lit(", "@), inputs, 0, 0);
+}
+
 pub proof fn l063(inputs: Seq<u::Bytes>)
     ensures
         u::copy_registry().contains(u::lit("Decisions on this version: "@)),
@@ -9168,6 +9184,397 @@ pub proof fn f286(inputs: Seq<u::Bytes>)
     h::fixed(
         u::lit(
             "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l287(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<section class=\"superseded\">"@)),
+        u::copy_derived(u::lit("<section class=\"superseded\">"@), inputs, u::copy_registry()),
+        u::copy_registry()[287] == u::lit("<section class=\"superseded\">"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[287] == u::lit("<section class=\"superseded\">"@) && 287
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<section class=\"superseded\">"@), inputs);
+}
+
+pub proof fn f287(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<section class=\"superseded\">"@), inputs, 0, 0),
+        u::copy_registry()[287] == u::lit("<section class=\"superseded\">"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l287(inputs);
+    reveal_strlit("<section class=\"superseded\">");
+    is_ascii_chars_encode_utf8("<section class=\"superseded\">"@);
+    assert(u::lit("<section class=\"superseded\">"@)
+        =~= bs![60u8,115,101,99,116,105,111,110,32,99,108,97,115,115,61,34,115,117,112,101,114,115,101,100,101,100,34,62]);
+    assert(cx::scan(
+        bs![60u8,115,101,99,116,105,111,110,32,99,108,97,115,115,61,34,115,117,112,101,114,115,101,100,101,100,34,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<section class=\"superseded\">"@), 0);
+    h::fixed(u::lit("<section class=\"superseded\">"@), inputs, 0, 0);
+}
+
+pub proof fn l288(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<p>On "@)),
+        u::copy_derived(u::lit("<p>On "@), inputs, u::copy_registry()),
+        u::copy_registry()[288] == u::lit("<p>On "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[288] == u::lit("<p>On "@) && 288 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<p>On "@), inputs);
+}
+
+pub proof fn f288(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<p>On "@), inputs, 0, 0),
+        u::copy_registry()[288] == u::lit("<p>On "@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l288(inputs);
+    reveal_strlit("<p>On ");
+    is_ascii_chars_encode_utf8("<p>On "@);
+    assert(u::lit("<p>On "@) =~= bs![60u8,112,62,79,110,32]);
+    assert(cx::scan(bs![60u8,112,62,79,110,32], 0) == 0) by (compute_only);
+    cx::exact(u::lit("<p>On "@), 0);
+    h::fixed(u::lit("<p>On "@), inputs, 0, 0);
+}
+
+pub proof fn l289(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("-"@)),
+        u::copy_derived(u::lit("-"@), inputs, u::copy_registry()),
+        u::copy_registry()[289] == u::lit("-"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[289] == u::lit("-"@) && 289 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("-"@), inputs);
+}
+
+pub proof fn f289(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("-"@), inputs, 0, 0),
+        u::copy_registry()[289] == u::lit("-"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l289(inputs);
+    reveal_strlit("-");
+    is_ascii_chars_encode_utf8("-"@);
+    assert(u::lit("-"@) =~= bs![45u8,]);
+    assert(cx::scan(bs![45u8,], 0) == 0) by (compute_only);
+    cx::exact(u::lit("-"@), 0);
+    h::fixed(u::lit("-"@), inputs, 0, 0);
+}
+
+pub proof fn l290(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[290] == u::lit(
+            " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[290] == u::lit(
+        " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+    ) && 290 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f290(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[290] == u::lit(
+            " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l290(inputs);
+    reveal_strlit(
+        " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+    );
+    assert(u::lit(
+        " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+    )
+        =~= bs![32u8,115,117,112,101,114,115,101,100,101,100,32,116,104,101,32,103,117,105,100,101,108,105,110,101,32,115,116,97,116,101,109,101,110,116,115,32,116,104,97,116,32,116,104,105,115,32,112,97,103,101,32,114,101,112,114,101,115,101,110,116,115,46,32,84,104,105,115,32,112,97,103,101,32,115,104,111,119,115,32,116,104,101,32,111,114,105,103,105,110,97,108,32,112,97,115,115,97,103,101,32,97,110,100,32,105,116,115,32,65,67,69,32,114,101,112,114,101,115,101,110,116,97,116,105,111,110,32,102,111,114,32,114,101,118,105,101,119,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![32u8,115,117,112,101,114,115,101,100,101,100,32,116,104,101,32,103,117,105,100,101,108,105,110,101,32,115,116,97,116,101,109,101,110,116,115,32,116,104,97,116,32,116,104,105,115,32,112,97,103,101,32,114,101,112,114,101,115,101,110,116,115,46,32,84,104,105,115,32,112,97,103,101,32,115,104,111,119,115,32,116,104,101,32,111,114,105,103,105,110,97,108,32,112,97,115,115,97,103,101,32,97,110,100,32,105,116,115,32,65,67,69,32,114,101,112,114,101,115,101,110,116,97,116,105,111,110,32,102,111,114,32,114,101,118,105,101,119,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l291(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit("<h2>Superseded passages</h2>"@)),
+        u::copy_derived(u::lit("<h2>Superseded passages</h2>"@), inputs, u::copy_registry()),
+        u::copy_registry()[291] == u::lit("<h2>Superseded passages</h2>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[291] == u::lit("<h2>Superseded passages</h2>"@) && 291
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit("<h2>Superseded passages</h2>"@), inputs);
+}
+
+pub proof fn f291(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed("<h2>Superseded passages</h2>"@), inputs, 0, 0),
+        u::copy_registry()[291] == u::lit("<h2>Superseded passages</h2>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l291(inputs);
+    reveal_strlit("<h2>Superseded passages</h2>");
+    is_ascii_chars_encode_utf8("<h2>Superseded passages</h2>"@);
+    assert(u::lit("<h2>Superseded passages</h2>"@)
+        =~= bs![60u8,104,50,62,83,117,112,101,114,115,101,100,101,100,32,112,97,115,115,97,103,101,115,60,47,104,50,62]);
+    assert(cx::scan(
+        bs![60u8,104,50,62,83,117,112,101,114,115,101,100,101,100,32,112,97,115,115,97,103,101,115,60,47,104,50,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(u::lit("<h2>Superseded passages</h2>"@), 0);
+    h::fixed(u::lit("<h2>Superseded passages</h2>"@), inputs, 0, 0);
+}
+
+pub proof fn l292(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[292] == u::lit(
+            "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[292] == u::lit(
+        "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+    ) && 292 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f292(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[292] == u::lit(
+            "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l292(inputs);
+    reveal_strlit(
+        "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+    );
+    assert(u::lit(
+        "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+    )
+        =~= bs![60u8,112,62,76,97,116,101,114,32,108,97,119,44,32,114,101,103,117,108,97,116,105,111,110,32,111,114,32,103,117,105,100,97,110,99,101,32,115,117,112,101,114,115,101,100,101,100,32,97,108,108,32,111,114,32,112,97,114,116,32,111,102,32,101,97,99,104,32,112,97,115,115,97,103,101,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,60,47,112,62]);
+    assert(cx::scan(
+        bs![60u8,112,62,76,97,116,101,114,32,108,97,119,44,32,114,101,103,117,108,97,116,105,111,110,32,111,114,32,103,117,105,100,97,110,99,101,32,115,117,112,101,114,115,101,100,101,100,32,97,108,108,32,111,114,32,112,97,114,116,32,111,102,32,101,97,99,104,32,112,97,115,115,97,103,101,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,60,47,112,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+        ),
+        inputs,
+        0,
+        0,
+    );
+}
+
+pub proof fn l293(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(
+            u::lit(
+                "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+            ),
+        ),
+        u::copy_derived(
+            u::lit(
+                "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+            ),
+            inputs,
+            u::copy_registry(),
+        ),
+        u::copy_registry()[293] == u::lit(
+            "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[293] == u::lit(
+        "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+    ) && 293 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(
+        u::lit(
+            "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+        ),
+        inputs,
+    );
+}
+
+pub proof fn f293(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(
+            u::fixed(
+                "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+            ),
+            inputs,
+            0,
+            0,
+        ),
+        u::copy_registry()[293] == u::lit(
+            "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+        ),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l293(inputs);
+    reveal_strlit(
+        "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>",
+    );
+    is_ascii_chars_encode_utf8(
+        "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+    );
+    assert(u::lit(
+        "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+    )
+        =~= bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,80,97,115,115,97,103,101,60,47,116,104,62,60,116,104,62,68,111,99,117,109,101,110,116,60,47,116,104,62,60,116,104,62,83,117,112,101,114,115,101,100,101,100,32,98,121,60,47,116,104,62,60,116,104,62,83,117,112,101,114,115,101,100,101,100,32,111,110,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62]);
+    assert(cx::scan(
+        bs![60u8,116,104,101,97,100,62,60,116,114,62,60,116,104,62,80,97,115,115,97,103,101,60,47,116,104,62,60,116,104,62,68,111,99,117,109,101,110,116,60,47,116,104,62,60,116,104,62,83,117,112,101,114,115,101,100,101,100,32,98,121,60,47,116,104,62,60,116,104,62,83,117,112,101,114,115,101,100,101,100,32,111,110,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62],
+        0,
+    ) == 0) by (compute_only);
+    cx::exact(
+        u::lit(
+            "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+        ),
+        0,
+    );
+    h::fixed(
+        u::lit(
+            "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
         ),
         inputs,
         0,

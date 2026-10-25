@@ -155,6 +155,8 @@ mod k5_sound_registry;
 mod k5_sound_scan;
 mod k5_sound_source;
 mod k5_sound_summary;
+mod k5_sound_superseded;
+mod k5_superseded;
 mod k5_text;
 mod k5_titles;
 mod k5_url;

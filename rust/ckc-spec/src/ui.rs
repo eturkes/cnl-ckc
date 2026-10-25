@@ -930,7 +930,7 @@ pub open spec fn guideline_html(g: Guideline) -> Html {
             fixed_bytes(tbody_open()) + lines(status_rows) + fixed_bytes(tbody_close()),
             fixed_bytes(table_close()),
             fixed_bytes(section_close()),
-        ] + meanings_section(g.vocabulary) + seq![
+        ] + meanings_section(g.vocabulary) + superseded_section(g) + seq![
             fixed_bytes(section_open()),
             fixed_bytes(h2_open_documents_h2_close()),
             fixed_bytes(table_open_2()),
@@ -1393,6 +1393,127 @@ pub open spec fn meanings_section(t: Option<Bytes>) -> Seq<Html> {
     }
 }
 
+// --- Superseded statements (contract sup4; Decisions `Supersession`): each
+// `supersession` or `superseded` row of the guideline's table, in table order,
+// cut into table spans as `vocabulary::superseding` reads its value.
+pub ghost struct Superseded {
+    pub document: bool,  // a `supersession` row: the key names a document
+    pub key: Bytes,
+    pub date: Bytes,  // YYYYMMDD
+    pub url: Bytes,
+    pub citation: Bytes,
+}
+
+pub open spec fn superseded_row(line: Bytes) -> Option<Superseded> {
+    let f = check::tab_fields(line);
+    if f.len() == 3 && (f[0] == lit("supersession"@) || f[0] == lit("superseded"@)) && f[2].len()
+        >= 9 {
+        let rest = f[2].skip(9);
+        let n = crate::replay::first_byte(rest, 32, 0);
+        Option::Some(
+            Superseded {
+                document: f[0] == lit("supersession"@),
+                key: f[1],
+                date: f[2].take(8),
+                url: rest.take(n as int),
+                citation: if n < rest.len() {
+                    rest.skip(n as int + 1)
+                } else {
+                    empty()
+                },
+            },
+        )
+    } else {
+        Option::None
+    }
+}
+
+pub open spec fn superseded_scan(lines: Seq<Bytes>) -> Seq<Superseded>
+    decreases lines.len(),
+{
+    if lines.len() == 0 {
+        Seq::empty()
+    } else {
+        (match superseded_row(lines[0]) {
+            Option::Some(r) => seq![r],
+            Option::None => Seq::empty(),
+        }) + superseded_scan(lines.drop_first())
+    }
+}
+
+// Only a table the grammar accepts (the `meanings_section` gate).
+pub open spec fn superseded_rows(t: Option<Bytes>) -> Seq<Superseded> {
+    match t {
+        Option::Some(raw) => match vocabulary::parse_vocabulary(raw) {
+            Result::Ok(_) => superseded_scan(
+                check::body_lines(raw.skip(vocabulary::vocabulary_header().len() as int)),
+            ),
+            Result::Err(_) => Seq::empty(),
+        },
+        Option::None => Seq::empty(),
+    }
+}
+
+// YYYY-MM-DD: three table spans joined by registry hyphens.
+pub open spec fn iso_date(d: Bytes) -> Html {
+    text(d.take(4)) + fixed_bytes(hyphen()) + text(d.subrange(4, 6)) + fixed_bytes(hyphen()) + text(
+        d.subrange(6, 8),
+    )
+}
+
+pub open spec fn source_link(r: Superseded) -> Html {
+    link(r.url, text(r.citation))
+}
+
+// Document page (D3): the notice of the first `supersession` row naming the document.
+pub open spec fn superseded_notice(g: Guideline, id: Bytes) -> Seq<Html> {
+    let rs = superseded_rows(g.vocabulary).filter(|r: Superseded| r.document && r.key == id);
+    if rs.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open_superseded()),
+            fixed_bytes(p_open_on_sp()) + iso_date(rs[0].date) + fixed_bytes(comma_sep())
+                + source_link(rs[0]) + fixed_bytes(sp_superseded_the_guideline_statements()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
+// Guideline page (D4): an empty cell claims nothing the coverage law decides.
+pub open spec fn superseded_cells(g: Guideline, r: Superseded) -> Html {
+    let passage = if r.document {
+        coverage_field(g, r.key, 0)
+    } else {
+        r.key
+    };
+    let document = if r.document && docids(g).contains(r.key) {
+        link(document_dir() + url_seg(r.key) + html_ext(), text(document_title(g, r.key)))
+    } else {
+        Seq::empty()
+    };
+    row(seq![cell(text(passage)), cell(document), cell(source_link(r)), cell(iso_date(r.date))])
+}
+
+pub open spec fn superseded_section(g: Guideline) -> Seq<Html> {
+    let rs = superseded_rows(g.vocabulary);
+    if rs.len() == 0 {
+        Seq::empty()
+    } else {
+        seq![
+            fixed_bytes(section_open()),
+            fixed_bytes(h2_open_superseded_passages_h2_close()),
+            fixed_bytes(p_open_later_law_regulation_or_guidance()),
+            fixed_bytes(table_open_2()),
+            fixed_bytes(thead_open_tr_open_th_open_passage_th_close_th_open_document_superseded()),
+            fixed_bytes(tbody_open()) + lines(rs.map_values(|r: Superseded| superseded_cells(g, r)))
+                + fixed_bytes(tbody_close()),
+            fixed_bytes(table_close()),
+            fixed_bytes(section_close()),
+        ]
+    }
+}
+
 // A reading word: characters [start, end) of the ACE text.
 pub ghost struct Reading {
     pub start: int,
@@ -1700,7 +1821,7 @@ pub open spec fn document_html(
             ]
         } else {
             Seq::empty()
-        }) + (if shown {
+        }) + superseded_notice(g, id) + (if shown {
             seq![
                 fixed_bytes(p_open_label_open_input_open_highlighting_label_close_try()),
                 fixed_bytes(script_html()),
@@ -2995,6 +3116,13 @@ copy_table! {
     p_open_opening_the_review_site_p_close = "<p>Opening the review site.</p>";
     meta_http_equiv_refresh_open = "<meta http-equiv=\"refresh\" content=\"0; url=";
     p_open_your_name_and_comment_are_published = "<p>Your name and comment are published with your decision in the knowledge base and its public repository.</p>";
+    section_open_superseded = "<section class=\"superseded\">";
+    p_open_on_sp = "<p>On ";
+    hyphen = "-";
+    sp_superseded_the_guideline_statements = " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>";
+    h2_open_superseded_passages_h2_close = "<h2>Superseded passages</h2>";
+    p_open_later_law_regulation_or_guidance = "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>";
+    thead_open_tr_open_th_open_passage_th_close_th_open_document_superseded = "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>";
 }
 
 verus! {

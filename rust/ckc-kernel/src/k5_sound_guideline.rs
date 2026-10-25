@@ -1,14 +1,15 @@
 use crate::{
     k5_sound_build as b, k5_sound_corpus as corpus, k5_sound_escape as h, k5_sound_literals as l,
     k5_sound_meanings as t, k5_sound_model as m, k5_sound_summary as summary,
+    k5_sound_superseded as superseded,
 };
 use ckc_spec::{check as ck, ui as u};
 use vstd::prelude::*;
 verus! {
 
 broadcast use {vstd::seq::group_seq_axioms, vstd::seq_lib::group_seq_properties};
-// The page splits around the time-word section (contract q14 D2): one query
-// over all 23 fixed parts plus the section exceeds the rlimit.
+// Table scanners stay behind separate soundness lemmas: one query over
+// all fixed parts and both table sections exceeds the page proof budget.
 
 pub open spec fn status_rows(g: u::Guideline) -> Seq<u::Html> {
     let labels = seq![
@@ -321,6 +322,7 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     hide(u::number);
     hide(u::url_seg);
     hide(u::meanings_section);
+    hide(u::superseded_section);
     l::l080(inputs);
     l::l083(inputs);
     l::l084(inputs);
@@ -341,11 +343,15 @@ pub proof fn page(g: u::Guideline, inputs: Seq<u::Bytes>)
     head_sound(g, inputs);
     tail_sound(g, inputs);
     t::section(g, inputs);
+    superseded::section(g, inputs);
     let head = head_parts(g);
     let meanings = u::meanings_section(g.vocabulary);
+    let superseded = u::superseded_section(g);
     let tail = tail_parts(g);
-    t::cat3(head, meanings, tail, inputs);
-    let parts = head + meanings + tail;
+    t::cat3(head, meanings, superseded, inputs);
+    t::cat3(head + meanings + superseded, tail, Seq::empty(), inputs);
+    let parts = head + meanings + superseded + tail;
+    assert(parts =~= parts + Seq::<u::Html>::empty());
     b::lines(parts, inputs);
     corpus::title(g, inputs);
     h::text(u::title(g), inputs);

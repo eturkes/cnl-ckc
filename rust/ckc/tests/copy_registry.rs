@@ -343,7 +343,7 @@ fn registry_shape() {
     let (rows, _) = table(&source);
     let names = rows.iter().map(|row| row.name).collect::<BTreeSet<_>>();
     assert_eq!(names.len(), rows.len(), "duplicate copy-table names");
-    assert_eq!(rows.len(), 287, "copy_table! row count");
+    assert_eq!(rows.len(), 294, "copy_table! row count");
 }
 
 #[test]

@@ -1042,17 +1042,18 @@ fn t5_copy_registry_appends_exact_literal_as_row_286() {
     // Source-level registry contract only; renderer/proof bodies are not an oracle.
     let source = fs::read_to_string(root().join("rust/ckc-spec/src/ui.rs")).unwrap();
     let rows = copy_rows(&source);
+    // SUP4 (contract sup4 D1) appends rows 287–293 after RD's row 286.
     assert_eq!(
         rows.len(),
-        287,
-        "RD copy_table row count: D1 appends at index 286"
+        294,
+        "copy_table row count: RD appends at index 286, SUP4 at 287–293"
     );
     assert_eq!(
         rows.iter()
             .map(|(name, _)| name)
             .collect::<BTreeSet<_>>()
             .len(),
-        287,
+        294,
         "unique registry names"
     );
     assert_eq!(

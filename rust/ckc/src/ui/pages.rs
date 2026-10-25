@@ -2,7 +2,7 @@ use super::chrome::{self, COMMIT_BASE, SCOPE};
 use super::common::*;
 use super::corpus::Corpus;
 use super::intake::{self, View};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -316,7 +316,40 @@ fn resource_reference(page: &str) -> bool {
         .filter_map(|p| p.split_once('>').map(|(tag, _)| tag))
         .any(resource_tag)
 }
-fn invariant(page: &str) -> Result<Option<&'static str>> {
+// contract sup4 D6: a source link = the attribute-escaped url of a `supersession` or
+// `superseded` row of the page's own guideline table (the intake already checked its grammar).
+fn source_hrefs(table: Option<&[u8]>) -> BTreeSet<String> {
+    let Some(table) = table else {
+        return BTreeSet::new();
+    };
+    text(table)
+        .lines()
+        .filter_map(|line| {
+            let mut f = line.split('\t');
+            let (kind, _, value) = (f.next()?, f.next()?, f.next()?);
+            (f.next().is_none() && matches!(kind, "supersession" | "superseded"))
+                .then(|| value.get(9..)?.split(' ').next())
+                .flatten()
+        })
+        .map(|url| {
+            url.replace('&', "&amp;")
+                .replace('<', "&lt;")
+                .replace('>', "&gt;")
+                .replace('"', "&quot;")
+                .replace('\'', "&#x27;")
+        })
+        .filter(|url| !url.starts_with(COMMIT_BASE))
+        .collect()
+}
+// Every off-site anchor href = a commit link or one of the page guideline's source links.
+// Anchors, not substrings: text escaping keeps `"`, so a citation can spell `href="http`.
+fn external_ok(page: &str, sources: &BTreeSet<String>) -> bool {
+    hrefs(page)
+        .into_iter()
+        .filter(|href| href.starts_with("http"))
+        .all(|href| href.starts_with(COMMIT_BASE) || sources.contains(href))
+}
+fn invariant(page: &str, sources: &BTreeSet<String>) -> Result<Option<&'static str>> {
     for (needle, count, label) in [
         ("<!doctype html>", 1, "doctype"),
         ("<html lang=\"en\">", 1, "html-lang"),
@@ -346,8 +379,7 @@ fn invariant(page: &str) -> Result<Option<&'static str>> {
             return Ok(Some(label));
         }
     }
-    if page.matches("href=\"http").count() != page.matches(&format!("href=\"{COMMIT_BASE}")).count()
-    {
+    if !external_ok(page, sources) {
         return Ok(Some("external-href"));
     }
     if resource_reference(page) {
@@ -361,11 +393,22 @@ fn invariant(page: &str) -> Result<Option<&'static str>> {
     }
     Ok(visible_violation(&visible(page)))
 }
+// The source hrefs of the guideline a page `g/<gid>/…` belongs to; none elsewhere.
+fn sources(view: &View, rel: &str) -> BTreeSet<String> {
+    let gid = rel.strip_prefix("g/").and_then(|r| r.split('/').next());
+    view.corpus
+        .guidelines
+        .iter()
+        .find(|g| Some(text(&g.gid).as_str()) == gid)
+        .map(|g| source_hrefs(g.vocabulary.as_deref()))
+        .unwrap_or_default()
+}
 pub(super) fn check(root: &Path) -> Result<()> {
     let corpus = Corpus::worktree(root);
     let first = Scratch::new()?;
     let second = Scratch::new()?;
-    let one = tree(&corpus, &intake::load(&corpus, b"")?)?;
+    let view = intake::load(&corpus, b"")?;
+    let one = tree(&corpus, &view)?;
     one.write(&first.0)?;
     let two = tree(&corpus, &intake::load(&corpus, b"")?)?;
     two.write(&second.0)?;
@@ -381,7 +424,7 @@ pub(super) fn check(root: &Path) -> Result<()> {
             return Err(format!("ui: render not byte-stable: {rel}"));
         }
         if !one.assets.contains_key(rel)
-            && let Some(problem) = invariant(&text(bytes))?
+            && let Some(problem) = invariant(&text(bytes), &sources(&view, rel))?
         {
             return Err(format!("ui: page invariant failed: {rel} {problem}"));
         }
@@ -389,4 +432,96 @@ pub(super) fn check(root: &Path) -> Result<()> {
     one.meter();
     println!("ui: check ok");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ckc_kernel::{
+        EBundle, ECoverage, ECoverageRow, EDocument, EEvidence, EGuideline, ESrc, EStatus,
+    };
+
+    const TABLE: &[u8] = b"# format: kind\tlemma\tvalue\nsupersession\tdoc\t20221229 https://a.test/?x=1&y='z' Act, section 1\nsuperseded\tR1\t20221229 https://github.com/eturkes/cnl-ckc/commit/abc Note\nunit\tday\tday\n";
+
+    #[test]
+    fn source_links_pass_and_foreign_links_fire() {
+        let sources = source_hrefs(Some(TABLE));
+        assert_eq!(
+            sources.iter().collect::<Vec<_>>(),
+            ["https://a.test/?x=1&amp;y=&#x27;z&#x27;"]
+        );
+        let cited = "<a href=\"https://a.test/?x=1&amp;y=&#x27;z&#x27;\">Act, section 1</a>";
+        let commit = "<a href=\"https://github.com/eturkes/cnl-ckc/commit/abc\">v</a>";
+        let foreign = "<a href=\"https://b.test/\">Elsewhere</a>";
+        let quoted = "<p>Act quoting href=\"https://b.test/\" as text</p>";
+        assert!(external_ok(cited, &sources));
+        assert!(!external_ok(&format!("{cited}{commit}"), &BTreeSet::new()));
+        assert!(external_ok(commit, &BTreeSet::new()));
+        assert!(external_ok(quoted, &BTreeSet::new()));
+        assert!(!external_ok(foreign, &sources));
+        assert!(!external_ok(&format!("{cited}{foreign}"), &sources));
+        assert!(!external_ok(cited, &source_hrefs(None)));
+    }
+
+    fn href_fired(verdict: Result<Option<&'static str>>) -> bool {
+        matches!(verdict, Ok(Some(label)) if label.ends_with("-href"))
+    }
+
+    // The whole page invariant over a kernel-rendered page whose citation spells an href.
+    #[test]
+    fn rendered_source_link_passes_the_page_invariant() {
+        let table = b"# format: kind\tlemma\tvalue\nsupersession\tx\t20221229 https://a.test/act Act quoting href=\"https://b.test/\" as text\n";
+        let g = EGuideline {
+            gid: b"x".to_vec(),
+            readme: None,
+            coverage: ECoverage {
+                rows: vec![ECoverageRow {
+                    id: b"x".to_vec(),
+                    file: b"source/x.txt".to_vec(),
+                    status: EStatus::Ace(b"x".to_vec()),
+                    line: b"x\tsource/x.txt\tp1\tx\tace(x)\n".to_vec(),
+                }],
+                files: vec![b"source/x.txt".to_vec()],
+                evidence: vec![EEvidence {
+                    census: b"1".to_vec(),
+                    locators: vec![b"x".to_vec()],
+                    payloads: vec![(b"x".to_vec(), vec![b"x".to_vec()])],
+                    ordinal: Vec::new(),
+                }],
+            },
+            documents: vec![EDocument {
+                bundle: EBundle {
+                    docid: b"x".to_vec(),
+                    ace: Vec::new(),
+                    cov: Vec::new(),
+                    pay: Vec::new(),
+                    cl: Vec::new(),
+                    review: Vec::new(),
+                },
+                ace: b"x".to_vec(),
+                pl: Vec::new(),
+                alignment: None,
+            }],
+            ledger: ESrc::Missing,
+            ledger_digest: b"absent".to_vec(),
+            source_names: Vec::new(),
+            vocabulary: Some(table.to_vec()),
+        };
+        let page = text(&ckc_kernel::contract::ui_render_document(
+            &g,
+            &g.documents[0],
+            b"",
+            b"",
+            b"",
+            b"",
+        ));
+        assert!(page.contains(
+            "<a href=\"https://a.test/act\">Act quoting href=\"https://b.test/\" as text</a>"
+        ));
+        let sources = source_hrefs(g.vocabulary.as_deref());
+        assert_eq!(invariant(&page, &sources).unwrap(), None);
+        let planted = page.replacen("</main>", "<a href=\"https://b.test/\">x</a></main>", 1);
+        assert!(href_fired(invariant(&planted, &sources)));
+        assert!(href_fired(invariant(&page, &BTreeSet::new())));
+    }
 }

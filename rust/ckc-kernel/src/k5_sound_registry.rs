@@ -6483,6 +6483,188 @@ pub proof fn literal_286()
     );
 }
 
+pub open spec fn data_287() -> Seq<nat> {
+    ns![60u32,115,101,99,116,105,111,110,32,99,108,97,115,115,61,34,115,117,112,101,114,115,101,100,101,100,34,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_287()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[287]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l287(Seq::empty());
+    p::all();
+    reveal_strlit("<section class=\"superseded\">");
+    assert(n::codes("<section class=\"superseded\">"@) =~= data_287());
+    assert(n::clean(data_287(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<section class=\"superseded\">"@);
+}
+
+} // verus!
+}
+pub mod batch_288 {
+    use crate::{
+        k5_sound_chrome as ch, k5_sound_codes as n, k5_sound_encoding as enc,
+        k5_sound_literals as l, k5_sound_patterns as p, k5_sound_scan as scan,
+    };
+    use ckc_spec::ui as u;
+    use vstd::prelude::*;
+    use vstd::utf8::*;
+    verus! {
+
+pub open spec fn data_288() -> Seq<nat> {
+    ns![60u32,112,62,79,110,32].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_288()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[288]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l288(Seq::empty());
+    p::all();
+    reveal_strlit("<p>On ");
+    assert(n::codes("<p>On "@) =~= data_288());
+    assert(n::clean(data_288(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<p>On "@);
+}
+
+pub open spec fn data_289() -> Seq<nat> {
+    ns![45u32,].map_values(|x: u32| x as nat)
+}
+
+pub proof fn literal_289()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[289]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l289(Seq::empty());
+    p::all();
+    reveal_strlit("-");
+    assert(n::codes("-"@) =~= data_289());
+    assert(n::clean(data_289(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("-"@);
+}
+
+pub open spec fn data_290() -> Seq<nat> {
+    ns![32u32,115,117,112,101,114,115,101,100,101,100,32,116,104,101,32,103,117,105,100,101,108,105,110,101,32,115,116,97,116,101,109,101,110,116,115,32,116,104,97,116,32,116,104,105,115,32,112,97,103,101,32,114,101,112,114,101,115,101,110,116,115,46,32,84,104,105,115,32,112,97,103,101,32,115,104,111,119,115,32,116,104,101,32,111,114,105,103,105,110,97,108,32,112,97,115,115,97,103,101,32,97,110,100,32,105,116,115,32,65,67,69,32,114,101,112,114,101,115,101,110,116,97,116,105,111,110,32,102,111,114,32,114,101,118,105,101,119,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_290()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[290]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l290(Seq::empty());
+    p::all();
+    reveal_strlit(
+        " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>",
+    );
+    assert(n::codes(
+        " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+    ) =~= data_290());
+    assert(n::clean(data_290(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        " superseded the guideline statements that this page represents. This page shows the original passage and its ACE representation for review.</p>"@,
+    );
+}
+
+pub open spec fn data_291() -> Seq<nat> {
+    ns![60u32,104,50,62,83,117,112,101,114,115,101,100,101,100,32,112,97,115,115,97,103,101,115,60,47,104,50,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_291()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[291]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l291(Seq::empty());
+    p::all();
+    reveal_strlit("<h2>Superseded passages</h2>");
+    assert(n::codes("<h2>Superseded passages</h2>"@) =~= data_291());
+    assert(n::clean(data_291(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge("<h2>Superseded passages</h2>"@);
+}
+
+pub open spec fn data_292() -> Seq<nat> {
+    ns![60u32,112,62,76,97,116,101,114,32,108,97,119,44,32,114,101,103,117,108,97,116,105,111,110,32,111,114,32,103,117,105,100,97,110,99,101,32,115,117,112,101,114,115,101,100,101,100,32,97,108,108,32,111,114,32,112,97,114,116,32,111,102,32,101,97,99,104,32,112,97,115,115,97,103,101,32,105,110,32,116,104,105,115,32,116,97,98,108,101,46,60,47,112,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_292()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[292]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l292(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>",
+    );
+    assert(n::codes(
+        "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+    ) =~= data_292());
+    assert(n::clean(data_292(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>"@,
+    );
+}
+
+pub open spec fn data_293() -> Seq<nat> {
+    ns![60u32,116,104,101,97,100,62,60,116,114,62,60,116,104,62,80,97,115,115,97,103,101,60,47,116,104,62,60,116,104,62,68,111,99,117,109,101,110,116,60,47,116,104,62,60,116,104,62,83,117,112,101,114,115,101,100,101,100,32,98,121,60,47,116,104,62,60,116,104,62,83,117,112,101,114,115,101,100,101,100,32,111,110,60,47,116,104,62,60,47,116,114,62,60,47,116,104,101,97,100,62].map_values(
+    |x: u32| x as nat)
+}
+
+pub proof fn literal_293()
+    ensures
+        u::copy_literal_ok(u::copy_registry()[293]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    hide(u::copy_literal_ok);
+    hide(n::clean);
+    l::l293(Seq::empty());
+    p::all();
+    reveal_strlit(
+        "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>",
+    );
+    assert(n::codes(
+        "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+    ) =~= data_293());
+    assert(n::clean(data_293(), p::css_codes(), p::marketing_codes(), p::relative_codes()))
+        by (compute_only);
+    n::clean_bridge(
+        "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>"@,
+    );
+}
+
 } // verus!
 }
 pub mod css {
@@ -12024,7 +12206,7 @@ pub proof fn block_256(i: int)
 
 pub proof fn block_272(i: int)
     requires
-        272 <= i < 287,
+        272 <= i < 288,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -12058,14 +12240,39 @@ pub proof fn block_272(i: int)
         batch_272::literal_284();
     } else if i == 285 {
         batch_272::literal_285();
-    } else {
+    } else if i == 286 {
         batch_272::literal_286();
+    } else {
+        batch_272::literal_287();
+    }
+}
+
+pub proof fn block_288(i: int)
+    requires
+        288 <= i < 294,
+    ensures
+        u::copy_literal_ok(u::copy_registry()[i]),
+{
+    hide(u::copy_registry);
+    hide(u::copy_literal_ok);
+    if i == 288 {
+        batch_288::literal_288();
+    } else if i == 289 {
+        batch_288::literal_289();
+    } else if i == 290 {
+        batch_288::literal_290();
+    } else if i == 291 {
+        batch_288::literal_291();
+    } else if i == 292 {
+        batch_288::literal_292();
+    } else {
+        batch_288::literal_293();
     }
 }
 
 pub proof fn literal(i: int)
     requires
-        0 <= i < 287,
+        0 <= i < 294,
     ensures
         u::copy_literal_ok(u::copy_registry()[i]),
 {
@@ -12105,14 +12312,16 @@ pub proof fn literal(i: int)
         block_240(i);
     } else if i < 272 {
         block_256(i);
-    } else {
+    } else if i < 288 {
         block_272(i);
+    } else {
+        block_288(i);
     }
 }
 
 pub proof fn registry_size()
     ensures
-        u::copy_registry().len() == 287,
+        u::copy_registry().len() == 294,
 {
     hide(u::lit);
     hide(u::css_text);

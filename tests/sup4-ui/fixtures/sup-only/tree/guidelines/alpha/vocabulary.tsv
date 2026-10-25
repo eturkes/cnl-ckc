@@ -1,0 +1,4 @@
+# format: kind	lemma	value
+superseded	r21	20240229 https://example.test/notice Later guidance
+supersession	z	20241231 https://example.test/end?x=1&y='2' End of year & "notice" <é>
+superseded	r20	00000229 https://example.test/repeat A repeated passage

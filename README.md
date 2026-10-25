@@ -199,6 +199,11 @@ A word with a solid underline in the ACE text has a fixed meaning in
 the vocabulary table of the guideline. Select the word to see how the
 compiler reads it. The guideline page lists all of these meanings under
 "Word meanings".
+When later law, regulation or guidance superseded the statements of a
+document, its page shows a notice above the passage with the date and a
+link to the source. Review that document like any other: the ACE must
+reflect the passage as the guideline states it. The guideline page
+lists every superseded passage under "Superseded passages".
 
 ## Releases
 

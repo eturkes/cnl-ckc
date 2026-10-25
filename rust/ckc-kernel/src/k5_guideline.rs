@@ -1,6 +1,6 @@
 use crate::{
     k5_bytes as b, k5_frame as frame, k5_html as h, k5_model as model, k5_payload as payload,
-    k5_records as records, k5_titles as titles, k5_url as url,
+    k5_records as records, k5_superseded as superseded, k5_titles as titles, k5_url as url,
 };
 use ckc_spec::check as ck;
 use ckc_spec::check::{ECoverageRow, EStatus};
@@ -375,6 +375,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     hide(u::tally);
     hide(u::class_counts);
     hide(u::meanings_section);
+    hide(u::superseded_section);
     let m = model::prepare(g);
     let title = titles::title(g);
     let stats = status_rows(g, &m);
@@ -455,6 +456,13 @@ pub fn page(g: &EGuideline) -> (out: EPage)
     proof {
         assert(h::pages(body@) =~= first + second);
     }
+    let ghost first = h::pages(body@);
+    let mut superseded = superseded::section(g);
+    let ghost second = h::pages(superseded@);
+    body.append(&mut superseded);
+    proof {
+        assert(h::pages(body@) =~= first + second);
+    }
     body.push(h::fixed("<section>"));
     body.push(h::fixed("<h2>Documents</h2>"));
     body.push(h::fixed("<table class=\"compact\">"));
@@ -488,7 +496,7 @@ pub fn page(g: &EGuideline) -> (out: EPage)
             ),
             u::fixed_bytes(u::table_close()),
             u::fixed_bytes(u::section_close()),
-        ] + u::meanings_section(g@.vocabulary) + seq![
+        ] + u::meanings_section(g@.vocabulary) + u::superseded_section(g@) + seq![
             u::fixed_bytes(u::section_open()),
             u::fixed_bytes(u::h2_open_documents_h2_close()),
             u::fixed_bytes(u::table_open_2()),

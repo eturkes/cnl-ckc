@@ -250,6 +250,23 @@ they say. Every typed fact reads in the ACE text itself, so no page
 repeats the compiled tables. A table that fails the `ckc check` grammar
 stops the interface with `ui: viewmodel: <id> vocabulary.tsv: <why>`.
 
+The table `vocabulary.tsv` can record that later law, regulation or
+guidance superseded statements of the guideline (section "Superseded
+statements"). The page of a superseded document then shows one notice
+above the passage. The notice gives the date, names the superseding
+source as a link, and states that the page shows the original passage
+and its ACE representation for review. The guideline page lists every
+superseded passage in the table "Superseded passages", after "Word
+meanings" (or after the status table when the guideline has no word
+meanings) and before the documents. Each row names the passage, the
+document that represents it, the source as a link, and the date. The
+document cell stays empty for a passage without ACE. The table states
+that later law, regulation or guidance superseded all or part of each
+passage, because a census can find a passage superseded in part. A
+source link opens in the same tab. The page check accepts an external
+link only when it is a commit link of this repository or the source link
+of a row in the table of the same guideline.
+
 The interface reads committed files. When the working tree holds
 uncommitted guideline changes, the pages render the last commit
 instead. Three consequences follow. An uncommitted edit is not
@@ -1243,7 +1260,8 @@ supersession	cdc2022-opioid-rec12-imp08	20221229 https://www.govinfo.gov/content
 
 A `superseded` row has the same value and names a passage without a
 document of its own, for example a passage that reports third-party
-policy. It changes no compiled document.
+policy. It changes no compiled document. The guideline page of the
+reviewer interface lists it under "Superseded passages".
 
 | Predicate | Meaning |
 | --- | --- |

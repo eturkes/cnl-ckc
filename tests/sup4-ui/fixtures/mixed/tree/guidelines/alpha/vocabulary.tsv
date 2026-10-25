@@ -1,0 +1,8 @@
+# format: kind	lemma	value
+qualifier	reviewer	manner
+superseded	r20	20240229 https://example.test/restated?a=1&b='two' Act & <Section> "Review" — Santé 漢字
+unit	day	day
+supersession	a-2	00000229 https://example.test/earliest?x="<&>'" Year zero & <Act> "A" — é
+superseded	r21	99991231 https://example.test/uncovered A long citation with spaces that names the later law and its operative provision in full
+supersession	missing	19000101 https://example.test/missing Missing document source
+superseded	r1	20000229 https://example.test/existing Passage with an ACE document
