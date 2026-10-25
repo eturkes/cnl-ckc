@@ -200,11 +200,20 @@ correctly: the clinician review checks that.
   a chronic pain. The rules of the other documents that name a pain class
   therefore also match a stated pain duration in months.
 - Superseded statements. Recommendation 12 tells clinicians to obtain a
-  waiver to prescribe buprenorphine (`cdc2022-opioid-rec12-imp08`), and
-  regions S39-14, S59-02, S59-08 and S59-11 describe that waiver. The
-  Consolidated Appropriations Act, 2023, §1262, eliminated the waiver
-  requirement from December 29, 2022 (89 FR 7528). The knowledge base keeps
-  these statements as the guideline states them.
+  waiver to prescribe buprenorphine (`cdc2022-opioid-rec12-imp08`). The
+  Consolidated Appropriations Act, 2023 (Public Law 117-328), Division FF,
+  section 1262(a)(1), eliminated this waiver requirement on December 29,
+  2022 (89 FR 7528). The vocabulary table records the supersession of this
+  document and of the passages S39-14, S59-02, S59-08 and S60-06, which
+  describe the waiver in whole or in part. The knowledge base keeps these
+  statements as the guideline states them. It derives the recommendations
+  of `cdc2022-opioid-rec12-imp08` only for an evaluation date before
+  2022-12-29 (`docs/REFERENCE.md`, section "Superseded statements"). A
+  check of every passage of the guideline against later law, regulation
+  and guidance found no other superseded statement. Passage S59-01 reports
+  a breastfeeding recommendation that later guidance changed, but the
+  check found no source that dates the change, so the table does not
+  record it.
 - Ruling tests. A CDC-voice imperative or endorsement with a trailing
   citation is the guideline's own directive: formalize it. A CDC-voice
   directive whose action is the guideline's own also formalizes when it

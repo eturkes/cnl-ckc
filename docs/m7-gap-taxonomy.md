@@ -31,7 +31,7 @@ the first class to implement. Each class is a separate feature unit.
 | condition-scope | exceptions and prerequisites | 96 | — | implemented: scope exclusions that gate the should, must and may statements of a guideline, and exceptions and prerequisites as rule conditions, with `does not provably` for the absence of a record (`docs/REFERENCE.md` § Scope exclusions) |
 | quantification | set scope, example generalized to rule | 68 | — | ACE extension (group coordination) |
 | relation-structure | cause and purpose links | 209 | — | authoring fidelity, ACE extension |
-| supersession | a statement that later law, regulation or guidance replaced | 1 | 5 | schema revision: a supersession record with the replacing source and its effective date; the user ruled it into the first release |
+| supersession | a statement that later law, regulation or guidance replaced | 1 | 5 | implemented: a supersession record with the superseding source and its effective date; the should, must and may statements of a superseded document derive only for an evaluation date before that date (`docs/REFERENCE.md` § Superseded statements) |
 
 Strength status: the table's grade nouns give the 12 recommendation
 documents 24 grade records, one strength and one evidence value each.

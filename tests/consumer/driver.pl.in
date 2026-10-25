@@ -48,3 +48,10 @@ bounded_all(Seconds, Name, G) :-
     catch(call_with_time_limit(Seconds, (findall(x, G, L), length(L, N), R = solutions(N))),
         E, R = E),
     format("bounded ~w ~q~n", [Name, R]).
+% doc_boxes(Doc): Doc's should/must/may box contexts + its supersession records.
+doc_boxes(Doc) :-
+    C = '$guideline_id'(context, Doc, _, _, _),
+    findall(C-O, (member(O, [should, must, may]), guideline_operator(actual, C, O)), L0),
+    sort(L0, L), length(L, N),
+    findall(S, guideline_supersession(Doc, S, _, _), R0), sort(R0, R), length(R, M),
+    format("boxes ~w ~w records ~w~n", [Doc, N, M]).

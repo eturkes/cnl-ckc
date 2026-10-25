@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s10-08',ace_sha256('8540e7b3b810993ce802742a88d1181efd6e736c1af0caa49890f574410ad10b'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s10-08',ace_sha256('8540e7b3b810993ce802742a88d1181efd6e736c1af0caa49890f574410ad10b'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
 % S1: Every outpatient-opioid-prescribing-scope-expansion can provide an evidence-based-advice to an additional-clinician.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s10-08',1,box(1),[A]),can) :- guideline_entity(actual,A,'outpatient-opioid-prescribing-scope-expansion',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s10-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s10-08',1,ref(2),[A]),'evidence-based-advice',countable) :- guideline_entity(actual,A,'outpatient-opioid-prescribing-scope-expansion',countable), guideline_cardinality(actual,A,na,eq,1).

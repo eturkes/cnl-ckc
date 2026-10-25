@@ -1,4 +1,4 @@
 % category-a-recommendations compiled from ACE question by ace_to_pl question mode; do not edit.
-'$guideline_query'(v1,'category-a-recommendations',ace_sha256(e1a55c47923fd26d266c56eb8b19cefba225d57e9095a2bfaec155bd392ff541),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+'$guideline_query'(v1,'category-a-recommendations',ace_sha256(e1a55c47923fd26d266c56eb8b19cefba225d57e9095a2bfaec155bd392ff541),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
 % Q1: Which recommendation is a category-A-recommendation?
 '$guideline_query_projection'(goal(','(guideline_entity(actual,A,recommendation,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,'category-A-recommendation',countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_event(actual,C,be),','(guideline_arg(actual,C,1,A),guideline_arg(actual,C,2,B)))))))),answers([answer(A,noun(recommendation,countable))])).

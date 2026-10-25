@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s62-05',ace_sha256(f725fa0c488fe704d0dc8058ea4a3256d9b377b13117ca84cb6f614514cfc4b5),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256(c36289aa40f75805a83501ca057b29dd1ba7292b025716853f654890b77ec50c))).
+guideline_document('cdc2022-opioid-s62-05',ace_sha256(f725fa0c488fe704d0dc8058ea4a3256d9b377b13117ca84cb6f614514cfc4b5),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
 % S1: Every health-inequity-response begins with an inequity-awareness-raising-and-acknowledgment.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s62-05',1,ref(2),[A]),'inequity-awareness-raising-and-acknowledgment',countable) :- guideline_entity(actual,A,'health-inequity-response',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s62-05',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'health-inequity-response',countable), guideline_cardinality(actual,A,na,eq,1).

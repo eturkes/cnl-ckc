@@ -266,6 +266,45 @@ fn patient_worlds_finish_and_agree_with_the_well_founded_model() {
     }
 }
 
+// SUP3 (contract sup1 D3/D4): the superseded document's should/must/may boxes derive only for
+// an evaluation date before its effective date; its records derive in every composition. The
+// earlier date restores exactly the boxes the adult world derived before the table rows.
+#[test]
+fn superseded_document_blocks_by_default_and_an_earlier_date_restores_it() {
+    const DOC: &str = "cdc2022-opioid-rec12-imp08";
+    let cases = [("none", None), ("before", Some(20221228)), ("on", Some(20221229))];
+    let runs: Vec<_> = cases
+        .iter()
+        .map(|&(name, date)| {
+            std::thread::spawn(move || {
+                let s = Scratch::new(&format!("superseded-{name}"));
+                let mut extra = vec![world(&s, "adult")];
+                if let Some(d) = date {
+                    extra.push(s.file(
+                        "date.pl",
+                        &format!(
+                            ":- multifile(guideline_evaluation_date/1).\nguideline_evaluation_date({d}).\n"
+                        ),
+                    ));
+                }
+                let out = swipl(&s, &load(&s, Mode::Recipe, &extra), &format!("doc_boxes('{DOC}')"));
+                let f: Vec<&str> = out
+                    .lines()
+                    .find_map(|l| l.strip_prefix("boxes "))
+                    .unwrap_or_else(|| panic!("{name}: no boxes row\n{out}"))
+                    .split(' ')
+                    .collect();
+                assert!(f.len() == 4 && f[0] == DOC && f[2] == "records", "{name}: {out}");
+                (name, (f[1].parse::<usize>().unwrap(), f[3].parse::<usize>().unwrap()))
+            })
+        })
+        .collect();
+    let got: BTreeMap<_, _> = runs.into_iter().map(|r| r.join().unwrap()).collect();
+    assert_eq!(got["none"], (0, 3), "no evaluation date: blocked, 3 records");
+    assert_eq!(got["on"], (0, 3), "the effective date itself: blocked");
+    assert_eq!(got["before"], (2, 3), "an earlier date restores the boxes");
+}
+
 #[test]
 fn dose_questions_answer_under_the_recipe_and_open_goals_diverge_without_it() {
     let s = Scratch::new("dose");
