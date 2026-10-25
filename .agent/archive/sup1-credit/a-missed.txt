@@ -1,0 +1,177 @@
+ckc/src/main.rs:21:9: delete match arm Some("trust-audit") in main
+ckc/src/main.rs:23:9: delete match arm Some("v1") in main
+ckc/src/main.rs:25:9: delete match arm Some("dist") in main
+ckc/src/main.rs:33:9: delete match arm Some("release-manifest" | "compile" | "queries" | "align" | "review-manifest" | "derive-review-manifest" | "ledger-validate",) in main
+ckc/src/main.rs:18:32: replace match guard args.get(2).is_some_and(|a| a == "--write") with true in main
+ckc/src/main.rs:18:32: replace match guard args.get(2).is_some_and(|a| a == "--write") with false in main
+ckc/src/main.rs:22:32: replace match guard args.len() == 5 with true in main
+ckc/src/main.rs:22:32: replace match guard args.len() == 5 with false in main
+ckc/src/main.rs:26:28: replace match guard args.len() == 3 with true in main
+ckc/src/main.rs:26:28: replace match guard args.len() == 3 with false in main
+ckc/src/main.rs:27:28: replace match guard args.len() == 4 && args[2] == "--cases" with true in main
+ckc/src/main.rs:27:28: replace match guard args.len() == 4 && args[2] == "--cases" with false in main
+ckc/src/main.rs:30:32: replace match guard args.len() == 8 || args.len() == 9 with true in main
+ckc/src/main.rs:30:32: replace match guard args.len() == 8 || args.len() == 9 with false in main
+ckc/src/main.rs:42:26: replace match guard args.len() <= 3 with true in main
+ckc/src/main.rs:42:26: replace match guard args.len() <= 3 with false in main
+ckc/src/main.rs:18:62: replace == with != in main
+ckc/src/main.rs:22:43: replace == with != in main
+ckc/src/main.rs:26:39: replace == with != in main
+ckc/src/main.rs:27:44: replace && with || in main
+ckc/src/main.rs:27:39: replace == with != in main
+ckc/src/main.rs:27:55: replace == with != in main
+ckc/src/main.rs:30:48: replace || with && in main
+ckc/src/main.rs:30:43: replace == with != in main
+ckc/src/main.rs:30:62: replace == with != in main
+ckc/src/main.rs:42:37: replace <= with > in main
+ckc/src/ui/mod.rs:36:9: delete match arm Some("request") in run
+ckc/src/ui/mod.rs:21:27: replace match guard (2..=3).contains(&args.len()) with true in run
+ckc/src/ui/mod.rs:21:27: replace match guard (2..=3).contains(&args.len()) with false in run
+ckc/src/ui/mod.rs:32:26: replace match guard args.len() <= 2 with true in run
+ckc/src/ui/mod.rs:35:31: replace match guard args.len() == 2 with true in run
+ckc/src/ui/mod.rs:35:31: replace match guard args.len() == 2 with false in run
+ckc/src/ui/mod.rs:40:26: replace match guard args.len() <= 3 with true in run
+ckc/src/ui/mod.rs:40:26: replace match guard args.len() <= 3 with false in run
+ckc/src/ui/mod.rs:35:42: replace == with != in run
+ckc/src/ui/mod.rs:40:37: replace <= with > in run
+ckc/src/ui/mod.rs:43:33: replace match guard port >= 1024 with true in run
+ckc/src/ui/mod.rs:43:33: replace match guard port >= 1024 with false in run
+ckc/src/ui/mod.rs:43:38: replace >= with < in run
+ckc/src/ui/mod.rs:71:5: replace finish_code -> ExitCode with Default::default()
+ckc/src/ui/mod.rs:80:5: replace usage -> ExitCode with Default::default()
+ckc/src/ui/common.rs:12:5: replace digest -> Vec<u8> with vec![]
+ckc/src/ui/common.rs:12:5: replace digest -> Vec<u8> with vec![0]
+ckc/src/ui/common.rs:12:5: replace digest -> Vec<u8> with vec![1]
+ckc/src/ui/common.rs:15:5: replace valid_id -> bool with true
+ckc/src/ui/common.rs:18:9: replace && with || in valid_id
+ckc/src/ui/common.rs:17:9: replace && with || in valid_id
+ckc/src/ui/common.rs:16:9: replace && with || in valid_id
+ckc/src/ui/common.rs:22:5: replace valid_hex -> bool with true
+ckc/src/ui/common.rs:22:5: replace valid_hex -> bool with false
+ckc/src/ui/common.rs:23:9: replace && with || in valid_hex
+ckc/src/ui/common.rs:22:13: replace == with != in valid_hex
+ckc/src/ui/common.rs:24:41: replace || with && in valid_hex
+ckc/src/ui/common.rs:84:9: replace <impl Drop for Scratch>::drop with ()
+ckc/src/ui/intake.rs:17:26: replace || with && in load
+ckc/src/ui/intake.rs:23:30: replace || with && in load
+ckc/src/ui/intake.rs:149:5: replace inventory -> Result<()> with Ok(())
+ckc/src/ui/intake.rs:167:5: replace manifest -> Result<BTreeMap<String, EBundle>> with Ok(BTreeMap::new())
+ckc/src/ui/intake.rs:206:5: replace census -> Vec<u8> with vec![]
+ckc/src/ui/intake.rs:206:5: replace census -> Vec<u8> with vec![0]
+ckc/src/ui/intake.rs:206:5: replace census -> Vec<u8> with vec![1]
+ckc/src/ui/intake.rs:209:18: replace && with || in census
+ckc/src/ui/intake.rs:209:14: replace > with == in census
+ckc/src/ui/intake.rs:209:14: replace > with < in census
+ckc/src/ui/intake.rs:209:14: replace > with >= in census
+ckc/src/ui/intake.rs:227:41: replace && with || in evidence
+ckc/src/ui/intake.rs:243:28: replace match guard !head.is_empty() && head.bytes().all(|b| b.is_ascii_digit()) with true in evidence
+ckc/src/ui/intake.rs:243:28: replace match guard !head.is_empty() && head.bytes().all(|b| b.is_ascii_digit()) with false in evidence
+ckc/src/ui/intake.rs:243:45: replace && with || in evidence
+ckc/src/ui/intake.rs:243:28: delete ! in evidence
+ckc/src/ui/intake.rs:259:5: replace payloads -> Result<()> with Ok(())
+ckc/src/ui/intake.rs:270:57: replace || with && in payloads
+ckc/src/ui/intake.rs:270:34: replace || with && in payloads
+ckc/src/ui/intake.rs:283:12: delete ! in payloads
+ckc/src/ui/intake.rs:288:22: replace > with < in payloads
+ckc/src/ui/intake.rs:296:38: replace == with != in payloads
+ckc/src/ui/intake.rs:308:57: replace == with != in payloads
+ckc/src/ui/intake.rs:309:69: replace || with && in payloads
+ckc/src/ui/intake.rs:309:26: replace != with == in payloads
+ckc/src/ui/intake.rs:309:78: replace != with == in payloads
+ckc/src/ui/intake.rs:342:26: replace != with == in ledger
+ckc/src/ui/intake.rs:367:5: replace valid_asset -> bool with true
+ckc/src/ui/intake.rs:367:5: replace valid_asset -> bool with false
+ckc/src/ui/intake.rs:369:9: replace && with || in valid_asset
+ckc/src/ui/intake.rs:368:9: replace && with || in valid_asset
+ckc/src/ui/intake.rs:367:5: delete ! in valid_asset
+ckc/src/ui/intake.rs:368:12: delete ! in valid_asset
+ckc/src/ui/intake.rs:371:48: replace || with && in valid_asset
+ckc/src/ui/intake.rs:374:5: replace media_type -> Option<&'static str> with None
+ckc/src/ui/intake.rs:374:5: replace media_type -> Option<&'static str> with Some("")
+ckc/src/ui/intake.rs:374:5: replace media_type -> Option<&'static str> with Some("xyzzy")
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![])
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![vec![]])
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![vec![0]])
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![vec![1]])
+ckc/src/ui/intake.rs:384:28: replace || with && in assets
+ckc/src/ui/intake.rs:384:31: delete ! in assets
+ckc/src/ui/intake.rs:389:37: replace && with || in assets
+ckc/src/ui/intake.rs:389:21: delete ! in assets
+ckc/src/ui/intake.rs:391:36: replace && with || in assets
+ckc/src/ui/intake.rs:406:21: replace != with == in document
+ckc/src/ui/intake.rs:411:25: replace != with == in document
+ckc/src/ui/intake.rs:436:25: replace || with && in vocabulary
+ckc/src/ui/pages.rs:17:9: replace Tree::write -> Result<()> with Ok(())
+ckc/src/ui/pages.rs:32:9: replace Tree::meter with ()
+ckc/src/ui/pages.rs:43:5: replace hrefs -> Vec<&str> with vec![]
+ckc/src/ui/pages.rs:43:5: replace hrefs -> Vec<&str> with vec![""]
+ckc/src/ui/pages.rs:43:5: replace hrefs -> Vec<&str> with vec!["xyzzy"]
+ckc/src/ui/pages.rs:56:5: replace resolve_href -> Option<String> with None
+ckc/src/ui/pages.rs:56:5: replace resolve_href -> Option<String> with Some(String::new())
+ckc/src/ui/pages.rs:56:5: replace resolve_href -> Option<String> with Some("xyzzy".into())
+ckc/src/ui/pages.rs:56:30: replace || with && in resolve_href
+ckc/src/ui/pages.rs:62:17: replace == with != in resolve_href
+ckc/src/ui/pages.rs:66:24: replace != with == in resolve_href
+ckc/src/ui/pages.rs:109:25: replace + with - in tree
+ckc/src/ui/pages.rs:109:25: replace + with * in tree
+ckc/src/ui/pages.rs:136:20: delete ! in tree
+ckc/src/ui/pages.rs:137:20: delete ! in tree
+ckc/src/ui/pages.rs:151:5: replace destination_blocked -> bool with true
+ckc/src/ui/pages.rs:151:5: replace destination_blocked -> bool with false
+ckc/src/ui/pages.rs:160:5: replace render -> Result<()> with Ok(())
+ckc/src/ui/pages.rs:168:5: replace files -> Result<()> with Ok(())
+ckc/src/ui/pages.rs:185:5: replace strip_between -> String with String::new()
+ckc/src/ui/pages.rs:185:5: replace strip_between -> String with "xyzzy".into()
+ckc/src/ui/pages.rs:195:5: replace visible -> String with String::new()
+ckc/src/ui/pages.rs:195:5: replace visible -> String with "xyzzy".into()
+ckc/src/ui/pages.rs:213:17: delete match arm "amp" in visible
+ckc/src/ui/pages.rs:214:17: delete match arm "lt" in visible
+ckc/src/ui/pages.rs:215:17: delete match arm "gt" in visible
+ckc/src/ui/pages.rs:216:17: delete match arm "quot" in visible
+ckc/src/ui/pages.rs:217:17: delete match arm "#x27" | "#39" in visible
+ckc/src/ui/pages.rs:233:5: replace word -> bool with true
+ckc/src/ui/pages.rs:233:5: replace word -> bool with false
+ckc/src/ui/pages.rs:233:25: replace || with && in word
+ckc/src/ui/pages.rs:233:30: replace == with != in word
+ckc/src/ui/pages.rs:236:5: replace has_functor -> bool with true
+ckc/src/ui/pages.rs:236:5: replace has_functor -> bool with false
+ckc/src/ui/pages.rs:238:69: delete ! in has_functor
+ckc/src/ui/pages.rs:242:5: replace visible_violation -> Option<&'static str> with None
+ckc/src/ui/pages.rs:242:5: replace visible_violation -> Option<&'static str> with Some("")
+ckc/src/ui/pages.rs:242:5: replace visible_violation -> Option<&'static str> with Some("xyzzy")
+ckc/src/ui/pages.rs:249:26: delete ! in visible_violation
+ckc/src/ui/pages.rs:250:36: replace && with || in visible_violation
+ckc/src/ui/pages.rs:250:30: replace >= with < in visible_violation
+ckc/src/ui/pages.rs:257:26: delete ! in visible_violation
+ckc/src/ui/pages.rs:263:13: replace && with || in visible_violation
+ckc/src/ui/pages.rs:262:13: replace && with || in visible_violation
+ckc/src/ui/pages.rs:259:13: replace && with || in visible_violation
+ckc/src/ui/pages.rs:261:45: replace || with && in visible_violation
+ckc/src/ui/pages.rs:271:5: replace resource_tag -> bool with true
+ckc/src/ui/pages.rs:271:5: replace resource_tag -> bool with false
+ckc/src/ui/pages.rs:273:52: replace && with || in resource_tag
+ckc/src/ui/pages.rs:273:25: delete ! in resource_tag
+ckc/src/ui/pages.rs:273:57: replace != with == in resource_tag
+ckc/src/ui/pages.rs:282:11: delete ! in resource_tag
+ckc/src/ui/pages.rs:285:53: replace || with && in resource_tag
+ckc/src/ui/pages.rs:285:58: replace == with != in resource_tag
+ckc/src/ui/pages.rs:287:21: replace || with && in resource_tag
+ckc/src/ui/pages.rs:287:16: replace == with != in resource_tag
+ckc/src/ui/pages.rs:311:5: replace resource_reference -> bool with true
+ckc/src/ui/pages.rs:311:5: replace resource_reference -> bool with false
+ckc/src/ui/pages.rs:320:5: replace invariant -> Result<Option<&'static str>> with Ok(None)
+ckc/src/ui/pages.rs:320:5: replace invariant -> Result<Option<&'static str>> with Ok(Some(""))
+ckc/src/ui/pages.rs:320:5: replace invariant -> Result<Option<&'static str>> with Ok(Some("xyzzy"))
+ckc/src/ui/pages.rs:332:41: replace != with == in invariant
+ckc/src/ui/pages.rs:336:8: delete ! in invariant
+ckc/src/ui/pages.rs:341:51: replace || with && in invariant
+ckc/src/ui/pages.rs:341:40: replace != with == in invariant
+ckc/src/ui/pages.rs:341:62: replace > with == in invariant
+ckc/src/ui/pages.rs:341:62: replace > with < in invariant
+ckc/src/ui/pages.rs:341:62: replace > with >= in invariant
+ckc/src/ui/pages.rs:349:44: replace != with == in invariant
+ckc/src/ui/pages.rs:356:36: replace != with == in invariant
+ckc/src/ui/pages.rs:359:8: delete ! in invariant
+ckc/src/ui/pages.rs:376:8: delete ! in check
+ckc/src/ui/pages.rs:380:23: replace != with == in check
+ckc/src/ui/pages.rs:383:12: delete ! in check

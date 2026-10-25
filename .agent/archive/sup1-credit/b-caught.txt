@@ -1,0 +1,57 @@
+ckc/src/main.rs:16:5: replace main -> ExitCode with Default::default()
+ckc/src/main.rs:23:9: delete match arm Some("v1") in main
+ckc/src/main.rs:26:28: replace match guard args.len() == 3 with false in main
+ckc/src/main.rs:30:32: replace match guard args.len() == 8 || args.len() == 9 with false in main
+ckc/src/main.rs:26:39: replace == with != in main
+ckc/src/main.rs:30:48: replace || with && in main
+ckc/src/main.rs:30:43: replace == with != in main
+ckc/src/main.rs:30:62: replace == with != in main
+ckc/src/certify_cli.rs:20:5: replace copy_tree -> io::Result<()> with Ok(())
+ckc/src/certify_cli.rs:34:5: replace read_text -> Result<Vec<u8>, String> with Ok(vec![])
+ckc/src/certify_cli.rs:34:5: replace read_text -> Result<Vec<u8>, String> with Ok(vec![0])
+ckc/src/certify_cli.rs:34:5: replace read_text -> Result<Vec<u8>, String> with Ok(vec![1])
+ckc/src/certify_cli.rs:40:5: replace optional_ulex -> Result<Option<Vec<u8>>, String> with Ok(None)
+ckc/src/certify_cli.rs:40:5: replace optional_ulex -> Result<Option<Vec<u8>>, String> with Ok(Some(vec![0]))
+ckc/src/certify_cli.rs:40:5: replace optional_ulex -> Result<Option<Vec<u8>>, String> with Ok(Some(vec![1]))
+ckc/src/certify_cli.rs:92:9: replace Stage::dump -> Result<Vec<u8>, String> with Ok(vec![])
+ckc/src/certify_cli.rs:92:9: replace Stage::dump -> Result<Vec<u8>, String> with Ok(vec![0])
+ckc/src/certify_cli.rs:92:9: replace Stage::dump -> Result<Vec<u8>, String> with Ok(vec![1])
+ckc/src/certify_cli.rs:120:12: delete ! in Stage::dump
+ckc/src/certify_cli.rs:135:5: replace optional_table -> Result<Option<Table>, String> with Ok(Some(Default::default()))
+ckc/src/certify_cli.rs:140:19: replace match guard e.kind() == io::ErrorKind::NotFound with false in optional_table
+ckc/src/certify_cli.rs:140:28: replace == with != in optional_table
+ckc/src/certify_cli.rs:188:5: replace emit -> ExitCode with Default::default()
+ckc/src/certify_cli.rs:197:5: replace name_ok -> bool with false
+ckc/src/certify_cli.rs:197:5: delete ! in name_ok
+ckc/src/certify_cli.rs:200:67: replace || with && in name_ok
+ckc/src/certify_cli.rs:200:45: replace || with && in name_ok
+ckc/src/certify_cli.rs:200:72: replace == with != in name_ok
+ckc/src/certify_cli.rs:204:5: replace run_one -> ExitCode with Default::default()
+ckc/src/certify_cli.rs:204:25: replace == with != in run_one
+ckc/src/certify_cli.rs:206:16: replace && with || in run_one
+ckc/src/certify_cli.rs:206:27: replace != with == in run_one
+ckc/src/certify_cli.rs:206:40: delete ! in run_one
+ckc/src/certify_cli.rs:211:31: replace == with != in run_one
+ckc/src/certify_cli.rs:248:5: replace ace_paths -> Result<Vec<PathBuf>, String> with Ok(vec![Default::default()])
+ckc/src/certify_cli.rs:292:14: replace != with == in certify_artifact
+ckc/src/certify_cli.rs:345:8: delete ! in run
+ckc/src/certify_cli.rs:378:16: delete ! in run
+ckc/src/certify_cli.rs:425:21: replace != with == in run
+ckc/src/v1_cli.rs:48:21: replace == with != in run_file
+ckc/src/v1_cli.rs:60:8: delete ! in read_src
+ckc/src/v1_cli.rs:73:5: replace emit -> ExitCode with Default::default()
+ckc/src/v1_cli.rs:79:5: replace sha_of -> String with String::new()
+ckc/src/v1_cli.rs:79:5: replace sha_of -> String with "xyzzy".into()
+ckc/src/v1_cli.rs:80:9: delete match arm ESrc::Bytes(b) in sha_of
+ckc/src/v1_cli.rs:88:5: replace run_trace -> ExitCode with Default::default()
+ckc/src/v1_cli.rs:149:5: replace run_mode -> ExitCode with Default::default()
+ckc/src/v1_cli.rs:171:5: replace run -> ExitCode with Default::default()
+ckc/src/v1_cli.rs:172:25: replace match guard mode == "check" || mode == "render" with false in run
+ckc/src/v1_cli.rs:176:25: replace match guard mode == "answer" with false in run
+ckc/src/v1_cli.rs:177:28: replace match guard mode == "trace" with false in run
+ckc/src/v1_cli.rs:178:31: replace match guard mode == "trace-check" with false in run
+ckc/src/v1_cli.rs:172:41: replace || with && in run
+ckc/src/v1_cli.rs:172:30: replace == with != in run
+ckc/src/v1_cli.rs:176:30: replace == with != in run
+ckc/src/v1_cli.rs:177:33: replace == with != in run
+ckc/src/v1_cli.rs:178:36: replace == with != in run

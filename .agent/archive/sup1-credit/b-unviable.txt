@@ -1,0 +1,5 @@
+ckc/src/certify_cli.rs:154:5: replace certify -> EOut with Default::default()
+ckc/src/certify_cli.rs:284:5: replace certify_artifact -> Certified with Default::default()
+ckc/src/certify_cli.rs:307:5: replace certify_parallel -> Result<Vec<Certified>, String> with Ok(vec![Default::default()])
+ckc/src/v1_cli.rs:30:9: delete match arm Some(Ok(b)) in run_file
+ckc/src/v1_cli.rs:59:5: replace read_src -> ESrc with Default::default()

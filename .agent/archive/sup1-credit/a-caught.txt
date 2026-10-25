@@ -1,0 +1,81 @@
+ckc/src/main.rs:16:5: replace main -> ExitCode with Default::default()
+ckc/src/main.rs:24:9: delete match arm Some("ui") in main
+ckc/src/ui/mod.rs:20:5: replace run -> ExitCode with Default::default()
+ckc/src/ui/mod.rs:32:26: replace match guard args.len() <= 2 with false in run
+ckc/src/ui/mod.rs:32:37: replace <= with > in run
+ckc/src/ui/mod.rs:61:5: replace finish -> ExitCode with Default::default()
+ckc/src/ui/common.rs:9:5: replace text -> String with String::new()
+ckc/src/ui/common.rs:9:5: replace text -> String with "xyzzy".into()
+ckc/src/ui/common.rs:15:5: replace valid_id -> bool with false
+ckc/src/ui/common.rs:15:5: delete ! in valid_id
+ckc/src/ui/common.rs:16:20: replace <= with > in valid_id
+ckc/src/ui/common.rs:17:12: delete ! in valid_id
+ckc/src/ui/common.rs:19:67: replace || with && in valid_id
+ckc/src/ui/common.rs:19:45: replace || with && in valid_id
+ckc/src/ui/common.rs:19:72: replace == with != in valid_id
+ckc/src/ui/common.rs:27:5: replace entries -> Result<Vec<PathBuf>> with Ok(vec![])
+ckc/src/ui/common.rs:27:5: replace entries -> Result<Vec<PathBuf>> with Ok(vec![Default::default()])
+ckc/src/ui/common.rs:36:5: replace name -> String with String::new()
+ckc/src/ui/common.rs:36:5: replace name -> String with "xyzzy".into()
+ckc/src/ui/common.rs:42:5: replace checked_text -> Result<Vec<u8>> with Ok(vec![])
+ckc/src/ui/common.rs:42:5: replace checked_text -> Result<Vec<u8>> with Ok(vec![0])
+ckc/src/ui/common.rs:42:5: replace checked_text -> Result<Vec<u8>> with Ok(vec![1])
+ckc/src/ui/common.rs:48:13: replace || with && in checked_text
+ckc/src/ui/common.rs:47:13: replace || with && in checked_text
+ckc/src/ui/common.rs:46:13: replace || with && in checked_text
+ckc/src/ui/common.rs:45:27: replace && with || in checked_text
+ckc/src/ui/common.rs:45:17: replace && with || in checked_text
+ckc/src/ui/common.rs:45:12: replace < with == in checked_text
+ckc/src/ui/common.rs:45:12: replace < with > in checked_text
+ckc/src/ui/common.rs:45:12: replace < with <= in checked_text
+ckc/src/ui/common.rs:45:22: replace != with == in checked_text
+ckc/src/ui/common.rs:45:32: replace != with == in checked_text
+ckc/src/ui/common.rs:46:18: replace == with != in checked_text
+ckc/src/ui/common.rs:57:5: replace load_text -> Result<Vec<u8>> with Ok(vec![])
+ckc/src/ui/common.rs:57:5: replace load_text -> Result<Vec<u8>> with Ok(vec![0])
+ckc/src/ui/common.rs:57:5: replace load_text -> Result<Vec<u8>> with Ok(vec![1])
+ckc/src/ui/common.rs:62:5: replace random_hex -> std::io::Result<String> with Ok(String::new())
+ckc/src/ui/common.rs:62:5: replace random_hex -> std::io::Result<String> with Ok("xyzzy".into())
+ckc/src/ui/intake.rs:17:29: delete ! in load
+ckc/src/ui/intake.rs:23:33: delete ! in load
+ckc/src/ui/intake.rs:41:5: replace table -> Result<Vec<TableRow<'a>>> with Ok(vec![])
+ckc/src/ui/intake.rs:41:5: replace table -> Result<Vec<TableRow<'a>>> with Ok(vec![Default::default()])
+ckc/src/ui/intake.rs:42:35: replace && with || in table
+ckc/src/ui/intake.rs:42:21: delete ! in table
+ckc/src/ui/intake.rs:42:38: delete ! in table
+ckc/src/ui/intake.rs:45:26: replace == with != in table
+ckc/src/ui/intake.rs:74:16: delete ! in coverage
+ckc/src/ui/intake.rs:77:16: delete ! in coverage
+ckc/src/ui/intake.rs:84:29: delete ! in coverage
+ckc/src/ui/intake.rs:96:24: replace == with != in coverage
+ckc/src/ui/intake.rs:102:12: delete ! in coverage
+ckc/src/ui/intake.rs:126:5: replace stems -> Result<Vec<String>> with Ok(vec![])
+ckc/src/ui/intake.rs:126:5: replace stems -> Result<Vec<String>> with Ok(vec![String::new()])
+ckc/src/ui/intake.rs:126:5: replace stems -> Result<Vec<String>> with Ok(vec!["xyzzy".into()])
+ckc/src/ui/intake.rs:126:8: delete ! in stems
+ckc/src/ui/intake.rs:131:12: delete ! in stems
+ckc/src/ui/intake.rs:151:12: delete ! in inventory
+ckc/src/ui/intake.rs:158:12: delete ! in inventory
+ckc/src/ui/intake.rs:190:12: delete ! in manifest
+ckc/src/ui/intake.rs:190:45: delete ! in manifest
+ckc/src/ui/intake.rs:197:12: delete ! in manifest
+ckc/src/ui/intake.rs:227:26: delete ! in evidence
+ckc/src/ui/intake.rs:227:44: delete ! in evidence
+ckc/src/ui/intake.rs:270:86: replace == with != in payloads
+ckc/src/ui/intake.rs:276:29: replace == with != in payloads
+ckc/src/ui/intake.rs:284:62: replace == with != in payloads
+ckc/src/ui/intake.rs:285:22: replace == with != in payloads
+ckc/src/ui/intake.rs:288:22: replace > with == in payloads
+ckc/src/ui/intake.rs:288:22: replace > with >= in payloads
+ckc/src/ui/intake.rs:299:22: replace == with != in payloads
+ckc/src/ui/intake.rs:304:22: replace != with == in payloads
+ckc/src/ui/intake.rs:327:8: delete ! in ledger
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(None)
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(Some(vec![]))
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(Some(vec![0]))
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(Some(vec![1]))
+ckc/src/ui/intake.rs:441:8: delete ! in vocabulary
+ckc/src/ui/intake.rs:459:8: delete ! in guideline
+ckc/src/ui/intake.rs:462:8: delete ! in guideline
+ckc/src/ui/intake.rs:468:8: delete ! in guideline
+ckc/src/ui/pages.rs:365:5: replace check -> Result<()> with Ok(())

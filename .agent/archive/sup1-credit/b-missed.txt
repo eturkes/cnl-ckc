@@ -1,0 +1,74 @@
+ckc/src/main.rs:21:9: delete match arm Some("trust-audit") in main
+ckc/src/main.rs:24:9: delete match arm Some("ui") in main
+ckc/src/main.rs:25:9: delete match arm Some("dist") in main
+ckc/src/main.rs:33:9: delete match arm Some("release-manifest" | "compile" | "queries" | "align" | "review-manifest" | "derive-review-manifest" | "ledger-validate",) in main
+ckc/src/main.rs:18:32: replace match guard args.get(2).is_some_and(|a| a == "--write") with true in main
+ckc/src/main.rs:18:32: replace match guard args.get(2).is_some_and(|a| a == "--write") with false in main
+ckc/src/main.rs:22:32: replace match guard args.len() == 5 with true in main
+ckc/src/main.rs:22:32: replace match guard args.len() == 5 with false in main
+ckc/src/main.rs:26:28: replace match guard args.len() == 3 with true in main
+ckc/src/main.rs:27:28: replace match guard args.len() == 4 && args[2] == "--cases" with true in main
+ckc/src/main.rs:27:28: replace match guard args.len() == 4 && args[2] == "--cases" with false in main
+ckc/src/main.rs:30:32: replace match guard args.len() == 8 || args.len() == 9 with true in main
+ckc/src/main.rs:42:26: replace match guard args.len() <= 3 with true in main
+ckc/src/main.rs:42:26: replace match guard args.len() <= 3 with false in main
+ckc/src/main.rs:18:62: replace == with != in main
+ckc/src/main.rs:22:43: replace == with != in main
+ckc/src/main.rs:27:44: replace && with || in main
+ckc/src/main.rs:27:39: replace == with != in main
+ckc/src/main.rs:27:55: replace == with != in main
+ckc/src/main.rs:42:37: replace <= with > in main
+ckc/src/certify_cli.rs:15:9: replace <impl Drop for Stage>::drop with ()
+ckc/src/certify_cli.rs:40:5: replace optional_ulex -> Result<Option<Vec<u8>>, String> with Ok(Some(vec![]))
+ckc/src/certify_cli.rs:45:19: replace match guard e.kind() == io::ErrorKind::NotFound with true in optional_ulex
+ckc/src/certify_cli.rs:45:19: replace match guard e.kind() == io::ErrorKind::NotFound with false in optional_ulex
+ckc/src/certify_cli.rs:45:28: replace == with != in optional_ulex
+ckc/src/certify_cli.rs:135:5: replace optional_table -> Result<Option<Table>, String> with Ok(None)
+ckc/src/certify_cli.rs:140:19: replace match guard e.kind() == io::ErrorKind::NotFound with true in optional_table
+ckc/src/certify_cli.rs:183:5: replace reject -> ExitCode with Default::default()
+ckc/src/certify_cli.rs:189:9: replace || with && in emit
+ckc/src/certify_cli.rs:197:5: replace name_ok -> bool with true
+ckc/src/certify_cli.rs:198:9: replace && with || in name_ok
+ckc/src/certify_cli.rs:206:37: replace || with && in run_one
+ckc/src/certify_cli.rs:206:9: delete ! in run_one
+ckc/src/certify_cli.rs:248:5: replace ace_paths -> Result<Vec<PathBuf>, String> with Ok(vec![])
+ckc/src/certify_cli.rs:250:19: replace match guard optional && e.kind() == io::ErrorKind::NotFound with true in ace_paths
+ckc/src/certify_cli.rs:250:19: replace match guard optional && e.kind() == io::ErrorKind::NotFound with false in ace_paths
+ckc/src/certify_cli.rs:250:28: replace && with || in ace_paths
+ckc/src/certify_cli.rs:250:40: replace == with != in ace_paths
+ckc/src/certify_cli.rs:256:47: replace == with != in ace_paths
+ckc/src/certify_cli.rs:271:5: replace order_artifacts with ()
+ckc/src/certify_cli.rs:307:5: replace certify_parallel -> Result<Vec<Certified>, String> with Ok(vec![])
+ckc/src/certify_cli.rs:345:5: replace run -> ExitCode with Default::default()
+ckc/src/certify_cli.rs:358:29: replace || with && in run
+ckc/src/certify_cli.rs:406:32: replace match guard output.rc != 0 with true in run
+ckc/src/certify_cli.rs:406:32: replace match guard output.rc != 0 with false in run
+ckc/src/certify_cli.rs:407:33: replace match guard !artifact.query with true in run
+ckc/src/certify_cli.rs:407:33: replace match guard !artifact.query with false in run
+ckc/src/certify_cli.rs:406:42: replace != with == in run
+ckc/src/certify_cli.rs:407:33: delete ! in run
+ckc/src/v1_cli.rs:12:5: replace reject -> ExitCode with Default::default()
+ckc/src/v1_cli.rs:20:5: replace line_col -> (u64, u64) with (0, 0)
+ckc/src/v1_cli.rs:20:5: replace line_col -> (u64, u64) with (0, 1)
+ckc/src/v1_cli.rs:20:5: replace line_col -> (u64, u64) with (1, 0)
+ckc/src/v1_cli.rs:20:5: replace line_col -> (u64, u64) with (1, 1)
+ckc/src/v1_cli.rs:20:18: replace + with - in line_col
+ckc/src/v1_cli.rs:20:18: replace + with * in line_col
+ckc/src/v1_cli.rs:20:54: replace == with != in line_col
+ckc/src/v1_cli.rs:21:17: replace + with - in line_col
+ckc/src/v1_cli.rs:21:17: replace + with * in line_col
+ckc/src/v1_cli.rs:21:63: replace != with == in line_col
+ckc/src/v1_cli.rs:28:5: replace run_file -> ExitCode with Default::default()
+ckc/src/v1_cli.rs:163:17: replace match guard mode == "aggregate-check" with true in run_mode
+ckc/src/v1_cli.rs:163:17: replace match guard mode == "aggregate-check" with false in run_mode
+ckc/src/v1_cli.rs:163:22: replace == with != in run_mode
+ckc/src/v1_cli.rs:172:25: replace match guard mode == "check" || mode == "render" with true in run
+ckc/src/v1_cli.rs:173:22: replace match guard mode == "aggregate-check" || mode == "recursion-check" with true in run
+ckc/src/v1_cli.rs:173:22: replace match guard mode == "aggregate-check" || mode == "recursion-check" with false in run
+ckc/src/v1_cli.rs:176:25: replace match guard mode == "answer" with true in run
+ckc/src/v1_cli.rs:177:28: replace match guard mode == "trace" with true in run
+ckc/src/v1_cli.rs:178:31: replace match guard mode == "trace-check" with true in run
+ckc/src/v1_cli.rs:172:49: replace == with != in run
+ckc/src/v1_cli.rs:173:48: replace || with && in run
+ckc/src/v1_cli.rs:173:27: replace == with != in run
+ckc/src/v1_cli.rs:173:56: replace == with != in run
