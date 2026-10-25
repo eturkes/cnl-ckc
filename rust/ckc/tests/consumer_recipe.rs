@@ -272,7 +272,11 @@ fn patient_worlds_finish_and_agree_with_the_well_founded_model() {
 #[test]
 fn superseded_document_blocks_by_default_and_an_earlier_date_restores_it() {
     const DOC: &str = "cdc2022-opioid-rec12-imp08";
-    let cases = [("none", None), ("before", Some(20221228)), ("on", Some(20221229))];
+    let cases = [
+        ("none", None),
+        ("before", Some(20221228)),
+        ("on", Some(20221229)),
+    ];
     let runs: Vec<_> = cases
         .iter()
         .map(|&(name, date)| {
@@ -300,7 +304,11 @@ fn superseded_document_blocks_by_default_and_an_earlier_date_restores_it() {
         })
         .collect();
     let got: BTreeMap<_, _> = runs.into_iter().map(|r| r.join().unwrap()).collect();
-    assert_eq!(got["none"], (0, 3), "no evaluation date: blocked, 3 records");
+    assert_eq!(
+        got["none"],
+        (0, 3),
+        "no evaluation date: blocked, 3 records"
+    );
     assert_eq!(got["on"], (0, 3), "the effective date itself: blocked");
     assert_eq!(got["before"], (2, 3), "an earlier date restores the boxes");
 }
