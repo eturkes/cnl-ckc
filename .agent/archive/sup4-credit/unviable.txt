@@ -1,0 +1,39 @@
+ckc/src/ui/intake.rs:16:5: replace load -> Result<View> with Ok(Default::default())
+ckc/src/ui/intake.rs:56:5: replace empty_evidence -> EEvidence with Default::default()
+ckc/src/ui/intake.rs:64:5: replace coverage -> Result<(ECoverage, Vec<String>)> with Ok((Default::default(), vec![]))
+ckc/src/ui/intake.rs:64:5: replace coverage -> Result<(ECoverage, Vec<String>)> with Ok((Default::default(), vec![String::new()]))
+ckc/src/ui/intake.rs:64:5: replace coverage -> Result<(ECoverage, Vec<String>)> with Ok((Default::default(), vec!["xyzzy".into()]))
+ckc/src/ui/intake.rs:133:13: replace && with || in stems
+ckc/src/ui/intake.rs:132:13: replace && with || in stems
+ckc/src/ui/intake.rs:167:5: replace manifest -> Result<BTreeMap<String, EBundle>> with Ok(BTreeMap::from_iter([(String::new(), Default::default())]))
+ckc/src/ui/intake.rs:167:5: replace manifest -> Result<BTreeMap<String, EBundle>> with Ok(BTreeMap::from_iter([("xyzzy".into(), Default::default())]))
+ckc/src/ui/intake.rs:217:5: replace evidence -> EEvidence with Default::default()
+ckc/src/ui/intake.rs:326:5: replace ledger -> Result<(ESrc, Vec<u8>)> with Ok((Default::default(), vec![]))
+ckc/src/ui/intake.rs:326:5: replace ledger -> Result<(ESrc, Vec<u8>)> with Ok((Default::default(), vec![0]))
+ckc/src/ui/intake.rs:326:5: replace ledger -> Result<(ESrc, Vec<u8>)> with Ok((Default::default(), vec![1]))
+ckc/src/ui/intake.rs:401:5: replace document -> Result<Content> with Ok(Default::default())
+ckc/src/ui/intake.rs:459:5: replace guideline -> Result<(EGuideline, Vec<Option<String>>)> with Ok((Default::default(), vec![]))
+ckc/src/ui/intake.rs:459:5: replace guideline -> Result<(EGuideline, Vec<Option<String>>)> with Ok((Default::default(), vec![None]))
+ckc/src/ui/intake.rs:459:5: replace guideline -> Result<(EGuideline, Vec<Option<String>>)> with Ok((Default::default(), vec![Some(String::new())]))
+ckc/src/ui/intake.rs:459:5: replace guideline -> Result<(EGuideline, Vec<Option<String>>)> with Ok((Default::default(), vec![Some("xyzzy".into())]))
+ckc/src/ui/pages.rs:73:5: replace tree -> Result<Tree> with Ok(Default::default())
+ckc/src/ui/pages.rs:137:17: replace && with || in tree
+ckc/src/ui/pages.rs:136:17: replace && with || in tree
+ckc/src/ui/pages.rs:427:13: replace && with || in check
+ckc/src/ui/request.rs:50:9: replace Response::page -> Self with Default::default()
+ckc/src/ui/request.rs:93:9: replace <impl From<EResponse> for Response>::from -> Self with Default::default()
+ckc/src/ui/request.rs:109:5: replace kernel_response -> Result<Response> with Ok(Default::default())
+ckc/src/ui/request.rs:115:5: replace empty_request -> ERequest with Default::default()
+ckc/src/ui/request.rs:127:5: replace server_error -> Result<Response> with Ok(Default::default())
+ckc/src/ui/request.rs:140:5: replace not_found -> Result<Response> with Ok(Default::default())
+ckc/src/ui/request.rs:153:5: replace clone_source -> ESrc with Default::default()
+ckc/src/ui/request.rs:188:5: replace post_models -> Vec<EPostGuideline> with vec![Default::default()]
+ckc/src/ui/request.rs:250:5: replace read -> Result<Response> with Ok(Default::default())
+ckc/src/ui/request.rs:334:5: replace respond -> Result<Outcome> with Ok(Default::default())
+ckc/src/ui/request.rs:380:5: replace gated -> Result<Outcome> with Ok(Default::default())
+ckc/src/ui/request.rs:397:5: replace candidate_file -> Result<Candidate> with Ok(Default::default())
+ckc/src/ui/request.rs:429:9: replace LedgerLock::acquire -> Result<Self> with Ok(Default::default())
+ckc/src/ui/request.rs:471:5: replace install -> Result<Outcome> with Ok(Default::default())
+ckc/src/ui/request.rs:498:13: replace && with || in install
+ckc/src/ui/request.rs:618:5: replace parse -> Option<Arguments> with Some(Default::default())
+ckc/src/ui/request.rs:650:17: delete match arm "--header" in parse

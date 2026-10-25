@@ -1,0 +1,21 @@
+# IMPLEMENT — supersession semantics (closed)
+
+Routed request + rulings as they stood in `.agent/spec.md` `Phase`:
+
+IMPLEMENT — supersession semantics (Tasks SUP1–SUP5)
+> Mark the current state of the repo for pre-release. I will use it to develop https://github.com/eturkes/cnl-ckc-demo, which I will also prepare for pre-release. In parallel to developing that repo, I will review the ACE using the `cnl-ckc` review UI. Once that review is done, I will inform you, and that will comprise the full release. I will then pass that release to `cnl-ckc-demo` and transition that to full-release as well. Meanwhile to all this going on, I want you to be able to continue with breaking change development, so we need to decide on a system for pre-release and then full release, whether this be a Git tag/release, or some other mechanism.
+> Address all `.agent/deferred.md` rows relevant for pre-release of this repo. Once you have confirmed everything is complete, make the pre-release.
+> User rulings (AskUserQuestion, pre-release request): SUP first, as ruled — "Option 2. Let's not worry about `cnl-ckc-demo` for now, that will come after SUP is completed."; Skolem role entities before the cut (Tasks SKO).
+> User rulings (AskUserQuestion ×2, SUP orientation): semantics "Block by default"; place "Inside the document"; pages "Notice (Recommended)"; census "Full census first"; singleton warnings "Before the cut (Recommended)".
+Suspended: MAINTAIN — release: formula-rule singleton warnings, Skolem role entities, first release line, review, release (Tasks SGW, SKO, RC1, PR8–PR10)
+
+User rulings at the SUP orientation (AskUserQuestion ×2; spec Decisions `Supersession`): a superseded statement keeps its ACE + clauses and blocks by default (its should/must/may statements derive only for an evaluation date before the effective date), picked over data-only records; the record lives inside the superseded document, picked over a per-guideline records file; the review pages show it (document notice + a guideline table of every superseded passage, those without ACE included); a full census of the CDC guideline before the cut; the formula-rule singleton warnings = their own unit before the cut (Tasks SGW).
+
+Tasks closed:
+- [x] 1a5d44f6 SUP2 supersession census (data): 927 regions, two blind triage passes, 314 candidates researched in four clusters against primary text, MAIN rulings: 5 superseded (S56-17 = rec12-imp08 whole; S60-06, S39-14 part, S59-02 part, S59-08 part), all by Pub. L. 117-328, Division FF, §1262(a)(1), effective 2022-12-29; S59-01 deferred (no establishable date) → `.agent/archive/sup-census/`.
+- [x] 9c1647ab SUP1 supersession schema (kernel; contract `archive/contracts/sup1.md`): table kinds `supersession` + `superseded`, the record `guideline_supersession/4` ending every sentence bundle, the evaluation-date guard on every should/must/may clause, 22 indicators, codec + whitelist + certification, every fixture migrated; mutation credit 7e8ce481.
+- [x] 593c3888 SUP3 corpus (data): the five census rows in the CDC table, 492 documents recompiled, queries re-derived (answers unchanged modulo digests), the consumer test (blocked by default; an earlier date restores the adult world's S1 + S3); format fix 20796896.
+- [x] f17bfd2d SUP4 review pages (kernel UI; contract `archive/contracts/sup4.md`): the document notice + the guideline's "Superseded passages" table, 7 copy rows (287–293), the verified kernel mirror, the page invariant admitting each guideline's source links.
+- [x] SUP5 closing review = the close commit: lenses A–E (reviewer-4..8) + MAIN's security lens; ledger `.agent/archive/review-sup.md`; lens fixes (the R22 writer for non-ASCII atoms, the 20-predicate count, repo-relative census anchors) + commit-body corrections in the close commit.
+
+Outcome: a statement that later law superseded stays in the knowledge base as the guideline states it, carries its superseding source + date, and derives none of its should/must/may statements unless a consumer states an earlier evaluation date; the CDC knowledge base records rec12-imp08's DATA-waiver duty (eliminated 2022-12-29) and four passages; the review pages show the notice + the table. Next = the resumed release scope (Tasks SGW, SKO, RC1, PR8–PR10).

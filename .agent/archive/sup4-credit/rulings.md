@@ -1,0 +1,21 @@
+# SUP4 mutation credit — already-passing implementation-facing tests
+
+Law: `CLAUDE.md` Engineering (verification integrity) + `.claude/rules/rust.md` Mutation credit. Run on f17bfd2d (main), local heavy slot, `just mutants` (cargo-mutants, default operators, `--no-config`, in place in a disposable worktree of HEAD).
+
+| tests | scope | command | result |
+|---|---|---|---|
+| `sup4_ui` `cases::characterization_p6_check_and_copy_register`, `cases::characterization_request_bodies_equal_render`, `cases::characterization_empty_selection_omits_both_blocks`, `cases::characterization_invalid_tables_refuse_before_render` | ckc/src/main.rs, ckc/src/ui/{mod,pages,copy,intake,common,request}.rs | `just mutants '--release --test sup4_ui -- cases::characterization_p6_check_and_copy_register cases::characterization_request_bodies_equal_render cases::characterization_empty_selection_omits_both_blocks cases::characterization_invalid_tables_refuse_before_render' ckc/src/main.rs ckc/src/ui/mod.rs ckc/src/ui/pages.rs ckc/src/ui/copy.rs ckc/src/ui/intake.rs ckc/src/ui/common.rs ckc/src/ui/request.rs` | 569 mutants, 194 caught, 335 missed, 39 unviable, 1 timeout (90 min) |
+
+Lists = `{caught,missed,unviable,timeout}.txt`. The fifth seed-green test (`characterization_strip_oracle_rejects_absent_duplicate_and_misplaced_blocks`) checks tester-3's own oracle and calls no implementation: no credit needed. The timeout = `request.rs:529` `+=` → `*=` in `decode_path` (the loop index stops advancing on every GET): the request test never completes → killed by its timeout.
+
+Survivor rulings (MAIN; the tests' author = tester-3): every survivor lies outside the four tests' calls or assertions (`ui check` + `ui copy-check` over valid trees and literals, GET bodies of the rendered pages, rendering without SUP rows, the intake's grammar refusal); the SUP4 contract leaves each to the named suites — recorded, no test added.
+
+| file: functions (survivors) | ruling |
+|---|---|
+| main.rs `main` (26) | arms of other commands + usage text; pinned by cli.rs, v1_suite, check_mutants, dist_cases |
+| ui/mod.rs `run`, `usage` (10) | the render, serve + request usage arms and argument-count guards; pinned by ui_fixtures + ui_socket |
+| ui/common.rs `checked_text`, `digest`, `valid_id`, `valid_hex`, `Scratch::drop` (13) | the file preflight refusals (no unreadable or control-holding file in these trees) + helpers; pinned by sup1_surface `p1_ui_file_preflight_characterization` (its credit killed every `checked_text` mutant, .agent/archive/sup1-credit/), ui_fixtures, ui_commit |
+| ui/copy.rs `literal`, `check` (7) | the copy-check source grammar (escapes, malformed literals); pinned by ui_fixtures over tests/copy (10 red + 2 green) + copy_registry |
+| ui/intake.rs `load`, `inventory`, `census`, `evidence`, `payloads`, `assets`, `valid_asset`, `media_type`, `ledger`, the `vocabulary` retired-name guard (34) | the other intake laws, which these trees pass; pinned by the 85 tests/ui/red cases |
+| ui/pages.rs `visible`, `visible_violation`, `word`, `has_functor`, `resource_tag`, `resource_reference`, `strip_between`, `hrefs`, `resolve_href`, `invariant`, `external_ok`, `source_hrefs`, `files`, `destination_blocked`, `Tree::meter` (39) | the page invariants + render output plumbing, asserted here as `ui check` rc 0 alone; pinned by ui_fixtures (golden byte compare + invariant cases), n22_viewport, n23_separators, ur_ui, rd_disclosure + the two pages.rs units (`source_links_pass_and_foreign_links_fire`, `rendered_source_link_passes_the_page_invariant`: red on the pre-unit substring count) |
+| ui/request.rs `parse`, `decode_path`, `route`, `gated`, `respond`, `read`, `kernel_response`, `review`, `snapshot`, `post_models`, `install`, `candidate_file`, `Candidate::drop`, `LedgerLock::acquire` + `drop`, `unhex`, `valid_date`, `utc_now`, `Response::reason` + `headers` (206) | the POST + ledger path (decision parsing, dates, locks, candidate files), percent-decoding + routing variants and non-200 responses; the test GETs four plain page paths and compares bodies (+ status 200, no-referrer); pinned by ui_fixtures request cases (encoded, query, 404, escape), ui_socket (POST 303, stale 409, forced-lock CAS, cleanup, `hardened` headers), ui_lock, ui_commit |

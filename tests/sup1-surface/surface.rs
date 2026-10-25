@@ -411,3 +411,52 @@ fn p5b_altered_witness_payload_fires_equality_check() {
     }
     checks.finish("P5b altered fork witness plant (not a certify input)");
 }
+// Codec ruling R22 over the free-text citation (SUP5 lens A finding): every admitted citation
+// compiles to a document the codec + certifier accept, its atom quoted with raw UTF-8.
+#[test]
+fn p5c_admitted_citations_compile_to_canonical_documents() {
+    let compiler = compiler();
+    let ace = "If a patient sleeps then the patient should wait.\n";
+    let mut checks = Checks::default();
+    for (name, citation) in [
+        ("ascii", "Act"),
+        ("lower-accent", "é"),
+        ("greek", "νόμος"),
+        ("han", "法律"),
+        ("capital-accent", "É"),
+        ("c1-control", "Act\u{85}one"),
+        ("line-separator", "Act\u{2028}one"),
+        ("paragraph-separator", "Act\u{2029}one"),
+        ("soft-hyphen", "Act\u{ad}one"),
+        ("no-break-space", "Act\u{a0}one"),
+        ("emoji", "📚"),
+        ("quote-backslash", "Year zero's act \\ annex é"),
+    ] {
+        let scratch = Scratch::new(&format!("citation-{name}"));
+        let work = &scratch.0;
+        let table = format!(
+            "{}supersession\tdoc\t20221229 https://example.test/ {citation}\n",
+            base::HEADER
+        );
+        let doc = compiler.run(work, "doc", "doc", ace, Some(table.as_bytes()));
+        checks.require(doc.success(), format!("{name} compile; {}", doc.describe()));
+        let record = format!(
+            "guideline_supersession(doc,1,source({},'https://example.test/'),20221229).",
+            atom(citation)
+        );
+        checks.require(
+            doc.stdout.lines().any(|line| line == record),
+            format!("{name} record {record}; {}", doc.describe()),
+        );
+        write(work.join("doc.pl"), &doc.stdout);
+        let codec = native(work, &["v1", "check", "doc.pl"]);
+        checks.require(codec.success(), format!("{name} codec; {}", codec.describe()));
+        let dump = compiler.dump(work, ace);
+        let certified = certify(work, "doc", ace, &dump.stdout, &doc.stdout, Some(&table));
+        checks.require(
+            certified.success(),
+            format!("{name} certify-one; {}", certified.describe()),
+        );
+    }
+    checks.finish("P5 admitted citations through the codec");
+}

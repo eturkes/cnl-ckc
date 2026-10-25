@@ -7,7 +7,7 @@ tests/s2-compiler/ --frozen tests/s2-codec/ --label s2`).
 
 Usage: python3 -I <this> <repo-root> <ckc-binary> --add NAME/ARITY [--add …] --after NAME/ARITY
        [--frozen PREFIX …] [--label TEXT] [--dry] [--semantic [--recompile QUERY-CASE …]]
-Toolchain PATH = swipl 9.2.9; repo-root carries the revised compiler, whose `v1_indicators`
+Toolchain PATH = the reference swipl (10.0.2); repo-root carries the revised compiler, whose `v1_indicators`
 list = the old block with the added indicators after the anchor (checked). --dry computes
 Phase A without writing. Scope = tracked guidelines/, tests/, the Kani harness, minus each
 --frozen prefix (suite-owned byte snapshots).

@@ -1,0 +1,335 @@
+ckc/src/main.rs:21:9: delete match arm Some("trust-audit") in main
+ckc/src/main.rs:23:9: delete match arm Some("v1") in main
+ckc/src/main.rs:25:9: delete match arm Some("dist") in main
+ckc/src/main.rs:33:9: delete match arm Some("release-manifest" | "compile" | "queries" | "align" | "review-manifest" | "derive-review-manifest" | "ledger-validate",) in main
+ckc/src/main.rs:18:32: replace match guard args.get(2).is_some_and(|a| a == "--write") with true in main
+ckc/src/main.rs:18:32: replace match guard args.get(2).is_some_and(|a| a == "--write") with false in main
+ckc/src/main.rs:22:32: replace match guard args.len() == 5 with true in main
+ckc/src/main.rs:22:32: replace match guard args.len() == 5 with false in main
+ckc/src/main.rs:26:28: replace match guard args.len() == 3 with true in main
+ckc/src/main.rs:26:28: replace match guard args.len() == 3 with false in main
+ckc/src/main.rs:27:28: replace match guard args.len() == 4 && args[2] == "--cases" with true in main
+ckc/src/main.rs:27:28: replace match guard args.len() == 4 && args[2] == "--cases" with false in main
+ckc/src/main.rs:30:32: replace match guard args.len() == 8 || args.len() == 9 with true in main
+ckc/src/main.rs:30:32: replace match guard args.len() == 8 || args.len() == 9 with false in main
+ckc/src/main.rs:42:26: replace match guard args.len() <= 3 with true in main
+ckc/src/main.rs:42:26: replace match guard args.len() <= 3 with false in main
+ckc/src/main.rs:18:62: replace == with != in main
+ckc/src/main.rs:22:43: replace == with != in main
+ckc/src/main.rs:26:39: replace == with != in main
+ckc/src/main.rs:27:44: replace && with || in main
+ckc/src/main.rs:27:39: replace == with != in main
+ckc/src/main.rs:27:55: replace == with != in main
+ckc/src/main.rs:30:48: replace || with && in main
+ckc/src/main.rs:30:43: replace == with != in main
+ckc/src/main.rs:30:62: replace == with != in main
+ckc/src/main.rs:42:37: replace <= with > in main
+ckc/src/ui/mod.rs:21:27: replace match guard (2..=3).contains(&args.len()) with true in run
+ckc/src/ui/mod.rs:32:26: replace match guard args.len() <= 2 with true in run
+ckc/src/ui/mod.rs:35:31: replace match guard args.len() == 2 with true in run
+ckc/src/ui/mod.rs:40:26: replace match guard args.len() <= 3 with true in run
+ckc/src/ui/mod.rs:40:26: replace match guard args.len() <= 3 with false in run
+ckc/src/ui/mod.rs:40:37: replace <= with > in run
+ckc/src/ui/mod.rs:43:33: replace match guard port >= 1024 with true in run
+ckc/src/ui/mod.rs:43:33: replace match guard port >= 1024 with false in run
+ckc/src/ui/mod.rs:43:38: replace >= with < in run
+ckc/src/ui/mod.rs:80:5: replace usage -> ExitCode with Default::default()
+ckc/src/ui/common.rs:15:5: replace valid_id -> bool with true
+ckc/src/ui/common.rs:18:9: replace && with || in valid_id
+ckc/src/ui/common.rs:17:9: replace && with || in valid_id
+ckc/src/ui/common.rs:16:9: replace && with || in valid_id
+ckc/src/ui/common.rs:22:5: replace valid_hex -> bool with true
+ckc/src/ui/common.rs:22:5: replace valid_hex -> bool with false
+ckc/src/ui/common.rs:23:9: replace && with || in valid_hex
+ckc/src/ui/common.rs:22:13: replace == with != in valid_hex
+ckc/src/ui/common.rs:24:41: replace || with && in valid_hex
+ckc/src/ui/common.rs:48:13: replace || with && in checked_text
+ckc/src/ui/common.rs:47:13: replace || with && in checked_text
+ckc/src/ui/common.rs:46:13: replace || with && in checked_text
+ckc/src/ui/common.rs:84:9: replace <impl Drop for Scratch>::drop with ()
+ckc/src/ui/copy.rs:18:13: delete match arm '\\' in literal
+ckc/src/ui/copy.rs:20:13: delete match arm 'n' in literal
+ckc/src/ui/copy.rs:21:13: delete match arm 't' in literal
+ckc/src/ui/copy.rs:22:13: delete match arm escape @('x' | 'u' | 'U') in literal
+ckc/src/ui/copy.rs:24:21: delete match arm 'x' in literal
+ckc/src/ui/copy.rs:25:21: delete match arm 'u' in literal
+ckc/src/ui/copy.rs:46:35: replace || with && in check
+ckc/src/ui/intake.rs:17:26: replace || with && in load
+ckc/src/ui/intake.rs:23:30: replace || with && in load
+ckc/src/ui/intake.rs:149:5: replace inventory -> Result<()> with Ok(())
+ckc/src/ui/intake.rs:206:5: replace census -> Vec<u8> with vec![]
+ckc/src/ui/intake.rs:206:5: replace census -> Vec<u8> with vec![0]
+ckc/src/ui/intake.rs:206:5: replace census -> Vec<u8> with vec![1]
+ckc/src/ui/intake.rs:209:18: replace && with || in census
+ckc/src/ui/intake.rs:209:14: replace > with == in census
+ckc/src/ui/intake.rs:209:14: replace > with < in census
+ckc/src/ui/intake.rs:209:14: replace > with >= in census
+ckc/src/ui/intake.rs:227:41: replace && with || in evidence
+ckc/src/ui/intake.rs:243:28: replace match guard !head.is_empty() && head.bytes().all(|b| b.is_ascii_digit()) with true in evidence
+ckc/src/ui/intake.rs:243:28: replace match guard !head.is_empty() && head.bytes().all(|b| b.is_ascii_digit()) with false in evidence
+ckc/src/ui/intake.rs:243:45: replace && with || in evidence
+ckc/src/ui/intake.rs:243:28: delete ! in evidence
+ckc/src/ui/intake.rs:270:57: replace || with && in payloads
+ckc/src/ui/intake.rs:270:34: replace || with && in payloads
+ckc/src/ui/intake.rs:283:12: delete ! in payloads
+ckc/src/ui/intake.rs:288:22: replace > with < in payloads
+ckc/src/ui/intake.rs:296:38: replace == with != in payloads
+ckc/src/ui/intake.rs:308:57: replace == with != in payloads
+ckc/src/ui/intake.rs:309:69: replace || with && in payloads
+ckc/src/ui/intake.rs:309:26: replace != with == in payloads
+ckc/src/ui/intake.rs:309:78: replace != with == in payloads
+ckc/src/ui/intake.rs:342:26: replace != with == in ledger
+ckc/src/ui/intake.rs:367:5: replace valid_asset -> bool with true
+ckc/src/ui/intake.rs:369:9: replace && with || in valid_asset
+ckc/src/ui/intake.rs:368:9: replace && with || in valid_asset
+ckc/src/ui/intake.rs:374:5: replace media_type -> Option<&'static str> with Some("")
+ckc/src/ui/intake.rs:374:5: replace media_type -> Option<&'static str> with Some("xyzzy")
+ckc/src/ui/intake.rs:384:28: replace || with && in assets
+ckc/src/ui/intake.rs:389:37: replace && with || in assets
+ckc/src/ui/intake.rs:391:36: replace && with || in assets
+ckc/src/ui/intake.rs:436:25: replace || with && in vocabulary
+ckc/src/ui/pages.rs:32:9: replace Tree::meter with ()
+ckc/src/ui/pages.rs:43:5: replace hrefs -> Vec<&str> with vec![]
+ckc/src/ui/pages.rs:56:5: replace resolve_href -> Option<String> with None
+ckc/src/ui/pages.rs:151:5: replace destination_blocked -> bool with false
+ckc/src/ui/pages.rs:168:5: replace files -> Result<()> with Ok(())
+ckc/src/ui/pages.rs:185:5: replace strip_between -> String with String::new()
+ckc/src/ui/pages.rs:185:5: replace strip_between -> String with "xyzzy".into()
+ckc/src/ui/pages.rs:195:5: replace visible -> String with String::new()
+ckc/src/ui/pages.rs:195:5: replace visible -> String with "xyzzy".into()
+ckc/src/ui/pages.rs:213:17: delete match arm "amp" in visible
+ckc/src/ui/pages.rs:214:17: delete match arm "lt" in visible
+ckc/src/ui/pages.rs:215:17: delete match arm "gt" in visible
+ckc/src/ui/pages.rs:216:17: delete match arm "quot" in visible
+ckc/src/ui/pages.rs:217:17: delete match arm "#x27" | "#39" in visible
+ckc/src/ui/pages.rs:233:5: replace word -> bool with true
+ckc/src/ui/pages.rs:233:5: replace word -> bool with false
+ckc/src/ui/pages.rs:233:25: replace || with && in word
+ckc/src/ui/pages.rs:233:30: replace == with != in word
+ckc/src/ui/pages.rs:236:5: replace has_functor -> bool with false
+ckc/src/ui/pages.rs:238:69: delete ! in has_functor
+ckc/src/ui/pages.rs:242:5: replace visible_violation -> Option<&'static str> with None
+ckc/src/ui/pages.rs:249:26: delete ! in visible_violation
+ckc/src/ui/pages.rs:257:26: delete ! in visible_violation
+ckc/src/ui/pages.rs:262:13: replace && with || in visible_violation
+ckc/src/ui/pages.rs:261:45: replace || with && in visible_violation
+ckc/src/ui/pages.rs:271:5: replace resource_tag -> bool with false
+ckc/src/ui/pages.rs:273:52: replace && with || in resource_tag
+ckc/src/ui/pages.rs:273:25: delete ! in resource_tag
+ckc/src/ui/pages.rs:273:57: replace != with == in resource_tag
+ckc/src/ui/pages.rs:282:11: delete ! in resource_tag
+ckc/src/ui/pages.rs:285:53: replace || with && in resource_tag
+ckc/src/ui/pages.rs:285:58: replace == with != in resource_tag
+ckc/src/ui/pages.rs:287:21: replace || with && in resource_tag
+ckc/src/ui/pages.rs:287:16: replace == with != in resource_tag
+ckc/src/ui/pages.rs:311:5: replace resource_reference -> bool with false
+ckc/src/ui/pages.rs:330:33: replace && with || in source_hrefs
+ckc/src/ui/pages.rs:347:5: replace external_ok -> bool with true
+ckc/src/ui/pages.rs:353:5: replace invariant -> Result<Option<&'static str>> with Ok(None)
+ckc/src/ui/pages.rs:374:51: replace || with && in invariant
+ckc/src/ui/request.rs:67:12: delete ! in Response::headers
+ckc/src/ui/request.rs:70:12: delete ! in Response::headers
+ckc/src/ui/request.rs:73:12: delete ! in Response::headers
+ckc/src/ui/request.rs:79:9: replace Response::reason -> &'static str with ""
+ckc/src/ui/request.rs:79:9: replace Response::reason -> &'static str with "xyzzy"
+ckc/src/ui/request.rs:80:13: delete match arm 200 in Response::reason
+ckc/src/ui/request.rs:81:13: delete match arm 303 in Response::reason
+ckc/src/ui/request.rs:82:13: delete match arm 400 in Response::reason
+ckc/src/ui/request.rs:83:13: delete match arm 403 in Response::reason
+ckc/src/ui/request.rs:84:13: delete match arm 404 in Response::reason
+ckc/src/ui/request.rs:85:13: delete match arm 405 in Response::reason
+ckc/src/ui/request.rs:86:13: delete match arm 409 in Response::reason
+ckc/src/ui/request.rs:110:9: delete match arm EPostOutcome::Refused(r) in kernel_response
+ckc/src/ui/request.rs:160:5: replace route -> Option<(&str, &str)> with None
+ckc/src/ui/request.rs:160:5: replace route -> Option<(&str, &str)> with Some(("", ""))
+ckc/src/ui/request.rs:160:5: replace route -> Option<(&str, &str)> with Some(("", "xyzzy"))
+ckc/src/ui/request.rs:160:5: replace route -> Option<(&str, &str)> with Some(("xyzzy", ""))
+ckc/src/ui/request.rs:160:5: replace route -> Option<(&str, &str)> with Some(("xyzzy", "xyzzy"))
+ckc/src/ui/request.rs:162:48: replace || with && in route
+ckc/src/ui/request.rs:162:25: replace || with && in route
+ckc/src/ui/request.rs:162:20: replace != with == in route
+ckc/src/ui/request.rs:162:60: replace != with == in route
+ckc/src/ui/request.rs:165:56: delete ! in route
+ckc/src/ui/request.rs:170:5: replace snapshot -> Vec<u8> with vec![]
+ckc/src/ui/request.rs:176:5: replace review -> Option<Vec<u8>> with None
+ckc/src/ui/request.rs:176:5: replace review -> Option<Vec<u8>> with Some(vec![])
+ckc/src/ui/request.rs:176:5: replace review -> Option<Vec<u8>> with Some(vec![0])
+ckc/src/ui/request.rs:176:5: replace review -> Option<Vec<u8>> with Some(vec![1])
+ckc/src/ui/request.rs:179:27: replace == with != in review
+ckc/src/ui/request.rs:188:5: replace post_models -> Vec<EPostGuideline> with vec![]
+ckc/src/ui/request.rs:193:32: replace == with != in post_models
+ckc/src/ui/request.rs:195:21: delete ! in post_models
+ckc/src/ui/request.rs:202:48: replace && with || in post_models
+ckc/src/ui/request.rs:202:37: replace == with != in post_models
+ckc/src/ui/request.rs:202:83: replace == with != in post_models
+ckc/src/ui/request.rs:217:36: replace && with || in post_models
+ckc/src/ui/request.rs:217:82: replace == with != in post_models
+ckc/src/ui/request.rs:220:48: replace == with != in post_models
+ckc/src/ui/request.rs:280:12: delete ! in read
+ckc/src/ui/request.rs:280:45: replace == with != in read
+ckc/src/ui/request.rs:346:18: delete ! in respond
+ckc/src/ui/request.rs:348:26: replace == with != in respond
+ckc/src/ui/request.rs:381:9: delete match arm EPostOutcome::Refused(response) in gated
+ckc/src/ui/request.rs:391:9: replace <impl Drop for Candidate>::drop with ()
+ckc/src/ui/request.rs:407:23: replace match guard e.kind() == std::io::ErrorKind::AlreadyExists with true in candidate_file
+ckc/src/ui/request.rs:407:23: replace match guard e.kind() == std::io::ErrorKind::AlreadyExists with false in candidate_file
+ckc/src/ui/request.rs:407:32: replace == with != in candidate_file
+ckc/src/ui/request.rs:445:30: replace match guard named.dev() == held.dev() && named.ino() == held.ino() with true in LedgerLock::acquire
+ckc/src/ui/request.rs:445:30: replace match guard named.dev() == held.dev() && named.ino() == held.ino() with false in LedgerLock::acquire
+ckc/src/ui/request.rs:449:27: replace match guard e.kind() == std::io::ErrorKind::NotFound with true in LedgerLock::acquire
+ckc/src/ui/request.rs:449:27: replace match guard e.kind() == std::io::ErrorKind::NotFound with false in LedgerLock::acquire
+ckc/src/ui/request.rs:445:56: replace && with || in LedgerLock::acquire
+ckc/src/ui/request.rs:445:42: replace == with != in LedgerLock::acquire
+ckc/src/ui/request.rs:445:71: replace == with != in LedgerLock::acquire
+ckc/src/ui/request.rs:449:36: replace == with != in LedgerLock::acquire
+ckc/src/ui/request.rs:458:9: replace <impl Drop for LedgerLock>::drop with ()
+ckc/src/ui/request.rs:474:28: replace || with && in install
+ckc/src/ui/request.rs:474:48: replace && with || in install
+ckc/src/ui/request.rs:474:51: delete ! in install
+ckc/src/ui/request.rs:495:27: replace != with == in install
+ckc/src/ui/request.rs:498:67: replace == with != in install
+ckc/src/ui/request.rs:518:38: replace < with == in decode_path
+ckc/src/ui/request.rs:518:38: replace < with > in decode_path
+ckc/src/ui/request.rs:518:38: replace < with <= in decode_path
+ckc/src/ui/request.rs:518:34: replace + with - in decode_path
+ckc/src/ui/request.rs:518:34: replace + with * in decode_path
+ckc/src/ui/request.rs:519:44: replace + with - in decode_path
+ckc/src/ui/request.rs:519:44: replace + with * in decode_path
+ckc/src/ui/request.rs:521:41: replace + with - in decode_path
+ckc/src/ui/request.rs:521:41: replace + with * in decode_path
+ckc/src/ui/request.rs:523:35: replace + with - in decode_path
+ckc/src/ui/request.rs:523:35: replace + with * in decode_path
+ckc/src/ui/request.rs:523:30: replace * with + in decode_path
+ckc/src/ui/request.rs:523:30: replace * with / in decode_path
+ckc/src/ui/request.rs:524:19: replace += with -= in decode_path
+ckc/src/ui/request.rs:524:19: replace += with *= in decode_path
+ckc/src/ui/request.rs:534:5: replace unhex -> Option<Vec<u8>> with None
+ckc/src/ui/request.rs:534:5: replace unhex -> Option<Vec<u8>> with Some(vec![])
+ckc/src/ui/request.rs:534:5: replace unhex -> Option<Vec<u8>> with Some(vec![0])
+ckc/src/ui/request.rs:534:5: replace unhex -> Option<Vec<u8>> with Some(vec![1])
+ckc/src/ui/request.rs:538:36: replace || with && in unhex
+ckc/src/ui/request.rs:538:41: replace == with != in unhex
+ckc/src/ui/request.rs:543:27: replace + with - in unhex
+ckc/src/ui/request.rs:543:27: replace + with * in unhex
+ckc/src/ui/request.rs:543:22: replace * with + in unhex
+ckc/src/ui/request.rs:543:22: replace * with / in unhex
+ckc/src/ui/request.rs:548:5: replace valid_date -> bool with true
+ckc/src/ui/request.rs:548:5: replace valid_date -> bool with false
+ckc/src/ui/request.rs:549:16: replace != with == in valid_date
+ckc/src/ui/request.rs:554:13: delete match arm 4 | 7 in valid_date
+ckc/src/ui/request.rs:555:13: delete match arm 10 in valid_date
+ckc/src/ui/request.rs:556:13: delete match arm 13 | 16 in valid_date
+ckc/src/ui/request.rs:557:13: delete match arm 19 in valid_date
+ckc/src/ui/request.rs:560:29: delete ! in valid_date
+ckc/src/ui/request.rs:560:65: replace != with == in valid_date
+ckc/src/ui/request.rs:573:39: replace && with || in valid_date
+ckc/src/ui/request.rs:573:69: replace || with && in valid_date
+ckc/src/ui/request.rs:573:43: delete ! in valid_date
+ckc/src/ui/request.rs:576:9: delete match arm 2 in valid_date
+ckc/src/ui/request.rs:577:9: delete match arm 4 | 6 | 9 | 11 in valid_date
+ckc/src/ui/request.rs:575:14: replace match guard leap with true in valid_date
+ckc/src/ui/request.rs:575:14: replace match guard leap with false in valid_date
+ckc/src/ui/request.rs:585:9: replace && with || in valid_date
+ckc/src/ui/request.rs:584:9: replace && with || in valid_date
+ckc/src/ui/request.rs:583:9: replace && with || in valid_date
+ckc/src/ui/request.rs:582:9: replace && with || in valid_date
+ckc/src/ui/request.rs:581:9: replace && with || in valid_date
+ckc/src/ui/request.rs:580:10: replace > with == in valid_date
+ckc/src/ui/request.rs:580:10: replace > with < in valid_date
+ckc/src/ui/request.rs:580:10: replace > with >= in valid_date
+ckc/src/ui/request.rs:583:17: replace < with == in valid_date
+ckc/src/ui/request.rs:583:17: replace < with > in valid_date
+ckc/src/ui/request.rs:583:17: replace < with <= in valid_date
+ckc/src/ui/request.rs:584:19: replace < with == in valid_date
+ckc/src/ui/request.rs:584:19: replace < with > in valid_date
+ckc/src/ui/request.rs:584:19: replace < with <= in valid_date
+ckc/src/ui/request.rs:585:19: replace < with == in valid_date
+ckc/src/ui/request.rs:585:19: replace < with > in valid_date
+ckc/src/ui/request.rs:585:19: replace < with <= in valid_date
+ckc/src/ui/request.rs:588:5: replace utc_now -> Result<String> with Ok(String::new())
+ckc/src/ui/request.rs:588:5: replace utc_now -> Result<String> with Ok("xyzzy".into())
+ckc/src/ui/request.rs:592:17: replace - with + in utc_now
+ckc/src/ui/request.rs:592:17: replace - with / in utc_now
+ckc/src/ui/request.rs:591:13: delete - in utc_now
+ckc/src/ui/request.rs:592:57: replace != with == in utc_now
+ckc/src/ui/request.rs:597:17: replace + with - in utc_now
+ckc/src/ui/request.rs:597:17: replace + with * in utc_now
+ckc/src/ui/request.rs:599:17: replace - with + in utc_now
+ckc/src/ui/request.rs:599:17: replace - with / in utc_now
+ckc/src/ui/request.rs:599:23: replace * with + in utc_now
+ckc/src/ui/request.rs:599:23: replace * with / in utc_now
+ckc/src/ui/request.rs:600:63: replace / with % in utc_now
+ckc/src/ui/request.rs:600:63: replace / with * in utc_now
+ckc/src/ui/request.rs:600:47: replace - with + in utc_now
+ckc/src/ui/request.rs:600:47: replace - with / in utc_now
+ckc/src/ui/request.rs:600:33: replace + with - in utc_now
+ckc/src/ui/request.rs:600:33: replace + with * in utc_now
+ckc/src/ui/request.rs:600:20: replace - with + in utc_now
+ckc/src/ui/request.rs:600:20: replace - with / in utc_now
+ckc/src/ui/request.rs:600:26: replace / with % in utc_now
+ckc/src/ui/request.rs:600:26: replace / with * in utc_now
+ckc/src/ui/request.rs:600:39: replace / with % in utc_now
+ckc/src/ui/request.rs:600:39: replace / with * in utc_now
+ckc/src/ui/request.rs:600:53: replace / with % in utc_now
+ckc/src/ui/request.rs:600:53: replace / with * in utc_now
+ckc/src/ui/request.rs:601:24: replace + with - in utc_now
+ckc/src/ui/request.rs:601:24: replace + with * in utc_now
+ckc/src/ui/request.rs:601:30: replace * with + in utc_now
+ckc/src/ui/request.rs:601:30: replace * with / in utc_now
+ckc/src/ui/request.rs:602:19: replace - with + in utc_now
+ckc/src/ui/request.rs:602:19: replace - with / in utc_now
+ckc/src/ui/request.rs:602:42: replace - with + in utc_now
+ckc/src/ui/request.rs:602:42: replace - with / in utc_now
+ckc/src/ui/request.rs:602:32: replace + with - in utc_now
+ckc/src/ui/request.rs:602:32: replace + with * in utc_now
+ckc/src/ui/request.rs:602:26: replace * with + in utc_now
+ckc/src/ui/request.rs:602:26: replace * with / in utc_now
+ckc/src/ui/request.rs:602:38: replace / with % in utc_now
+ckc/src/ui/request.rs:602:38: replace / with * in utc_now
+ckc/src/ui/request.rs:602:48: replace / with % in utc_now
+ckc/src/ui/request.rs:602:48: replace / with * in utc_now
+ckc/src/ui/request.rs:603:28: replace / with % in utc_now
+ckc/src/ui/request.rs:603:28: replace / with * in utc_now
+ckc/src/ui/request.rs:603:23: replace + with - in utc_now
+ckc/src/ui/request.rs:603:23: replace + with * in utc_now
+ckc/src/ui/request.rs:603:17: replace * with + in utc_now
+ckc/src/ui/request.rs:603:17: replace * with / in utc_now
+ckc/src/ui/request.rs:604:40: replace + with - in utc_now
+ckc/src/ui/request.rs:604:40: replace + with * in utc_now
+ckc/src/ui/request.rs:604:19: replace - with + in utc_now
+ckc/src/ui/request.rs:604:19: replace - with / in utc_now
+ckc/src/ui/request.rs:604:36: replace / with % in utc_now
+ckc/src/ui/request.rs:604:36: replace / with * in utc_now
+ckc/src/ui/request.rs:604:31: replace + with - in utc_now
+ckc/src/ui/request.rs:604:31: replace + with * in utc_now
+ckc/src/ui/request.rs:604:26: replace * with + in utc_now
+ckc/src/ui/request.rs:604:26: replace * with / in utc_now
+ckc/src/ui/request.rs:605:20: replace + with - in utc_now
+ckc/src/ui/request.rs:605:20: replace + with * in utc_now
+ckc/src/ui/request.rs:605:28: replace < with == in utc_now
+ckc/src/ui/request.rs:605:28: replace < with > in utc_now
+ckc/src/ui/request.rs:605:28: replace < with <= in utc_now
+ckc/src/ui/request.rs:605:46: delete - in utc_now
+ckc/src/ui/request.rs:606:10: replace += with -= in utc_now
+ckc/src/ui/request.rs:606:10: replace += with *= in utc_now
+ckc/src/ui/request.rs:606:29: replace <= with > in utc_now
+ckc/src/ui/request.rs:607:8: delete ! in utc_now
+ckc/src/ui/request.rs:618:19: replace < with == in parse
+ckc/src/ui/request.rs:618:19: replace < with <= in parse
+ckc/src/ui/request.rs:643:15: replace += with -= in parse
+ckc/src/ui/request.rs:643:15: replace += with *= in parse
+ckc/src/ui/request.rs:645:31: replace == with != in parse
+ckc/src/ui/request.rs:646:35: replace && with || in parse
+ckc/src/ui/request.rs:646:21: replace != with == in parse
+ckc/src/ui/request.rs:657:17: delete match arm "--body" in parse
+ckc/src/ui/request.rs:658:17: delete match arm "--body-hex" in parse
+ckc/src/ui/request.rs:659:17: delete match arm "--token" in parse
+ckc/src/ui/request.rs:660:17: delete match arm "--session" in parse
+ckc/src/ui/request.rs:666:17: delete match arm "--now" in parse
+ckc/src/ui/request.rs:672:17: delete match arm "--commit" in parse
+ckc/src/ui/request.rs:661:24: delete ! in parse
+ckc/src/ui/request.rs:667:24: delete ! in parse
+ckc/src/ui/request.rs:673:24: delete ! in parse
+ckc/src/ui/request.rs:679:30: replace != with == in parse
+ckc/src/ui/request.rs:686:48: replace || with && in parse
+ckc/src/ui/request.rs:686:39: replace || with && in parse

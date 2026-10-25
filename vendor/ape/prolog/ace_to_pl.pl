@@ -622,13 +622,45 @@ write_body([Lit|Lits]) :-
     write(', '),
     write_body(Lits).
 
+/* Codec ruling R22 (rust/ckc-spec/src/v1text.rs): an atom holding a code
+   >= 0x80 spells quoted, its codes raw inside the quotes. writeq leaves such
+   an atom bare when it opens with a lowercase letter (é, Greek, Han) and
+   escapes some code points (U+0085, U+00A0, U+00AD, U+2028), so the portray
+   hook prints every such atom; a supersession citation (sup1 D1) is the first
+   carrier of free UTF-8 text. */
 write_canonical_part(Term) :-
-    write_term(Term,
-        [ quoted(true),
-          numbervars(true),
-          character_escapes(true),
-          ignore_ops(true)
-        ]).
+    setup_call_cleanup(
+        nb_setval(v1_r22_atoms, true),
+        write_term(Term,
+            [ quoted(true),
+              numbervars(true),
+              character_escapes(true),
+              ignore_ops(true),
+              portray(true)
+            ]),
+        nb_setval(v1_r22_atoms, false)).
+
+:- multifile(user:portray/1).
+user:portray(Atom) :-
+    nb_current(v1_r22_atoms, true),
+    atom(Atom),
+    atom_codes(Atom, Codes),
+    member(C, Codes),
+    C >= 0x80,
+    !,
+    put_char(''''),
+    forall(member(Code, Codes), r22_put(Code)),
+    put_char('''').
+
+% Inside the quotes: the escape spellings writeq uses for ASCII bytes
+% (v1text: named \a..\r, \uXXXX for the other controls + DEL), every
+% other code raw.
+r22_put(0'\\) :- !, write('\\\\').
+r22_put(0'\') :- !, write('\\''').
+r22_put(C) :- nth0(I, [7, 8, 9, 10, 11, 12, 13], C), !,
+    nth0(I, [a, b, t, n, v, f, r], E), write('\\'), write(E).
+r22_put(C) :- ( C < 0x20 ; C =:= 0x7F ), !, format('\\u~|~`0t~16R~4+', [C]).
+r22_put(C) :- put_code(C).
 
 input_lines(Text, Lines) :-
     atom_codes(Text, Codes),

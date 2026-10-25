@@ -46,7 +46,7 @@ compiler base:
   `.claude/rules/rust.md`). The emitter `vendor/ape/prolog/ace_to_pl.pl`
   produces the artifacts, but no human needs to read it: the
   specification and the certifier's verdict are the audit surface.
-  `tests/certify/cases.tsv` holds 17 hostile edits of committed
+  `tests/certify/cases.tsv` holds hostile edits of committed
   artifacts that the certifier must reject; `just certify` runs the
   corpus certification and that battery.
 - **A verified kernel checks every logical step.** All first-party program logic except the ACE emitter (`vendor/ape/prolog/ace_to_pl.pl`, whose output `ckc certify` certifies) lives in `rust/`: a short, human-read formal
@@ -1392,7 +1392,7 @@ must name readable files, and the mode never parses payload terms. A
 indicators and solves against no clauses. `<query-pl>` must read
 as exactly two terms in order: the ground `'$guideline_query'/5`
 record, then the `'$guideline_query_projection'/2` term. A query names
-any of the 18 semantic predicates, the comparison built-ins and the
+any of the 20 semantic predicates, the comparison built-ins and the
 arithmetic built-ins, and it runs against any composition. The mode
 reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
 

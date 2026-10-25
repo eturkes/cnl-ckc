@@ -1,0 +1,194 @@
+ckc/src/main.rs:16:5: replace main -> ExitCode with Default::default()
+ckc/src/main.rs:24:9: delete match arm Some("ui") in main
+ckc/src/ui/mod.rs:20:5: replace run -> ExitCode with Default::default()
+ckc/src/ui/mod.rs:36:9: delete match arm Some("request") in run
+ckc/src/ui/mod.rs:21:27: replace match guard (2..=3).contains(&args.len()) with false in run
+ckc/src/ui/mod.rs:32:26: replace match guard args.len() <= 2 with false in run
+ckc/src/ui/mod.rs:35:31: replace match guard args.len() == 2 with false in run
+ckc/src/ui/mod.rs:32:37: replace <= with > in run
+ckc/src/ui/mod.rs:35:42: replace == with != in run
+ckc/src/ui/mod.rs:61:5: replace finish -> ExitCode with Default::default()
+ckc/src/ui/mod.rs:71:5: replace finish_code -> ExitCode with Default::default()
+ckc/src/ui/common.rs:9:5: replace text -> String with String::new()
+ckc/src/ui/common.rs:9:5: replace text -> String with "xyzzy".into()
+ckc/src/ui/common.rs:12:5: replace digest -> Vec<u8> with vec![]
+ckc/src/ui/common.rs:12:5: replace digest -> Vec<u8> with vec![0]
+ckc/src/ui/common.rs:12:5: replace digest -> Vec<u8> with vec![1]
+ckc/src/ui/common.rs:15:5: replace valid_id -> bool with false
+ckc/src/ui/common.rs:15:5: delete ! in valid_id
+ckc/src/ui/common.rs:16:20: replace <= with > in valid_id
+ckc/src/ui/common.rs:17:12: delete ! in valid_id
+ckc/src/ui/common.rs:19:67: replace || with && in valid_id
+ckc/src/ui/common.rs:19:45: replace || with && in valid_id
+ckc/src/ui/common.rs:19:72: replace == with != in valid_id
+ckc/src/ui/common.rs:27:5: replace entries -> Result<Vec<PathBuf>> with Ok(vec![])
+ckc/src/ui/common.rs:27:5: replace entries -> Result<Vec<PathBuf>> with Ok(vec![Default::default()])
+ckc/src/ui/common.rs:36:5: replace name -> String with String::new()
+ckc/src/ui/common.rs:36:5: replace name -> String with "xyzzy".into()
+ckc/src/ui/common.rs:42:5: replace checked_text -> Result<Vec<u8>> with Ok(vec![])
+ckc/src/ui/common.rs:42:5: replace checked_text -> Result<Vec<u8>> with Ok(vec![0])
+ckc/src/ui/common.rs:42:5: replace checked_text -> Result<Vec<u8>> with Ok(vec![1])
+ckc/src/ui/common.rs:45:27: replace && with || in checked_text
+ckc/src/ui/common.rs:45:17: replace && with || in checked_text
+ckc/src/ui/common.rs:45:12: replace < with == in checked_text
+ckc/src/ui/common.rs:45:12: replace < with > in checked_text
+ckc/src/ui/common.rs:45:12: replace < with <= in checked_text
+ckc/src/ui/common.rs:45:22: replace != with == in checked_text
+ckc/src/ui/common.rs:45:32: replace != with == in checked_text
+ckc/src/ui/common.rs:46:18: replace == with != in checked_text
+ckc/src/ui/common.rs:57:5: replace load_text -> Result<Vec<u8>> with Ok(vec![])
+ckc/src/ui/common.rs:57:5: replace load_text -> Result<Vec<u8>> with Ok(vec![0])
+ckc/src/ui/common.rs:57:5: replace load_text -> Result<Vec<u8>> with Ok(vec![1])
+ckc/src/ui/common.rs:62:5: replace random_hex -> std::io::Result<String> with Ok(String::new())
+ckc/src/ui/common.rs:62:5: replace random_hex -> std::io::Result<String> with Ok("xyzzy".into())
+ckc/src/ui/copy.rs:6:5: replace literal -> Option<String> with None
+ckc/src/ui/copy.rs:6:5: replace literal -> Option<String> with Some(String::new())
+ckc/src/ui/copy.rs:6:5: replace literal -> Option<String> with Some("xyzzy".into())
+ckc/src/ui/copy.rs:10:14: replace == with != in literal
+ckc/src/ui/copy.rs:13:14: replace != with == in literal
+ckc/src/ui/copy.rs:19:13: delete match arm '"' in literal
+ckc/src/ui/copy.rs:42:5: replace check -> Result<u8> with Ok(0)
+ckc/src/ui/copy.rs:42:5: replace check -> Result<u8> with Ok(1)
+ckc/src/ui/intake.rs:17:29: delete ! in load
+ckc/src/ui/intake.rs:23:33: delete ! in load
+ckc/src/ui/intake.rs:41:5: replace table -> Result<Vec<TableRow<'a>>> with Ok(vec![])
+ckc/src/ui/intake.rs:41:5: replace table -> Result<Vec<TableRow<'a>>> with Ok(vec![Default::default()])
+ckc/src/ui/intake.rs:42:35: replace && with || in table
+ckc/src/ui/intake.rs:42:21: delete ! in table
+ckc/src/ui/intake.rs:42:38: delete ! in table
+ckc/src/ui/intake.rs:45:26: replace == with != in table
+ckc/src/ui/intake.rs:74:16: delete ! in coverage
+ckc/src/ui/intake.rs:77:16: delete ! in coverage
+ckc/src/ui/intake.rs:84:29: delete ! in coverage
+ckc/src/ui/intake.rs:96:24: replace == with != in coverage
+ckc/src/ui/intake.rs:102:12: delete ! in coverage
+ckc/src/ui/intake.rs:126:5: replace stems -> Result<Vec<String>> with Ok(vec![])
+ckc/src/ui/intake.rs:126:5: replace stems -> Result<Vec<String>> with Ok(vec![String::new()])
+ckc/src/ui/intake.rs:126:5: replace stems -> Result<Vec<String>> with Ok(vec!["xyzzy".into()])
+ckc/src/ui/intake.rs:126:8: delete ! in stems
+ckc/src/ui/intake.rs:131:12: delete ! in stems
+ckc/src/ui/intake.rs:151:12: delete ! in inventory
+ckc/src/ui/intake.rs:158:12: delete ! in inventory
+ckc/src/ui/intake.rs:167:5: replace manifest -> Result<BTreeMap<String, EBundle>> with Ok(BTreeMap::new())
+ckc/src/ui/intake.rs:190:12: delete ! in manifest
+ckc/src/ui/intake.rs:190:45: delete ! in manifest
+ckc/src/ui/intake.rs:197:12: delete ! in manifest
+ckc/src/ui/intake.rs:227:26: delete ! in evidence
+ckc/src/ui/intake.rs:227:44: delete ! in evidence
+ckc/src/ui/intake.rs:259:5: replace payloads -> Result<()> with Ok(())
+ckc/src/ui/intake.rs:270:86: replace == with != in payloads
+ckc/src/ui/intake.rs:276:29: replace == with != in payloads
+ckc/src/ui/intake.rs:284:62: replace == with != in payloads
+ckc/src/ui/intake.rs:285:22: replace == with != in payloads
+ckc/src/ui/intake.rs:288:22: replace > with == in payloads
+ckc/src/ui/intake.rs:288:22: replace > with >= in payloads
+ckc/src/ui/intake.rs:299:22: replace == with != in payloads
+ckc/src/ui/intake.rs:304:22: replace != with == in payloads
+ckc/src/ui/intake.rs:327:8: delete ! in ledger
+ckc/src/ui/intake.rs:367:5: replace valid_asset -> bool with false
+ckc/src/ui/intake.rs:367:5: delete ! in valid_asset
+ckc/src/ui/intake.rs:368:12: delete ! in valid_asset
+ckc/src/ui/intake.rs:371:48: replace || with && in valid_asset
+ckc/src/ui/intake.rs:374:5: replace media_type -> Option<&'static str> with None
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![])
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![vec![]])
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![vec![0]])
+ckc/src/ui/intake.rs:383:5: replace assets -> Result<Vec<Vec<u8>>> with Ok(vec![vec![1]])
+ckc/src/ui/intake.rs:384:31: delete ! in assets
+ckc/src/ui/intake.rs:389:21: delete ! in assets
+ckc/src/ui/intake.rs:406:21: replace != with == in document
+ckc/src/ui/intake.rs:411:25: replace != with == in document
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(None)
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(Some(vec![]))
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(Some(vec![0]))
+ckc/src/ui/intake.rs:435:5: replace vocabulary -> Result<Option<Vec<u8>>> with Ok(Some(vec![1]))
+ckc/src/ui/intake.rs:441:8: delete ! in vocabulary
+ckc/src/ui/intake.rs:459:8: delete ! in guideline
+ckc/src/ui/intake.rs:462:8: delete ! in guideline
+ckc/src/ui/intake.rs:468:8: delete ! in guideline
+ckc/src/ui/pages.rs:17:9: replace Tree::write -> Result<()> with Ok(())
+ckc/src/ui/pages.rs:43:5: replace hrefs -> Vec<&str> with vec![""]
+ckc/src/ui/pages.rs:43:5: replace hrefs -> Vec<&str> with vec!["xyzzy"]
+ckc/src/ui/pages.rs:56:5: replace resolve_href -> Option<String> with Some(String::new())
+ckc/src/ui/pages.rs:56:5: replace resolve_href -> Option<String> with Some("xyzzy".into())
+ckc/src/ui/pages.rs:56:30: replace || with && in resolve_href
+ckc/src/ui/pages.rs:62:17: replace == with != in resolve_href
+ckc/src/ui/pages.rs:66:24: replace != with == in resolve_href
+ckc/src/ui/pages.rs:109:25: replace + with - in tree
+ckc/src/ui/pages.rs:109:25: replace + with * in tree
+ckc/src/ui/pages.rs:136:20: delete ! in tree
+ckc/src/ui/pages.rs:137:20: delete ! in tree
+ckc/src/ui/pages.rs:151:5: replace destination_blocked -> bool with true
+ckc/src/ui/pages.rs:160:5: replace render -> Result<()> with Ok(())
+ckc/src/ui/pages.rs:236:5: replace has_functor -> bool with true
+ckc/src/ui/pages.rs:242:5: replace visible_violation -> Option<&'static str> with Some("")
+ckc/src/ui/pages.rs:242:5: replace visible_violation -> Option<&'static str> with Some("xyzzy")
+ckc/src/ui/pages.rs:250:36: replace && with || in visible_violation
+ckc/src/ui/pages.rs:250:30: replace >= with < in visible_violation
+ckc/src/ui/pages.rs:263:13: replace && with || in visible_violation
+ckc/src/ui/pages.rs:259:13: replace && with || in visible_violation
+ckc/src/ui/pages.rs:271:5: replace resource_tag -> bool with true
+ckc/src/ui/pages.rs:311:5: replace resource_reference -> bool with true
+ckc/src/ui/pages.rs:322:5: replace source_hrefs -> BTreeSet<String> with BTreeSet::new()
+ckc/src/ui/pages.rs:322:5: replace source_hrefs -> BTreeSet<String> with BTreeSet::from_iter([String::new()])
+ckc/src/ui/pages.rs:322:5: replace source_hrefs -> BTreeSet<String> with BTreeSet::from_iter(["xyzzy".into()])
+ckc/src/ui/pages.rs:341:23: delete ! in source_hrefs
+ckc/src/ui/pages.rs:347:5: replace external_ok -> bool with false
+ckc/src/ui/pages.rs:350:51: replace || with && in external_ok
+ckc/src/ui/pages.rs:353:5: replace invariant -> Result<Option<&'static str>> with Ok(Some(""))
+ckc/src/ui/pages.rs:353:5: replace invariant -> Result<Option<&'static str>> with Ok(Some("xyzzy"))
+ckc/src/ui/pages.rs:365:41: replace != with == in invariant
+ckc/src/ui/pages.rs:369:8: delete ! in invariant
+ckc/src/ui/pages.rs:374:40: replace != with == in invariant
+ckc/src/ui/pages.rs:374:62: replace > with == in invariant
+ckc/src/ui/pages.rs:374:62: replace > with < in invariant
+ckc/src/ui/pages.rs:374:62: replace > with >= in invariant
+ckc/src/ui/pages.rs:382:8: delete ! in invariant
+ckc/src/ui/pages.rs:388:36: replace != with == in invariant
+ckc/src/ui/pages.rs:391:8: delete ! in invariant
+ckc/src/ui/pages.rs:398:5: replace sources -> BTreeSet<String> with BTreeSet::new()
+ckc/src/ui/pages.rs:398:5: replace sources -> BTreeSet<String> with BTreeSet::from_iter([String::new()])
+ckc/src/ui/pages.rs:398:5: replace sources -> BTreeSet<String> with BTreeSet::from_iter(["xyzzy".into()])
+ckc/src/ui/pages.rs:402:47: replace == with != in sources
+ckc/src/ui/pages.rs:407:5: replace check -> Result<()> with Ok(())
+ckc/src/ui/pages.rs:419:8: delete ! in check
+ckc/src/ui/pages.rs:423:23: replace != with == in check
+ckc/src/ui/pages.rs:426:12: delete ! in check
+ckc/src/ui/request.rs:60:9: replace Response::headers -> Result<Vec<(&'static str, String)>> with Ok(vec![])
+ckc/src/ui/request.rs:60:9: replace Response::headers -> Result<Vec<(&'static str, String)>> with Ok(vec![("", String::new())])
+ckc/src/ui/request.rs:60:9: replace Response::headers -> Result<Vec<(&'static str, String)>> with Ok(vec![("", "xyzzy".into())])
+ckc/src/ui/request.rs:60:9: replace Response::headers -> Result<Vec<(&'static str, String)>> with Ok(vec![("xyzzy", String::new())])
+ckc/src/ui/request.rs:60:9: replace Response::headers -> Result<Vec<(&'static str, String)>> with Ok(vec![("xyzzy", "xyzzy".into())])
+ckc/src/ui/request.rs:170:5: replace snapshot -> Vec<u8> with vec![0]
+ckc/src/ui/request.rs:170:5: replace snapshot -> Vec<u8> with vec![1]
+ckc/src/ui/request.rs:251:20: replace || with && in read
+ckc/src/ui/request.rs:251:13: replace == with != in read
+ckc/src/ui/request.rs:251:28: replace == with != in read
+ckc/src/ui/request.rs:265:30: replace == with != in read
+ckc/src/ui/request.rs:269:20: replace == with != in read
+ckc/src/ui/request.rs:271:13: delete match arm "" | "index.html" in read
+ckc/src/ui/request.rs:272:13: delete match arm "records.html" in read
+ckc/src/ui/request.rs:276:20: replace != with == in read
+ckc/src/ui/request.rs:279:17: replace == with != in read
+ckc/src/ui/request.rs:296:17: replace != with == in read
+ckc/src/ui/request.rs:306:39: replace == with != in read
+ckc/src/ui/request.rs:319:17: replace + with - in read
+ckc/src/ui/request.rs:319:17: replace + with * in read
+ckc/src/ui/request.rs:514:5: replace decode_path -> Vec<u8> with vec![]
+ckc/src/ui/request.rs:514:5: replace decode_path -> Vec<u8> with vec![0]
+ckc/src/ui/request.rs:514:5: replace decode_path -> Vec<u8> with vec![1]
+ckc/src/ui/request.rs:517:13: replace < with == in decode_path
+ckc/src/ui/request.rs:517:13: replace < with > in decode_path
+ckc/src/ui/request.rs:517:13: replace < with <= in decode_path
+ckc/src/ui/request.rs:518:29: replace && with || in decode_path
+ckc/src/ui/request.rs:518:21: replace == with != in decode_path
+ckc/src/ui/request.rs:529:11: replace += with -= in decode_path
+ckc/src/ui/request.rs:618:5: replace parse -> Option<Arguments> with None
+ckc/src/ui/request.rs:618:19: replace < with > in parse
+ckc/src/ui/request.rs:628:13: replace < with == in parse
+ckc/src/ui/request.rs:628:13: replace < with > in parse
+ckc/src/ui/request.rs:628:13: replace < with <= in parse
+ckc/src/ui/request.rs:691:11: replace += with -= in parse
+ckc/src/ui/request.rs:691:11: replace += with *= in parse
+ckc/src/ui/request.rs:725:5: replace execute -> Result<u8> with Ok(0)
+ckc/src/ui/request.rs:725:5: replace execute -> Result<u8> with Ok(1)
