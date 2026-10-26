@@ -297,7 +297,7 @@ fn readme(
             text += &rights_line(gid, row, "Source: ", ".");
         }
     }
-    text += "\n## Replay\n\nThese commands run in the source repository at the commit that this archive names.\n\n- compile: ckc compile <guideline-id>\n- check: ckc check\n- load: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n";
+    text += "\n## Replay\n\nRun `compile` and `check` in the source repository at the commit that this archive names. Run `load` in the root directory of this archive.\n\n- compile: ckc compile <guideline-id>\n- check: ckc check\n- load: swipl -q -s data/guidelines/schema.pl -s data/guidelines/<guideline-id>/pl/<docid>.pl\n\n";
     text + schema
 }
 pub(super) fn member(path: &str, bytes: &[u8]) -> EMember {

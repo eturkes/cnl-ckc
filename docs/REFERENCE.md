@@ -1717,8 +1717,8 @@ leaves `main`. A second line that leaves `main` on the same date adds
 - `release/kb-YYYY-MM-DD` is its branch.
 - `kb-YYYY-MM-DD-rc.1`, `kb-YYYY-MM-DD-rc.2`, and so on are its release
   candidates, as signed annotated tags. A candidate is not reviewed.
-- `kb-YYYY-MM-DD` is its release, as a signed annotated tag on the last
-  commit of the line. The release notes and `CITATION.cff` state the
+- `kb-YYYY-MM-DD` is its release, as a signed annotated tag on the
+  commit that the release archive comes from. The release notes and `CITATION.cff` state the
   date of the release.
 
 The archive keeps its commit name; the release record outside the
@@ -1777,7 +1777,8 @@ To release the line:
 10. Run `ckc dist build` and `just release-ckc`. Write the release
     notes. State the identifier, the date, the signer and the key
     fingerprint, the archive name, one `<SHA-256>  <file name>` line
-    for the archive and for `ckc-x86_64-linux`, the release commit, the
+    for each of the four files (the archive, `ckc-x86_64-linux`, and the
+    `.sha256` sidecar of each), the release commit, the
     schema identifier, the source edition and digest of each guideline,
     and the review label counts. Classify the change from the previous
     release twice: the schema change (`none`, or the new identifier) and
@@ -1791,7 +1792,7 @@ To release the line:
     the project record. Link the preprint that describes the release.
     The version DOI then names the archive bytes.
 13. Update `CITATION.cff` on the branch: the version, the release date,
-    and the version DOI.
+    and the version DOI. Commit the change on the branch.
 14. Merge the line into `main` with
     `git merge --no-ff release/kb-YYYY-MM-DD`. If
     `release-manifest.tsv` conflicts, keep either side and commit the

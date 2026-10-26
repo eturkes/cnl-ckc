@@ -1192,6 +1192,14 @@ fn validate_bag(
                 ),
                 "README-dist load line omits the schema file",
             );
+            // The load paths are bag-relative; compile + check need the source repository.
+            run.check(
+                has(
+                    bag.bytes("README-dist.md"),
+                    b"Run `load` in the root directory of this archive.",
+                ),
+                "README-dist does not place the load command in the archive root",
+            );
             run.check(
                 !has(bag.bytes("README-dist.md"), b"dirty reference"),
                 "working docs/REFERENCE.md leaked",
