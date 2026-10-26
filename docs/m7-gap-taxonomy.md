@@ -39,7 +39,7 @@ documents 24 grade records, one strength and one evidence value each.
 and `instead-of` alternatives. Two of them, `cdc2022-opioid-s22-02` and
 `cdc2022-opioid-s37-09`, are new documents for regions that earlier
 restated a recommendation without its preference. The table's 67
-qualifier rows type the hedges of 200 documents on the actions that
+qualifier rows type the hedges of 204 documents on the actions that
 they qualify, in seven classes: manner, applicability, possibility,
 usuality, focus, ideality and force. A "might" claim compiles under "can" with "possibly". An
 applicability hedge ("as appropriate", "when feasible") compiles as a
@@ -56,7 +56,7 @@ and stay in the nouns of the ACE. Two emphasize a whole prohibition
 `cdc2022-opioid-s51-11`); they stay untyped, and the projection notes
 record them.
 
-Temporal status: 66 of the CDC guideline's 492 documents carry
+Temporal status: 69 of the CDC guideline's 492 documents carry
 annotations. A census of the 81 documents with
 a recorded temporal loss (`.agent/archive/m7t-reauthor.tsv`) found 12
 whose sources state a bound that the interval and recurrence
@@ -86,7 +86,7 @@ start or end point that the source does not name, and a measured
 number such as `3 d` stay outside the schema.
 
 Numeric-threshold status: 35 of the CDC guideline's 492 documents
-compare a quantity with a number, and 40 state a time quantity with its
+compare a quantity with a number, and 42 state a time quantity with its
 unit. The 19 documents that stated a comparison in ACE before the
 comparison built-ins compile it as a value comparison without an ACE
 change. A census of the 702 regions outside Box 3
