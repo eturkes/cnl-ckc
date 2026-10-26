@@ -188,7 +188,7 @@ pub open spec fn comparison_output(
                     docid,
                     Term::Comp(
                         v1text::ascii("nonground_obligation"@),
-                        seq![o.s, spec::variant_slot(0)],
+                        seq![o.s, replay::variant(o)],
                     ),
                 ),
                 None => replay::ok(replay::print_payload(obs)),
@@ -248,10 +248,13 @@ fn compare_projection(
             assert(ckc_spec::engine::args_of(replay::ob_term(obs@[i as int]@)).len() == 5);
             assert(oa.len() == 5);
             assert(valid(arena.nodes@, &oa@[1]));
+            assert(valid(arena.nodes@, &oa@[2]));
+            assert(models(oa@)[2] == oa@[2]@);
+            assert(oa@[2]@ == replay::variant(obs@[i as int]@));
         }
         let sentence = oa[1].cp();
         let ghost before = arena.nodes@;
-        let variant = slot(arena, &Sym::Variant, 0);
+        let variant = oa[2].cp();
         proof {
             prefix(before, arena.nodes@, &sentence);
         }

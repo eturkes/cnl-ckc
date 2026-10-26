@@ -205,23 +205,34 @@ pub fn summary(g: &EGuideline, m: &Model) -> (out: Vec<u8>)
         out@ == u::review_summary(g@),
 {
     let n = m.decisions.len();
+    let k = g.documents.len();
     if n == 0 {
+        let noun = if k == 1 {
+            b::literal(" document in this guideline.")
+        } else {
+            b::literal(" documents in this guideline.")
+        };
         b::cat(
-            b::cat(
-                b::literal("No decisions are recorded for the "),
-                &b::nat_bytes(g.documents.len() as u64),
-            ),
-            &b::literal(" documents in this guideline."),
+            b::cat(b::literal("No decisions are recorded for the "), &b::nat_bytes(k as u64)),
+            &noun,
         )
     } else {
         let seen = classify::reviewed_list(&m.decisions);
         let mut out = b::literal("Reviewers recorded ");
         b::append(&mut out, &b::nat_bytes(n as u64));
-        b::append(&mut out, &b::literal(" decisions on "));
+        if n == 1 {
+            b::append(&mut out, &b::literal(" decision on "));
+        } else {
+            b::append(&mut out, &b::literal(" decisions on "));
+        }
         b::append(&mut out, &b::nat_bytes(seen.len() as u64));
         b::append(&mut out, &b::literal(" of "));
-        b::append(&mut out, &b::nat_bytes(g.documents.len() as u64));
-        b::append(&mut out, &b::literal(" documents."));
+        b::append(&mut out, &b::nat_bytes(k as u64));
+        if k == 1 {
+            b::append(&mut out, &b::literal(" document."));
+        } else {
+            b::append(&mut out, &b::literal(" documents."));
+        }
         out
     }
 }

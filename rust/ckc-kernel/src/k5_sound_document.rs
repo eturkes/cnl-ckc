@@ -167,6 +167,11 @@ pub open spec fn tail_parts(
     });
     let name = u::latest_name(u::records(g), u::empty(), u::empty());
     let count = u::splitline_count(u::chars(d.pl), false);
+    let close = if count == 1 {
+        b::f(297)
+    } else {
+        b::f(176)
+    };
     seq![
         b::f(86),
         b::f(155),
@@ -193,7 +198,7 @@ pub open spec fn tail_parts(
         b::f(86),
         b::f(80),
         b::f(174),
-        b::f(175) + u::number(count) + b::f(176),
+        b::f(175) + u::number(count) + close,
         b::f(177) + u::text(d.pl) + b::f(153),
         b::f(178),
         b::f(86),
@@ -392,6 +397,11 @@ proof fn tail_sound(
     });
     let name = u::latest_name(u::records(g), u::empty(), u::empty());
     let count = u::splitline_count(u::chars(d.pl), false);
+    let close = if count == 1 {
+        b::f(297)
+    } else {
+        b::f(176)
+    };
     l::f036(inputs);
     l::f144(inputs);
     l::f145(inputs);
@@ -424,6 +434,7 @@ proof fn tail_sound(
     l::f174(inputs);
     l::f175(inputs);
     l::f176(inputs);
+    l::f297(inputs);
     l::f177(inputs);
     l::f178(inputs);
     l::f179(inputs);
@@ -439,7 +450,7 @@ proof fn tail_sound(
     hl::attribute(b::f(239), commit, b::f(11), inputs);
     hl::attribute(b::f(171), token, b::f(11), inputs);
     h::number(count, inputs, 0);
-    three(b::f(175), u::number(count), b::f(176), inputs);
+    three(b::f(175), u::number(count), close, inputs);
     three(b::f(177), u::text(d.pl), b::f(153), inputs);
     b::link(u::url_seg(prev) + u::html_ext(), b::f(144), inputs);
     b::link(u::url_seg(next) + u::html_ext(), b::f(146), inputs);
@@ -586,6 +597,7 @@ proof fn tail_equiv(
     l::l174(inputs);
     l::l175(inputs);
     l::l176(inputs);
+    l::l297(inputs);
     l::l177(inputs);
     l::l178(inputs);
     l::l179(inputs);

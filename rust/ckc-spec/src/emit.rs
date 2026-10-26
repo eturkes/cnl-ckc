@@ -4807,10 +4807,7 @@ pub open spec fn certify_doc(
                                     Option::Some(o) => Result::Err(
                                         Term::Comp(
                                             ascii("nonground_obligation"@),
-                                            seq![
-                                                o.s,
-                                                variant_slot(0),  /* placeholder */
-                                            ],
+                                            seq![o.s, crate::replay::variant(o)],
                                         ),
                                     ),
                                     Option::None => Result::Ok(obs),

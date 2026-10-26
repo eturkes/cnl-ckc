@@ -515,7 +515,7 @@ form label { display: block; margin-top: 1rem; font-weight: 600; }
 fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }
 legend { font-weight: 600; padding: 0; }
 fieldset label { margin-top: 0.5rem; font-weight: 400; }
-input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
+input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #4b5563; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
 textarea { min-height: 6rem; }
 input[type="radio"], input[type="checkbox"] { accent-color: #111827; }
 input[type="text"]:focus-visible, input[type="radio"]:focus-visible, input[type="checkbox"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
@@ -595,9 +595,9 @@ main:has(mark.t45:hover) mark.t45 { background: #d9f99d; text-decoration-style: 
 main:has(mark.t46:hover) mark.t46 { background: #c7d2fe; text-decoration-style: solid; }
 main:has(mark.t47:hover) mark.t47 { background: #d6d3d1; text-decoration-style: solid; }
 .hl-note label { margin-right: 0.75rem; }
-main.hl-click pre.prose { color: #9ca3af; }
-main.hl-click pre.prose .kw { color: #9ca3af; }
-main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #9ca3af; }
+main.hl-click pre.prose { color: #4b5563; }
+main.hl-click pre.prose .kw { color: #4b5563; }
+main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #4b5563; }
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
@@ -780,13 +780,25 @@ pub open spec fn tally_text(t: (nat, nat, nat)) -> Bytes {
 
 pub open spec fn review_summary(g: Guideline) -> Bytes {
     let n = decisions(g).len();
+    let k = g.documents.len();
     if n == 0 {
-        no_decisions_are_recorded_for_the_cap_sp() + check::nat_bytes(g.documents.len())
-            + sp_documents_in_this_guideline()
+        no_decisions_are_recorded_for_the_cap_sp() + check::nat_bytes(k) + (if k == 1 {
+            sp_document_in_this_guideline()
+        } else {
+            sp_documents_in_this_guideline()
+        })
     } else {
-        reviewers_recorded_cap_sp() + check::nat_bytes(n) + sp_decisions_on_sp() + check::nat_bytes(
-            check::reviewed(decisions(g)).len(),
-        ) + sp_of_sp() + check::nat_bytes(g.documents.len()) + sp_documents()
+        reviewers_recorded_cap_sp() + check::nat_bytes(n) + (if n == 1 {
+            sp_decision_on_sp()
+        } else {
+            sp_decisions_on_sp()
+        }) + check::nat_bytes(check::reviewed(decisions(g)).len()) + sp_of_sp() + check::nat_bytes(
+            k,
+        ) + (if k == 1 {
+            sp_document()
+        } else {
+            sp_documents()
+        })
     }
 }
 
@@ -1874,7 +1886,13 @@ pub open spec fn document_html(
             fixed_bytes(details_open()),
             fixed_bytes(summary_open_compiled_prolog()) + number(
                 splitline_count(chars(d.pl), false),
-            ) + fixed_bytes(sp_lines_summary_close()),
+            ) + fixed_bytes(
+                if splitline_count(chars(d.pl), false) == 1 {
+                    sp_line_summary_close()
+                } else {
+                    sp_lines_summary_close()
+                },
+            ),
             fixed_bytes(pre_open_2()) + text(d.pl) + fixed_bytes(pre_close()),
             fixed_bytes(details_close()),
             fixed_bytes(section_close()),
@@ -3123,6 +3141,10 @@ copy_table! {
     h2_open_superseded_passages_h2_close = "<h2>Superseded passages</h2>";
     p_open_later_law_regulation_or_guidance = "<p>Later law, regulation or guidance superseded all or part of each passage in this table.</p>";
     thead_open_tr_open_th_open_passage_th_close_th_open_document_superseded = "<thead><tr><th>Passage</th><th>Document</th><th>Superseded by</th><th>Superseded on</th></tr></thead>";
+    sp_decision_on_sp = " decision on ";
+    sp_document_in_this_guideline = " document in this guideline.";
+    sp_document = " document.";
+    sp_line_summary_close = " line)</summary>";
 }
 
 verus! {

@@ -1,5 +1,7 @@
 // RD D1/D2/D4/P3: contract literal + frozen fixture inputs; renderer implementation unread.
 // CKC_UI_TEST_BIN selects the candidate; CKC_RD_MIGRATION selects the replay script.
+#[path = "../../../tests/frozen-pages/rev_k.rs"]
+mod rev_k;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -51,6 +53,12 @@ fn read(path: &Path) -> Vec<u8> {
 
 fn text(bytes: &[u8]) -> &str {
     std::str::from_utf8(bytes).expect("UTF-8 test data")
+}
+
+// The 065d814b goldens + the non-document pins hold pre-REV-K renderer bytes: a current page's
+// REV-K sites map back before the comparison.
+fn pre_rev_k(page: &[u8]) -> Vec<u8> {
+    rev_k::map(text(page), false).into_bytes()
 }
 
 fn write(path: &Path, bytes: &[u8]) {
@@ -405,7 +413,7 @@ fn t1_static_documents_have_one_disclosure_at_the_form_anchor() {
     for (path, data) in documents {
         if let Some(before) = baseline().get(&path) {
             assert!(
-                data == add_note(before),
+                pre_rev_k(&data) == add_note(before),
                 "{}: only D1 changes",
                 path.display()
             );
@@ -438,7 +446,7 @@ fn pinned_non_document(page: &[u8], name: &str) {
         .expect("session pin")
         .0;
     assert_eq!(
-        Sha256::digest(page)
+        Sha256::digest(pre_rev_k(page))
             .iter()
             .map(|byte| format!("{byte:02x}"))
             .collect::<String>(),
@@ -541,7 +549,7 @@ fn t2_only_document_pages_change_including_session_and_refusal_bodies() {
         absent(bytes, &path.display().to_string());
         if let Some(before) = baseline().get(path) {
             assert!(
-                bytes == before,
+                pre_rev_k(bytes) == *before,
                 "{}: changed non-document bytes",
                 path.display()
             );
@@ -604,7 +612,10 @@ fn t2_only_document_pages_change_including_session_and_refusal_bodies() {
             let (expected_head, _) = response(expected);
             assert_eq!(head.lines().next(), expected_head.lines().next(), "{label}");
             absent(body, &label);
-            assert!(body == expected_body, "{label}: changed non-document body");
+            assert!(
+                pre_rev_k(body) == expected_body,
+                "{label}: changed non-document body"
+            );
             statuses.insert(head.lines().next().unwrap().to_owned());
             request_count += 1;
         }
@@ -1042,18 +1053,19 @@ fn t5_copy_registry_appends_exact_literal_as_row_286() {
     // Source-level registry contract only; renderer/proof bodies are not an oracle.
     let source = fs::read_to_string(root().join("rust/ckc-spec/src/ui.rs")).unwrap();
     let rows = copy_rows(&source);
-    // SUP4 (contract sup4 D1) appends rows 287–293 after RD's row 286.
+    // SUP4 (contract sup4 D1) appends rows 287–293 after RD's row 286; REV-K (contract rev-k
+    // P2) appends rows 294–297.
     assert_eq!(
         rows.len(),
-        294,
-        "copy_table row count: RD appends at index 286, SUP4 at 287–293"
+        298,
+        "copy_table row count: RD appends at index 286, SUP4 at 287–293, REV-K at 294–297"
     );
     assert_eq!(
         rows.iter()
             .map(|(name, _)| name)
             .collect::<BTreeSet<_>>()
             .len(),
-        294,
+        298,
         "unique registry names"
     );
     assert_eq!(

@@ -4,6 +4,8 @@
 mod legacy;
 #[path = "../../../tests/ur-ui/oracle.rs"]
 mod oracle;
+#[path = "../../../tests/frozen-pages/rev_k.rs"]
+mod rev_k;
 #[path = "../../../tests/ur-ui/support.rs"]
 mod support;
 

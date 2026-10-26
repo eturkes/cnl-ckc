@@ -1,0 +1,3 @@
+sentences([[^,'Every',patient,is,a,person,'.'],[^,'Every',patient,is,a,person,'.']]).
+drs(drs([],[=>(drs([A],[-(object(A,patient,countable,na,eq,1),/(1,2))]),drs([B,C],[-(object(B,person,countable,na,eq,1),/(1,5)),-(predicate(C,be,A,B),/(1,3))])),=>(drs([D],[-(object(D,patient,countable,na,eq,E),/(2,2))]),drs([F,G],[-(object(F,person,countable,na,eq,1),/(2,5)),-(predicate(G,be,D,F),/(2,3))]))])).
+messages([]).

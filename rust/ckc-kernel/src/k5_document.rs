@@ -367,7 +367,13 @@ pub open spec fn body_spec(
         u::fixed_bytes(u::details_open()),
         u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
             u::splitline_count(u::chars(d.pl), false),
-        ) + u::fixed_bytes(u::sp_lines_summary_close()),
+        ) + u::fixed_bytes(
+            if u::splitline_count(u::chars(d.pl), false) == 1 {
+                u::sp_line_summary_close()
+            } else {
+                u::sp_lines_summary_close()
+            },
+        ),
         u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
         u::fixed_bytes(u::details_close()),
         u::fixed_bytes(u::section_close()),
@@ -534,7 +540,13 @@ pub proof fn decomposition(
         u::fixed_bytes(u::details_open()),
         u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
             u::splitline_count(u::chars(d.pl), false),
-        ) + u::fixed_bytes(u::sp_lines_summary_close()),
+        ) + u::fixed_bytes(
+            if u::splitline_count(u::chars(d.pl), false) == 1 {
+                u::sp_line_summary_close()
+            } else {
+                u::sp_lines_summary_close()
+            },
+        ),
         u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
         u::fixed_bytes(u::details_close()),
         u::fixed_bytes(u::section_close()),
@@ -613,7 +625,13 @@ pub open spec fn compiled_spec(d: u::Document, prev: u::Bytes, next: u::Bytes) -
         u::fixed_bytes(u::details_open()),
         u::fixed_bytes(u::summary_open_compiled_prolog()) + u::number(
             u::splitline_count(u::chars(d.pl), false),
-        ) + u::fixed_bytes(u::sp_lines_summary_close()),
+        ) + u::fixed_bytes(
+            if u::splitline_count(u::chars(d.pl), false) == 1 {
+                u::sp_line_summary_close()
+            } else {
+                u::sp_lines_summary_close()
+            },
+        ),
         u::fixed_bytes(u::pre_open_2()) + u::text(d.pl) + u::fixed_bytes(u::pre_close()),
         u::fixed_bytes(u::details_close()),
         u::fixed_bytes(u::section_close()),
@@ -830,12 +848,13 @@ pub fn compiled(d: &EDocument, prev: &[u8], next: &[u8]) -> (out: Vec<EPage>)
     let mut body = Vec::new();
     body.push(h::fixed("<section>"));
     body.push(h::fixed("<details>"));
-    body.push(
-        h::cat(
-            h::cat(h::fixed("<summary>Compiled Prolog ("), h::number(data::lines(&d.pl))),
-            h::fixed(" lines)</summary>"),
-        ),
-    );
+    let lines = data::lines(&d.pl);
+    let close = if lines == 1 {
+        h::fixed(" line)</summary>")
+    } else {
+        h::fixed(" lines)</summary>")
+    };
+    body.push(h::cat(h::cat(h::fixed("<summary>Compiled Prolog ("), h::number(lines)), close));
     body.push(h::cat(h::cat(h::fixed("<pre>"), h::text(&d.pl)), h::fixed("</pre>")));
     body.push(h::fixed("</details>"));
     body.push(h::fixed("</section>"));

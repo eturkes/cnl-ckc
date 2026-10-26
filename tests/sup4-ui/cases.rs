@@ -1,4 +1,5 @@
 use super::oracle::{self, Model, Row};
+use super::rev_k;
 use super::support::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -18,6 +19,15 @@ fn stripped(c: &mut Checks, model: &Model, path: &str, body: &[u8], label: &str)
             .into_bytes()
     } else {
         body.to_owned()
+    }
+}
+
+// The pins hold pre-REV-K renderer bytes: a page's REV-K sites map back before its hash.
+fn pre_rev_k(path: &str, bytes: &[u8]) -> Vec<u8> {
+    if path.ends_with(".html") {
+        rev_k::map(std::str::from_utf8(bytes).unwrap(), false).into_bytes()
+    } else {
+        bytes.to_owned()
     }
 }
 
@@ -54,7 +64,7 @@ fn p2_p3_frozen_pages_and_row_removal_differ_only_by_insertions() {
             let expected = pins.get(&key).expect("pin inventory");
             seen.insert(key.clone());
             c.equal(
-                sha(bytes).as_bytes(),
+                sha(pre_rev_k(path, bytes)).as_bytes(),
                 expected.as_bytes(),
                 &format!("P2 baseline sha256 {key}"),
             );
@@ -79,7 +89,7 @@ fn p2_p3_frozen_pages_and_row_removal_differ_only_by_insertions() {
             let key = format!("{case}/removed/{path}");
             seen.insert(key.clone());
             c.equal(
-                sha(bytes).as_bytes(),
+                sha(pre_rev_k(path, bytes)).as_bytes(),
                 pins[&key].as_bytes(),
                 &format!("P2 removed baseline sha256 {key}"),
             );

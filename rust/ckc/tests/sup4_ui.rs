@@ -4,5 +4,7 @@
 mod cases;
 #[path = "../../../tests/sup4-ui/oracle.rs"]
 mod oracle;
+#[path = "../../../tests/frozen-pages/rev_k.rs"]
+mod rev_k;
 #[path = "../../../tests/sup4-ui/support.rs"]
 mod support;

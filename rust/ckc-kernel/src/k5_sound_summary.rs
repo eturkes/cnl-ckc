@@ -101,38 +101,49 @@ pub proof fn review(g: u::Guideline, inputs: Seq<u::Bytes>)
     hide(ck::reviewed);
     hide(ck::nat_bytes);
     let n = u::decisions(g).len();
-    b::decimal(g.documents.len(), inputs);
+    let k = g.documents.len();
+    b::decimal(k, inputs);
     l::l069(inputs);
     l::l070(inputs);
     l::l071(inputs);
     l::l072(inputs);
     l::l073(inputs);
     l::l074(inputs);
+    l::l294(inputs);
+    l::l295(inputs);
+    l::l296(inputs);
     if n == 0 {
-        b::cat(
-            u::no_decisions_are_recorded_for_the_cap_sp(),
-            ck::nat_bytes(g.documents.len()),
-            inputs,
-        );
-        b::cat(
-            u::no_decisions_are_recorded_for_the_cap_sp() + ck::nat_bytes(g.documents.len()),
-            u::sp_documents_in_this_guideline(),
-            inputs,
-        );
+        let noun = if k == 1 {
+            u::sp_document_in_this_guideline()
+        } else {
+            u::sp_documents_in_this_guideline()
+        };
+        b::cat(u::no_decisions_are_recorded_for_the_cap_sp(), ck::nat_bytes(k), inputs);
+        b::cat(u::no_decisions_are_recorded_for_the_cap_sp() + ck::nat_bytes(k), noun, inputs);
     } else {
+        let on = if n == 1 {
+            u::sp_decision_on_sp()
+        } else {
+            u::sp_decisions_on_sp()
+        };
+        let noun = if k == 1 {
+            u::sp_document()
+        } else {
+            u::sp_documents()
+        };
         b::decimal(n, inputs);
         b::decimal(ck::reviewed(u::decisions(g)).len(), inputs);
         let a = u::reviewers_recorded_cap_sp() + ck::nat_bytes(n);
         b::cat(u::reviewers_recorded_cap_sp(), ck::nat_bytes(n), inputs);
-        b::cat(a, u::sp_decisions_on_sp(), inputs);
-        let a = a + u::sp_decisions_on_sp();
+        b::cat(a, on, inputs);
+        let a = a + on;
         b::cat(a, ck::nat_bytes(ck::reviewed(u::decisions(g)).len()), inputs);
         let a = a + ck::nat_bytes(ck::reviewed(u::decisions(g)).len());
         b::cat(a, u::sp_of_sp(), inputs);
         let a = a + u::sp_of_sp();
-        b::cat(a, ck::nat_bytes(g.documents.len()), inputs);
-        let a = a + ck::nat_bytes(g.documents.len());
-        b::cat(a, u::sp_documents(), inputs);
+        b::cat(a, ck::nat_bytes(k), inputs);
+        let a = a + ck::nat_bytes(k);
+        b::cat(a, noun, inputs);
     }
 }
 

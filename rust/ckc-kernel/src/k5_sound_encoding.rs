@@ -47,7 +47,7 @@ form label { display: block; margin-top: 1rem; font-weight: 600; }
 fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }
 legend { font-weight: 600; padding: 0; }
 fieldset label { margin-top: 0.5rem; font-weight: 400; }
-input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
+input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #4b5563; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
 textarea { min-height: 6rem; }
 input[type="radio"], input[type="checkbox"] { accent-color: #111827; }
 input[type="text"]:focus-visible, input[type="radio"]:focus-visible, input[type="checkbox"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
@@ -127,9 +127,9 @@ main:has(mark.t45:hover) mark.t45 { background: #d9f99d; text-decoration-style: 
 main:has(mark.t46:hover) mark.t46 { background: #c7d2fe; text-decoration-style: solid; }
 main:has(mark.t47:hover) mark.t47 { background: #d6d3d1; text-decoration-style: solid; }
 .hl-note label { margin-right: 0.75rem; }
-main.hl-click pre.prose { color: #9ca3af; }
-main.hl-click pre.prose .kw { color: #9ca3af; }
-main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #9ca3af; }
+main.hl-click pre.prose { color: #4b5563; }
+main.hl-click pre.prose .kw { color: #4b5563; }
+main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #4b5563; }
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
@@ -265,7 +265,7 @@ form label { display: block; margin-top: 1rem; font-weight: 600; }
 fieldset { border: 0; margin: 1rem 0 0; padding: 0; max-width: 28rem; }
 legend { font-weight: 600; padding: 0; }
 fieldset label { margin-top: 0.5rem; font-weight: 400; }
-input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
+input[type="text"], textarea { display: block; box-sizing: border-box; width: 100%; max-width: 28rem; margin-top: 0.3rem; padding: 0.45rem 0.6rem; border: 1px solid #4b5563; font-family: inherit; font-size: 1rem; color: #111827; background: #ffffff; }
 textarea { min-height: 6rem; }
 input[type="radio"], input[type="checkbox"] { accent-color: #111827; }
 input[type="text"]:focus-visible, input[type="radio"]:focus-visible, input[type="checkbox"]:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
@@ -345,9 +345,9 @@ main:has(mark.t45:hover) mark.t45 { background: #d9f99d; text-decoration-style: 
 main:has(mark.t46:hover) mark.t46 { background: #c7d2fe; text-decoration-style: solid; }
 main:has(mark.t47:hover) mark.t47 { background: #d6d3d1; text-decoration-style: solid; }
 .hl-note label { margin-right: 0.75rem; }
-main.hl-click pre.prose { color: #9ca3af; }
-main.hl-click pre.prose .kw { color: #9ca3af; }
-main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #9ca3af; }
+main.hl-click pre.prose { color: #4b5563; }
+main.hl-click pre.prose .kw { color: #4b5563; }
+main.hl-click pre.prose mark:not(.hl-pick) { background: none; text-decoration-color: #4b5563; }
 main.hl-click pre.prose mark.hl-pick { color: #111827; }
 body:has(input.hl-toggle:not(:checked)) pre.prose mark { background: none; text-decoration: none; color: inherit; }
 body:has(input.hl-toggle:not(:checked)) pre.prose .kw { color: inherit; }
@@ -998,7 +998,7 @@ pub proof fn css_text_block41(i: int)
     reveal_css_text!();
     assert(ch::css_text_bytes().len() == 10950) by (compute_only);
     assert(ch::css_text_bytes().subrange(2624, 2688)
-        == bs![109u8,59,32,112,97,100,100,105,110,103,58,32,48,46,52,53,114,101,109,32,48,46,54,114,101,109,59,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,101,53,101,55,101,98,59,32,102,111,110,116,45,102,97,109,105])
+        == bs![109u8,59,32,112,97,100,100,105,110,103,58,32,48,46,52,53,114,101,109,32,48,46,54,114,101,109,59,32,98,111,114,100,101,114,58,32,49,112,120,32,115,111,108,105,100,32,35,52,98,53,53,54,51,59,32,102,111,110,116,45,102,97,109,105])
         by (compute_only);
 }
 
@@ -2573,7 +2573,7 @@ pub proof fn css_text_block146(i: int)
     reveal_css_text!();
     assert(ch::css_text_bytes().len() == 10950) by (compute_only);
     assert(ch::css_text_bytes().subrange(9344, 9408)
-        == bs![32u8,35,57,99,97,51,97,102,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,35,57,99,97,51,97,102,59,32,125,10,109,97,105,110])
+        == bs![32u8,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,46,107,119,32,123,32,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110])
         by (compute_only);
 }
 
@@ -2603,7 +2603,7 @@ pub proof fn css_text_block148(i: int)
     reveal_css_text!();
     assert(ch::css_text_bytes().len() == 10950) by (compute_only);
     assert(ch::css_text_bytes().subrange(9472, 9536)
-        == bs![100u8,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,57,99,97,51,97,102,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99])
+        == bs![100u8,101,99,111,114,97,116,105,111,110,45,99,111,108,111,114,58,32,35,52,98,53,53,54,51,59,32,125,10,109,97,105,110,46,104,108,45,99,108,105,99,107,32,112,114,101,46,112,114,111,115,101,32,109,97,114,107,46,104,108,45,112,105,99])
         by (compute_only);
 }
 

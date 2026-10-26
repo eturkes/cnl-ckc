@@ -9582,4 +9582,93 @@ pub proof fn f293(inputs: Seq<u::Bytes>)
     );
 }
 
+pub proof fn l294(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" decision on "@)),
+        u::copy_derived(u::lit(" decision on "@), inputs, u::copy_registry()),
+        u::copy_registry()[294] == u::lit(" decision on "@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[294] == u::lit(" decision on "@) && 294 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" decision on "@), inputs);
+}
+
+pub proof fn l295(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" document in this guideline."@)),
+        u::copy_derived(u::lit(" document in this guideline."@), inputs, u::copy_registry()),
+        u::copy_registry()[295] == u::lit(" document in this guideline."@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[295] == u::lit(" document in this guideline."@) && 295
+        < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" document in this guideline."@), inputs);
+}
+
+pub proof fn l296(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" document."@)),
+        u::copy_derived(u::lit(" document."@), inputs, u::copy_registry()),
+        u::copy_registry()[296] == u::lit(" document."@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[296] == u::lit(" document."@) && 296 < u::copy_registry().len()) by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" document."@), inputs);
+}
+
+pub proof fn l297(inputs: Seq<u::Bytes>)
+    ensures
+        u::copy_registry().contains(u::lit(" line)</summary>"@)),
+        u::copy_derived(u::lit(" line)</summary>"@), inputs, u::copy_registry()),
+        u::copy_registry()[297] == u::lit(" line)</summary>"@),
+{
+    hide(u::copy_derived);
+    hide(u::copy_registry);
+    hide(u::lit);
+    hide(u::css_text);
+    hide(u::script_html);
+    assert(u::copy_registry()[297] == u::lit(" line)</summary>"@) && 297 < u::copy_registry().len())
+        by {
+        reveal(u::copy_registry);
+    };
+    b::literal(u::lit(" line)</summary>"@), inputs);
+}
+
+pub proof fn f297(inputs: Seq<u::Bytes>)
+    ensures
+        h::fragment(u::fixed(" line)</summary>"@), inputs, 0, 0),
+        u::copy_registry()[297] == u::lit(" line)</summary>"@),
+{
+    hide(u::copy_registry);
+    hide(u::copy_derived);
+    l297(inputs);
+    reveal_strlit(" line)</summary>");
+    is_ascii_chars_encode_utf8(" line)</summary>"@);
+    assert(u::lit(" line)</summary>"@)
+        =~= bs![32u8,108,105,110,101,41,60,47,115,117,109,109,97,114,121,62]);
+    assert(cx::scan(bs![32u8,108,105,110,101,41,60,47,115,117,109,109,97,114,121,62], 0) == 0)
+        by (compute_only);
+    cx::exact(u::lit(" line)</summary>"@), 0);
+    h::fixed(u::lit(" line)</summary>"@), inputs, 0, 0);
+}
+
 } // verus!

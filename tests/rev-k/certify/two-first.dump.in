@@ -1,0 +1,3 @@
+sentences([[^,'If',there,is,a,patient,or,there,is,a,doctor,then,there,is,a,person,'.']]).
+drs(drs([],[=>(drs([],[v(drs([A],[-(object(A,patient,countable,na,eq,B),/(1,5))]),drs([C],[-(object(C,doctor,countable,na,eq,1),/(1,10))]))]),drs([D],[-(object(D,person,countable,na,eq,1),/(1,15))]))])).
+messages([]).
