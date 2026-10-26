@@ -1743,3 +1743,52 @@ fn kani_bootstrap_version_probes_fail_the_script() {
         show(&out)
     );
 }
+
+// `just --list` is the gate's CLI help: every public recipe shows one standalone
+// sentence (a `[doc("…")]`), never the last line of a longer comment.
+fn help_fragments(justfile: &Path) -> Vec<String> {
+    let out = Command::new(just())
+        .arg("--justfile")
+        .arg(justfile)
+        .args(["--list", "--unsorted"])
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "just --list: {}", show(&out));
+    String::from_utf8(out.stdout)
+        .unwrap()
+        .lines()
+        .skip(1)
+        .filter(|line| {
+            let doc = line.split_once(" # ").map(|(_, d)| d).unwrap_or("");
+            !(doc.starts_with(|c: char| c.is_ascii_uppercase()) && doc.ends_with('.'))
+        })
+        .map(str::to_owned)
+        .collect()
+}
+
+#[test]
+fn recipe_list_gives_every_recipe_a_sentence() {
+    let text = justfile();
+    let s = scratch("help");
+    let put_justfile = |name: &str, body: &str| {
+        let path = s.0.join(name).join("justfile");
+        put(&path, body);
+        path
+    };
+    let fragments = help_fragments(&put_justfile("control", &text));
+    assert!(
+        fragments.is_empty(),
+        "recipes without a help sentence: {fragments:?}"
+    );
+    let planted = plant(
+        &text,
+        &[("[doc(\"Build the release ckc program.\")]\n", "")],
+    );
+    let fragments = help_fragments(&put_justfile("planted", &planted));
+    assert!(
+        fragments
+            .iter()
+            .any(|l| l.split_whitespace().next() == Some("build")),
+        "a recipe without its [doc] slipped through: {fragments:?}"
+    );
+}

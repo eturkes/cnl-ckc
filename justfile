@@ -12,6 +12,7 @@ export CARGO_HOME := TOOLCHAIN / "cargo"
 # .toolchain/bin first: the swipl shim must shadow a system copy.
 export PATH := (TOOLCHAIN / "bin") + ":" + (TOOLCHAIN / "verus-x86-linux") + ":" + (TOOLCHAIN / "cargo/bin") + ":" + env("PATH")
 
+[doc("List the recipes.")]
 default:
     @just --list --unsorted
 
@@ -25,6 +26,7 @@ rust: (_timed RUST_STEPS)
 
 # CI gate (.claude/rules/ops.md): the full gate as the ci.yml fan-out on HEAD, pushed to ci/<unit>.
 # Green deletes the branch; red keeps it (fix, amend, rerun). A dirty tree is refused: CI grades HEAD alone.
+[doc("Run the full gate in CI on HEAD (branch ci/<unit>); green deletes the branch.")]
 ci unit:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -352,10 +354,12 @@ bump-tool tool version:
 fmt:
     cd "{{ ROOT }}/rust" && verusfmt --edition 2024 $(find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' | sort)
 
+[doc("Check the workspace format (verusfmt inside verus!, rustfmt outside).")]
 fmt-check:
     cd "{{ ROOT }}/rust" && verusfmt --edition 2024 --check $(find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' | sort)
     @echo "gate: fmt ok"
 
+[doc("Lint every workspace target; a warning fails the step.")]
 clippy:
     cd "{{ ROOT }}/rust" && cargo clippy --workspace --locked --offline --all-targets -q -- -D warnings
     @echo "gate: clippy ok"
@@ -382,6 +386,7 @@ verify:
     if [ "$n" != 0 ]; then echo "verify: $n warning lines" >&2; exit 1; fi
     echo "gate: verify ok"
 
+[doc("Build the release ckc program.")]
 build:
     cd "{{ ROOT }}/rust" && cargo build --release --locked --offline -q
     @echo "gate: build ok"
@@ -390,6 +395,7 @@ build:
 # Static musl ckc = the binary of the CI container jobs + the reviewer program of a release.
 # Panic locations name the vendored crates by absolute path; remapping the checkout path keeps
 # it out of the binary, so every checkout of a commit builds the same bytes.
+[doc("Build the static ckc program for the CI containers and the release.")]
 build-static:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -413,6 +419,7 @@ build-static:
 
 # Reviewer program of a release (docs/REFERENCE.md § Releasing): the static ckc as
 # <dest>/ckc-x86_64-linux + its sha256sum sidecar; prints the sidecar line.
+[doc("Write the release reviewer program and its sha256sum sidecar to <dest>.")]
 release-ckc dest="dist": build-static
     #!/usr/bin/env bash
     set -euo pipefail
@@ -421,6 +428,7 @@ release-ckc dest="dist": build-static
     install -m 0755 rust/target/x86_64-unknown-linux-musl/release/ckc "{{ dest }}/ckc-x86_64-linux"
     cd "{{ dest }}" && sha256sum ckc-x86_64-linux | tee ckc-x86_64-linux.sha256
 
+[doc("Run the trust audit: escape tokens, dependency set, trusted-surface pins.")]
 trust: build
     cd "{{ ROOT }}/rust" && ./target/release/ckc trust-audit
 
@@ -429,6 +437,7 @@ trust: build
 # own error lines: a binary killed by a signal or a harness error prints no panic and no `test
 # result` line, so cargo's lines hold its cause. Every binary runs (`--no-fail-fast`), so one run
 # reports every failing binary. Every run leaves its log in rust/target/test.log.
+[doc("Run every test binary and report each failing one.")]
 test:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -602,11 +611,13 @@ outdated:
 
 # Verifier canary: the Verus build rejects every known false proof + verifies every control
 # (default = the pinned one, which `just verify` runs first).
+[doc("Check that a Verus build rejects every known false proof (default: the pinned build).")]
 canary verus=(TOOLCHAIN / "verus-x86-linux/verus"):
     bash "{{ ROOT }}/rust/verus-canary/run.sh" "{{ verus }}"
 
 # Secondary bounded gate (Kani 0.68.0 over the kernel's public exec surface;
 # harnesses stay outside the Verus workspace). Bootstrap = rust/kani.lock.
+[doc("Run the Kani harnesses over the kernel's public exec surface.")]
 kani:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -629,6 +640,7 @@ kani:
 # sections after the SWI-Prolog stage. Each tests/check-mutants/late.tsv row mutates a
 # fresh HEAD clone and must end on its pinned first violation (stderr when nonempty,
 # else the last stdout line). CKC_BIN names a prebuilt binary.
+[doc("Replay the late ckc check mutants (one full check each).")]
 late-mutants:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -680,6 +692,7 @@ late-mutants:
 # arguments keep each file glob one argument: `{{ files }}` would re-split it at its spaces.
 # Mutation run: <target> = cargo target selection [`-- <test-binary args>`], <files> rust/-relative;
 # results → rust/target/mutants/<HEAD>/mutants.out/; rc = cargo-mutants' (2 = missed mutants).
+[doc("Run cargo-mutants over <files> with the <target> tests.")]
 [positional-arguments]
 mutants target +files:
     #!/usr/bin/env bash
@@ -705,6 +718,7 @@ mutants target +files:
 # (tools/ui-mobile-probe.mjs under the pinned node). The recipe's own red inputs run every time:
 # the render with its viewport meta stripped must fail on every page, with its narrow-screen
 # table rule stripped on at least one. CKC_BIN names a prebuilt binary.
+[doc("Check the phone layout and the reading words of the rendered pages.")]
 mobile:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -753,6 +767,7 @@ mobile:
 # `ckc check` (every custody, coverage, lexicon, fixture and release-manifest law),
 # `ckc ui check`, then a fresh compile + queries per guideline must leave
 # guidelines/ byte-identical. CKC_BIN names a prebuilt binary.
+[doc("Run the corpus chain: spec shape, ckc check, ui check, fresh compile + queries.")]
 check:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -773,6 +788,7 @@ check:
 # Emission certification (M6, R83/R86): every committed document + query certifies
 # against rust/ckc-spec/src/emit.rs through the upstream APE parser, then the
 # tests/certify battery replays. CKC_BIN names a prebuilt binary (CI artifact).
+[doc("Certify every committed document and question against the emission spec.")]
 certify:
     #!/usr/bin/env bash
     set -euo pipefail
