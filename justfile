@@ -63,9 +63,10 @@ _timed steps:
         t=$SECONDS
         just --justfile "{{ justfile() }}" --no-deps "$s"; rc=$?
         echo "time: $s $((SECONDS - t)) s"
-        [ "$rc" -eq 0 ] || exit "$rc"
+        [ "$rc" -eq 0 ] || break
     done
     echo "time: total $((SECONDS - start)) s"
+    exit "$rc"
 
 # Install every pinned tool into the toolchain dir (idempotent, digest-verified).
 tools:
@@ -394,13 +395,16 @@ build:
 # The swipl:10.0.2 image (Debian glibc 2.36) cannot load the runner's glibc-2.43 build.
 # Static musl ckc = the binary of the CI container jobs + the reviewer program of a release.
 # Panic locations name the vendored crates by absolute path; remapping the checkout path keeps
-# it out of the binary, so every checkout of a commit builds the same bytes.
+# it out of the binary, and the pinned toolchain's rust-lld links it (the host `cc` adds its
+# own build-id + layout), so every checkout of a commit builds the same bytes on any host.
 [doc("Build the static ckc program for the CI containers and the release.")]
 build-static:
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}/rust"
-    CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="--remap-path-prefix={{ ROOT }}=cnl-ckc" \
+    sysroot=$(rustc --print sysroot)
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER="$sysroot/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld" \
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="--remap-path-prefix={{ ROOT }}=cnl-ckc -C linker-flavor=ld.lld" \
         cargo build --release --locked --offline -q -p ckc --target x86_64-unknown-linux-musl
     bin=target/x86_64-unknown-linux-musl/release/ckc
     # Each inspection is a checked assignment: inside an `if`, a failed readelf (or a

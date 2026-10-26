@@ -13,6 +13,8 @@ mod trust;
 mod ui;
 mod v1_cli;
 
+const USAGE: &str = "usage: ckc trust-audit [--write] [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc check [repo-root] | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl> [<vocabulary>] | ckc compile <guideline-id> | ckc queries <guideline-id> | ckc align <guideline-id> <docid> | ckc review-manifest <guideline-id> | ckc derive-review-manifest <guideline-dir> | ckc ledger-validate <ledger-path> <manifest-path> <label> | ckc release-manifest | ckc dist build [<dest>] | ckc ui <serve|render|check|request|copy-check> …";
+
 // A command's product on stdout: the caller maps a failed write or flush to rc 2
 // (`ckc: stdout: <why>`), because the exit flush drops its error and a lost product
 // would read as success.
@@ -60,10 +62,13 @@ fn main() -> ExitCode {
         Some("check") if args.len() <= 3 => {
             check::run(args.get(2).map(|s| s.as_str()).unwrap_or("."))
         }
+        // Asked-for help is an answer (stdout, rc 0); a malformed call is a refusal (rc 2).
+        Some("--help" | "-h" | "help") if args.len() == 2 => {
+            println!("{USAGE}");
+            ExitCode::SUCCESS
+        }
         _ => {
-            eprintln!(
-                "usage: ckc trust-audit [--write] [workspace-root] | ckc align-check <align.tsv> <src.txt> <ace.txt> | ckc v1 <check|render|aggregate-check|recursion-check|answer|trace|trace-check> … | ckc check [repo-root] | ckc certify <guideline-id> | ckc certify --cases <tsv> | ckc certify-one <doc|query> <id> <ace> <ulex|-> <dump> <pl> [<vocabulary>] | ckc compile <guideline-id> | ckc queries <guideline-id> | ckc align <guideline-id> <docid> | ckc review-manifest <guideline-id> | ckc derive-review-manifest <guideline-dir> | ckc ledger-validate <ledger-path> <manifest-path> <label> | ckc release-manifest | ckc dist build [<dest>] | ckc ui <serve|render|check|request|copy-check> …"
-            );
+            eprintln!("{USAGE}");
             ExitCode::from(2)
         }
     }

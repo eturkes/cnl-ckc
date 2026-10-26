@@ -1553,6 +1553,10 @@ fn build_static_inspection_failures_fail_the_recipe() {
     let case = |name: &str, justfile: &str, readelf: &str, grep_fails: bool| {
         let fx = Fixture::new(&s, name, justfile);
         put_exec(&fx.mock.join("cargo"), "#!/usr/bin/env bash\nexit 0\n");
+        put_exec(
+            &fx.mock.join("rustc"),
+            "#!/usr/bin/env bash\necho /fixture/sysroot\n",
+        );
         put(
             &fx.root
                 .join("rust/target/x86_64-unknown-linux-musl/release/ckc"),
@@ -1830,6 +1834,31 @@ fn gate_steps_print_their_wall_clock() {
         timed_lines(&s, "planted", &planted),
         want,
         "a missing total line slipped through"
+    );
+    // A failing step still ends the run with its total, and the run keeps the step's rc.
+    let fx = Fixture::new(&s, "failing", &text);
+    put_exec(&fx.mock.join("just"), "#!/usr/bin/env bash\nexit 7\n");
+    let out = fx.run("_timed", &["fmt-check clippy"]);
+    let lines: Vec<String> = String::from_utf8(out.stdout.clone())
+        .unwrap()
+        .lines()
+        .filter(|l| l.starts_with("time: "))
+        .map(|l| {
+            l.rsplit_once(' ')
+                .unwrap()
+                .0
+                .rsplit_once(' ')
+                .unwrap()
+                .0
+                .to_owned()
+        })
+        .collect();
+    assert_ne!(out.status.code(), Some(0), "failing: {}", show(&out));
+    assert_eq!(
+        lines,
+        ["time: fmt-check", "time: total"],
+        "failing: {}",
+        show(&out)
     );
 }
 

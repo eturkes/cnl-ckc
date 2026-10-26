@@ -346,3 +346,13 @@ fn certify_runs_the_selected_swipl_under_its_version_guard() {
         String::from_utf8_lossy(&out.stderr)
     );
 }
+
+#[test]
+fn help_answers_with_the_usage_on_stdout() {
+    for flag in ["--help", "-h", "help"] {
+        let out = ckc(&[flag]);
+        assert_eq!(out.status.code(), Some(0), "{flag}");
+        assert!(out.stdout.starts_with(b"usage: ckc "), "{flag}");
+        assert!(out.stderr.is_empty(), "{flag}");
+    }
+}
