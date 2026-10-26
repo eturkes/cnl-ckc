@@ -11,6 +11,7 @@ compendium-org-class	check_compendium_orgs	1
 compendium-row-status	check_compendium_rows	1
 compendium-issuer-unknown	check_compendium_rows	1
 compendium-issuer-cpgs-no	check_compendium_rows	1
+compendium-sweep-count	check_compendium_rows	1
 agent-law-ignore	check_agent_law	1
 agent-law-import	check_agent_law	1
 agent-law-deferred	check_agent_law	1

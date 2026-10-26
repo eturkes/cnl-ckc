@@ -86,6 +86,13 @@ fn swept(s: &str) -> bool {
             .all(|c| decimal(*c).is_some())
         && !c[11..].contains(&'\n')
 }
+// A swept org's manifest `… <n> index entries -> <e> eligible + <x> excluded` → (e, x).
+fn manifest(s: &str) -> Option<(usize, usize)> {
+    let (_, rest) = s.rsplit_once(" index entries -> ")?;
+    let (e, rest) = rest.split_once(" eligible + ")?;
+    let x = rest.strip_suffix(" excluded")?;
+    Some((e.parse().ok()?, x.parse().ok()?))
+}
 fn read_compendium(path: &str) -> Result<String> {
     let p = Path::new(path);
     if p.is_symlink() {
@@ -167,6 +174,7 @@ pub(super) fn check() -> Result {
     let org_count = rows.len();
     let mut classes = BTreeMap::new();
     let mut cpgs_of = BTreeMap::new();
+    let mut sweeps = BTreeMap::new();
     let mut org_remaining = 0;
     let mut keys = vec![];
     for r in rows {
@@ -215,6 +223,9 @@ pub(super) fn check() -> Result {
         }
         classes.insert(org, ci);
         cpgs_of.insert(org, cpgs);
+        if let Some(counts) = manifest(sweep) {
+            sweeps.insert(org, counts);
+        }
         keys.push(((ci, pi, fold(org)), org));
         if cpgs != "no" && ["pending", "-"].contains(&sweep) {
             org_remaining += 1;
@@ -252,6 +263,7 @@ pub(super) fn check() -> Result {
     let row_count = rows.len();
     let (mut active, mut remaining, mut provisional) = (0, 0, 0);
     let (mut seen, mut urls, mut keys) = (BTreeSet::new(), BTreeMap::new(), vec![]);
+    let mut rows_of: BTreeMap<&str, (usize, usize)> = BTreeMap::new();
     for r in rows {
         let (org, title, url, a, s, notes) = (r[0], r[1], r[2], r[3], r[4], r[5]);
         if !access(a) {
@@ -325,6 +337,8 @@ pub(super) fn check() -> Result {
                 }
                 _ => (),
             }
+            let n = rows_of.entry(issuer).or_default();
+            if excluded { n.1 += 1 } else { n.0 += 1 }
         }
         if a == "unverified" && !(prov || excluded) {
             return Err(violation(
@@ -363,6 +377,17 @@ pub(super) fn check() -> Result {
             (usize::from(a != "open"), class, fold(org), -y, folded),
             title,
         ));
+    }
+    // A sweep manifest's <e> + <x> count the org's rows (co-issuance = issuance), so the
+    // provenance claim cannot drift from the table (compendium.md § Organizations).
+    for (org, (e, x)) in &sweeps {
+        let (rows_e, rows_x) = rows_of.get(org).copied().unwrap_or_default();
+        if (*e, *x) != (rows_e, rows_x) {
+            return Err(violation(
+                "compendium-sweep",
+                format!("{org}: manifest {e} eligible + {x} excluded, rows {rows_e} + {rows_x}"),
+            ));
+        }
     }
     if active > 1 {
         return Err(violation(

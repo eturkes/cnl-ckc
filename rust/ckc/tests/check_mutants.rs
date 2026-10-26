@@ -195,6 +195,12 @@ fn mutate(t: &Path, name: &str) {
             "Advisory Committee on Immunization Practices\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
             "Advisory Committee on Immunization Practices + Agency for Healthcare Research and Quality\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
         ),
+        "compendium-sweep-count" => replace(
+            t,
+            ".agent/compendium.md",
+            b"-> 67 eligible + 3 excluded",
+            b"-> 68 eligible + 3 excluded",
+        ),
         "agent-law-ignore" => replace(t, ".gitignore", b"/CLAUDE.local.md\n", b""),
         "agent-law-import" => replace(
             t,
@@ -486,7 +492,7 @@ fn check_mutant_battery() {
     let (files, c1) = (count("temporal-v3-"), count("vocabulary-"));
     assert_eq!(
         rows.len() - files - c1,
-        62,
+        63,
         "tests/check-mutants legacy row count"
     );
     let q13 = count("temporal-v3-q13-");
