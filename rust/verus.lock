@@ -1,7 +1,7 @@
 key	value
-verus_release	release/0.2026.10.18.7d82994
-verus_asset	verus-0.2026.10.18.7d82994-x86-linux.zip
-verus_asset_sha256	e9af03732d4bdd32b93a8fcf471706739c24c1473fa5086618d96c47237845dd
-verus_asset_url	https://github.com/verus-lang/verus/releases/download/release%2F0.2026.10.18.7d82994/verus-0.2026.10.18.7d82994-x86-linux.zip
+verus_release	release/0.2026.10.26.d17fbd0
+verus_asset	verus-0.2026.10.26.d17fbd0-x86-linux.zip
+verus_asset_sha256	361674d05f0c1b2c9c3f4d5bc56a8fb2ab9241ed0cceca27780668c292bb4940
+verus_asset_url	https://github.com/verus-lang/verus/releases/download/release%2F0.2026.10.26.d17fbd0/verus-0.2026.10.26.d17fbd0-x86-linux.zip
 rustc_toolchain	1.99.1-x86_64-unknown-linux-gnu
 z3_version	4.16.0

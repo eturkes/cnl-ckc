@@ -47,11 +47,12 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 ## Tasks
 
 - [ ] Q1 Kani engine + trace harnesses: waits on its re-open trigger (user ruling) = the next `rust/kani.lock` bump → rerun `engine_answer_tiny` ≤1200 s (the N8 bump's rerun: rc 124 at 1200 s).
-- [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): #3147, #3158, #3159, #3160 fixed + canary cases in the N8 bump; waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3154–#3157 (#3157 closed on Verus main by PR 3271, unreleased).
+- [ ] N17 Verus soundness issues filed 2026-10-12/13 (queue-run find): #3147, #3158, #3159, #3160 fixed + canary cases in the N8 bump, #3155, #3156, #3157 in the REV bump (0.2026.10.26); waits on its re-open trigger = a stable Verus release fixing any of verus-lang/verus #3144, #3146, #3154.
 - [ ] Q6 corpus rounds to exhaustion: separate corpus-prompt sessions (user ruling); the CDC guideline until the first publication, other guidelines after it (Publication scope).
 - [ ] REV1 code review check set: `.agent/review.md` § REV (24 baseline + 65 lens × module + 24 spec-fit + 132 conformance rows), committed before the first read.
 - [ ] REV2 baseline (rows B-*): HEAD's gate record + each runnable `Artifacts` entry driven by its run command; the REFERENCE § Releasing dry run first.
 - [ ] REV3 lens pass (rows C/K/A/S/V × module, F, L): `reviewer` teammates' tables = leads, MAIN rules each row; each defect class = its own fix unit appended here (fast gate + `just ci <class>` green).
+- [ ] REV-V Verus release/0.2026.10.26.d17fbd0 (B-15 drift; N17 trigger: #3155–#3157 fixed): `just bump-verus`, canary shapes + the `run` expectation, scans, gate via `just ci`.
 - [ ] REV4 user questions: one `AskUserQuestion` once the agent-side work is done, then the fixes it unblocks; a closing `AskUserQuestion` for later finds (approve or leave); whatever stays owed → `.agent/deferred.md`.
 - [ ] REV5 close: every REV row a verdict, ledger → `.agent/archive/review-rev.md`, ticked rows cleared, rules upkeep (`CLAUDE.md` `Session flow`), full gate green on a clean tree at the closing commit.
 - [ ] SGW formula-rule singleton warnings (user ruling, SUP orientation: its own unit after SUP, before RC1): SWI-Prolog warns `Singleton variables` 65 times loading `cdc2022-opioid-s33-01` (56) + `-s42-15` (9): a formula rule's non-target clauses share the rule body, whose computed outputs occur once in them; REFERENCE promises warning-free co-loading, and `consumer_recipe` fails only on `ERROR` lines; accept = SWI loads every committed document + consumer world with empty stderr, and `consumer_recipe` fails on any warning line (red on the pre-fix corpus).

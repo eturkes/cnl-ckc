@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "verus_builtin_macros"
-version = "0.0.0-2026-10-18-0147"
+version = "0.0.0-2026-10-25-0158"
 build = false
 autolib = false
 autobins = false

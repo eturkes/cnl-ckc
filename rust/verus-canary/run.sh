@@ -39,7 +39,7 @@ manifest_error() {
         [[ "$name" =~ ^[a-z][a-z0-9_]*$ && -z ${seen[$name]+set} ]] || manifest_error "$line"
         [[ "$upstream" =~ ^([0-9]+|-)$ ]] || manifest_error "$line"
         case "$expect" in
-            verify | partial) [[ "$diagnostic" == - ]] || manifest_error "$line" ;;
+            verify | partial | run) [[ "$diagnostic" == - ]] || manifest_error "$line" ;;
             reject) [[ "$diagnostic" != - && "$diagnostic" != *$'\r'* ]] || manifest_error "$line" ;;
             *) manifest_error "$line" ;;
         esac
@@ -63,6 +63,8 @@ for i in "${!names[@]}"; do
     # The upstream cases use uninterpreted functions; --no-cheating rejects those declarations,
     # so verifier flags come per case from a first line `// canary-args: <flag>...`.
     read -ra args <<< "$(sed -n '1s#^// canary-args: ##p' "$dir/$name.rs")"
+    # A fix that only changes the erased program (the binary) shows when the binary runs.
+    [[ "$expect" == run ]] && args+=(--compile -o "$logs/$name.bin")
     timeout --kill-after=5s "$case_timeout" "$verus" --color never "${args[@]}" "$dir/$name.rs" > "$log" 2>&1
     rc=$?
     got=error
@@ -83,7 +85,7 @@ for i in "${!names[@]}"; do
             message = $0
             sub(/^error(\[E[0-9]+\])?: /, "", message)
             if (diagnostic != "-" && message != $0 && index(message, diagnostic) == 1) expected++
-            else if (diagnostic == "-" && $0 ~ /^error: (assert_by_compute_only failed to simplify down to true|assertion failed)/) expected++
+            else if (diagnostic == "-" && $0 ~ /^error: (`assert_by_compute_only` failed to simplify down to true|assertion failed)/) expected++
             else if ($0 !~ /^error: aborting due to [0-9]+ previous errors?([; ].*)?$/) unexpected++
         }
         /panicked at|internal compiler error|fatal runtime error/ { unexpected++ }
@@ -94,8 +96,13 @@ for i in "${!names[@]}"; do
     case $rc in
         125|126|127) launch_failed=1 ;;
     esac
+    if [[ "$expect:$got" == run:verified ]]; then
+        timeout --kill-after=5s "$case_timeout" "$logs/$name.bin" >> "$log" 2>&1
+        run_rc=$?
+        if [[ $run_rc == 0 ]]; then got=ran; else got="run-failed($run_rc)"; fi
+    fi
     status=MISMATCH
-    if [[ "$expect:$got" == verify:verified || "$expect:$got" == partial:partial || "$expect:$got" == reject:rejected-with-diagnostic ]]; then
+    if [[ "$expect:$got" == verify:verified || "$expect:$got" == partial:partial || "$expect:$got" == reject:rejected-with-diagnostic || "$expect:$got" == run:ran ]]; then
         status=ok
     else
         ((mismatched += 1))
