@@ -166,6 +166,7 @@ pub(super) fn check() -> Result {
     }
     let org_count = rows.len();
     let mut classes = BTreeMap::new();
+    let mut cpgs_of = BTreeMap::new();
     let mut org_remaining = 0;
     let mut keys = vec![];
     for r in rows {
@@ -213,6 +214,7 @@ pub(super) fn check() -> Result {
             ));
         }
         classes.insert(org, ci);
+        cpgs_of.insert(org, cpgs);
         keys.push(((ci, pi, fold(org)), org));
         if cpgs != "no" && ["pending", "-"].contains(&sweep) {
             org_remaining += 1;
@@ -305,6 +307,25 @@ pub(super) fn check() -> Result {
         }
         let prov = s.starts_with("provisional(");
         let excluded = s.starts_with("excluded(");
+        // compendium.md § Organizations: every named issuer (co-issuance = issuance) holds
+        // an organization row, and an eligible row names no issuer ruled `CPGs=no`.
+        for issuer in org.split('+').map(strip) {
+            match cpgs_of.get(issuer) {
+                None => {
+                    return Err(violation(
+                        "compendium-issuer",
+                        format!("issuer holds no organization row: {issuer} ({title})"),
+                    ));
+                }
+                Some(&"no") if !excluded => {
+                    return Err(violation(
+                        "compendium-issuer",
+                        format!("eligible row names CPGs=no issuer: {issuer} ({title})"),
+                    ));
+                }
+                _ => (),
+            }
+        }
         if a == "unverified" && !(prov || excluded) {
             return Err(violation(
                 "compendium-row",
@@ -337,8 +358,7 @@ pub(super) fn check() -> Result {
             ));
         }
         urls.insert(url, folded.clone());
-        let first = strip(org.split('+').next().unwrap_or(""));
-        let class = classes.get(first).copied().unwrap_or(2);
+        let class = classes[strip(org.split('+').next().unwrap_or(""))];
         keys.push((
             (usize::from(a != "open"), class, fold(org), -y, folded),
             title,

@@ -183,6 +183,18 @@ fn mutate(t: &Path, name: &str) {
             let row = lines(&fs::read(t.join("vendor/clex/MANIFEST.sha256")).unwrap())[0].clone();
             replace(t, "vendor/clex/MANIFEST.sha256", &row, &flip_first(&row));
         }
+        "compendium-issuer-unknown" => replace(
+            t,
+            ".agent/compendium.tsv",
+            "Advisory Committee on Immunization Practices\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
+            "Advisory Committee on Immunization Practices + A-Reviewer-Unknown\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
+        ),
+        "compendium-issuer-cpgs-no" => replace(
+            t,
+            ".agent/compendium.tsv",
+            "Advisory Committee on Immunization Practices\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
+            "Advisory Committee on Immunization Practices + Agency for Healthcare Research and Quality\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
+        ),
         "fork-date-invalid" => replace(
             t,
             "vendor/ape/README.md",
@@ -449,7 +461,7 @@ fn check_mutant_battery() {
     let (files, c1) = (count("temporal-v3-"), count("vocabulary-"));
     assert_eq!(
         rows.len() - files - c1,
-        54,
+        56,
         "tests/check-mutants legacy row count"
     );
     let q13 = count("temporal-v3-q13-");
