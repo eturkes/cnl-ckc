@@ -397,12 +397,18 @@ build-static:
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="--remap-path-prefix={{ ROOT }}=cnl-ckc" \
         cargo build --release --locked --offline -q -p ckc --target x86_64-unknown-linux-musl
     bin=target/x86_64-unknown-linux-musl/release/ckc
-    if readelf -lW "$bin" | grep -q INTERP || readelf -dW "$bin" | grep -q NEEDED; then
+    # Each inspection is a checked assignment: inside an `if`, a failed readelf (or a
+    # grep -q that quits early, SIGPIPE under pipefail) reads as "no match" = green.
+    prog=$(readelf -lW "$bin"); dyn=$(readelf -dW "$bin")
+    if grep -q INTERP <<< "$prog" || grep -q NEEDED <<< "$dyn"; then
         echo "build-static: $bin is dynamically linked" >&2; exit 1
     fi
-    if grep -qF "{{ ROOT }}" "$bin"; then
-        echo "build-static: $bin holds the checkout path {{ ROOT }}" >&2; exit 1
-    fi
+    rc=0; grep -qF "{{ ROOT }}" "$bin" || rc=$?
+    case $rc in
+        0) echo "build-static: $bin holds the checkout path {{ ROOT }}" >&2; exit 1 ;;
+        1) ;;
+        *) echo "build-static: cannot search $bin for the checkout path (grep rc $rc)" >&2; exit 1 ;;
+    esac
     echo "gate: build-static ok"
 
 # Reviewer program of a release (docs/REFERENCE.md § Releasing): the static ckc as

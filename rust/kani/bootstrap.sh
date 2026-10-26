@@ -75,7 +75,15 @@ BOOTSTRAP_TOOLCHAIN=$(readlink -f -- "$BOOTSTRAP_TOOLCHAIN") || fail 'bootstrap 
 BOOTSTRAP_CARGO="$BOOTSTRAP_TOOLCHAIN/bin/cargo"
 BOOTSTRAP_RUSTC="$BOOTSTRAP_TOOLCHAIN/bin/rustc"
 [[ -x "$BOOTSTRAP_CARGO" && -x "$BOOTSTRAP_RUSTC" ]] || fail 'bootstrap toolchain missing; run just tools'
-[[ "$("$BOOTSTRAP_RUSTC" --version)" == "${value[bootstrap_rustc_version]}" ]] || fail 'bootstrap rustc version mismatch'
+# A version probe counts only when it exits 0: inside `[[ … ]]` its status is lost, so a
+# tool that prints the pinned version and then fails would pass.
+first_line_is() { # <want> <cmd…>: cmd exits 0 and its first stdout line is <want>
+    local want=$1 out
+    shift
+    out=$("$@" 2>/dev/null) || return 1
+    [[ "${out%%$'\n'*}" == "$want" ]]
+}
+first_line_is "${value[bootstrap_rustc_version]}" "$BOOTSTRAP_RUSTC" --version || fail 'bootstrap rustc version mismatch'
 
 digest() {
     local actual
@@ -111,7 +119,7 @@ installed_hash=
 
 TOOLCHAIN="$PREFIX/toolchain"
 if [[ "$installed_hash" != "$lock_hash" || ! -x "$TOOLCHAIN/bin/rustc" ]] \
-    || [[ "$("$TOOLCHAIN/bin/rustc" --version 2>/dev/null || true)" != "${value[rustc_version]}" ]]; then
+    || ! first_line_is "${value[rustc_version]}" "$TOOLCHAIN/bin/rustc" --version; then
     extract="$STATE/toolchain-extract"; candidate="$STATE/toolchain-candidate"
     rm -rf -- "$extract" "$candidate"
     mkdir -p "$extract" "$candidate"
@@ -125,7 +133,7 @@ if [[ "$installed_hash" != "$lock_hash" || ! -x "$TOOLCHAIN/bin/rustc" ]] \
         tar -xJf "$ASSETS/$asset" -C "$extract"
         sh "$extract/$root/install.sh" --prefix="$candidate" --disable-ldconfig >> "$LOGS/toolchain-install.log" 2>&1
     done
-    [[ "$("$candidate/bin/rustc" --version)" == "${value[rustc_version]}" ]] || fail 'reconstructed rustc version mismatch'
+    first_line_is "${value[rustc_version]}" "$candidate/bin/rustc" --version || fail 'reconstructed rustc version mismatch'
     rm -rf -- "$TOOLCHAIN"
     mv -- "$candidate" "$TOOLCHAIN"
     rm -rf -- "$extract"
@@ -168,22 +176,18 @@ wrapper_ok || fail 'cargo-kani version mismatch'
 install="$KANI_HOME/kani-${value[kani_version]}"
 # `--version` line 1 = `Kani Rust Verifier <v> (standalone|cargo plugin)`, line 2 = the CBMC version.
 KANI_ID="Kani Rust Verifier ${value[kani_version]}"
-first_line() {
-    local out
-    out=$("$@" 2>/dev/null) || true
-    printf '%s' "${out%%$'\n'*}"
-}
 if [[ "$installed_hash" != "$lock_hash" || ! -x "$install/bin/kani-driver" || ! -L "$install/toolchain" ]] \
     || [[ "$(readlink -f -- "$install/toolchain" 2>/dev/null || true)" != "$TOOLCHAIN" ]] \
-    || [[ "$(first_line "$install/bin/kani-driver" --version)" != "$KANI_ID (standalone)" ]]; then
+    || ! first_line_is "$KANI_ID (standalone)" "$install/bin/kani-driver" --version; then
     rm -rf -- "$install"
     cargo-kani setup --use-local-bundle "$ASSETS/${value[bundle_asset]}" \
         --use-local-toolchain "$TOOLCHAIN" > "$LOGS/setup.log" 2>&1
 fi
-[[ "$(first_line cargo-kani --version)" == "$KANI_ID (cargo plugin)" ]] || fail 'final cargo-kani version mismatch'
-[[ "$(first_line kani --version)" == "$KANI_ID (standalone)" ]] || fail 'final kani version mismatch'
-[[ "$("$install/bin/cbmc" --version)" == "${value[cbmc_version]}"* ]] || fail 'CBMC version mismatch'
-[[ "$("$install/bin/kissat" --version)" == "${value[kissat_version]}" ]] || fail 'Kissat version mismatch'
+first_line_is "$KANI_ID (cargo plugin)" cargo-kani --version || fail 'final cargo-kani version mismatch'
+first_line_is "$KANI_ID (standalone)" kani --version || fail 'final kani version mismatch'
+cbmc=$("$install/bin/cbmc" --version) || fail 'CBMC version probe failed'
+[[ "$cbmc" == "${value[cbmc_version]}"* ]] || fail 'CBMC version mismatch'
+first_line_is "${value[kissat_version]}" "$install/bin/kissat" --version || fail 'Kissat version mismatch'
 printf '%s\n' "$lock_hash" > "$PREFIX/lock.sha256"
 if [[ "$mode" == --env ]]; then
     for key in CKC_KANI_BOOTSTRAP_RUSTUP_HOME CARGO_HOME RUSTUP_HOME KANI_HOME CARGO_NET_OFFLINE PATH; do

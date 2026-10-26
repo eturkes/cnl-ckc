@@ -1542,3 +1542,204 @@ fn test_recipe_reports_every_failing_binary() {
         show(&out)
     );
 }
+
+// build-static inspects the static binary: a failed readelf, a grep that cannot read
+// the binary, or dynamic markers ahead of a long readelf listing (an early `grep -q`
+// exit = SIGPIPE under pipefail) must each fail the recipe, never print its green line.
+#[test]
+fn build_static_inspection_failures_fail_the_recipe() {
+    let s = scratch("build-static");
+    let text = justfile();
+    let case = |name: &str, justfile: &str, readelf: &str, grep_fails: bool| {
+        let fx = Fixture::new(&s, name, justfile);
+        put_exec(&fx.mock.join("cargo"), "#!/usr/bin/env bash\nexit 0\n");
+        put(
+            &fx.root
+                .join("rust/target/x86_64-unknown-linux-musl/release/ckc"),
+            "fixture binary\n",
+        );
+        put_exec(&fx.mock.join("readelf"), readelf);
+        if grep_fails {
+            put_exec(
+                &fx.mock.join("grep"),
+                "#!/usr/bin/env bash\n[ \"$1\" != -qF ] || exit 2\nexec /usr/bin/grep \"$@\"\n",
+            );
+        }
+        fx.run("build-static", &[])
+    };
+    let quiet = "#!/usr/bin/env bash\necho 'ELF Header:'\n";
+    let fails = "#!/usr/bin/env bash\nexit 23\n";
+    let long = "#!/usr/bin/env bash\ncase \"$1\" in -lW) echo '  INTERP' ;; -dW) echo ' (NEEDED)' ;; esac\nfor ((i = 0; i < 20000; i++)); do echo 'ELF filler line'; done\n";
+    let green = |out: &Output| {
+        out.status.code() == Some(0) && out.stdout.ends_with(b"gate: build-static ok\n")
+    };
+    let out = case("control", &text, quiet, false);
+    assert!(green(&out), "control: {}", show(&out));
+    for (name, readelf, grep_fails) in [
+        ("readelf-fails", fails, false),
+        ("grep-fails", quiet, true),
+        ("dynamic-long", long, false),
+    ] {
+        let out = case(name, &text, readelf, grep_fails);
+        assert!(
+            out.status.code() != Some(0) && !out.stdout.ends_with(b"gate: build-static ok\n"),
+            "{name} passed: {}",
+            show(&out)
+        );
+    }
+    let planted = plant(
+        &text,
+        &[(
+            "    prog=$(readelf -lW \"$bin\"); dyn=$(readelf -dW \"$bin\")\n    if grep -q INTERP <<< \"$prog\" || grep -q NEEDED <<< \"$dyn\"; then\n",
+            "    if readelf -lW \"$bin\" | grep -q INTERP || readelf -dW \"$bin\" | grep -q NEEDED; then\n",
+        )],
+    );
+    let out = case("planted", &planted, fails, false);
+    assert!(
+        green(&out),
+        "the planted pre-fix build-static no longer slips through: {}",
+        show(&out)
+    );
+}
+
+// rust/kani/bootstrap.sh over a cached install: a version probe that prints the pinned
+// version and then exits 23 must fail the script, never stamp `kani: <v> ok`.
+#[test]
+fn kani_bootstrap_version_probes_fail_the_script() {
+    let s = scratch("kani-bootstrap");
+    let script = fs::read_to_string(root().join("rust/kani/bootstrap.sh")).unwrap();
+    let base_lock = fs::read_to_string(root().join("rust/kani.lock")).unwrap();
+    let data = b"fixture pinned bytes\n";
+    let digest = hex(data);
+    let lock: String = base_lock
+        .lines()
+        .map(|l| {
+            let mut f: Vec<String> = l.split('\t').map(str::to_owned).collect();
+            if f[0].ends_with("_sha256") {
+                f[1] = digest.clone();
+            }
+            if f[0] == "vendor_crate" {
+                f[3] = digest.clone();
+            }
+            f.join("\t") + "\n"
+        })
+        .collect();
+    let value = |key: &str| -> String {
+        lock.lines()
+            .find_map(|l| l.strip_prefix(&format!("{key}\t")).map(str::to_owned))
+            .unwrap()
+    };
+    let case = |name: &str, script: &str, failing: &str| {
+        let fx = Fixture::new(&s, name, "");
+        put_exec(&fx.root.join("rust/kani/bootstrap.sh"), script);
+        put(&fx.root.join("rust/kani.lock"), &lock);
+        put(
+            &fx.root.join("rust/verus.lock"),
+            fs::read(root().join("rust/verus.lock")).unwrap(),
+        );
+        let prefix = fx.toolchain.join("kani");
+        for l in lock.lines() {
+            let f: Vec<&str> = l.split('\t').collect();
+            if f[0].ends_with("_asset") {
+                put(&prefix.join("dl").join(f[1]), data);
+            }
+            if f[0] == "vendor_crate" {
+                put(&prefix.join(format!("dl/{}-{}.crate", f[1], f[2])), data);
+            }
+        }
+        put(
+            &prefix.join("lock.sha256"),
+            format!("{}\n", hex(lock.as_bytes())),
+        );
+        let tc = fx
+            .toolchain
+            .join("rustup/toolchains")
+            .join(value("bootstrap_rustc_toolchain"))
+            .join("bin");
+        probe(
+            &tc.join("rustc"),
+            &value("bootstrap_rustc_version"),
+            failing == "bootstrap-rustc",
+        );
+        put_exec(&tc.join("cargo"), "#!/usr/bin/env bash\nexit 97\n");
+        probe(
+            &prefix.join("toolchain/bin/rustc"),
+            &value("rustc_version"),
+            failing == "installed-rustc",
+        );
+        let id = format!("Kani Rust Verifier {}", value("kani_version"));
+        put(
+            &prefix.join("wrapper/.crates.toml"),
+            format!(
+                "\"kani-verifier {} (path+file:///fixture)\" = [\"cargo-kani\", \"kani\"]\n",
+                value("kani_version")
+            ),
+        );
+        probe(
+            &prefix.join("wrapper/bin/cargo-kani"),
+            &format!("{id} (cargo plugin)"),
+            failing == "cargo-kani",
+        );
+        probe(
+            &prefix.join("wrapper/bin/kani"),
+            &format!("{id} (standalone)"),
+            failing == "kani",
+        );
+        let installed = prefix.join(format!("kani-home/kani-{}", value("kani_version")));
+        probe(
+            &installed.join("bin/kani-driver"),
+            &format!("{id} (standalone)"),
+            failing == "kani-driver",
+        );
+        probe(
+            &installed.join("bin/cbmc"),
+            &value("cbmc_version"),
+            failing == "cbmc",
+        );
+        probe(
+            &installed.join("bin/kissat"),
+            &value("kissat_version"),
+            failing == "kissat",
+        );
+        std::os::unix::fs::symlink(prefix.join("toolchain"), installed.join("toolchain")).unwrap();
+        fx.command(Path::new("/bin/bash"))
+            .arg(fx.root.join("rust/kani/bootstrap.sh"))
+            .env("RUSTUP_HOME", fx.toolchain.join("rustup"))
+            .output()
+            .unwrap()
+    };
+    let ok = format!("kani: {} ok\n", value("kani_version"));
+    let out = case("control", &script, "");
+    assert_eq!(out.status.code(), Some(0), "control: {}", show(&out));
+    assert_eq!(String::from_utf8_lossy(&out.stdout), ok);
+    for failing in [
+        "bootstrap-rustc",
+        "installed-rustc",
+        "kani-driver",
+        "cargo-kani",
+        "kani",
+        "cbmc",
+        "kissat",
+    ] {
+        let out = case(failing, &script, failing);
+        assert!(
+            out.status.code() != Some(0) && !out.stdout.ends_with(ok.as_bytes()),
+            "{failing}: a failed version probe passed: {}",
+            show(&out)
+        );
+    }
+    let planted = plant(
+        &script,
+        &[(
+            "first_line_is \"$KANI_ID (cargo plugin)\" cargo-kani --version || fail 'final cargo-kani version mismatch'\n",
+            "[[ \"$(cargo-kani --version 2>/dev/null || true)\" == \"$KANI_ID (cargo plugin)\" ]] || fail 'final cargo-kani version mismatch'\n",
+        )],
+    );
+    let out = case("planted", &planted, "cargo-kani");
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "the planted pre-fix bootstrap no longer slips through: {}",
+        show(&out)
+    );
+}
