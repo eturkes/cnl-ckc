@@ -706,6 +706,7 @@ mobile:
     bin="${CKC_BIN:-}"
     if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
     w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    "{{ TOOLCHAIN }}/bin/node" tools/cdp-pipe-test.mjs
     probe() { "{{ TOOLCHAIN }}/bin/node" tools/ui-mobile-probe.mjs "{{ TOOLCHAIN }}/bin/chrome-headless-shell" "$1"; }
     "$bin" ui render "$w/pages" >/dev/null
     probe "$w/pages"

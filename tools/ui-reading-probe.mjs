@@ -2,11 +2,10 @@
 // node ui-reading-probe.mjs <pinned headless browser> <render-dir>...
 // node ui-reading-probe.mjs --strip-handler <render-dir> <red-dir>
 // rc 0 = pass; 1 = failed transitions; 2 = usage, filesystem, browser, or strip-anchor failure.
-import { spawn } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { cpSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { open } from "./cdp-pipe.mjs";
 
 const fail = (why) => { console.error(`ui-reading: ${why}`); process.exit(2); };
 const walk = (dir) => readdirSync(dir).flatMap((name) => {
@@ -82,46 +81,7 @@ if (missing.length) {
   process.exit(1);
 }
 
-const profile = mkdtempSync(join(tmpdir(), "ui-reading-"));
-const chrome = spawn(browser, ["--headless", "--no-sandbox", "--hide-scrollbars", "--no-first-run", "--no-startup-window", "--remote-debugging-pipe", `--user-data-dir=${profile}`], { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] });
-let stderr = "", stopped = false;
-chrome.stderr.on("data", (data) => { stderr += data; });
-const quit = (why) => {
-  if (stopped) return;
-  stopped = true;
-  chrome.kill("SIGKILL");
-  rmSync(profile, { recursive: true, force: true });
-  fail(`${why}${stderr ? `\n${stderr.trimEnd()}` : ""}`);
-};
-for (const stream of [chrome, chrome.stdio[3], chrome.stdio[4]]) stream.on("error", (error) => quit(`browser: ${error.message}`));
-chrome.on("exit", (code, signal) => quit(`browser exited (${signal ?? code})`));
-let next = 0, buffer = "";
-const pending = new Map(), waiters = [];
-chrome.stdio[4].on("data", (data) => {
-  buffer += data;
-  for (let end; (end = buffer.indexOf("\0")) >= 0;) {
-    let message;
-    try { message = JSON.parse(buffer.slice(0, end)); } catch (error) { quit(error.message); return; }
-    buffer = buffer.slice(end + 1);
-    if (message.id !== undefined) {
-      const request = pending.get(message.id);
-      if (!request) { quit(`unexpected CDP id ${message.id}`); return; }
-      const [ok, ko, method] = request;
-      pending.delete(message.id);
-      message.error ? ko(new Error(`${method}: ${message.error.message}`)) : ok(message.result);
-    } else {
-      const i = waiters.findIndex((w) => w.method === message.method && w.session === message.sessionId);
-      if (i >= 0) waiters.splice(i, 1)[0].ok(message.params);
-    }
-  }
-});
-const timed = (promise, what) => Promise.race([promise, new Promise((_, ko) => setTimeout(() => ko(new Error(`${what}: timeout`)), 60000).unref())]);
-const send = (method, params = {}, sessionId) => timed(new Promise((ok, ko) => {
-  const id = ++next;
-  pending.set(id, [ok, ko, method]);
-  chrome.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId && { sessionId }) }) + "\0");
-}), method);
-const event = (method, session) => new Promise((ok) => waiters.push({ method, session, ok }));
+const { send, event, timed, quit, close } = open(browser, "ui-reading-", fail);
 let session, transitions = 0;
 const failures = [];
 class TransitionFailure extends Error {}
@@ -352,13 +312,7 @@ try {
     }
   }
 } catch (error) { quit(error.message); }
-for (const stream of [chrome, chrome.stdio[3], chrome.stdio[4]]) stream.removeAllListeners("error").on("error", () => {});
-chrome.removeAllListeners("exit");
-const exited = new Promise((ok) => chrome.once("exit", ok));
-await send("Browser.close").catch(() => {});
-await timed(exited, "browser close").catch(() => chrome.kill("SIGKILL"));
-stopped = true;
-rmSync(profile, { recursive: true, force: true });
+await close();
 for (const failure of failures) console.log(`bad: ${failure}`);
 console.log(`ui-reading: ${transitions} transitions, ${failures.length} failures`);
 process.exit(failures.length === 0 ? 0 : 1);

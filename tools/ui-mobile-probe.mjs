@@ -2,14 +2,13 @@
 // in a 390x844 mobile-emulated page (mobile viewport, touch, DPR 3); a page fails unless its
 // clientWidth is 390 (the viewport meta applies), it has no page-level sideways scroll, and
 // every table wider than its box brings its last column fully into view at scrollLeft = max.
-// The browser runs over its DevTools pipe (fds 3 + 4, NUL-delimited JSON), so the probe needs
-// node alone:  node tools/ui-mobile-probe.mjs <headless browser> <dir>...
+// The browser runs over its DevTools pipe (fds 3 + 4, NUL-delimited JSON; tools/cdp-pipe.mjs),
+// so the probe needs node alone:  node tools/ui-mobile-probe.mjs <headless browser> <dir>...
 //   → rc 0 | 1 (bad pages listed) | 2 (usage, no pages, browser failure)
-import { spawn } from "node:child_process";
-import { mkdtempSync, readdirSync, rmSync, statSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { open } from "./cdp-pipe.mjs";
 
 const fail = (why) => {
   console.error(`ui-mobile: ${why}`);
@@ -25,67 +24,7 @@ const walk = (d) =>
 const files = dirs.flatMap(walk).sort();
 if (files.length === 0) fail("no .html pages under the given directories");
 
-// --hide-scrollbars = Playwright's headless default: a classic scrollbar would narrow
-// clientWidth. --no-sandbox: hosts that restrict unprivileged user namespaces (the Ubuntu CI
-// runners) cannot start the sandbox; the inputs are this repo's own rendered pages.
-const profile = mkdtempSync(join(tmpdir(), "ui-mobile-"));
-const chrome = spawn(
-  browser,
-  [
-    "--headless",
-    "--no-sandbox",
-    "--hide-scrollbars",
-    "--no-first-run",
-    "--no-startup-window",
-    "--remote-debugging-pipe",
-    `--user-data-dir=${profile}`,
-  ],
-  { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] },
-);
-let stderr = "";
-chrome.stderr.on("data", (b) => (stderr += b));
-const quit = (why) => {
-  chrome.kill("SIGKILL");
-  rmSync(profile, { recursive: true, force: true });
-  fail(`${why}${stderr ? `\n${stderr.trimEnd()}` : ""}`);
-};
-for (const x of [chrome, chrome.stdio[3], chrome.stdio[4]]) x.on("error", (e) => quit(`browser: ${e.message}`));
-chrome.on("exit", (code, signal) => quit(`browser exited (${signal ?? code})`));
-
-let next = 0, buffer = "";
-const pending = new Map(), waiters = [];
-chrome.stdio[4].on("data", (b) => {
-  buffer += b;
-  for (let i; (i = buffer.indexOf("\0")) >= 0; ) {
-    let m;
-    try {
-      m = JSON.parse(buffer.slice(0, i));
-    } catch (e) {
-      quit(`browser: ${e.message}`);
-    }
-    buffer = buffer.slice(i + 1);
-    if (m.id !== undefined) {
-      const [ok, ko, method] = pending.get(m.id);
-      pending.delete(m.id);
-      m.error ? ko(new Error(`${method}: ${m.error.message}`)) : ok(m.result);
-    } else {
-      const k = waiters.findIndex((w) => w.method === m.method && w.session === m.sessionId);
-      if (k >= 0) waiters.splice(k, 1)[0].ok(m.params);
-    }
-  }
-});
-const timed = (p, what) =>
-  Promise.race([p, new Promise((_, ko) => setTimeout(() => ko(new Error(`${what}: timeout`)), 60000).unref())]);
-const send = (method, params = {}, sessionId) =>
-  timed(
-    new Promise((ok, ko) => {
-      const id = ++next;
-      pending.set(id, [ok, ko, method]);
-      chrome.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId && { sessionId }) }) + "\0");
-    }),
-    method,
-  );
-const event = (method, session) => new Promise((ok) => waiters.push({ method, session, ok }));
+const { send, event, timed, quit, close } = open(browser, "ui-mobile-", fail);
 
 const measure = () => {
   const de = document.documentElement;
@@ -142,11 +81,6 @@ try {
 } catch (e) {
   quit(e.message);
 }
-for (const x of [chrome, chrome.stdio[3], chrome.stdio[4]]) x.removeAllListeners("error").on("error", () => {});
-chrome.removeAllListeners("exit");
-const exited = new Promise((ok) => chrome.once("exit", ok));
-await send("Browser.close").catch(() => {});
-await timed(exited, "browser close").catch(() => chrome.kill("SIGKILL"));
-rmSync(profile, { recursive: true, force: true });
+await close();
 console.log(`ui-mobile: ${files.length} pages, ${bad} bad, ${wide} wide tables`);
 process.exit(bad === 0 ? 0 : 1);
