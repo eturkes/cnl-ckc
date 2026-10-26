@@ -2,6 +2,9 @@
 fork-entry	check_fork_notices	1
 vendor-license	check_vendor_tree	1
 pristine-digest	check_pristine_tree	1
+fork-date-invalid	check_fork_notices	1
+fork-date-rewritten	check_fork_notices	1
+pristine-history-unread	check_pristine_tree	1
 adjudication-fixture-pin	check_adjudication_fixtures	1
 compendium-header-cr	check_compendium	1
 compendium-org-class	check_compendium_orgs	1

@@ -113,11 +113,15 @@ pub(super) fn git(args: &[&str]) -> Result<Vec<u8>> {
         .output()
         .map_err(|_| fail("git", "not executable: git"))?;
     if !out.status.success() {
-        return Err(Failure {
-            rc: out.status.code().unwrap_or(2) as u8,
-            out: vec![],
-            err: out.stderr,
-        });
+        let why = String::from_utf8_lossy(&out.stderr);
+        return Err(fail(
+            "git",
+            format!(
+                "{} failed: {}",
+                args.join(" "),
+                why.lines().next().unwrap_or("")
+            ),
+        ));
     }
     Ok(out.stdout)
 }

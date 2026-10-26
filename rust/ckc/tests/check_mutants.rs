@@ -183,6 +183,30 @@ fn mutate(t: &Path, name: &str) {
             let row = lines(&fs::read(t.join("vendor/clex/MANIFEST.sha256")).unwrap())[0].clone();
             replace(t, "vendor/clex/MANIFEST.sha256", &row, &flip_first(&row));
         }
+        "fork-date-invalid" => replace(
+            t,
+            "vendor/ape/README.md",
+            b"Modified 2026-08-06",
+            b"Modified 0000-99-99",
+        ),
+        "fork-date-rewritten" => replace(
+            t,
+            "vendor/ape/README.md",
+            b"Modified 2026-08-06",
+            b"Modified 2026-08-07",
+        ),
+        // A pristine tree is checked by content, so an unusable import commit must not
+        // stop the check before its digest law fires.
+        "pristine-history-unread" => {
+            replace(
+                t,
+                "vendor/clex/PROVENANCE",
+                b"Import commit: ace2759c713c547fdd3a26f10095b2c370e69e77",
+                b"Import commit: 0000000000000000000000000000000000000000",
+            );
+            let row = lines(&fs::read(t.join("vendor/clex/MANIFEST.sha256")).unwrap())[0].clone();
+            replace(t, "vendor/clex/MANIFEST.sha256", &row, &flip_first(&row));
+        }
         "adjudication-fixture-pin" => append(t, "tests/adjudication/green-absent-ledger/golden", b"\n"),
         "compendium-header-cr" => replace(
             t,
@@ -425,7 +449,7 @@ fn check_mutant_battery() {
     let (files, c1) = (count("temporal-v3-"), count("vocabulary-"));
     assert_eq!(
         rows.len() - files - c1,
-        51,
+        54,
         "tests/check-mutants legacy row count"
     );
     let q13 = count("temporal-v3-q13-");

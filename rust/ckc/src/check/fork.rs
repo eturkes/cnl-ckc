@@ -25,13 +25,38 @@ fn scan(path: &Path) -> Result<(String, String)> {
     }
     Ok(found)
 }
-fn dated(s: &str) -> bool {
-    s.as_bytes().windows(10).any(|b| {
-        b[4] == b'-'
-            && b[7] == b'-'
-            && b.iter()
-                .enumerate()
-                .all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
+// The first YYYY-MM-DD in `s` that names a calendar day (vendor.md: notice + ISO date).
+fn iso_date(s: &str) -> Option<&str> {
+    (0..s.len().saturating_sub(9)).find_map(|i| {
+        let d = s.get(i..i + 10)?;
+        let b = d.as_bytes();
+        let digits = b.iter().enumerate().all(|(k, c)| {
+            (k == 4 || k == 7) == (*c == b'-') && (k == 4 || k == 7 || c.is_ascii_digit())
+        });
+        if !digits {
+            return None;
+        }
+        let (y, m, day) = (
+            d[..4].parse::<u32>().ok()?,
+            d[5..7].parse::<u32>().ok()?,
+            d[8..].parse::<u32>().ok()?,
+        );
+        let leap = y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
+        let days = [
+            31,
+            if leap { 29 } else { 28 },
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
+        ];
+        (y > 0 && (1..=12).contains(&m) && day >= 1 && day <= days[m as usize - 1]).then_some(d)
     })
 }
 fn pristine(tree: &Path, tracked: &[String], first: &BTreeSet<String>) -> Result<usize> {
@@ -134,20 +159,6 @@ fn tree(path: &Path) -> Result<usize> {
         .map(str::to_owned)
         .collect();
     tracked.sort();
-    let log = git_text(&[
-        "log",
-        "--name-only",
-        "--pretty=format:",
-        &format!("{imported}..HEAD"),
-        "--",
-        &prefix,
-    ])?;
-    let diff = git_text(&["diff", "--name-only", "HEAD", "--", &prefix])?;
-    let touched: BTreeSet<&str> = lines(&log)
-        .chain(lines(&diff))
-        .map(strip)
-        .filter(|s| !s.is_empty())
-        .collect();
     let mut first = BTreeSet::new();
     for rel in field(&src, "First-party files")
         .split(',')
@@ -163,9 +174,24 @@ fn tree(path: &Path) -> Result<usize> {
         }
         first.insert(full);
     }
+    // A pristine tree is checked by content (lexicon.md): its history is never read.
     if field(&src, "Pristine") == "yes" {
         return pristine(path, &tracked, &first);
     }
+    let log = git_text(&[
+        "log",
+        "--name-only",
+        "--pretty=format:",
+        &format!("{imported}..HEAD"),
+        "--",
+        &prefix,
+    ])?;
+    let diff = git_text(&["diff", "--name-only", "HEAD", "--", &prefix])?;
+    let touched: BTreeSet<&str> = lines(&log)
+        .chain(lines(&diff))
+        .map(strip)
+        .filter(|s| !s.is_empty())
+        .collect();
     let mut count = 0;
     for item in tracked.iter().filter(|s| !first.contains(*s)) {
         let modified = touched.contains(item.as_str());
@@ -180,11 +206,32 @@ fn tree(path: &Path) -> Result<usize> {
                 };
                 return Err(violation("fork-notice", format!("{reason}: {item}")));
             }
-            if needs_date && !dated(&prominent) {
-                return Err(violation(
-                    "fork-notice",
-                    format!("change notice states no date: {item}"),
-                ));
+            if needs_date {
+                let Some(date) = iso_date(&prominent) else {
+                    return Err(violation(
+                        "fork-notice",
+                        format!("change notice states no date: {item}"),
+                    ));
+                };
+                // Write-once: the notice keeps the date of the first committed fork edit.
+                let edits = git_text(&[
+                    "log",
+                    "--format=%as",
+                    "--reverse",
+                    &format!("{imported}..HEAD"),
+                    "--",
+                    item,
+                ])?;
+                if let Some(first_edit) = lines(&edits).map(strip).find(|s| !s.is_empty())
+                    && date != first_edit
+                {
+                    return Err(violation(
+                        "fork-notice",
+                        format!(
+                            "change notice date {date} is not the first fork edit {first_edit}: {item}"
+                        ),
+                    ));
+                }
             }
         } else if !prominent.is_empty() {
             return Err(violation(
