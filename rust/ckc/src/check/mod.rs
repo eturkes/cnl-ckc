@@ -68,6 +68,21 @@ fn check() -> common::Result {
     );
     Ok(())
 }
+// The shell's one SWI-Prolog mechanism for callers outside `check` (certify): the
+// SWIPL | PATH program under the 10.0.2 guard, each run inside the group wall.
+pub(crate) fn swipl_program() -> std::result::Result<std::path::PathBuf, ExitCode> {
+    process::swipl().map_err(|f| common::emit(Err(f)))
+}
+pub(crate) fn swipl_run(
+    command: &mut std::process::Command,
+    input: Option<&[u8]>,
+) -> std::result::Result<(i32, Vec<u8>), &'static str> {
+    match process::walled(command, input, process::WALL) {
+        Err(_) => Err("swipl_unavailable."),
+        Ok((true, _)) => Err("swipl_timeout."),
+        Ok((false, o)) => Ok((o.rc, o.out)),
+    }
+}
 pub fn run(root: &str) -> ExitCode {
     if std::env::set_current_dir(root).is_err() {
         return common::emit(Err(common::fail("check", format!("unreadable {root}"))));

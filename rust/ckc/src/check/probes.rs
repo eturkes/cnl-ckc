@@ -114,16 +114,25 @@ pub(super) fn trace_numeric() -> Result {
 }
 pub(super) fn wall() -> Result {
     let start = Instant::now();
-    for (cmd, detail) in [
-        ("sleep 600", "sleeper exited under the wall clock"),
+    // The last case leaves stdin unread in a descendant after the parent exits: the
+    // writer of its 1 MiB input stays blocked until the wall's group kill.
+    let input = vec![b'x'; 1 << 20];
+    for (cmd, input, detail) in [
+        ("sleep 600", None, "sleeper exited under the wall clock"),
         (
             "sleep 600 & exec sleep 600",
+            None,
             "descendant-held-pipe sleeper exited under the wall clock",
+        ),
+        (
+            "exec 3<&0; sleep 5 <&3 3<&- >/dev/null 2>&1 & exit 0",
+            Some(&input[..]),
+            "stdin-holding descendant outlived the wall clock",
         ),
     ] {
         let (timed, _) = process::walled(
             Command::new("/bin/sh").args(["-c", cmd]),
-            None,
+            input,
             Duration::from_secs(1),
         )?;
         if !timed {

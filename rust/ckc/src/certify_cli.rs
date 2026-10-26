@@ -4,15 +4,18 @@ use ckc_kernel::{EOut, ESrc};
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitCode, Stdio};
+use std::process::{Command, ExitCode};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
-struct Stage(PathBuf);
+struct Stage {
+    dir: PathBuf,
+    swipl: PathBuf,
+}
 
 impl Drop for Stage {
     fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
+        let _ = fs::remove_dir_all(&self.dir);
     }
 }
 
@@ -48,20 +51,25 @@ fn optional_ulex(path: &Path) -> Result<Option<Vec<u8>>, String> {
 }
 
 impl Stage {
-    fn new(root: &Path, ulex: Option<&[u8]>) -> Result<Self, String> {
+    fn new(root: &Path, swipl: &Path, ulex: Option<&[u8]>) -> Result<Self, String> {
         let mut index = 0u64;
         let stage = loop {
             let path =
                 std::env::temp_dir().join(format!("ckc-certify-{}-{index}", std::process::id()));
             match fs::create_dir(&path) {
-                Ok(()) => break Self(path),
+                Ok(()) => {
+                    break Self {
+                        dir: path,
+                        swipl: swipl.to_owned(),
+                    };
+                }
                 Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
                     index = index.checked_add(1).ok_or("stage_unavailable.")?;
                 }
                 Err(_) => return Err("stage_unavailable.".to_owned()),
             }
         };
-        let ape = stage.0.join("ape-stage");
+        let ape = stage.dir.join("ape-stage");
         copy_tree(&root.join("vendor/ape"), &ape).map_err(|_| "stage_copy_failed.")?;
         fs::copy(
             root.join("vendor/clex/clex_lexicon.pl"),
@@ -69,7 +77,7 @@ impl Stage {
         )
         .map_err(|_| "stage_clex_failed.")?;
         if let Some(bytes) = ulex {
-            fs::write(stage.0.join("lexicon.ulex"), bytes).map_err(|_| "stage_ulex_failed.")?;
+            fs::write(stage.dir.join("lexicon.ulex"), bytes).map_err(|_| "stage_ulex_failed.")?;
         }
         let parser = ape.join("prolog/parser");
         let parser_text = parser
@@ -78,53 +86,33 @@ impl Stage {
             .replace('\\', "\\\\")
             .replace('\'', "\\'");
         let goal = format!("working_directory(_, '{parser_text}'), [fit_to_plp], halt.");
-        let output = Command::new("swipl")
-            .args(["-O", "-f", "none", "-F", "none", "-g", &goal, "-t", "halt"])
-            .output()
-            .map_err(|_| "swipl_unavailable.")?;
-        if !output.status.success() || !parser.join("grammar.plp").is_file() {
+        let (rc, _) = crate::check::swipl_run(
+            Command::new(&stage.swipl)
+                .args(["-O", "-f", "none", "-F", "none", "-g", &goal, "-t", "halt"]),
+            None,
+        )?;
+        if rc != 0 || !parser.join("grammar.plp").is_file() {
             return Err("stage_grammar_failed.".to_owned());
         }
         Ok(stage)
     }
 
     fn dump(&self, root: &Path, ace: &[u8], with_ulex: bool) -> Result<Vec<u8>, String> {
-        let mut command = Command::new("swipl");
+        let mut command = Command::new(&self.swipl);
         command
             .args(["-q", "-f", "none", "-F", "none", "-s"])
             .arg(root.join("rust/ckc/prolog/drs_dump.pl"))
             .args(["-g", "main", "-t", "halt(9)", "--"])
-            .arg(self.0.join("ape-stage"));
+            .arg(self.dir.join("ape-stage"));
         if with_ulex {
-            command.arg(self.0.join("lexicon.ulex"));
+            command.arg(self.dir.join("lexicon.ulex"));
         }
-        let mut child = command
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|_| "swipl_unavailable.")?;
-        let written = child
-            .stdin
-            .take()
-            .ok_or_else(|| io::Error::other("driver stdin"))
-            .and_then(|mut stdin| stdin.write_all(ace));
-        if written.is_err() {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err("driver_input_failed.".to_owned());
+        let (rc, out) = crate::check::swipl_run(&mut command, Some(ace))?;
+        if rc != 0 {
+            return Err(format!("driver_failed({rc})."));
         }
-        let output = child
-            .wait_with_output()
-            .map_err(|_| "driver_wait_failed.")?;
-        if !output.status.success() {
-            return Err(format!(
-                "driver_failed({}).",
-                output.status.code().unwrap_or(-1)
-            ));
-        }
-        std::str::from_utf8(&output.stdout).map_err(|_| "invalid_utf8(dump).")?;
-        Ok(output.stdout)
+        std::str::from_utf8(&out).map_err(|_| "invalid_utf8(dump).")?;
+        Ok(out)
     }
 }
 
@@ -349,6 +337,10 @@ pub fn run(id: &str) -> ExitCode {
         Ok(root) => root,
         Err(_) => return reject(id, "repository_root."),
     };
+    let swipl = match crate::check::swipl_program() {
+        Ok(swipl) => swipl,
+        Err(rc) => return rc,
+    };
     let guideline = root.join("guidelines").join(id);
     let inputs = (|| {
         let docs = ace_paths(&guideline.join("ace"), false)?;
@@ -359,7 +351,7 @@ pub fn run(id: &str) -> ExitCode {
             return Err("retired_table(temporal.tsv).".to_owned());
         }
         let table = optional_table(&guideline.join("vocabulary.tsv"))?;
-        let stage = Stage::new(&root, ulex.as_deref())?;
+        let stage = Stage::new(&root, &swipl, ulex.as_deref())?;
         Ok::<_, String>((docs, queries, ulex, table, stage))
     })();
     let (docs, queries, ulex, table, stage) = match inputs {

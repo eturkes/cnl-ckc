@@ -277,3 +277,72 @@ fn non_utf8_argument_is_a_usage_refusal() {
     assert!(out.stdout.is_empty());
     assert_eq!(out.stderr, b"ckc: usage: an argument is not valid UTF-8\n");
 }
+
+// `ckc certify` runs SWI-Prolog through the one resolver (REFERENCE § Running:
+// SWIPL names the program; 10.0.2 guard): a different `swipl` earlier on PATH is
+// never called, and a wrong version refuses before any staging.
+#[test]
+fn certify_runs_the_selected_swipl_under_its_version_guard() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = std::env::temp_dir().join(format!("ckc-cli-swipl-{}", std::process::id()));
+    std::fs::remove_dir_all(&dir).ok();
+    for sub in [
+        "root/guidelines/fx/ace",
+        "root/vendor/ape/prolog/parser",
+        "root/vendor/ape/prolog/lexicon",
+        "root/vendor/clex",
+        "bin",
+    ] {
+        std::fs::create_dir_all(dir.join(sub)).unwrap();
+    }
+    std::fs::write(
+        dir.join("root/guidelines/fx/ace/doc.ace"),
+        b"A person sleeps.\n",
+    )
+    .unwrap();
+    std::fs::write(dir.join("root/vendor/clex/clex_lexicon.pl"), b"% empty\n").unwrap();
+    let called = dir.join("called");
+    let sentinel = |path: PathBuf, label: &str, version: &str| {
+        let script = format!(
+            "#!/bin/sh\necho {label} >> {}\n[ \"$1\" = --version ] && {{ echo 'SWI-Prolog version {version} for x86_64-linux'; exit 0; }}\nexit 23\n",
+            called.display()
+        );
+        std::fs::write(&path, script).unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        path
+    };
+    let selected = sentinel(dir.join("selected"), "selected", "10.0.2");
+    let old = sentinel(dir.join("old"), "old", "9.2.9");
+    sentinel(dir.join("bin/swipl"), "path", "10.0.2");
+    let run = |swipl: &PathBuf| {
+        std::fs::remove_file(&called).ok();
+        let out = Command::new(env!("CARGO_BIN_EXE_ckc"))
+            .args(["certify", "fx"])
+            .current_dir(dir.join("root"))
+            .env("SWIPL", swipl)
+            .env(
+                "PATH",
+                format!("{}:/usr/bin:/bin", dir.join("bin").display()),
+            )
+            .output()
+            .unwrap();
+        (out, std::fs::read_to_string(&called).unwrap_or_default())
+    };
+    let (out, log) = run(&selected);
+    assert_eq!(
+        (out.status.code(), log.as_str()),
+        (Some(1), "selected\nselected\n"),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(out.stderr, b"ckc: certify: fx: stage_grammar_failed.\n");
+    let (out, log) = run(&old);
+    std::fs::remove_dir_all(&dir).unwrap();
+    assert_eq!((out.status.code(), log.as_str()), (Some(2), "old\n"));
+    assert!(
+        out.stderr
+            .starts_with(b"ckc: swipl-version: expected 10.0.2, found: "),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}

@@ -80,7 +80,9 @@ pub(super) fn walled(
                 .try_wait()
                 .map_err(|e| fail("subprocess", e.to_string()))?;
         }
-        if stdout.is_some() && stderr.is_some() && status.is_some() {
+        // The stdin writer belongs to the run: a descendant can hold stdin unread
+        // after the parent exits, and only the group kill below releases it.
+        if stdout.is_some() && stderr.is_some() && status.is_some() && writer.is_finished() {
             break;
         }
         if start.elapsed() >= wall {
@@ -136,8 +138,9 @@ pub(super) fn walled(
         },
     ))
 }
+pub(super) const WALL: Duration = Duration::from_secs(300);
 pub(super) fn bounded(command: &mut Command, label: &str, input: Option<&[u8]>) -> Result<Output> {
-    let (timed, result) = walled(command, input, Duration::from_secs(300))?;
+    let (timed, result) = walled(command, input, WALL)?;
     if timed {
         return Err(fail(
             "swipl-timeout",
@@ -312,6 +315,23 @@ pub(super) fn write(path: &Path, bytes: &[u8]) -> Result {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wall_covers_a_stdin_holding_descendant() {
+        let start = Instant::now();
+        let (timed, _) = walled(
+            Command::new("/bin/sh")
+                .args(["-c", "exec 3<&0; sleep 5 <&3 3<&- >/dev/null 2>&1 & exit 0"]),
+            Some(&vec![b'x'; 1 << 20]),
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        assert!(
+            timed && start.elapsed() < Duration::from_secs(3),
+            "timed {timed}, elapsed {:?}",
+            start.elapsed()
+        );
+    }
 
     // A leftover whose creator is gone is swept; a name a live pid holds (here the
     // own pid) is stepped past and never removed.
