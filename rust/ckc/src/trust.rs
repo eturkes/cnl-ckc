@@ -428,13 +428,7 @@ fn rebaseline(root: &Path) -> Result<(), String> {
         .collect();
     paths.sort();
     paths.extend(TRUSTED_KERNEL_FILES.iter().map(|f| f.to_string()));
-    // The M6 driver is pinned only where the tree carries it.
-    paths.extend(
-        TRUSTED_EXTRA
-            .iter()
-            .filter(|f| **f != "ckc/prolog/drs_dump.pl" || root.join(f).is_file())
-            .map(|f| f.to_string()),
-    );
+    paths.extend(TRUSTED_EXTRA.iter().map(|f| f.to_string()));
     let mut text = String::from("sha256\tpath\n");
     for path in paths {
         let bytes =

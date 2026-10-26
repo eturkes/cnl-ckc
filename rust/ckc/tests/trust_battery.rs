@@ -507,3 +507,33 @@ fn write_rebaselines_a_planted_copy() {
         .collect();
     assert!(trust("spec-manifest.tsv").contains(&format!("{digest}\tckc-spec/src/align.rs\n")));
 }
+
+// The writer and the auditor share one trusted surface: a tree without the M6 driver
+// fails both, never a rebaseline that the next audit then refuses.
+#[test]
+fn write_refuses_a_tree_without_the_driver() {
+    let scratch = Scratch(workspace().join(format!("target/trust-driver/{}", std::process::id())));
+    let _ = fs::remove_dir_all(&scratch.0);
+    let copy = scratch.0.join("rust");
+    copy_tree(&workspace(), &copy);
+    fs::remove_file(copy.join("ckc/prolog/drs_dump.pl")).unwrap();
+    let before = fs::read(copy.join("trust/spec-manifest.tsv")).unwrap();
+    let program = std::env::var_os("CKC_TRUST_TEST_BIN")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_ckc")));
+    let out = Command::new(program)
+        .args(["trust-audit", "--write"])
+        .arg(&copy)
+        .output()
+        .unwrap();
+    assert_ne!(
+        out.status.code(),
+        Some(0),
+        "--write rebaselined a tree without the driver"
+    );
+    assert_eq!(
+        fs::read(copy.join("trust/spec-manifest.tsv")).unwrap(),
+        before
+    );
+    assert_eq!(audit(&copy).status.code(), Some(1));
+}
