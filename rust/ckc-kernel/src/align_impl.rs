@@ -1,5 +1,3 @@
-#![allow(unexpected_cfgs)]
-
 #[cfg(verus_keep_ghost)]
 use vstd::arithmetic::div_mod::{lemma_mod_multiples_vanish, lemma_small_mod};
 #[cfg(verus_keep_ghost)]
