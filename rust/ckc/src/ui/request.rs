@@ -56,6 +56,14 @@ impl Response {
             set_cookie: Vec::new(),
         }
     }
+    // A request the parser could not read: an empty 400 under the shared headers.
+    pub fn unreadable() -> Self {
+        Self {
+            status: 400,
+            media: "text/plain; charset=utf-8",
+            ..Self::page(Vec::new())
+        }
+    }
     pub fn headers(&self) -> Result<Vec<(&'static str, String)>> {
         let mut headers = vec![
             ("Content-Type", self.media.to_owned()),

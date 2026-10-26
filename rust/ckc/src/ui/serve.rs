@@ -219,16 +219,7 @@ fn answer(stream: &TcpStream, root: &Path, config: &Config) -> Result<()> {
         Ok(Parsed::Request(request)) => request,
         Ok(Parsed::Answered(Outcome::Response(response))) => return send(stream, &response),
         Ok(Parsed::Answered(Outcome::Crash)) | Ok(Parsed::Closed) => return Ok(()),
-        Err(_) => {
-            return Timed {
-                stream,
-                until: Instant::now() + DEADLINE,
-            }
-            .write_all(
-                b"HTTP/1.0 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
-            )
-            .map_err(|e| format!("ui: socket: {e}"));
-        }
+        Err(_) => return send(stream, &request::Response::unreadable()),
     };
     let response = match request::respond(root, &request, config)? {
         Outcome::Response(response) => response,

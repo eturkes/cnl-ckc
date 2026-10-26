@@ -958,3 +958,49 @@ fn refused_body_still_gets_the_whole_answer() {
         );
     }
 }
+
+// A request the parser cannot read gets the shared response headers too (CSP
+// `hardened`, nosniff, no-store), like every other answer.
+#[test]
+fn unreadable_request_answer_is_hardened() {
+    let (work, tree, tmp) = fixture("bad-request");
+    let run_dir = private_dir(&work.0.join("run"));
+    let port = free_port();
+    let stdout_path = work.0.join("bad-request.stdout");
+    let _server = Server(
+        serve(port, &tree, &work.0, &tmp, &run_dir)
+            .stdout(File::create(&stdout_path).unwrap())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    printed_address(&stdout_path, port);
+    let mut stream = TcpStream::connect(("127.0.0.1", port)).unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(5)))
+        .unwrap();
+    stream.write_all(b"GET / HTTP/9.9\r\n\r\n").unwrap();
+    let mut raw = Vec::new();
+    stream.read_to_end(&mut raw).unwrap();
+    let split = raw
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .expect("header end");
+    let head = String::from_utf8(raw[..split].to_vec()).unwrap();
+    let mut lines = head.split("\r\n");
+    assert!(lines.next().unwrap().starts_with("HTTP/1.0 400 "), "{head}");
+    let response = Response {
+        status: 400,
+        headers: lines
+            .map(|l| {
+                let (k, v) = l.split_once(": ").unwrap();
+                (k.to_owned(), v.to_owned())
+            })
+            .collect(),
+        body: raw[split + 4..].to_vec(),
+    };
+    hardened(&response, "unreadable request 400");
+    assert_eq!(response.header("X-Content-Type-Options"), "nosniff");
+    assert_eq!(response.header("Cache-Control"), "no-store");
+    assert!(response.body.is_empty());
+}
