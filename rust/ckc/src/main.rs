@@ -2,6 +2,7 @@
 // trust-audit (zero-trust gate) + align-check (M5.1 verified seam) + v1
 // (M5.2 KB-consumption seams) + check (M5.3) + corpus pipeline (M5.4)
 // + ui (M5.5 reviewer) + dist (M5.6).
+use std::io::Write;
 use std::process::ExitCode;
 
 mod align_cli;
@@ -12,8 +13,25 @@ mod trust;
 mod ui;
 mod v1_cli;
 
+// A command's product on stdout: the caller maps a failed write or flush to rc 2
+// (`ckc: stdout: <why>`), because the exit flush drops its error and a lost product
+// would read as success.
+pub(crate) fn stdout_all(bytes: &[u8]) -> std::io::Result<()> {
+    let mut out = std::io::stdout().lock();
+    out.write_all(bytes)?;
+    out.flush()
+}
+
 fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().collect();
+    // Subcommands read String arguments: a non-UTF-8 one is a usage refusal, not
+    // `std::env::args`' panic.
+    let Ok(args) = std::env::args_os()
+        .map(|a| a.into_string())
+        .collect::<Result<Vec<String>, _>>()
+    else {
+        eprintln!("ckc: usage: an argument is not valid UTF-8");
+        return ExitCode::from(2);
+    };
     match args.get(1).map(|s| s.as_str()) {
         Some("trust-audit") if args.get(2).is_some_and(|a| a == "--write") => {
             trust::write(args.get(3).map(|s| s.as_str()).unwrap_or("."))

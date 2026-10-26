@@ -200,3 +200,80 @@ fn compile_refuses_a_symlinked_schema_file() {
     );
     assert_eq!(kept, b"keep\n");
 }
+
+// A command's product is its stdout: a write or flush error must fail the
+// command (R19: rc0 → stdout = the exact bytes). /dev/full answers every write
+// with ENOSPC, the full-disk case (Rust's stdout swallows EBADF alone).
+fn ckc_full_stdout(args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_ckc"))
+        .args(args)
+        .stdout(std::fs::File::create("/dev/full").unwrap())
+        .output()
+        .unwrap()
+}
+
+fn assert_stdout_failure(out: &Output) {
+    assert_eq!(
+        out.status.code(),
+        Some(2),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        out.stderr.starts_with(b"ckc: stdout: "),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+#[test]
+fn render_fails_when_stdout_rejects_its_bytes() {
+    let doc = doc_path();
+    assert_stdout_failure(&ckc_full_stdout(&["v1", "render", doc.to_str().unwrap()]));
+}
+
+#[test]
+fn answer_fails_when_stdout_rejects_its_lines() {
+    let case = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/v1/s4-k2-003");
+    let dir = std::env::temp_dir().join(format!("ckc-cli-answer-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    for name in ["manifest.tsv", "query.pl"] {
+        std::fs::copy(case.join(format!("{name}.in")), dir.join(name)).unwrap();
+    }
+    let (m, q) = (dir.join("manifest.tsv"), dir.join("query.pl"));
+    let control = ckc(&["v1", "answer", m.to_str().unwrap(), q.to_str().unwrap()]);
+    let out = ckc_full_stdout(&["v1", "answer", m.to_str().unwrap(), q.to_str().unwrap()]);
+    std::fs::remove_dir_all(&dir).unwrap();
+    assert_eq!(
+        (control.status.code(), control.stdout.is_empty()),
+        (Some(0), false)
+    );
+    assert_stdout_failure(&out);
+}
+
+#[test]
+fn derive_review_manifest_fails_when_stdout_rejects_its_rows() {
+    let g = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../guidelines/cdc-2022-opioid");
+    assert_stdout_failure(&ckc_full_stdout(&[
+        "derive-review-manifest",
+        g.to_str().unwrap(),
+    ]));
+}
+
+#[test]
+fn non_utf8_argument_is_a_usage_refusal() {
+    use std::os::unix::ffi::OsStrExt;
+    let out = Command::new(env!("CARGO_BIN_EXE_ckc"))
+        .args(["v1", "check"])
+        .arg(std::ffi::OsStr::from_bytes(b"/tmp/\xff.pl"))
+        .output()
+        .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(2),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(out.stdout.is_empty());
+    assert_eq!(out.stderr, b"ckc: usage: an argument is not valid UTF-8\n");
+}

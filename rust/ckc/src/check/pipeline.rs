@@ -119,9 +119,14 @@ fn review(path: &Path, write: bool) -> Result {
             g.docids.len()
         );
     } else {
-        coverage::meter(&bytes);
+        product(&bytes)?;
     }
     Ok(())
+}
+
+// The command's product on stdout (derive-review-manifest rows, a ledger verdict).
+fn product(bytes: &[u8]) -> Result {
+    crate::stdout_all(bytes).map_err(|e| fail("stdout", e.to_string()))
 }
 
 pub(crate) fn run(args: &[String]) -> ExitCode {
@@ -141,7 +146,7 @@ pub(crate) fn run(args: &[String]) -> ExitCode {
             &normalized_path(&args[2]),
             &args[3],
         )
-        .map(|b| coverage::meter(&b)),
+        .and_then(|b| product(&b)),
         _ => Err(fail(
             "usage",
             match args.first().map(String::as_str) {

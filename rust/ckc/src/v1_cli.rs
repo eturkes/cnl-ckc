@@ -44,12 +44,8 @@ fn run_file(mode: &str, path: &str) -> ExitCode {
             let (l, c) = line_col(&bytes, at);
             reject(l, c)
         }
-        None => {
-            if mode == "render" {
-                std::io::stdout().write_all(&bytes).ok();
-            }
-            ExitCode::SUCCESS
-        }
+        None if mode == "render" => deliver(&bytes, ExitCode::SUCCESS),
+        None => ExitCode::SUCCESS,
     }
 }
 
@@ -69,10 +65,23 @@ fn read_src(path: &[u8]) -> ESrc {
     }
 }
 
+// R19: rc 0 promises the exact stdout bytes, so a lost product is rc 2.
+fn deliver(out: &[u8], rc: ExitCode) -> ExitCode {
+    match crate::stdout_all(out) {
+        Ok(()) => rc,
+        Err(e) => {
+            std::io::stderr()
+                .write_all(format!("ckc: stdout: {e}\n").as_bytes())
+                .ok();
+            ExitCode::from(2)
+        }
+    }
+}
+
 fn emit(o: EOut) -> ExitCode {
-    std::io::stdout().write_all(&o.out).ok();
+    let rc = deliver(&o.out, ExitCode::from(o.rc));
     std::io::stderr().write_all(&o.err).ok();
-    ExitCode::from(o.rc)
+    rc
 }
 
 fn sha_of(s: &ESrc) -> String {
