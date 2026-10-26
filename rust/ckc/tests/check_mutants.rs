@@ -195,6 +195,31 @@ fn mutate(t: &Path, name: &str) {
             "Advisory Committee on Immunization Practices\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
             "Advisory Committee on Immunization Practices + Agency for Healthcare Research and Quality\tPrevention and Control of Seasonal Influenza with Vaccines: Recommendations of the Advisory Committee on Immunization Practices — United States, 2025–26 Influenza Season (2025)\t".as_bytes(),
         ),
+        "agent-law-ignore" => replace(t, ".gitignore", b"/CLAUDE.local.md\n", b""),
+        "agent-law-import" => replace(
+            t,
+            "CLAUDE.md",
+            b"@.agent/spec.md\n",
+            b"@.agent/spec.md\n@.agent/deferred.md\n",
+        ),
+        "agent-law-deferred" => replace(
+            t,
+            ".agent/deferred.md",
+            b"Accept: typed below-parser",
+            b"Check: typed below-parser",
+        ),
+        "agent-law-glob" => replace(t, ".claude/rules/vendor.md", b"  - \"vendor/**\"\n", b"  - vendor/**\n"),
+        "agent-law-path" => replace(
+            t,
+            ".claude/rules/ops.md",
+            b"- Presentation rule (user):",
+            b"- Run /home/fixture/x.\n- Presentation rule (user):",
+        ),
+        "agent-law-queue" => append(
+            t,
+            ".agent/queue.md",
+            b"- one | https://example.invalid/1 | in-progress\n- two | https://example.invalid/2 | in-progress\n",
+        ),
         "fork-date-invalid" => replace(
             t,
             "vendor/ape/README.md",
@@ -461,7 +486,7 @@ fn check_mutant_battery() {
     let (files, c1) = (count("temporal-v3-"), count("vocabulary-"));
     assert_eq!(
         rows.len() - files - c1,
-        56,
+        62,
         "tests/check-mutants legacy row count"
     );
     let q13 = count("temporal-v3-q13-");

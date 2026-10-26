@@ -1792,3 +1792,96 @@ fn recipe_list_gives_every_recipe_a_sentence() {
         "a recipe without its [doc] slipped through: {fragments:?}"
     );
 }
+
+// The gate prints each step's wall-clock and the run's total (CLAUDE.md `Execution`):
+// `_timed` over two steps (each a mocked nested `just`) prints both step lines + total.
+fn timed_lines(s: &Scratch, case: &str, justfile: &str) -> Vec<String> {
+    let fx = Fixture::new(s, case, justfile);
+    put_exec(&fx.mock.join("just"), "#!/usr/bin/env bash\nexit 0\n");
+    let out = fx.run("_timed", &["fmt-check clippy"]);
+    assert_eq!(out.status.code(), Some(0), "{case}: {}", show(&out));
+    String::from_utf8(out.stdout)
+        .unwrap()
+        .lines()
+        .filter(|l| l.starts_with("time: "))
+        .map(|l| {
+            l.rsplit_once(' ')
+                .unwrap()
+                .0
+                .rsplit_once(' ')
+                .unwrap()
+                .0
+                .to_owned()
+        })
+        .collect()
+}
+
+#[test]
+fn gate_steps_print_their_wall_clock() {
+    let s = scratch("timed");
+    let text = justfile();
+    let want = ["time: fmt-check", "time: clippy", "time: total"];
+    assert_eq!(timed_lines(&s, "control", &text), want);
+    let planted = plant(
+        &text,
+        &[("    echo \"time: total $((SECONDS - start)) s\"\n", "")],
+    );
+    assert_ne!(
+        timed_lines(&s, "planted", &planted),
+        want,
+        "a missing total line slipped through"
+    );
+}
+
+// CI runs every chain `just gate` runs (CLAUDE.md `Execution` CI gate): each component
+// of the gate recipe has a `just <recipe>` step in ci.yml (RUST_STEPS = `just rust`).
+fn ci_gaps(justfile: &str, ci: &str) -> Vec<String> {
+    let gate = justfile
+        .lines()
+        .find_map(|l| l.strip_prefix("gate: (_timed RUST_STEPS + \""))
+        .and_then(|l| l.strip_suffix("\")"))
+        .expect("gate recipe shape");
+    std::iter::once("rust")
+        .chain(gate.split_whitespace())
+        .filter(|step| {
+            !ci.lines().any(|l| {
+                l.split_whitespace()
+                    .collect::<Vec<_>>()
+                    .windows(2)
+                    .any(|w| w[0] == "just" && w[1] == *step)
+            })
+        })
+        .map(str::to_owned)
+        .collect()
+}
+
+#[test]
+fn ci_runs_every_gate_chain() {
+    let text = justfile();
+    let ci = fs::read_to_string(root().join(".github/workflows/ci.yml")).unwrap();
+    assert_eq!(ci_gaps(&text, &ci), Vec::<String>::new());
+    let planted = ci.replace("just mobile", "just build");
+    assert_eq!(
+        ci_gaps(&text, &planted),
+        ["mobile"],
+        "a dropped CI chain slipped through"
+    );
+}
+
+// Tools install inside the project (CLAUDE.md `Execution`: project-local): the toolchain
+// default of the justfile + the Kani bootstrap sits under the checkout.
+#[test]
+fn toolchain_defaults_stay_project_local() {
+    let local = |justfile: &str, bootstrap: &str| {
+        justfile.contains("TOOLCHAIN := env(\"CKC_TOOLCHAIN\", ROOT / \".toolchain\")\n")
+            && bootstrap.contains("BASE=${CKC_TOOLCHAIN:-$PROJECT/.toolchain}\n")
+    };
+    let text = justfile();
+    let bootstrap = fs::read_to_string(root().join("rust/kani/bootstrap.sh")).unwrap();
+    assert!(local(&text, &bootstrap));
+    let planted = text.replacen("ROOT / \".toolchain\"", "env(\"HOME\") / \".ckc\"", 1);
+    assert!(
+        !local(&planted, &bootstrap),
+        "a toolchain outside the project slipped through"
+    );
+}
