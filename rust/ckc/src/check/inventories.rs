@@ -216,7 +216,24 @@ pub(super) fn guidelines() -> Result<Vec<Guideline>> {
     if plans.is_empty() {
         return Err(violation("guidelines", "no guideline directories"));
     }
+    unique_docids(&plans)?;
     Ok(plans)
+}
+// A document id names one document in any composition of guidelines: the loaded
+// records and the release labels key on it alone.
+fn unique_docids(plans: &[Guideline]) -> Result {
+    let mut owner = std::collections::BTreeMap::new();
+    for g in plans {
+        for id in &g.docids {
+            if let Some(first) = owner.insert(id, name(&g.path)) {
+                return Err(violation(
+                    "guideline-entry",
+                    format!("docid {id} in guidelines {first} and {}", name(&g.path)),
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 fn pl_name(s: &str) -> bool {
     s.strip_suffix(".pl").is_some_and(valid_docid)
@@ -406,4 +423,28 @@ pub(super) fn green() -> Result<Vec<PathBuf>> {
         }
     }
     Ok(probes.into_iter().map(|(p, _)| p).collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_docid_in_two_guidelines_is_refused() {
+        let g = |dir: &str, ids: &[&str]| Guideline {
+            path: PathBuf::from(format!("guidelines/{dir}")),
+            docids: ids.iter().map(|s| s.to_string()).collect(),
+            lexicon: None,
+            vocabulary: None,
+        };
+        assert!(unique_docids(&[g("g-a", &["doc-a", "doc-b"]), g("g-b", &["doc-c"])]).is_ok());
+        let e = unique_docids(&[g("g-a", &["doc-a"]), g("g-b", &["doc-b", "doc-a"])]).unwrap_err();
+        assert_eq!(
+            (e.rc, String::from_utf8_lossy(&e.out).as_ref()),
+            (
+                1,
+                "ckc: guideline-entry: docid doc-a in guidelines g-a and g-b\n"
+            )
+        );
+    }
 }

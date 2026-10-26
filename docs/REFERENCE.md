@@ -1686,7 +1686,9 @@ whole. A `reconstructable` guideline ships without its `source/` files;
 the manifest lists them as `source` rows with fetch URLs. A `restricted`
 guideline is held back and appears as a document count alone. The
 manifest carries a review label for every shipped document. A rejected
-or contested verdict blocks the build. Each shipped guideline includes
+or contested verdict blocks the build. A document id names one document
+across all guidelines: `ckc check` and the build refuse an id that two
+guidelines share. Each shipped guideline includes
 its decision ledger `audit/adjudication.tsv`, with the name and the
 comment of each reviewer. The decision form states this to every
 reviewer.

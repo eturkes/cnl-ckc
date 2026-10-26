@@ -425,7 +425,13 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
         counts.insert(gid.clone(), docs.len());
         if rs[gid][0][0] != "restricted" {
             shipped += 1;
-            labels.extend(classes(gid, &staged, &docs));
+            // Labels key on the docid alone: a second guideline's document must never
+            // replace the first one's verdict (`ckc check` refuses such a corpus too).
+            for (id, class) in classes(gid, &staged, &docs) {
+                if labels.insert(id.clone(), class).is_some() {
+                    return Err(error(format!("docid {id} in two guidelines")));
+                }
+            }
         }
     }
     let readme = readme(&gids, &rs, &counts, &labels, &schema);

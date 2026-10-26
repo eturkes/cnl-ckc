@@ -2158,6 +2158,32 @@ fn amended_manifest_case(path: &Path) -> TestResult<Run> {
     }
     Ok(run)
 }
+// Two guidelines with one docid: the release labels key on the docid alone, so the
+// approved g-yellow/doc-a (listed after g-red) would replace the rejected g-red/doc-a's label and ship it.
+fn docid_collision_case(path: &Path) -> TestResult<Run> {
+    let repo = base_repo(
+        path.join("repo"),
+        "redistributable",
+        &[("doc-a", "rejected")],
+        None,
+        false,
+    )?;
+    write_guideline(
+        &repo,
+        "g-yellow",
+        "redistributable",
+        &[("doc-a", "approved")],
+        None,
+        false,
+    )?;
+    repo.commit("colliding guideline")?;
+    // A writer that accepts the corpus gets its manifest committed, so the build itself
+    // decides; one that refuses it leaves the build to refuse the same way.
+    if writer(&repo)?.rc == 0 {
+        repo.commit("fixture release manifest")?;
+    }
+    Ok(build(&repo, "out", &[])?.0)
+}
 fn scenario(path: &Path, name: &str) -> TestResult<Run> {
     match name {
         "input_head" => return input_head_case(path),
@@ -2178,6 +2204,7 @@ fn scenario(path: &Path, name: &str) -> TestResult<Run> {
         | "rights_second_row_invalid"
         | "reconstructable_empty_url"
         | "stage_clean_refusal" => return rights_case(path, name),
+        "docid_collision" => return docid_collision_case(path),
         "reconstructable_source"
         | "rights_first_row_operative"
         | "stray_root"
@@ -2329,15 +2356,15 @@ fn read_cases() -> TestResult<Vec<Case>> {
     let expected = BTreeMap::from([
         ("manifest", 8),
         ("rights", 16),
-        ("labels", 4),
+        ("labels", 5),
         ("determinism", 11),
         ("members", 9),
         ("verification", 4),
         ("runner", 11),
     ]);
-    if cases.len() != 63
+    if cases.len() != 64
         || families != expected
-        || codes != BTreeMap::from([(0, 29), (1, 29), (2, 5)])
+        || codes != BTreeMap::from([(0, 29), (1, 30), (2, 5)])
     {
         return Err(format!(
             "case census: total={} families={families:?} rc={codes:?}",
