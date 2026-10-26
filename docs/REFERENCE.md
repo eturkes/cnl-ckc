@@ -54,7 +54,7 @@ compiler base:
   machine-checked proofs (`rust/ckc-kernel/`, never read by a human),
   and a thin shell (`rust/ckc/`) that moves bytes between the file
   system, SWI-Prolog, the loopback socket, and the kernel.
-  `cargo verus verify --no-cheating` under the pinned verifier
+  `cargo verus verify --workspace -- --no-cheating` (`just verify`) under the pinned verifier
   (`rust/verus.lock`) proves every kernel entry point against its
   specification: clause-file acceptance, the composition modes, query
   answers, proof traces and trace checks, the corpus validators, the
@@ -94,8 +94,9 @@ compiler base:
   gate verifies content instead of history. Every tracked
   non-first-party file must match its `MANIFEST.sha256` digest and must
   carry no change notice.
-- **Tests are data.** Each corpus under `tests/` is a fixture set, not
-  a program. `tests/red/` holds compiler rejection probes named
+- **Tests are fixtures.** Each corpus under `tests/` is a fixture set:
+  inputs, pinned output bytes, and the small oracles and drivers that the
+  batteries in `rust/ckc/tests/` run. `tests/red/` holds compiler rejection probes named
   `<expected-error-class>--<name>.ace`. `tests/green/` holds compiler
   acceptance probes; each `.expect` file pins the compiled document or
   question. `tests/adjudication/` holds
@@ -108,9 +109,9 @@ compiler base:
   alignment, `ckc check`, and export batteries that `cargo test`
   replays. Every case pins exact output bytes. `tests/consumer/` holds
   the patient worlds and drivers of the consumer-recipe check
-  ("Loading a whole knowledge base"). `just check` is the
-  full acceptance gate, with `just certify` beside it. It runs
-  `.agent/spec-lint`, `ckc check`, `ckc ui check`, and a fresh
+  ("Loading a whole knowledge base"). `just gate` is the full
+  acceptance gate: the Rust chain, the phone layout, `just check` and
+  `just certify`. `just check` runs `.agent/spec-lint`, `ckc check`, `ckc ui check`, and a fresh
   compile whose output must equal the committed corpus.
   `.agent/spec-lint` checks the shape of `.agent/spec.md`, the
   `Phase` section included. `ckc check`:

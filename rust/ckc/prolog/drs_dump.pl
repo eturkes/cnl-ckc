@@ -1,6 +1,7 @@
 % drs_dump.pl — trusted DRS driver for `ckc certify` (contract m6, R41).
 % Loads only upstream APE modules from a staged tree (never the fork
-% ace_to_pl.pl), reads an optional ulex then the ACE text (strict UTF-8),
+% ace_to_pl.pl), reads an optional ulex then the ACE text (UTF-8; `ckc certify`
+% checks both as strict UTF-8 before it runs the driver),
 % parses with acetext_to_drs/8 (guessing + catching off, as the fork does),
 % and prints three canonical lines under ONE numbervars pass:
 %   sentences(Ss).  drs(Drs).  messages(Ms).
