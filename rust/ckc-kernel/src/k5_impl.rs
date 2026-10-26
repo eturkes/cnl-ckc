@@ -3,13 +3,6 @@ use vstd::prelude::*;
 verus! {
 
 // M5.5 K5 seed: red stubs, one verification error each (contract.rs binds them).
-pub fn ui_render_page_impl(p: &ckc_spec::ui::EPage) -> (out: Vec<u8>)
-    ensures
-        out@ == ckc_spec::ui::render_page(p@),
-{
-    crate::k5_render::page(p)
-}
-
 pub fn ui_render_index_impl(c: &ckc_spec::ui::ECorpus) -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::ui::render_index(c@),

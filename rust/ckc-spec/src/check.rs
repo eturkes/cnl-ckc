@@ -1926,18 +1926,6 @@ pub open spec fn source_lookup(v: Seq<(Seq<u8>, FileSrc)>, key: Seq<u8>, i: nat)
     }
 }
 
-pub open spec fn digest_lookup(v: Seq<(Seq<u8>, Seq<u8>)>, key: Seq<u8>, i: nat) -> Seq<u8>
-    decreases v.len() - i,
-{
-    if i >= v.len() {
-        Seq::empty()
-    } else if v[i as int].0 == key {
-        v[i as int].1
-    } else {
-        digest_lookup(v, key, i + 1)
-    }
-}
-
 pub open spec fn bundles(v: Seq<EBundle>) -> Seq<Bundle> {
     v.map_values(|b: EBundle| b@)
 }

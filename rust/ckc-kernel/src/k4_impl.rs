@@ -93,21 +93,6 @@ pub fn check_ledger_impl(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> 
     crate::k4_ledger::validate(src, known)
 }
 
-pub fn check_class_count_impl(
-    ds: &Vec<ckc_spec::check::EDecision>,
-    bs: &Vec<ckc_spec::check::EBundle>,
-    k: i64,
-) -> (r: usize)
-    ensures
-        r as nat == ckc_spec::check::class_count(
-            ckc_spec::check::decisions(ds@),
-            ckc_spec::check::bundles(bs@),
-            k as int,
-        ),
-{
-    crate::k4_classify::count(ds, bs, k)
-}
-
 pub fn check_adjudication_meter_impl(
     gid: &[u8],
     ds: &Vec<ckc_spec::check::EDecision>,

@@ -234,13 +234,6 @@ pub fn k3_naf_counterexample() -> (rejected: bool)
 // = copied corpus spans | registry literals | canonical decimals); POST = the
 // ordered first-refusal law; the ledger candidate = byte-exact row insertion;
 // the copy registry passes the copy law. Pure spec fns ⇒ determinism.
-pub fn ui_render_page(p: &ckc_spec::ui::EPage) -> (out: Vec<u8>)
-    ensures
-        out@ == ckc_spec::ui::render_page(p@),
-{
-    crate::k5_impl::ui_render_page_impl(p)
-}
-
 pub fn ui_render_index(c: &ckc_spec::ui::ECorpus) -> (out: Vec<u8>)
     ensures
         out@ == ckc_spec::ui::render_index(c@),
@@ -597,21 +590,6 @@ pub fn check_ledger(src: &ckc_spec::replay::ESrc, known: &Vec<Vec<u8>>) -> (r: (
         ),
 {
     crate::k4_impl::check_ledger_impl(src, known)
-}
-
-pub fn check_class_count(
-    ds: &Vec<ckc_spec::check::EDecision>,
-    bs: &Vec<ckc_spec::check::EBundle>,
-    k: i64,
-) -> (r: usize)
-    ensures
-        r as nat == ckc_spec::check::class_count(
-            ckc_spec::check::decisions(ds@),
-            ckc_spec::check::bundles(bs@),
-            k as int,
-        ),
-{
-    crate::k4_impl::check_class_count_impl(ds, bs, k)
 }
 
 pub fn check_adjudication_meter(
