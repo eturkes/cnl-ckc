@@ -1,0 +1,24 @@
+% The recurrence frame guard of v2_pp_ann/7 reads the frame through arg/3 + ==:
+% a frame whose class, unit, comparator + count are unbound is refused
+% (temporal_shape(frame_shape, S)) and stays unbound; a valid frame is accepted.
+% swipl -f none -F none -s <this> -g probe_main -t 'halt(9)' -- <ace_to_pl.pl>
+probe_main :-
+    current_prolog_flag(argv, [Compiler]),
+    use_module(Compiler),
+    T = t([day-day], [], [at-interval], [], [], [], []),
+    Good = [anchored(actual, object(F0, interval, countable, na, eq, 1)),
+            anchored(actual, relation(F0, of, Q0)),
+            anchored(actual, object(Q0, day, countable, na, eq, 2))],
+    ace_to_pl:v2_pp_ann(T, 1, Good, actual, modifier_pp(E0, at, F0), Control),
+    Control == recurrence(E0, F0, Q0, day),
+    Bad = [anchored(actual, object(F, interval, Class, Unit, Cmp, Count)),
+           anchored(actual, relation(F, of, Q)),
+           anchored(actual, object(Q, day, countable, na, eq, 2))],
+    catch(( ace_to_pl:v2_pp_ann(T, 1, Bad, actual, modifier_pp(_, at, F), _)
+          -> Result = accepted
+          ;  Result = failed ),
+          Error, Result = rejected(Error)),
+    format("frame: ~q, fields ~q~n", [Result, [Class, Unit, Cmp, Count]]),
+    Result == rejected(ace_to_pl_reject(unsupported, temporal_shape(frame_shape, 1))),
+    var(Class), var(Unit), var(Cmp), var(Count),
+    halt(0).

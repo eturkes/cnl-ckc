@@ -1167,7 +1167,7 @@ v2_pp_ann(T, S, Scope, Ctx, PP, Ann) :-
     ; v2_obj_of(Scope, Ctx, X, F) ->
         v2_noun(F, FL),
         ( atom(P), memberchk(P-FL, Sp) ->
-            ( arg(3, F, countable), arg(4, F, na), arg(5, F, eq), arg(6, F, 1) ->
+            ( v3_frame_shaped(F) ->
                 true
             ; reject(unsupported, temporal_shape(frame_shape, S))
             ),
@@ -4725,8 +4725,9 @@ v1_bounded_head_call(Goal) :-
    witness facts asserted front-of-predicate with refs so obligation
    search reaches them before any rule clause, each obligation head
    called under the shared bounds, refs erased. Failure rejects the
-   document (class proof) — an underivable rule can never fire in any
-   world satisfying its body. Obligation construction copies clauses together with the
+   document (class proof): the rule does not fire in the world its own
+   witness builds (bounded search; other worlds that satisfy the body stay
+   unexamined). Obligation construction copies clauses together with the
    witness pairs, then binds the copies; the originals stay
    variable-clean for product rendering. */
 v1_derive_proofs(Bundles, DocId, Payload) :-
