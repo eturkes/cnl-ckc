@@ -583,11 +583,12 @@ fn graded_members() -> Vec<Member> {
 fn a05_grade_join_is_document_local() {
     let mut c = Cases::new("A5");
     for reverse in [false, true] {
+        // One order per pass: both grade dimensions see the reversed composition.
         let mut members = graded_members();
+        if reverse {
+            members.reverse();
+        }
         for (value, id) in [("strong", "alpha"), ("conditional", "beta")] {
-            if reverse {
-                members.reverse();
-            }
             install(&c, &members);
             let goal = conjunction(&[
                 format!(
