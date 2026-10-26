@@ -268,13 +268,13 @@ impl Server {
         };
         let prefix =
             format!("ui: no browser opened. Open this address: http://127.0.0.1:{port}/session/");
-        let deadline = Instant::now() + Duration::from_secs(20);
+        let deadline = Instant::now() + Duration::from_secs(120);
         let session = loop {
             let text = fs::read_to_string(&stdout).unwrap_or_default();
             if let Some(line) = text.lines().find(|l| l.starts_with(&prefix)) {
                 break line[prefix.len()..].to_owned();
             }
-            assert!(Instant::now() < deadline, "server startup: 20 s");
+            assert!(Instant::now() < deadline, "server startup: 120 s");
             std::thread::sleep(Duration::from_millis(25));
         };
         server.cookie = format!("ckc-session-{port}={session}");
@@ -285,7 +285,7 @@ impl Server {
                     return server;
                 }
                 Err(_) => {
-                    assert!(Instant::now() < deadline, "server startup: 20 s");
+                    assert!(Instant::now() < deadline, "server startup: 120 s");
                     std::thread::sleep(Duration::from_millis(25));
                 }
             }

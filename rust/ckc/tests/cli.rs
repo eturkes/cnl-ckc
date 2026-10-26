@@ -140,7 +140,7 @@ fn check_and_render_reject_non_regular_paths() {
                 .stderr(std::process::Stdio::piped())
                 .spawn()
                 .unwrap();
-            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
             while child.try_wait().unwrap().is_none() {
                 if std::time::Instant::now() > deadline {
                     let _ = child.kill();

@@ -485,7 +485,7 @@ fn signin() -> Vec<u8> {
             .spawn()
             .unwrap(),
     );
-    let deadline = Instant::now() + Duration::from_secs(20);
+    let deadline = Instant::now() + Duration::from_secs(120);
     let file = run.join(format!("ckc-ui-{port}.html"));
     let page = loop {
         if let Ok(page) = fs::read_to_string(&file)

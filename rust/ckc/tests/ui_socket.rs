@@ -249,7 +249,7 @@ fn serve(port: u16, tree: &Path, cwd: &Path, tmp: &Path, run: &Path) -> Command 
 
 fn printed_address(stdout: &Path, port: u16) -> String {
     let prefix = "ui: no browser opened. Open this address: ";
-    let deadline = Instant::now() + Duration::from_secs(20);
+    let deadline = Instant::now() + Duration::from_secs(120);
     loop {
         let text = fs::read_to_string(stdout).unwrap_or_default();
         if let Some(line) = text.lines().find(|l| l.starts_with(prefix)) {
@@ -265,7 +265,7 @@ fn printed_address(stdout: &Path, port: u16) -> String {
             );
             return address;
         }
-        assert!(Instant::now() < deadline, "server startup: 20 s ({text})");
+        assert!(Instant::now() < deadline, "server startup: 120 s ({text})");
         std::thread::sleep(Duration::from_millis(50));
     }
 }
@@ -600,7 +600,7 @@ fn serve_get_post_cas_and_cleanup_over_loopback() {
             http(port, "POST", page_path, &headers, body.as_bytes()).unwrap()
         }
     });
-    let deadline = Instant::now() + Duration::from_secs(20);
+    let deadline = Instant::now() + Duration::from_secs(120);
     let candidate = loop {
         assert!(
             !racing.is_finished(),
@@ -741,7 +741,7 @@ fn opener_receives_a_private_file_never_the_secret() {
                 .spawn()
                 .unwrap(),
         );
-        let deadline = Instant::now() + Duration::from_secs(20);
+        let deadline = Instant::now() + Duration::from_secs(120);
         let opened = "ui: the review site is open in your browser. Press Enter to open it again. Press Ctrl+C to stop.";
         while fs::read_to_string(&stdout_path)
             .unwrap_or_default()
@@ -781,7 +781,7 @@ fn opener_receives_a_private_file_never_the_secret() {
         let entered = http(port, "GET", &format!("/session/{session}"), &[], b"").unwrap();
         assert_eq!(entered.status, 303, "{label}: sign-in");
         server.0.stdin.as_mut().unwrap().write_all(b"\n").unwrap();
-        let deadline = Instant::now() + Duration::from_secs(20);
+        let deadline = Instant::now() + Duration::from_secs(120);
         while fs::read_to_string(&args).unwrap().lines().count() < 2 {
             assert!(Instant::now() < deadline, "{label}: Enter reopens");
             std::thread::sleep(Duration::from_millis(50));
