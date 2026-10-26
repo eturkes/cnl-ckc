@@ -246,7 +246,9 @@ async function readingPage(path, name, mobile) {
     await state(`${label}/enable highlights preserves reading`, "ideally", "", box, true);
     await click(nested);
     await state(`${label}/both actions resume`, "usually", "t0", box, true);
-    await evaluate('document.getElementById("reviewer").focus()');
+    // preventScroll: a focus scroll makes Chrome rerun hover at the parked CDP cursor (cf. `tap`), and
+    // that mouseout clears the pick before or after the next snapshot, by timing alone.
+    await evaluate('document.getElementById("reviewer").focus({ preventScroll: true })');
     await escape();
     await state(`${label}/Escape from another control preserves highlight`, "", "t0", box, true);
     await move("#reviewer");
