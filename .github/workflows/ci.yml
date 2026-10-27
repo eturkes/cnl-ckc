@@ -11,6 +11,12 @@ on:
 permissions:
   contents: read
 
+# One run per ref at a time: a re-pushed ci/<unit> supersedes its earlier run, while main
+# and pull-request runs queue, so every pushed main commit keeps its own gate record.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/ci/') }}
+
 jobs:
   # Rust chain = `just rust`: verusfmt, clippy -D warnings, Verus --no-cheating,
   # build, trust-audit, tests, cargo-deny, gitleaks, zizmor; then the phone-layout
@@ -20,6 +26,7 @@ jobs:
   # SWI-Prolog source build of `just swipl`, cached on its pin. The container jobs run
   # its static musl binary (`just build-static`).
   rust:
+    name: rust
     if: github.event_name != 'schedule'
     runs-on: ubuntu-26.04
     steps:
@@ -105,6 +112,7 @@ jobs:
   # compile + queries byte-stable. Full history: fork-notice dates + ledger commits
   # read git log.
   check:
+    name: check
     if: github.event_name != 'schedule'
     needs: rust
     runs-on: ubuntu-26.04
@@ -173,6 +181,7 @@ jobs:
   # binary inside the pinned swipl container (the reference runtime): the swipl image
   # carries no linker, so the artifact is the seam.
   certify:
+    name: certify
     if: github.event_name != 'schedule'
     needs: rust
     runs-on: ubuntu-26.04
@@ -216,6 +225,7 @@ jobs:
 
   # Weekly: RustSec advisories + license/source policy over the committed Cargo.lock.
   advisories:
+    name: advisories
     if: github.event_name == 'schedule'
     runs-on: ubuntu-26.04
     steps:
@@ -251,6 +261,7 @@ jobs:
 
   # Weekly: Kani bounded model checking over the kernel's public exec surface.
   kani:
+    name: kani
     if: github.event_name == 'schedule'
     runs-on: ubuntu-26.04
     timeout-minutes: 60
@@ -288,6 +299,7 @@ jobs:
   # Weekly: online workflow audits (zizmor with a token) + pin drift (`just outdated`:
   # every lock pin vs upstream latest; red = bump notice, procedure in .claude/rules/rust.md).
   updates:
+    name: updates
     if: github.event_name == 'schedule'
     runs-on: ubuntu-26.04
     steps:

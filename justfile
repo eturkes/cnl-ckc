@@ -479,9 +479,9 @@ secrets:
     cd "{{ ROOT }}" && gitleaks git --no-banner --redact -c .gitleaks.toml --staged . >/dev/null
     @echo "gate: secrets ok"
 
-# Workflow scan: zizmor over .github/ (offline audits; online audits too when GH_TOKEN is set).
+# Workflow scan: zizmor's auditor persona over .github/ (offline audits; online audits too when GH_TOKEN is set).
 workflows:
-    cd "{{ ROOT }}" && zizmor --no-progress --color never $([ -n "${GH_TOKEN:-}" ] || echo --offline) .github
+    cd "{{ ROOT }}" && zizmor --no-progress --color never --persona auditor $([ -n "${GH_TOKEN:-}" ] || echo --offline) .github
     @echo "gate: workflows ok"
 
 # Prints `pin current latest status [detail]`; rc 1 = drift (bump procedure: .claude/rules/rust.md),
