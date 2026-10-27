@@ -1897,6 +1897,64 @@ fn ci_runs_every_gate_chain() {
     );
 }
 
+// Jobs of ci.yml that call a recipe before the shared bootstrap step installs the pinned
+// `just` (.github/actions/bootstrap-just), or the whole workflow when that action stops
+// verifying the tools.lock row: a runner image's own `just` would otherwise run unpinned.
+fn unbootstrapped_jobs(ci: &str, action: &str) -> Vec<String> {
+    if !(action.contains("$1==\"just\"{print $4}") && action.contains("sha256sum -c")) {
+        return vec!["bootstrap action".to_owned()];
+    }
+    let mut out = Vec::new();
+    let mut job: Option<(String, bool, bool)> = None; // (id, bootstrapped, reported)
+    for line in ci.lines().skip_while(|l| *l != "jobs:").skip(1) {
+        if let Some(id) = line.strip_prefix("  ").and_then(|l| l.strip_suffix(':'))
+            && !id.starts_with([' ', '#'])
+        {
+            job = Some((id.to_owned(), false, false));
+            continue;
+        }
+        let Some((id, booted, reported)) = job.as_mut() else {
+            continue;
+        };
+        if line.trim() == "uses: $/.github/actions/bootstrap-just" {
+            *booted = true;
+        }
+        let calls = line
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .windows(2)
+            .any(|w| w[0] == "just" && w[1].starts_with(|c: char| c.is_ascii_lowercase()));
+        if calls && !*booted && !*reported {
+            *reported = true;
+            out.push(id.clone());
+        }
+    }
+    out
+}
+
+#[test]
+fn ci_jobs_bootstrap_the_pinned_just() {
+    let ci = fs::read_to_string(root().join(".github/workflows/ci.yml")).unwrap();
+    let action =
+        fs::read_to_string(root().join(".github/actions/bootstrap-just/action.yml")).unwrap();
+    assert_eq!(unbootstrapped_jobs(&ci, &action), Vec::<String>::new());
+    let at = ci.find("  certify:\n").expect("certify job");
+    let step = "        uses: $/.github/actions/bootstrap-just\n";
+    let cut = at + ci[at..].find(step).expect("certify bootstrap step");
+    let planted = format!("{}{}", &ci[..cut], &ci[cut + step.len()..]);
+    assert_eq!(
+        unbootstrapped_jobs(&planted, &action),
+        ["certify"],
+        "a job without the pinned just slipped through"
+    );
+    let unverified = action.replace("sha256sum -c", "true");
+    assert_eq!(
+        unbootstrapped_jobs(&ci, &unverified),
+        ["bootstrap action"],
+        "an unverified bootstrap slipped through"
+    );
+}
+
 // Tools install inside the project (CLAUDE.md `Execution`: project-local): the toolchain
 // default of the justfile + the Kani bootstrap sits under the checkout.
 #[test]

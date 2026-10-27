@@ -1,0 +1,18 @@
+# The one bootstrap of the pinned `just` for every ci.yml job (after its checkout): the
+# rust/tools.lock row names the release asset + its sha256; a mismatch fails the job.
+name: Bootstrap just
+description: Install the just release that rust/tools.lock pins, sha256-verified, onto PATH.
+runs:
+  using: composite
+  steps:
+    - name: Bootstrap just (rust/tools.lock)
+      shell: bash
+      run: | # zizmor: ignore[github-env] PATH gains the literal $RUNNER_TEMP/just; the only caller (ci.yml) runs on push, pull_request + schedule
+        set -eu
+        url=$(awk -F'\t' '$1=="just"{print $5}' rust/tools.lock)
+        sha=$(awk -F'\t' '$1=="just"{print $4}' rust/tools.lock)
+        curl -sSL -o "$RUNNER_TEMP/just.tar.gz" "$url"
+        printf '%s  %s\n' "$sha" "$RUNNER_TEMP/just.tar.gz" | sha256sum -c
+        mkdir -p "$RUNNER_TEMP/just"
+        tar -xzf "$RUNNER_TEMP/just.tar.gz" -C "$RUNNER_TEMP/just" just
+        echo "$RUNNER_TEMP/just" >> "$GITHUB_PATH"

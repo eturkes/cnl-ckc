@@ -53,7 +53,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] DQ1 formula cycle scan (deferred row `Formula cycle scan`; its Accept).
 - [ ] DQ2 fixed-witness NAF completeness (deferred row; its Accept).
 - [ ] DQ3 colleague review return (deferred row; its Accept).
-- [ ] DQ4 workflow hardening below the gate persona (deferred row; its Accept).
+- [x] a4406990 DQ4 workflow hardening below the gate persona (deferred row; its Accept).
 - [ ] DQ5 stacks without a committed scanner (deferred row; its Accept).
 - [ ] DQ6 `bump-verus` upstream strings (deferred row; its Accept).
 - [ ] DQ7 Rust toolchain by version only (deferred row; its Accept).
