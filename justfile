@@ -44,8 +44,18 @@ ci unit:
     [ -n "$id" ] || { echo "ci: no run for $sha on $b after 5 min" >&2; exit 2; }
     echo "ci: run $id, commit $sha, tree $tree"
     rc=0; gh run watch "$id" --exit-status -i 30 > /dev/null 2>&1 || rc=$?
-    gh run view "$id" --json jobs -q '.jobs[] | select(.conclusion != "skipped")
-        | "time: \(.name) \(.conclusion) \((.completedAt | fromdate) - (.startedAt | fromdate)) s"'
+    # `gh run watch` can return while GitHub still records a finished job's end as 0001-01-01
+    # (gh's jq refuses `fromdate` on it): the jobs are re-read until each one holds its end, ≤ 5 min.
+    for i in $(seq 31); do
+        pending=$(gh run view "$id" --json jobs -q '[.jobs[] | select(.conclusion != "skipped"
+            and .conclusion != "cancelled") | select(.completedAt | startswith("0001-"))] | length')
+        [ "$pending" = 0 ] && break
+        [ "$i" -lt 31 ] || { echo "ci: run $id: $pending jobs without an end time after 5 min" >&2; exit 2; }
+        sleep 10
+    done
+    gh run view "$id" --json jobs -q '.jobs[] | select(.conclusion != "skipped") | "time: \(.name) \(.conclusion) \(
+        if [.startedAt, .completedAt] | any(startswith("0001-")) then "-"
+        else (.completedAt | fromdate) - (.startedAt | fromdate) end) s"'
     if [ "$rc" -ne 0 ]; then
         gh run view "$id" --log-failed | tail -80
         echo "ci: run $id red, branch $b kept" >&2; exit 1

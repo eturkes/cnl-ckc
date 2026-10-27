@@ -1897,6 +1897,118 @@ fn ci_runs_every_gate_chain() {
     );
 }
 
+// Mock gh for `just ci`: run 4242; the first `run view` answers jobs-early.json (GitHub still
+// holding the check job's end as 0001-01-01 after `run watch` returned), later ones jobs.json.
+// gh's embedded jq refuses `fromdate` on that zero time (gh 2.102.1: `strptime(...) cannot be
+// applied to: string ("0001-01-01T00:00:00Z")`), which system jq accepts: the mock's `fromdate`
+// raises that error.
+const GH_CI: &str = r#"#!/usr/bin/env bash
+case "$1 $2" in
+    "run list") echo 4242 ;;
+    "run watch") exit 0 ;;
+    "run view")
+        n=$(( $(cat "$MOCK_DATA/views" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$MOCK_DATA/views"
+        f="$MOCK_DATA/jobs.json"; [ "$n" = 1 ] && f="$MOCK_DATA/jobs-early.json"
+        q=; while [ "$#" -gt 0 ]; do [ "$1" = -q ] && q=$2; shift; done
+        jq -r "def fromdate: if startswith(\"0001-\") then error(\"strptime(%Y-%m-%dT%H:%M:%S%z) cannot be applied to: \\(.)\")
+            else strptime(\"%Y-%m-%dT%H:%M:%SZ\") | mktime end; $q" "$f" ;;
+    *) echo "mock gh: $*" >&2; exit 97 ;;
+esac
+"#;
+
+#[test]
+fn ci_waits_for_every_job_end_before_its_timings() {
+    let s = scratch("ci-timing");
+    let text = justfile();
+    let job = |name: &str, done: bool, secs: u32| {
+        let (status, conclusion, end) = if done {
+            (
+                "completed",
+                "success",
+                format!("2026-10-27T10:{:02}:{:02}Z", secs / 60, secs % 60),
+            )
+        } else {
+            ("in_progress", "", "0001-01-01T00:00:00Z".to_owned())
+        };
+        format!(
+            r#"{{"name":"{name}","status":"{status}","conclusion":"{conclusion}","startedAt":"2026-10-27T10:00:00Z","completedAt":"{end}"}}"#
+        )
+    };
+    let jobs = |check_done: bool| {
+        format!(
+            r#"{{"jobs":[{},{},{},{{"name":"kani","status":"completed","conclusion":"skipped","startedAt":"0001-01-01T00:00:00Z","completedAt":"0001-01-01T00:00:00Z"}}]}}"#,
+            job("rust", true, 60),
+            job("check", check_done, 120),
+            job("certify", true, 30)
+        )
+    };
+    // `ends` = the check job records its end after the first read (else never).
+    let case = |name: &str, justfile: &str, ends: bool| {
+        let fx = Fixture::new(&s, name, justfile);
+        put_exec(&fx.mock.join("gh"), GH_CI);
+        put_exec(&fx.mock.join("sleep"), "#!/usr/bin/env bash\n");
+        put(&fx.data.join("jobs-early.json"), jobs(false));
+        put(&fx.data.join("jobs.json"), jobs(ends));
+        put(
+            &fx.root.join(".gitignore"),
+            "/data/\n/mock/\n/tmp/\n/toolchain/\n/origin.git/\n",
+        );
+        fx.git(&["init", "-q", "-b", "main"]);
+        fx.git(&["add", "justfile", ".gitignore"]);
+        fx.git(&["commit", "-q", "-m", "fixture"]);
+        fx.git(&["init", "-q", "--bare", "origin.git"]);
+        fx.git(&["remote", "add", "origin", "origin.git"]);
+        let out = fx.run("ci", &["dq13"]);
+        (out, fx)
+    };
+    let (out, fx) = case("control", &text, true);
+    assert_eq!(out.status.code(), Some(0), "control: {}", show(&out));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let times: Vec<&str> = stdout.lines().filter(|l| l.starts_with("time: ")).collect();
+    assert_eq!(
+        times,
+        [
+            "time: rust success 60 s",
+            "time: check success 120 s",
+            "time: certify success 30 s"
+        ],
+        "control: {}",
+        show(&out)
+    );
+    assert!(stdout.ends_with("gate: ci ok\n"), "control: {}", show(&out));
+    assert!(
+        fx.git(&["--git-dir", "origin.git", "branch", "--list", "ci/dq13"])
+            .is_empty()
+    );
+    // The pre-fix recipe read the jobs once, right after `run watch` returned.
+    let fixed = &text[text.find("    # `gh run watch` can return while").unwrap()
+        ..text
+            .find("    if [ \"$rc\" -ne 0 ]; then\n        gh run view")
+            .unwrap()];
+    let planted = plant(
+        &text,
+        &[(
+            fixed,
+            "    gh run view \"$id\" --json jobs -q '.jobs[] | select(.conclusion != \"skipped\")\n        | \"time: \\(.name) \\(.conclusion) \\((.completedAt | fromdate) - (.startedAt | fromdate)) s\"'\n",
+        )],
+    );
+    let (out, _) = case("planted", &planted, true);
+    assert_ne!(
+        out.status.code(),
+        Some(0),
+        "the pre-fix single read slipped through: {}",
+        show(&out)
+    );
+    // A job that never records its end: the bounded re-read gives up with rc 2.
+    let (out, _) = case("never", &text, false);
+    assert_eq!(out.status.code(), Some(2), "never: {}", show(&out));
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("1 jobs without an end time after 5 min"),
+        "never: {}",
+        show(&out)
+    );
+}
+
 // Jobs of ci.yml that call a recipe before the shared bootstrap step installs the pinned
 // `just` (.github/actions/bootstrap-just), or the whole workflow when that action stops
 // verifying the tools.lock row: a runner image's own `just` would otherwise run unpinned.

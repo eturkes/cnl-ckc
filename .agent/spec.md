@@ -60,7 +60,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] DQ8 concurrent connections in the reviewer server (deferred row; its Accept).
 - [ ] DQ9 S59-01 supersession date (deferred row; its Accept: a primary source dates the change, else a user ruling → DQ-ASK).
 - [ ] DQ10 superseded notice overflow (deferred row; its Accept).
-- [ ] DQ11 CI bootstrap repetition (deferred row; its Accept).
+- [x] ba0a840b DQ11 CI bootstrap repetition (deferred row; its Accept).
 - [ ] DQ12 run-wide test caches (deferred row; its Accept).
 - [ ] DQ13 `just ci` job timing before GitHub records the end (deferred row; its Accept).
 - [ ] DQ-ASK one closing `AskUserQuestion`: deontic conditions in scoped documents (user-ruled IMPLEMENT route) + patient-question engine (IMPLEMENT-scale): route after the cut or fund; S59-01 when no source dates it; every find needing the user.
