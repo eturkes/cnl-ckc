@@ -9,7 +9,7 @@ use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use std::sync::{Condvar, Mutex, OnceLock};
+use std::sync::{Arc, Condvar, Mutex, Weak};
 
 const HEADER: &str = "# format: kind\tlemma\tvalue\n";
 const GID: &str = "cdc-2022-opioid";
@@ -324,45 +324,170 @@ fn judge_table(checks: &mut Checks, label: &str, bytes: &[u8], out: &Output) {
 }
 
 // Each `ckc check` of a full HEAD clone costs seconds and a test's table cases are independent:
-// the table cases of every test share TABLE_WORKERS HEAD clones (checked out once per run in
-// rust/target/c1-surface/pool-<k>; a case rewrites the table before its `ckc check`, so a clone
-// carries no state between cases), and each test's verdicts fold in case order, so the
-// assertions and their failure text are a sequential run's. One pool bounds the concurrent
-// checks and checkouts for the whole binary.
+// the table cases of every test share TABLE_WORKERS HEAD clones (rust/target/c1-surface/
+// pool-<pid>-<k>; a case rewrites the table before its `ckc check`, so a clone carries no state
+// between cases), and each test's verdicts fold in case order, so the assertions and their
+// failure text are a sequential run's. One pool bounds the concurrent checks and checkouts.
 const TABLE_WORKERS: usize = 8;
 
-fn table_pool() -> &'static (Mutex<Vec<CheckTree>>, Condvar) {
-    static POOL: OnceLock<(Mutex<Vec<CheckTree>>, Condvar)> = OnceLock::new();
-    POOL.get_or_init(|| {
+// A run-wide cache lives while some test holds it: the registry keeps a Weak, every user an Arc,
+// and the last drop removes the cache's directories (setup + teardown symmetric per process).
+// Each instance owns directories named by pid + generation, so a teardown racing a successor's
+// setup never removes the successor's directories.
+static GENERATION: AtomicU64 = AtomicU64::new(0);
+
+fn shared<T>(slot: &Mutex<Weak<T>>, make: impl FnOnce() -> T) -> Arc<T> {
+    let mut weak = slot.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(live) = weak.upgrade() {
+        return live;
+    }
+    let made = Arc::new(make());
+    *weak = Arc::downgrade(&made);
+    made
+}
+
+// Cache directories of runs that ended without their teardown (a killed run) carry a dead pid;
+// the pre-pid names (pool-<k>, stage) carry none.
+fn sweep_caches(base: &Path) {
+    let Ok(entries) = fs::read_dir(base) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let pid = name
+            .strip_prefix("pool-")
+            .filter(|r| r.contains('-'))
+            .or_else(|| name.strip_prefix("stage-"))
+            .and_then(|r| r.split('-').next())
+            .and_then(|pid| pid.parse::<u32>().ok());
+        let stale = match pid {
+            Some(pid) => !Path::new("/proc").join(pid.to_string()).exists(),
+            None => {
+                name == "stage"
+                    || name
+                        .strip_prefix("pool-")
+                        .is_some_and(|k| k.parse::<usize>().is_ok())
+            }
+        };
+        if stale {
+            remove(&entry.path());
+        }
+    }
+}
+
+struct Pool {
+    free: Mutex<Vec<CheckTree>>,
+    ready: Condvar,
+}
+impl Drop for Pool {
+    fn drop(&mut self) {
+        for tree in self
+            .free
+            .get_mut()
+            .unwrap_or_else(|e| e.into_inner())
+            .iter()
+        {
+            remove(&tree.dir);
+        }
+    }
+}
+
+fn table_pool() -> Arc<Pool> {
+    static POOL: Mutex<Weak<Pool>> = Mutex::new(Weak::new());
+    shared(&POOL, || {
+        let base = root().join("rust/target/c1-surface");
+        sweep_caches(&base);
+        let (pid, generation) = (
+            std::process::id(),
+            GENERATION.fetch_add(1, Ordering::Relaxed),
+        );
         let trees = (0..TABLE_WORKERS)
-            .map(|k| CheckTree::at(root().join(format!("rust/target/c1-surface/pool-{k}"))))
+            .map(|k| CheckTree::at(base.join(format!("pool-{pid}-{generation}-{k}"))))
             .collect();
-        (Mutex::new(trees), Condvar::new())
+        Pool {
+            free: Mutex::new(trees),
+            ready: Condvar::new(),
+        }
     })
 }
 
 // A pool clone on loan; dropping the loan (a panic included) returns it.
-struct Loan(Option<CheckTree>);
+struct Loan {
+    pool: Arc<Pool>,
+    tree: Option<CheckTree>,
+}
 impl Loan {
-    fn take() -> Self {
-        let (free, ready) = table_pool();
-        let mut trees = free.lock().unwrap_or_else(|e| e.into_inner());
+    fn take(pool: &Arc<Pool>) -> Self {
+        let mut trees = pool.free.lock().unwrap_or_else(|e| e.into_inner());
         loop {
             if let Some(tree) = trees.pop() {
-                return Self(Some(tree));
+                return Self {
+                    pool: Arc::clone(pool),
+                    tree: Some(tree),
+                };
             }
-            trees = ready.wait(trees).unwrap_or_else(|e| e.into_inner());
+            trees = pool.ready.wait(trees).unwrap_or_else(|e| e.into_inner());
         }
     }
 }
 impl Drop for Loan {
     fn drop(&mut self) {
-        let (free, ready) = table_pool();
-        free.lock()
+        self.pool
+            .free
+            .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .push(self.0.take().unwrap());
-        ready.notify_one();
+            .push(self.tree.take().unwrap());
+        self.pool.ready.notify_one();
     }
+}
+
+// The child-run probe of `run_wide_caches_leave_nothing`: one loan from the table pool and one
+// staged compiler (this binary's two run-wide caches), each directory present while held.
+#[test]
+fn cache_probe() {
+    let pid = std::process::id();
+    let named = |dir: &Path, prefix: &str| {
+        dir.file_name()
+            .is_some_and(|n| n.to_string_lossy().starts_with(&format!("{prefix}-{pid}-")))
+    };
+    // Other tests may hold loans of the shared pool: the probe checks the tree it borrows.
+    let pool = table_pool();
+    let loan = Loan::take(&pool);
+    let tree = &loan.tree.as_ref().unwrap().dir;
+    assert!(named(tree, "pool") && tree.join("tree/.git").exists());
+    drop(loan);
+    let compiler = Compiler::new();
+    assert!(compiler.stage.join("prolog/ace_to_pl.pl").is_file());
+    assert!(named(compiler.stage.parent().unwrap(), "stage"));
+}
+
+// Setup + teardown stay symmetric (REV R5-R2): a child process runs the probe, and once it exits
+// no cache directory named after its pid remains.
+#[test]
+fn run_wide_caches_leave_nothing() {
+    let child = Command::new(std::env::current_exe().unwrap())
+        .args(["cache_probe", "--exact"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let pid = child.id();
+    let out = child.wait_with_output().unwrap();
+    let stdout = text(&out.stdout);
+    assert!(
+        out.status.success() && stdout.contains("test result: ok. 1 passed;"),
+        "child cache_probe: {stdout}{}",
+        text(&out.stderr)
+    );
+    let left: Vec<String> = fs::read_dir(root().join("rust/target/c1-surface"))
+        .unwrap()
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| {
+            n.starts_with(&format!("stage-{pid}-")) || n.starts_with(&format!("pool-{pid}-"))
+        })
+        .collect();
+    assert!(left.is_empty(), "cache left: {left:?}");
 }
 
 #[derive(Default)]
@@ -373,6 +498,7 @@ impl TableCases {
     }
     fn run(self, checks: &mut Checks) {
         let next = AtomicUsize::new(0);
+        let pool = table_pool();
         let mut outs = std::thread::scope(|s| {
             let workers = (0..TABLE_WORKERS.min(self.0.len()))
                 .map(|_| {
@@ -383,8 +509,8 @@ impl TableCases {
                             let Some((_, bytes)) = self.0.get(i) else {
                                 return done;
                             };
-                            let loan = Loan::take();
-                            let tree = loan.0.as_ref().unwrap();
+                            let loan = Loan::take(&pool);
+                            let tree = loan.tree.as_ref().unwrap();
                             tree.table(bytes);
                             done.push((i, tree.run(&["check"])));
                         }
@@ -1120,16 +1246,27 @@ fn simple_facts(id: &str, timed: bool) -> Vec<String> {
 struct Compiler {
     scratch: Scratch,
     stage: PathBuf,
+    _hold: Arc<Stage>,
 }
 
-// One staged compiler per test process (APE + Clex + the compiled parser + Clex qcompiled
-// beside its source: every compile then loads the same clauses from the .qlf in ~0.3 s instead
-// of ~1.2 s from source). Compiles only read the stage; each Compiler keeps its own scratch for
-// inputs. The stage directory is rebuilt at first use in every run.
-fn compiler_stage() -> &'static Path {
-    static STAGE: OnceLock<PathBuf> = OnceLock::new();
-    STAGE.get_or_init(|| {
-        let dir = root().join("rust/target/c1-surface/stage");
+// One staged compiler while some Compiler holds it (APE + Clex + the compiled parser + Clex
+// qcompiled beside its source: every compile then loads the same clauses from the .qlf in ~0.3 s
+// instead of ~1.2 s from source). Compiles only read the stage; each Compiler keeps its own
+// scratch for inputs. rust/target/c1-surface/stage-<pid>, removed with its last holder.
+struct Stage(PathBuf);
+impl Drop for Stage {
+    fn drop(&mut self) {
+        remove(self.0.parent().unwrap());
+    }
+}
+
+fn compiler_stage() -> Arc<Stage> {
+    static STAGE: Mutex<Weak<Stage>> = Mutex::new(Weak::new());
+    shared(&STAGE, || {
+        let base = root().join("rust/target/c1-surface");
+        sweep_caches(&base);
+        let generation = GENERATION.fetch_add(1, Ordering::Relaxed);
+        let dir = base.join(format!("stage-{}-{generation}", std::process::id()));
         remove(&dir);
         let stage = dir.join("ape");
         copy_tree(&root().join("vendor/ape"), &stage);
@@ -1161,7 +1298,7 @@ fn compiler_stage() -> &'static Path {
             &[],
         );
         assert!(out.status.success(), "compiler stage: {}", observed(&out));
-        stage
+        Stage(stage)
     })
 }
 
@@ -1172,9 +1309,11 @@ impl Compiler {
             &scratch.0.join("-"),
             b"a file named dash is not a table or lexicon\n",
         );
+        let hold = compiler_stage();
         Self {
             scratch,
-            stage: compiler_stage().to_path_buf(),
+            stage: hold.0.clone(),
+            _hold: hold,
         }
     }
     fn input(&self, name: &str, bytes: &[u8]) -> String {

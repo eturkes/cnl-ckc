@@ -82,7 +82,8 @@ fn observe(scene: Scene) -> Observed {
 pub fn results() -> &'static BTreeMap<String, Observed> {
     static RESULTS: OnceLock<BTreeMap<String, Observed>> = OnceLock::new();
     RESULTS.get_or_init(|| {
-        compiler();
+        // One stage for every scene: the scenes' own handles keep this one alive.
+        let _stage = compiler();
         let cases = model::scenes();
         let next = AtomicUsize::new(0);
         let found = Mutex::new(BTreeMap::new());

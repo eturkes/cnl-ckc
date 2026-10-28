@@ -4,7 +4,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::sync::OnceLock;
+use std::sync::{Arc, Mutex, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub fn root() -> PathBuf {
@@ -206,14 +206,42 @@ impl Checks {
     }
 }
 
+// One staged compiler while some test holds it: the registry keeps a Weak, every user an Arc,
+// and the last drop removes rust/target/sup1-surface/stage-<pid>-<generation> (setup + teardown
+// symmetric; a teardown racing a successor's setup never removes the successor's directory).
+static GENERATION: AtomicUsize = AtomicUsize::new(0);
 pub struct Compiler {
     pub stage: PathBuf,
 }
-pub fn compiler() -> &'static Compiler {
-    static COMPILER: OnceLock<Compiler> = OnceLock::new();
-    COMPILER.get_or_init(|| {
-        // One process-wide stage; the next invocation replaces this build cache.
-        let stage = root().join("rust/target/sup1-surface/stage");
+impl Drop for Compiler {
+    fn drop(&mut self) {
+        fs::remove_dir_all(&self.stage)
+            .unwrap_or_else(|e| eprintln!("SUP1 cleanup {}: {e}", self.stage.display()));
+    }
+}
+pub fn compiler() -> Arc<Compiler> {
+    static COMPILER: Mutex<Weak<Compiler>> = Mutex::new(Weak::new());
+    let mut weak = COMPILER.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(live) = weak.upgrade() {
+        return live;
+    }
+    let made = Arc::new({
+        let base = root().join("rust/target/sup1-surface");
+        // A killed run's stage carries a dead pid; the pre-pid name carries none.
+        for entry in fs::read_dir(&base).into_iter().flatten().flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            let stale = name == "stage"
+                || name
+                    .strip_prefix("stage-")
+                    .and_then(|r| r.split('-').next())
+                    .and_then(|pid| pid.parse::<u32>().ok())
+                    .is_some_and(|pid| !Path::new("/proc").join(pid.to_string()).exists());
+            if stale {
+                fs::remove_dir_all(entry.path()).unwrap();
+            }
+        }
+        let generation = GENERATION.fetch_add(1, Ordering::Relaxed);
+        let stage = base.join(format!("stage-{}-{generation}", std::process::id()));
         if stage.exists() {
             fs::remove_dir_all(&stage).unwrap();
         }
@@ -259,7 +287,9 @@ pub fn compiler() -> &'static Compiler {
         )
         .require_ok("Clex stage");
         Compiler { stage }
-    })
+    });
+    *weak = Arc::downgrade(&made);
+    made
 }
 impl Compiler {
     pub fn run(&self, cwd: &Path, id: &str, mode: &str, ace: &str, table: Option<&[u8]>) -> Run {
