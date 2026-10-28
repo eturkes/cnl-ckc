@@ -1,4 +1,4 @@
 % evidence-type-1-recommendation compiled from ACE question by ace_to_pl question mode; do not edit.
-'$guideline_query'(v1,'evidence-type-1-recommendation',ace_sha256(faeb2a82d1512ecc03939e815f8c54338c3b99418cedc28f2fd1d784fd188ce1),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
+'$guideline_query'(v1,'evidence-type-1-recommendation',ace_sha256(faeb2a82d1512ecc03939e815f8c54338c3b99418cedc28f2fd1d784fd188ce1),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % Q1: Which recommendation is an evidence-type-1-recommendation?
 '$guideline_query_projection'(goal(','(guideline_entity(actual,A,recommendation,countable),','(guideline_cardinality(actual,A,na,eq,1),','(guideline_entity(actual,B,'evidence-type-1-recommendation',countable),','(guideline_cardinality(actual,B,na,eq,1),','(guideline_event(actual,C,be),','(guideline_arg(actual,C,1,A),guideline_arg(actual,C,2,B)))))))),answers([answer(A,noun(recommendation,countable))])).

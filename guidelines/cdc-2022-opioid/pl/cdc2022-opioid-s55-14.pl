@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s55-14',ace_sha256(f6fe1e1b5d7307fd6ed8c0276f1bbd40aae59dbb42df684432bc2dfce5944c3b),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
+guideline_document('cdc2022-opioid-s55-14',ace_sha256(f6fe1e1b5d7307fd6ed8c0276f1bbd40aae59dbb42df684432bc2dfce5944c3b),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: Every benzodiazepine sometimes can be beneficial.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s55-14',1,box(1),[A]),can) :- guideline_entity(actual,A,benzodiazepine,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s55-14',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s55-14',1,ref(3),[A]),usuality,sometimes) :- guideline_entity(actual,A,benzodiazepine,countable), guideline_cardinality(actual,A,na,eq,1).

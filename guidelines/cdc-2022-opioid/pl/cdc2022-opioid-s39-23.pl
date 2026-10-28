@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s39-23',ace_sha256(b021c8a0e23fbb7af2ad8c83bfa9b77da25c89df8f4d30081f06d73369767ba0),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
+guideline_document('cdc2022-opioid-s39-23',ace_sha256(b021c8a0e23fbb7af2ad8c83bfa9b77da25c89df8f4d30081f06d73369767ba0),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: Every buprenorphine is a partial-agonist-opioid.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s39-23',1,ref(2),[A]),'partial-agonist-opioid',countable) :- guideline_entity(actual,A,buprenorphine,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s39-23',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,buprenorphine,countable), guideline_cardinality(actual,A,na,eq,1).

@@ -208,12 +208,18 @@ correctly: the clinician review checks that.
   describe the waiver in whole or in part. The knowledge base keeps these
   statements as the guideline states them. It derives the recommendations
   of `cdc2022-opioid-rec12-imp08` only for an evaluation date before
-  2022-12-29 (`docs/REFERENCE.md`, section "Superseded statements"). A
-  check of every passage of the guideline against later law, regulation
-  and guidance found no other superseded statement. Passage S59-01 reports
-  a breastfeeding recommendation that later guidance changed, but the
-  check found no source that dates the change, so the table does not
-  record it.
+  2022-12-29 (`docs/REFERENCE.md`, section "Superseded statements").
+  Passage S59-01 reports the breastfeeding recommendation of the American
+  Academy of Pediatrics for people who receive treatment for opioid use
+  disorder: it supports, considers or discourages breastfeeding by the
+  time since the last return to drug use (90 or more days, 30 to 90 days,
+  or less than 30 days). The CDC page "Opioid Use and
+  Pregnancy" replaced it on 2024-09-26: breastfeeding is supported if
+  nonprescribed substance use stopped by the time of delivery. No source
+  states an operative date, so the table records the date of that page
+  revision. S59-01 has no document, so this record changes no compiled
+  statement. A check of every passage of the guideline against later law,
+  regulation and guidance found no other superseded statement.
 - Ruling tests. A CDC-voice imperative or endorsement with a trailing
   citation is the guideline's own directive: formalize it. A CDC-voice
   directive whose action is the guideline's own also formalizes when it

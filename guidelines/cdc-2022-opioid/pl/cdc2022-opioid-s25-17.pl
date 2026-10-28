@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s25-17',ace_sha256('9fc1e0421b5bd8fa2b1ef24b23e435252bd8ffa95a5276ce29a4ae154b6aded0'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
+guideline_document('cdc2022-opioid-s25-17',ace_sha256('9fc1e0421b5bd8fa2b1ef24b23e435252bd8ffa95a5276ce29a4ae154b6aded0'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: Every physical-therapy can improve a pain without a serious-harm-risk and can improve a function without a serious-harm-risk.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s25-17',1,box(1),[A]),can) :- guideline_entity(actual,A,'physical-therapy',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s25-17',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s25-17',1,ref(2),[A]),pain,countable) :- guideline_entity(actual,A,'physical-therapy',countable), guideline_cardinality(actual,A,na,eq,1).

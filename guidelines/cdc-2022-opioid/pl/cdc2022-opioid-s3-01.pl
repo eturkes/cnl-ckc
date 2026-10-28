@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s3-01',ace_sha256('89e636ab64c88ef87e3d126daf90e2a94d5aa60104e76e816b832ae9aeadd17e'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
+guideline_document('cdc2022-opioid-s3-01',ace_sha256('89e636ab64c88ef87e3d126daf90e2a94d5aa60104e76e816b832ae9aeadd17e'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: If a patient has a pain then the patient should receive an appropriate-pain-treatment.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s3-01',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,pain,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s3-01',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s3-01',1,ref(4),[A,B,C]),'appropriate-pain-treatment',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,pain,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

@@ -1,2 +1,2 @@
 % recommendation-exists answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'recommendation-exists',query_sha256('839c4979f0e1e510ef2f692df143689283c3065c5073bf0e31af1d36a0e32ed7'),result(yes)).
+'$guideline_answers'(v1,'recommendation-exists',query_sha256(f91614da3d152bf4e216a2f7d60b139b1ba2f111f7aa5d5a2aad2f7d90b83143),result(yes)).

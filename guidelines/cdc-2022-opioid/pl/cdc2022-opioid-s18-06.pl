@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s18-06',ace_sha256(ce7bef5f0494748e2e3e73f9e50949557022dac69936dcd9365578b54034e1cf),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('405832ed3f275f091f60ded2e828af610266110b6c9a29536ca799d29ca43d72'))).
+guideline_document('cdc2022-opioid-s18-06',ace_sha256(ce7bef5f0494748e2e3e73f9e50949557022dac69936dcd9365578b54034e1cf),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: A multimodal-and-multidisciplinary-pain-management-approach is critical.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s18-06',1,ref(1),[]),'multimodal-and-multidisciplinary-pain-management-approach',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s18-06',1,ref(1),[]),na,eq,1).
