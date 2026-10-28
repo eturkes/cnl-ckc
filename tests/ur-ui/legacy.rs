@@ -26,6 +26,9 @@ const REV_K: &str = ".agent/archive/migrations/rev-k-repin.py";
 const DQ10: &str = ".agent/archive/migrations/dq10-repin.py";
 const PRINT_END: &str =
     ".chip { border: 1px solid #111827; background: none; color: inherit; }\n}\n</style>";
+// Green cases added after the pre-unit archive (DQ10: the spaceless supersession citation). They
+// have no legacy form, so P7 leaves them out; their goldens are ui_fixtures' byte pins.
+const POST_UNIT: [&str; 1] = ["green/superseded-spaceless-citation"];
 
 fn baseline() -> Scratch {
     let scratch = Scratch::new("pre-unit");
@@ -497,8 +500,19 @@ fn p7_golden_migration_is_complete_bounded_and_idempotent() {
     assert_eq!(retired, 119, "P7 frozen removed-section assertion census");
     let new_script = current_script();
     let mut c = Checks::default();
+    let mut live = files(&root().join("tests/ui"));
+    let case = |p: &PathBuf| p.iter().take(2).collect::<PathBuf>();
+    let frozen: std::collections::BTreeSet<PathBuf> = before.keys().map(case).collect();
+    let added: std::collections::BTreeSet<PathBuf> =
+        live.keys().map(case).filter(|c| !frozen.contains(c)).collect();
+    assert_eq!(
+        added,
+        POST_UNIT.iter().map(PathBuf::from).collect(),
+        "P7 post-unit case census"
+    );
+    live.retain(|p, _| !added.iter().any(|case| p.starts_with(case)));
     compare_migration(
-        &files(&root().join("tests/ui")),
+        &live,
         &before,
         &new_script,
         "P7 committed goldens",

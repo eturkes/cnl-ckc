@@ -20,6 +20,9 @@ const NOTE: &str = "<p>Your name and comment are published with your decision in
 const NAME: &str = "p_open_your_name_and_comment_are_published";
 const ANCHOR: &str = "</fieldset>\n<label for=\"reviewer\">Reviewer name</label>";
 const REVIEWER: &str = "<label for=\"reviewer\">Reviewer name</label>";
+// Live green cases absent from the base (DQ10: the spaceless supersession citation): no base
+// render exists, so their document pages take the D1 law alone.
+const POST_BASE: [&str; 1] = ["superseded-spaceless-citation"];
 const GIT_ENV: [(&str, &str); 9] = [
     ("GIT_CONFIG_GLOBAL", "/dev/null"),
     ("GIT_CONFIG_SYSTEM", "/dev/null"),
@@ -421,6 +424,36 @@ fn t1_static_documents_have_one_disclosure_at_the_form_anchor() {
             );
         }
     }
+    let frozen = cases("green");
+    let live = fs::read_dir(root().join("tests/ui/green"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().into_string().unwrap())
+        .filter(|name| !frozen.contains(&Path::new("green").join(name)))
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        live.into_iter().collect::<Vec<_>>(),
+        POST_BASE,
+        "post-base live case census"
+    );
+    let mut post = Files::new();
+    for name in POST_BASE {
+        let case = Path::new("green").join(name);
+        let fx = Fixture {
+            scratch: Scratch::new(),
+            tree: Path::new("tests/ui").join(&case).join("tree"),
+            case,
+        };
+        for (path, bytes) in files(&root().join(&fx.tree)) {
+            write(&fx.scratch.0.join(&fx.tree).join(path), &bytes);
+        }
+        for (path, bytes) in fx.render() {
+            if document_path(&path) {
+                post.insert(fx.case.join("golden").join(path), bytes);
+            }
+        }
+    }
+    assert_eq!(post.len(), 1, "post-base document census");
+    check_notes(&post);
 }
 
 fn absent(page: &[u8], label: &str) {

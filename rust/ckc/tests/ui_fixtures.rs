@@ -668,6 +668,7 @@ ui_cases! {
     ui_green_q12_timing => ("green", "q12-timing"),
     ui_green_q13_temporal_words => ("green", "q13-temporal-words"),
     ui_green_q13_timing => ("green", "q13-timing"),
+    ui_green_superseded_spaceless_citation => ("green", "superseded-spaceless-citation"),
     ui_green_temporal_words => ("green", "temporal-words"),
     ui_green_timing => ("green", "timing"),
     ui_green_unicode_digit_region => ("green", "unicode-digit-region"),

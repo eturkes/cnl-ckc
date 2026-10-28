@@ -880,11 +880,13 @@ mutants target +files:
     CARGO_NET_OFFLINE=true cargo mutants --in-place --no-config --cargo-arg=--locked --cargo-arg=--offline \
         "${args[@]}" --output "$out" ${filter:+-- -- $filter}
 
-# Phone layout (n22): every `ckc ui render` page of HEAD + of the superseded-statement fixture
-# tree tests/sup4-ui/mobile (contract sup4 D7) loads at 390 px in the pinned headless browser
+# Phone layout (n22): every `ckc ui render` page of HEAD, of the superseded-statement fixture
+# tree tests/sup4-ui/mobile (contract sup4 D7) and of the green case
+# tests/ui/green/superseded-spaceless-citation loads at 390 px in the pinned headless browser
 # (tools/ui-mobile-probe.mjs under the pinned node). The recipe's own red inputs run every time:
 # the render with its viewport meta stripped must fail on every page, with its narrow-screen
-# table rule stripped on at least one. CKC_BIN names a prebuilt binary.
+# table rule stripped on at least one, and the spaceless-citation pages without the notice wrap
+# rule on at least one. CKC_BIN names a prebuilt binary.
 [doc("Check the phone layout and the reading words of the rendered pages.")]
 mobile:
     #!/usr/bin/env bash
@@ -905,6 +907,9 @@ mobile:
     tree tests/sup4-ui/mobile/tree superseded-tree
     "$bin" ui render "$w/superseded-pages" "$w/superseded-tree" >/dev/null
     probe "$w/superseded-pages"
+    tree tests/ui/green/superseded-spaceless-citation/tree citation-tree
+    "$bin" ui render "$w/citation-pages" "$w/citation-tree" >/dev/null
+    probe "$w/citation-pages"
     n=$(find "$w/pages" -name '*.html' | wc -l)
     red() { # name pages anchor min-bad: the anchor sits on every page; stripped, ≥ min-bad pages fail (rc 1)
         local m; m=$(find "$2" -name '*.html' | wc -l)
@@ -921,8 +926,8 @@ mobile:
     }
     red no-viewport-meta "$w/pages" '<meta name="viewport" content="width=device-width, initial-scale=1">' "$n"
     red no-narrow-table-rule "$w/pages" '@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }' 1
-    # The superseded tree's z page cites a 120-character run without a space (DQ10).
-    red no-superseded-wrap "$w/superseded-pages" 'section.superseded p { overflow-wrap: anywhere; }' 1
+    # The green case's z page cites a 120-character run without a space (DQ10).
+    red no-superseded-wrap "$w/citation-pages" 'section.superseded p { overflow-wrap: anywhere; }' 1
     tree tests/ur-ui/browser/tree reading-tree
     "$bin" ui render "$w/reading-pages" "$w/reading-tree" >/dev/null
     reading() { "{{ TOOLCHAIN }}/bin/node" tools/ui-reading-probe.mjs "{{ TOOLCHAIN }}/bin/chrome-headless-shell" "$1"; }
