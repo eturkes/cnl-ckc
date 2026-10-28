@@ -58,7 +58,9 @@
 %
 % Compile contract: stdin = strict RFC 3629 UTF-8; one ACE sentence per non-empty LF line.
 % <docid> = nonempty [a-z0-9-] with no leading dash.
-% Success: stdout = compiled Prolog document, stderr = 0 bytes, exit 0.
+% Success: stdout = compiled Prolog document, stderr = 0 bytes, exit 0. A document
+% clause line spells a variable that occurs once `_`; the others keep their letter
+% numbered over all the line's variables (contract sgw D1; number_line/1).
 % Reject: stdout = 0 bytes; stderr = one canonical ace_to_pl_error(Class,Detail) line.
 % Exit: 0=compiled; 1=input_utf8|ape_messages|empty_drs|sentence_lines|unsupported|safety|proof;
 %       2=usage|ape_load|ulex_load|vocabulary_load|uncaught.
@@ -741,10 +743,39 @@ header_term(DocId, AceDigest, sha256(Digest),
 render_item(rule(Head, Body)) :-
     validate_emittable(rule(Head, Body)),
     copy_term(rule(Head, Body), rule(HeadCopy, BodyCopy)),
-    numbervars(rule(HeadCopy, BodyCopy), 0, _),
+    number_line(rule(HeadCopy, BodyCopy)),
     write_canonical_part(HeadCopy),
     write(' :- '),
     write_body(BodyCopy),
+    write('.'),
+    nl.
+
+/* A document clause line spells each variable that occurs once in it `_`
+   (SWI warns `Singleton variables` about a named one); every other
+   variable keeps the letter of its number counted over ALL of the line's
+   variables, so a `_` consumes a number: p(A,_,C) :- q(A,C). SWI's own
+   numbervars/4 singletons(true) renumbers the rest instead. The kernel's
+   reading law (ckc-spec v1text read_v1) reads each `_` back as that
+   letter (contract sgw D1). */
+number_line(Term) :-
+    term_singletons(Term, Singles),
+    term_variables(Term, Vars),
+    number_line(Vars, Singles, 0).
+
+number_line([], _, _).
+number_line([V|Vs], Singles, N) :-
+    (   strict_member(V, Singles)
+    ->  V = '$VAR'('_')
+    ;   V = '$VAR'(N)
+    ),
+    N1 is N + 1,
+    number_line(Vs, Singles, N1).
+
+render_fact_line(Term) :-
+    validate_emittable(Term),
+    copy_term(Term, Copy),
+    number_line(Copy),
+    write_canonical_part(Copy),
     write('.'),
     nl.
 
@@ -4253,7 +4284,7 @@ v1_render_items([Clause|Clauses]) :-
 
 v1_render_item(clause(Head, [])) :-
     !,
-    render_term_line(Head).
+    render_fact_line(Head).
 v1_render_item(clause(Head, Goals)) :-
     v1_wrap_goals(Goals, Wrapped),
     render_item(rule(Head, Wrapped)).

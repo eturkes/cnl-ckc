@@ -7,14 +7,14 @@ verus! {
 use crate::k2_term::ETermArena;
 use crate::v1_term_impl::{parse_answers, parse_doc, parse_query, parse_traces, EParsedV1};
 
-proof fn parsed_accepts(bytes: Seq<u8>, parsed: &EParsedV1)
+proof fn parsed_canonical(bytes: Seq<u8>, parsed: &EParsedV1)
     requires
         crate::v1_term_impl::parsed_v1_ok(bytes, parsed),
     ensures
-        ckc_spec::v1text::accepts(bytes),
+        ckc_spec::v1text::canonical_v1(bytes),
 {
     reveal(crate::v1_term_impl::parsed_v1_ok);
-    reveal(ckc_spec::v1text::accepts);
+    reveal(ckc_spec::v1text::canonical_v1);
     assert(exists|f: ckc_spec::v1text::V1File| #[trigger]
         ckc_spec::v1text::wf_v1(f) && ckc_spec::v1text::print_v1(f) == bytes) by {
         let f = parsed@;
@@ -140,26 +140,26 @@ fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Opti
         crate::k2_term::arena_ok(final(arena)),
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         *old(at) <= *final(at) <= bytes@.len(),
-        r.is_some() <==> text::accepts(bytes@),
+        r.is_some() <==> text::canonical_v1(bytes@),
         r matches Some(p) ==> {
             &&& crate::v1_term_impl::parsed_v1_ok(bytes@, &p)
             &&& crate::v1_term_impl::parsed_metadata_ok(&p)
             &&& crate::v1_term_impl::parsed_certify_metadata_ok(&p)
-            &&& p@ == ckc_spec::replay::the_v1(bytes@)
+            &&& p@ == ckc_spec::replay::the_canonical(bytes@)
             &&& crate::v1_term_impl::parsed_doc_roots_ok(final(arena).nodes@, &p)
             &&& crate::v1_term_impl::parsed_query_roots_ok(final(arena).nodes@, &p)
         },
 {
     let ghost entry_nodes = arena.nodes@;
-    let ghost witness = if text::accepts(bytes@) {
-        Some(ckc_spec::replay::the_v1(bytes@))
+    let ghost witness = if text::canonical_v1(bytes@) {
+        Some(ckc_spec::replay::the_canonical(bytes@))
     } else {
         None
     };
     proof {
-        if text::accepts(bytes@) {
-            reveal(text::accepts);
-            reveal(ckc_spec::replay::the_v1);
+        if text::canonical_v1(bytes@) {
+            reveal(text::canonical_v1);
+            reveal(ckc_spec::replay::the_canonical);
             assert(witness is Some);
             assert(text::wf_v1(witness.unwrap()));
             assert(text::print_v1(witness.unwrap()) == bytes@);
@@ -186,7 +186,7 @@ fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Opti
     if doc_result.is_some() {
         let parsed = doc_result.unwrap();
         proof {
-            parsed_accepts(bytes@, &parsed);
+            parsed_canonical(bytes@, &parsed);
             v1_header_class(parsed@, witness.unwrap());
             assert(doc_expected is Some);
         }
@@ -200,7 +200,7 @@ fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Opti
     if query_result.is_some() {
         let parsed = query_result.unwrap();
         proof {
-            parsed_accepts(bytes@, &parsed);
+            parsed_canonical(bytes@, &parsed);
             v1_header_class(parsed@, witness.unwrap());
             assert(query_expected is Some);
         }
@@ -214,7 +214,7 @@ fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Opti
     if answers_result.is_some() {
         let parsed = answers_result.unwrap();
         proof {
-            parsed_accepts(bytes@, &parsed);
+            parsed_canonical(bytes@, &parsed);
             v1_header_class(parsed@, witness.unwrap());
             assert(answers_expected is Some);
         }
@@ -228,14 +228,14 @@ fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Opti
     if traces_result.is_some() {
         let parsed = traces_result.unwrap();
         proof {
-            parsed_accepts(bytes@, &parsed);
+            parsed_canonical(bytes@, &parsed);
             v1_header_class(parsed@, witness.unwrap());
             assert(traces_expected is Some);
         }
         return Some(parsed);
     }
     proof {
-        if text::accepts(bytes@) {
+        if text::canonical_v1(bytes@) {
             let f = witness.unwrap();
             reveal(text::wf_v1);
             reveal(text::print_v1);
@@ -266,6 +266,7 @@ fn v1_parse_at(bytes: &[u8], arena: &mut ETermArena, at: &mut usize) -> (r: Opti
     None
 }
 
+// The reading law first (contract sgw), then the canonical parser over the read bytes.
 pub fn v1_parse(bytes: &[u8], arena: &mut ETermArena) -> (r: Option<EParsedV1>)
     requires
         crate::k2_term::arena_ok(old(arena)),
@@ -274,7 +275,7 @@ pub fn v1_parse(bytes: &[u8], arena: &mut ETermArena) -> (r: Option<EParsedV1>)
         old(arena).nodes@.is_prefix_of(final(arena).nodes@),
         r.is_some() <==> text::accepts(bytes@),
         r matches Some(p) ==> {
-            &&& crate::v1_term_impl::parsed_v1_ok(bytes@, &p)
+            &&& crate::v1_term_impl::parsed_v1_ok(text::read_v1(bytes@), &p)
             &&& crate::v1_term_impl::parsed_metadata_ok(&p)
             &&& crate::v1_term_impl::parsed_certify_metadata_ok(&p)
             &&& p@ == ckc_spec::replay::the_v1(bytes@)
@@ -282,8 +283,13 @@ pub fn v1_parse(bytes: &[u8], arena: &mut ETermArena) -> (r: Option<EParsedV1>)
             &&& crate::v1_term_impl::parsed_query_roots_ok(final(arena).nodes@, &p)
         },
 {
+    let read = crate::v1_read::read_bytes(bytes);
     let mut at = 0usize;
-    v1_parse_at(bytes, arena, &mut at)
+    proof {
+        reveal(text::accepts);
+        reveal(ckc_spec::replay::the_v1);
+    }
+    v1_parse_at(&read.text, arena, &mut at)
 }
 
 pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
@@ -291,14 +297,18 @@ pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
         r.is_accept() <==> ckc_spec::v1text::accepts(bytes@),
         r matches ckc_spec::v1text::EV1Verdict::Reject { at } ==> at <= bytes@.len(),
 {
+    let read = crate::v1_read::read_bytes(bytes);
     let mut at = 0usize;
     let mut arena = ETermArena { nodes: Vec::new() };
     proof {
         reveal(crate::k2_term::arena_ok);
+        reveal(text::accepts);
     }
-    match v1_parse_at(bytes, &mut arena, &mut at) {
+    match v1_parse_at(&read.text, &mut arena, &mut at) {
         Some(_) => ckc_spec::v1text::EV1Verdict::Ok,
-        None => ckc_spec::v1text::EV1Verdict::Reject { at },
+        None => ckc_spec::v1text::EV1Verdict::Reject {
+            at: crate::v1_read::raw_offset(&read, bytes.len(), at),
+        },
     }
 }
 

@@ -10,6 +10,8 @@ mod engine;
 mod model;
 #[path = "../../../tests/da2/preservation.rs"]
 mod preservation;
+#[path = "../../../tests/singletons/anonymize.rs"]
+mod singletons;
 #[path = "../../../tests/da2/support.rs"]
 mod support;
 #[path = "../../../tests/da2/surface.rs"]

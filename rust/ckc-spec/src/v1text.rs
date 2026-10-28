@@ -701,8 +701,133 @@ pub open spec fn wf_v1(f: V1File) -> bool {
 }
 
 // --- the acceptance law ---
-pub open spec fn accepts(bytes: Seq<u8>) -> bool {
+// A canonical file = the print of a wellformed model, byte for byte.
+pub open spec fn canonical_v1(bytes: Seq<u8>) -> bool {
     exists|f: V1File| #[trigger] wf_v1(f) && print_v1(f) == bytes
+}
+
+// --- the reading law (contract sgw) ---
+// SWI-Prolog reads each `_` as a new variable, and warns about a named variable that occurs
+// once in a clause; so a clause line spells such a variable `_`. Reading gives the letter
+// spelling, line by line: a line that opens with `%` reads as written; on every other line,
+// outside quoted atoms (`'` opens one, `\` escapes the next byte inside it, `'` closes it),
+// each maximal run of identifier bytes reads in order. The run `_` becomes the letter of the
+// next new variable of its line (counting the distinct letter runs + the `_` runs met so far);
+// a letter run equal to one of those spellings reads as NUL bytes, which no canonical file
+// holds, so the file rejects there (or at an earlier divergence). Every other byte reads as
+// written.
+pub ghost enum ReadMode {
+    LineStart,
+    Comment,
+    Code,
+    Quoted,
+    Escaped,
+}
+
+pub open spec fn is_upper_b(b: u8) -> bool {
+    0x41 <= b && b <= 0x5A
+}
+
+// End of the maximal identifier run that starts at i.
+pub open spec fn run_end(bytes: Seq<u8>, i: nat) -> nat
+    decreases bytes.len() - i,
+{
+    if i < bytes.len() && is_alnum_b(bytes[i as int]) {
+        run_end(bytes, i + 1)
+    } else {
+        i
+    }
+}
+
+proof fn run_end_bounds(bytes: Seq<u8>, i: nat)
+    requires
+        i <= bytes.len(),
+    ensures
+        i <= run_end(bytes, i) <= bytes.len(),
+        i < bytes.len() && is_alnum_b(bytes[i as int]) ==> i < run_end(bytes, i),
+    decreases bytes.len() - i,
+{
+    if i < bytes.len() && is_alnum_b(bytes[i as int]) {
+        run_end_bounds(bytes, i + 1);
+    }
+}
+
+pub open spec fn nul_bytes(n: nat) -> Seq<u8> {
+    Seq::new(n, |k: int| 0u8)
+}
+
+// `seen` = the distinct letter runs of the line so far; `given` = the spellings its `_` runs
+// became.
+pub open spec fn read_from(
+    bytes: Seq<u8>,
+    i: nat,
+    mode: ReadMode,
+    seen: Seq<Seq<u8>>,
+    given: Seq<Seq<u8>>,
+) -> Seq<u8>
+    decreases bytes.len() - i,
+    via read_from_decreases
+{
+    if i >= bytes.len() {
+        Seq::empty()
+    } else {
+        let b = bytes[i as int];
+        if b == 0x0A {
+            seq![b] + read_from(bytes, i + 1, ReadMode::LineStart, Seq::empty(), Seq::empty())
+        } else if mode is Comment || (mode is LineStart && b == 0x25) {
+            seq![b] + read_from(bytes, i + 1, ReadMode::Comment, seen, given)
+        } else if mode is Escaped {
+            seq![b] + read_from(bytes, i + 1, ReadMode::Quoted, seen, given)
+        } else if mode is Quoted {
+            let next = if b == 0x5C {
+                ReadMode::Escaped
+            } else if b == 0x27 {
+                ReadMode::Code
+            } else {
+                ReadMode::Quoted
+            };
+            seq![b] + read_from(bytes, i + 1, next, seen, given)
+        } else if b == 0x27 {
+            seq![b] + read_from(bytes, i + 1, ReadMode::Quoted, seen, given)
+        } else if is_alnum_b(b) {
+            let j = run_end(bytes, i);
+            let run = bytes.subrange(i as int, j as int);
+            if run == seq![0x5Fu8] {
+                let spelling = var_bytes(seen.len() + given.len());
+                spelling + read_from(bytes, j, ReadMode::Code, seen, given.push(spelling))
+            } else if is_upper_b(b) && given.contains(run) {
+                nul_bytes(run.len()) + read_from(bytes, j, ReadMode::Code, seen, given)
+            } else if is_upper_b(b) && !seen.contains(run) {
+                run + read_from(bytes, j, ReadMode::Code, seen.push(run), given)
+            } else {
+                run + read_from(bytes, j, ReadMode::Code, seen, given)
+            }
+        } else {
+            seq![b] + read_from(bytes, i + 1, ReadMode::Code, seen, given)
+        }
+    }
+}
+
+#[via_fn]
+proof fn read_from_decreases(
+    bytes: Seq<u8>,
+    i: nat,
+    mode: ReadMode,
+    seen: Seq<Seq<u8>>,
+    given: Seq<Seq<u8>>,
+) {
+    if i < bytes.len() {
+        run_end_bounds(bytes, i);
+    }
+}
+
+pub open spec fn read_v1(bytes: Seq<u8>) -> Seq<u8> {
+    read_from(bytes, 0, ReadMode::LineStart, Seq::empty(), Seq::empty())
+}
+
+// A file is accepted iff its reading is canonical.
+pub open spec fn accepts(bytes: Seq<u8>) -> bool {
+    canonical_v1(read_v1(bytes))
 }
 
 // --- exec-facing verdict (R9: `at` = byte offset of the first divergence

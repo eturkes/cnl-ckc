@@ -23,6 +23,15 @@ pub fn v1_check(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
     crate::v1_impl::v1_check_impl(bytes)
 }
 
+// Contract sgw: the reading of a v1 file (each `_` → the letter of the next new variable of
+// its line), the bytes the canonical law then judges.
+pub fn v1_read(bytes: &[u8]) -> (r: Vec<u8>)
+    ensures
+        r@ == ckc_spec::v1text::read_v1(bytes@),
+{
+    crate::v1_read::read_bytes(bytes).text
+}
+
 // M5.2 K2: composition modes (contract m5u2 R24). Every file the shell read
 // arrives as an `ESrc`; a mode's result = the exact (rc, stdout, stderr)
 // triple of its spec fn over those sources.

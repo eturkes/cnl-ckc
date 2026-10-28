@@ -663,7 +663,9 @@ pub fn custody_exec(arena: &mut ETermArena, source: &ESrc) -> (out: Result<EQuer
         Some(parsed) => parsed,
     };
     if !matches!(parsed.class, crate::v1_term_impl::EV1Class::Query) {
-        let count = parsed_term_count(arena, bytes.as_slice(), &parsed);
+        // The count's length bound holds over the read image (contract sgw D6).
+        let read = crate::v1_read::read_bytes(bytes.as_slice());
+        let count = parsed_term_count(arena, read.text.as_slice(), &parsed);
         let count_root = int_root(arena, count);
         let name: &[u8] = b"term_count";
         proof {

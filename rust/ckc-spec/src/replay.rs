@@ -220,8 +220,13 @@ pub open spec fn src_of(rows: Seq<MRow>, pls: Seq<Src>, p: Seq<u8>) -> Src {
     pls[row_index(rows, p, 0) as int]
 }
 
-pub open spec fn the_v1(bytes: Seq<u8>) -> V1File {
+pub open spec fn the_canonical(bytes: Seq<u8>) -> V1File {
     choose|f: V1File| wf_v1(f) && print_v1(f) == bytes
+}
+
+// The model of a file = the canonical model of its reading (v1text reading law).
+pub open spec fn the_v1(bytes: Seq<u8>) -> V1File {
+    the_canonical(read_v1(bytes))
 }
 
 // First distinct path whose bytes are not a canonical v1 file.

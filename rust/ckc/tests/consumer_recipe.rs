@@ -110,10 +110,10 @@ fn load(s: &Scratch, mode: Mode, extra: &[PathBuf]) -> Vec<PathBuf> {
     v
 }
 
-// One SWI-Prolog process; its stdout, after rc 0 and no ERROR line.
-fn swipl(s: &Scratch, files: &[PathBuf], goal: &str) -> String {
+// One SWI-Prolog process under a UTF-8 locale (LC_ALL=C adds source-load warnings).
+fn run(s: &Scratch, files: &[PathBuf], goal: &str) -> std::process::Output {
     let files = files.iter().map(|p| quote(p)).collect::<Vec<_>>().join(",");
-    let out = Command::new("timeout")
+    Command::new("timeout")
         .args([
             "--kill-after=5",
             "900",
@@ -128,16 +128,55 @@ fn swipl(s: &Scratch, files: &[PathBuf], goal: &str) -> String {
         .arg(format!("consult([{files}]), {goal}"))
         .args(["-t", "halt"])
         .current_dir(&s.0)
+        .env("LANG", "C.UTF-8")
+        .env("LC_ALL", "C.UTF-8")
         .stdin(Stdio::null())
         .output()
-        .unwrap();
+        .unwrap()
+}
+
+// The load gate (contract sgw D7): REFERENCE promises that documents co-load with no
+// warnings, so rc 0 + an empty stderr; a warning fails it like an error.
+fn quiet(out: &std::process::Output) -> Result<(), String> {
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    if out.status.success() && stderr.is_empty() {
+        Ok(())
+    } else {
+        Err(format!("swipl rc {:?}: {stderr}", out.status.code()))
+    }
+}
+
+// The gate's stdout.
+fn swipl(s: &Scratch, files: &[PathBuf], goal: &str) -> String {
+    let out = run(s, files, goal);
+    if let Err(why) = quiet(&out) {
+        panic!("{why}");
+    }
+    String::from_utf8(out.stdout).unwrap()
+}
+
+// D7 firing: the pre-SGW spelling of a formula document (its reading = the letter form, P3)
+// prints `Singleton variables`, which the gate names with the file; the pre-SGW gate (ERROR
+// lines only) passes the same load.
+#[test]
+fn warning_lines_fail_the_load_gate() {
+    let s = Scratch::new("warning-gate");
+    let doc = root().join("guidelines/cdc-2022-opioid/pl/cdc2022-opioid-s42-15.pl");
+    let letters = ckc_kernel::contract::v1_read(&fs::read(&doc).unwrap());
+    let pre = s.file("s42-15-letters.pl", &String::from_utf8(letters).unwrap());
+    let files = [root().join("guidelines/schema.pl"), pre];
+    let out = run(&s, &files, "true");
+    let why = quiet(&out).expect_err("a warning passed the gate");
+    assert!(
+        why.contains("Singleton variables") && why.contains("s42-15-letters.pl"),
+        "{why}"
+    );
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         out.status.success() && !stderr.lines().any(|l| l.starts_with("ERROR")),
-        "swipl rc {:?}: {stderr}",
-        out.status.code()
+        "the planted ERROR-only gate no longer passes the warning: {stderr}"
     );
-    String::from_utf8(out.stdout).unwrap()
+    assert!(quiet(&run(&s, &files[..1], "true")).is_ok(), "schema alone");
 }
 
 // `enum <goal> <count> undefined <n> <hash>` rows by goal.

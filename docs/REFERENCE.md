@@ -442,7 +442,7 @@ document-local. Negation-as-failure in a consequent or a root fact
 rejects; assertion-by-absence is meaningless.
 
 A universally quantified sentence becomes one Horn clause per
-consequent condition. All clauses of a rule variant share one logical body; each clause line renders it with its own canonical variable letters, so two lines of one variant are equal up to variable renaming. In a document whose vocabulary table names a scope, each `should`, `must` or `may` operator edge clause ends with one more goal, the scope guard (section "Scope exclusions"). In a superseded document, every clause of a variant that holds a `should`, `must` or `may` edge ends with two more goals, the supersession guard, before the scope guard (section "Superseded statements"). A nested `if … then if … then …` consequent curries into
+consequent condition. All clauses of a rule variant share one logical body; each clause line renders it with its own canonical variable letters, so two lines of one variant are equal up to variable renaming. A variable that occurs once in a clause line is written `_`, the Prolog spelling of such a variable, so a standard engine loads the line without a singleton warning. Every other variable keeps the letter of its number among all variables of the line, and the letters after a `_` skip its number: `p(A,_,C) :- q(A,C)`. A reader of the knowledge base turns each `_` back into that letter (`read_v1` in `rust/ckc-spec/src/v1text.rs`), so a line means what its letter spelling means. In a document whose vocabulary table names a scope, each `should`, `must` or `may` operator edge clause ends with one more goal, the scope guard (section "Scope exclusions"). In a superseded document, every clause of a variant that holds a `should`, `must` or `may` edge ends with two more goals, the supersession guard, before the scope guard (section "Superseded statements"). A nested `if … then if … then …` consequent curries into
 one rule whose antecedent concatenates the nested domains. An
 antecedent that contains one disjunction splits into two variants whose
 bodies are the shared conditions plus that arm. The bundle keeps one
@@ -1395,7 +1395,7 @@ as exactly two terms in order: the ground `'$guideline_query'/5`
 record, then the `'$guideline_query_projection'/2` term. A query names
 any of the 20 semantic predicates, the comparison built-ins and the
 arithmetic built-ins, and it runs against any composition. The mode
-reads the query file as data and never consults it. The file must hold the exact canonical bytes that `ckc queries` writes: an added comment or a layout change rejects as `query_file(noncanonical)`.
+reads the query file as data and never consults it. The file must hold canonical bytes, as `ckc queries` writes them: an added comment or a layout change rejects as `query_file(noncanonical)`. As in a document, a `_` reads as the letter of a new variable; `ckc queries` writes letters.
 
 Success emits a two-line artifact on stdout: a generated-file
 comment, then one ground term
@@ -1496,7 +1496,8 @@ claim and stay verbatim.
 `P` is `proved(Nodes)`, `unproved(finite_failure)`, or
 `unproved(limit)`. Each proof node is `clause(sentence(DocId, S),
 clause_sha256(Hex), Children)`. It names the resolved clause by its document and by the `% S<n>:` block that holds the clause's line. A clause that cites an earlier sentence's referent still names its own sentence. `Hex` is the SHA-256 of
-that clause's rendered document line with its newline. A re-checked
+that clause's canonical line with its newline: the document line as the
+reader reads it, each `_` in its variable letter. A re-checked
 negation-as-failure goal freezes as a `naf(Goal)` leaf among a
 clause node's children. A comparison built-in that held freezes as a
 `builtin(Goal)` leaf, the goal as called, with no clause digest. An
@@ -1523,7 +1524,7 @@ bound.
 
 `check` re-derives each committed trace twice, compares the bytes,
 and resolves every `clause_sha256` to exactly one clause line of the
-committed document under `pl/`. A committed trace must prove its
+committed document under `pl/`, as read. A committed trace must prove its
 answer: `yes(proved(...))`, or solution rows that are all proved.
 `check` prints one `ckc: traces <id> <n> traces; nodes=<k>` meter
 per guideline beside the queries meter.

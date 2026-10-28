@@ -460,8 +460,11 @@ pub fn answers_custody_exec(
             }
             return Err(file_atom_error(why, false));
         }
+        // The count's length bound holds over the read image (contract sgw D6).
+
+        let read = crate::v1_read::read_bytes(bytes.as_slice());
         return Err(
-            count_error(crate::k2_answers::parsed_term_count(arena, bytes.as_slice(), &parsed)),
+            count_error(crate::k2_answers::parsed_term_count(arena, read.text.as_slice(), &parsed)),
         );
     }
     let ghost a = choose|a: AnswersFile| parsed@ == V1File::Answers(a);

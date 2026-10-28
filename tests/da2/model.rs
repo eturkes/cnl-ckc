@@ -602,10 +602,10 @@ impl Product {
                     )]));
                 }
                 let mut vars = BTreeMap::new();
-                out.push_str(&h.text(&mut vars));
+                let mut line = h.text(&mut vars);
                 if !body.is_empty() {
-                    out.push_str(" :- ");
-                    out.push_str(
+                    line.push_str(" :- ");
+                    line.push_str(
                         &body
                             .iter()
                             .map(|g| g.text(&mut vars))
@@ -613,6 +613,8 @@ impl Product {
                             .join(", "),
                     );
                 }
+                // The emitted spelling (contract sgw D1) of the letter form this model prints.
+                out.push_str(&super::singletons::anonymize(&line));
                 out.push_str(".\n");
             }
         }
