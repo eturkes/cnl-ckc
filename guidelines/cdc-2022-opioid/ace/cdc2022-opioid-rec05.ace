@@ -1,8 +1,10 @@
 A recommendation is a category-B-recommendation and is an evidence-type-4-recommendation.
 If a patient receives an opioid-therapy then every clinician should carefully weigh a benefit against a risk for the patient.
 If a clinician changes an opioid-dosage for a patient that receives an opioid-therapy then the clinician should carefully change the opioid-dosage.
-If a benefit outweighs a risk then every clinician should closely work with a patient and should optimize a nonopioid-therapy and should continue an opioid-therapy.
-If a benefit does not outweigh a risk then every clinician should optimize a different-therapy and should closely work with a patient and should gradually taper an opioid-dosage to a lower-opioid-dosage.
-If a benefit does not outweigh a risk and a patient takes an opioid and an opioid-discontinuation is warranted for the patient then every clinician should appropriately taper the opioid and should appropriately discontinue the opioid.
+If a patient receives an opioid-therapy and the opioid-therapy has a benefit and has a risk and the benefit outweighs the risk then every clinician should closely work with the patient and should optimize a nonopioid-therapy and should continue the opioid-therapy.
+If a patient receives an opioid-therapy and the opioid-therapy has a benefit and has a risk and the benefit does not outweigh the risk then every clinician should optimize a different-therapy and should closely work with the patient and should gradually taper an opioid-dosage to a lower-opioid-dosage.
+If a patient receives an opioid-therapy and the opioid-therapy has a benefit and has a risk and the benefit does not outweigh the risk and the patient takes an opioid and an opioid-discontinuation is warranted for the patient then every clinician should appropriately taper the opioid and should appropriately discontinue the opioid.
 If there is a clinician that does not provably detect a life-threatening-warning then it is recommended that the clinician does not abruptly discontinue an opioid.
 If there is a clinician that does not provably detect a life-threatening-warning then it is recommended that the clinician does not rapidly reduce an opioid-dosage from a higher-dosage.
+A life-threatening-warning-example is an impending-overdose-warning-sign-example.
+An impending-overdose-warning-sign-example includes a confusion-example and includes a sedation-example and includes a slurred-speech-example.

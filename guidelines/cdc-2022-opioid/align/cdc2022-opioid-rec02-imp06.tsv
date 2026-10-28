@@ -2,29 +2,37 @@
 1	ace	19	pain
 0	ace	32	patient
 2	ace	46	single-joint-osteoarthritis
-3	ace	80	nonpharmacologic-intervention
-4	ace	110	does not improve
-1	ace	131	pain
-5	ace	163	topical-NSAID
-6	ace	177	treat
+7	ace	89	near
+0	ace	113	patient
+3	ace	141	nonpharmacologic-intervention
 1	ace	188	pain
-0	ace	199	patient
-1	ace	213	pain
-0	ace	226	patient
-2	ace	240	few-joint-osteoarthritis
-3	ace	271	nonpharmacologic-intervention
-4	ace	301	does not improve
-1	ace	322	pain
-5	ace	354	topical-NSAID
-6	ace	368	treat
-1	ace	379	pain
+5	ace	220	topical-NSAID
+6	ace	234	treat
+1	ace	245	pain
+0	ace	256	patient
+1	ace	270	pain
+0	ace	283	patient
+2	ace	297	few-joint-osteoarthritis
+7	ace	337	near
+0	ace	361	patient
+3	ace	389	nonpharmacologic-intervention
+1	ace	436	pain
+5	ace	468	topical-NSAID
+6	ace	482	treat
+1	ace	493	pain
+7	ace	501	near
+8	ace	530	knee
+3	ace	546	nonpharmacologic-intervention
+9	ace	590	exercise-for-arthritis
 0	src	5	patients
 2	src	26	osteoarthritis
-4	src	49	insufficient response
 3	src	74	nonpharmacologic interventions
+9	src	113	exercise for arthritis
 1	src	136	pain
 5	src	142	topical NSAIDs
 6	src	164	used
 0	src	172	patients
 1	src	186	pain
 2	src	196	single or few joints
+7	src	217	near
+8	src	253	knee

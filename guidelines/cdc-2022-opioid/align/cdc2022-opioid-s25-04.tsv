@@ -1,29 +1,63 @@
+3	ace	23	conduct
 0	ace	33	focused-history
 1	ace	58	pain-evaluation
-2	ace	108	physical-examination
-1	ace	138	pain-evaluation
-1	ace	170	conducts
-1	ace	181	pain-evaluation
-3	ace	203	diagnostic-testing
-6	ace	225	not
-4	ace	229	indicated
-1	ace	250	pain-evaluation
-5	ace	277	recommended
-6	ace	313	not
-3	ace	317	conduct
-3	ace	329	diagnostic-testing
-1	ace	359	pain-evaluation
-1	ace	402	pain-evaluation
-3	ace	424	diagnostic-testing
-4	ace	446	indicated
-1	ace	467	pain-evaluation
-3	ace	518	diagnostic-testing
-1	ace	548	pain-evaluation
+1	ace	90	conducts
+0	ace	101	focused-history
+1	ace	126	pain-evaluation
+7	ace	168	include
+1	ace	178	pain
+0	ace	198	focused-history
+7	ace	225	include
+1	ace	235	pain
+0	ace	262	focused-history
+7	ace	289	include
+8	ace	299	potential-contributing-factor
+0	ace	336	focused-history
+8	ace	355	potential-contributing-factor
+9	ace	404	function
+10	ace	436	work-history
+11	ace	472	current-work-demand
+12	ace	515	psychosocial-stressor
+13	ace	560	sleep
+3	ace	598	conduct
+2	ace	608	physical-examination
+1	ace	638	pain-evaluation
+1	ace	670	conducts
+1	ace	681	pain-evaluation
+3	ace	703	diagnostic-testing
+6	ace	725	not
+4	ace	729	indicated
+1	ace	750	pain-evaluation
+5	ace	777	recommended
+6	ace	813	not
+3	ace	817	conduct
+3	ace	829	diagnostic-testing
+1	ace	859	pain-evaluation
+1	ace	891	conducts
+1	ace	902	pain-evaluation
+3	ace	924	diagnostic-testing
+4	ace	946	indicated
+1	ace	967	pain-evaluation
+3	ace	1006	conduct
+3	ace	1018	diagnostic-testing
+1	ace	1048	pain-evaluation
+3	ace	1067	diagnostic-testing
+14	ace	1116	severe-or-progressive-neurologic-deficit
+15	ace	1190	serious-underlying-condition
 1	src	0	Evaluation
 5	src	11	should
+7	src	18	include
 0	src	28	focused history
 1	src	86	pain
+8	src	95	potential contributing factors
+9	src	133	function
+10	src	143	work history
+11	src	160	current work demands
+12	src	182	psychosocial stressors
+13	src	210	sleep
 2	src	222	physical examination
 3	src	249	imaging or other diagnostic testing
 6	src	285	only
 4	src	293	indicated
+14	src	313	severe or progressive neurologic deficits
+15	src	373	serious underlying conditions

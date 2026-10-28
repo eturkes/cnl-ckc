@@ -6,41 +6,41 @@
 4	ace	86	substance-use-disorder
 0	ace	118	clinician
 5	ace	135	discuss
-6	ace	146	opioid-use-disorder-risk
-1	ace	180	patient
-5	ace	199	discuss
-7	ace	210	overdose-risk
-1	ace	233	patient
-15	ace	252	carefully
-8	ace	262	weigh an opioid-benefit against an opioid-risk
-1	ace	317	patient
-9	ace	336	incorporate
-10	ace	350	risk-mitigation-strategy
-11	ace	380	management-plan
-1	ace	405	patient
-0	ace	419	clinician
-2	ace	429	considers
-3	ace	441	chronic-opioid-therapy
-1	ace	470	patient
-1	ace	486	patient
-4	ace	500	substance-use-disorder
-0	ace	532	clinician
-12	ace	546	offer
-13	ace	554	naloxone-dose
-1	ace	575	patient
-14	ace	591	increase
-14	ace	602	patient-monitoring
-1	ace	629	patient
+6	ace	156	opioid-use-disorder
+1	ace	190	patient
+5	ace	209	discuss
+16	ace	220	increased
+1	ace	253	patient
+15	ace	272	carefully
+3	ace	291	opioid
+16	ace	317	increased
+1	ace	347	patient
+9	ace	366	incorporate
+10	ace	380	risk-mitigation-strategy
+11	ace	410	management-plan
+1	ace	435	patient
+0	ace	449	clinician
+2	ace	459	considers
+3	ace	471	chronic-opioid-therapy
+1	ace	500	patient
+1	ace	516	patient
+4	ace	530	substance-use-disorder
+0	ace	562	clinician
+12	ace	576	offer
+13	ace	584	naloxone-dose
+1	ace	605	patient
+14	ace	621	increase
+1	ace	632	patient
+1	ace	669	patient
 0	src	3	clinicians
 2	src	14	consider
 3	src	23	opioid therapy for chronic pain
 1	src	59	patients
 4	src	73	substance use disorder
 5	src	109	discuss
+16	src	117	increased
 6	src	137	opioid use disorder
-7	src	161	overdose
 15	src	185	carefully
-8	src	212	benefits of opioids outweigh increased risks
 9	src	262	incorporate
 10	src	274	strategies to mitigate risk
 11	src	311	management plan

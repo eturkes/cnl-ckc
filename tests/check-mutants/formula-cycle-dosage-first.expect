@@ -1,1 +1,1 @@
-ckc: formula-cycle: guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec02.pl:152: a formula condition reaches its own sentence (:152) through cdc2022-opioid-rec02:159 → cdc2022-opioid-rec02:152
+ckc: formula-cycle: guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec02.pl:211: a formula condition reaches its own sentence (:211) through cdc2022-opioid-rec02:218 → cdc2022-opioid-rec02:211

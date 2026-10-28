@@ -5,14 +5,12 @@
 5	ace	100	punitively
 6	ace	135	use
 0	ace	141	toxicology-testing
-3	ace	169	clinical-decision
-2	ace	223	other-clinical-information
-3	ace	259	clinical-decision
-6	ace	301	use
-0	ace	307	toxicology-testing
-4	ace	335	patient-care-improvement
-2	ace	396	other-clinical-information
-4	ace	432	patient-care-improvement
+2	ace	168	other-clinical-information
+2	ace	201	clinical
+6	ace	253	use
+0	ace	259	toxicology-testing
+2	ace	286	other-clinical-information
+4	ace	319	patient-care-improvement
 0	src	0	Toxicology testing
 7	src	19	should
 8	src	26	not
@@ -20,5 +18,4 @@
 5	src	43	punitive
 6	src	73	used
 2	src	96	other clinical information
-3	src	126	inform
 4	src	137	improve patient care

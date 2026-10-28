@@ -7,6 +7,10 @@
 5	ace	108	instead-of
 6	ace	121	withdrawal-management
 2	ace	151	opioid-use-disorder
+6	ace	178	withdrawal-management
+7	ace	207	short-or-medium-term
+6	ace	260	withdrawal-management
+2	ace	296	opioid
 1	src	4	pregnant
 0	src	13	persons
 2	src	26	opioid use disorder
@@ -15,3 +19,4 @@
 4	src	87	preferred
 5	src	97	over
 6	src	102	withdrawal management
+7	src	173	short- or medium-term

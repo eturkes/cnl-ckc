@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s26-09',ace_sha256('93ce880f18013b011128014c4f287620b60733e94052672e04d73471d2c5eb3d'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s26-09',ace_sha256(e96409dd51e2a90c05389a6f87fb770f7cc9e41c62633ce5c65db425c015b012),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a patient has a high-pain-related-anxiety then every clinician may refer the patient to a mental-health-specialist for a treatment.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s26-09',1,box(1),[A,B,C,D]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'high-pain-related-anxiety',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s26-09',1,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s26-09',1,ref(5),[A,B,C,D]),'mental-health-specialist',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'high-pain-related-anxiety',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
@@ -78,3 +78,21 @@ guideline_arg('$guideline_id'(context,'cdc2022-opioid-s26-09',3,box(1),[A,B,C,D]
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s26-09',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s26-09',3,ref(7),[A,B,C,D]),2,A) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'clinically-significant-psychological-distress',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s26-09',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s26-09',3,ref(7),[A,B,C,D]),for,'$guideline_id'(product,'cdc2022-opioid-s26-09',3,ref(6),[A,B,C,D])) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'clinically-significant-psychological-distress',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s26-09',3,box(1),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s26-09',3,ref(7),[A,B,C,D]),to,'$guideline_id'(product,'cdc2022-opioid-s26-09',3,ref(5),[A,B,C,D])) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'clinically-significant-psychological-distress',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1).
+% S4: A mental-health-specialist-example includes a psychologist-example and includes a psychiatrist-example and includes a clinical-social-worker-example.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(1),[]),'mental-health-specialist-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(2),[]),'psychologist-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(3),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(2),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(4),[]),'psychiatrist-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(4),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(5),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(6),[]),'clinical-social-worker-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(6),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(7),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(7),[]),1,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(7),[]),2,'$guideline_id'(product,'cdc2022-opioid-s26-09',4,ref(6),[])).

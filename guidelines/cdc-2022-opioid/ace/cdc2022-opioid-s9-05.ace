@@ -2,7 +2,9 @@ Every opioid-pain-clinical-practice-guideline is a clinical-tool.
 Every opioid-pain-clinical-practice-guideline should improve a clinician-patient-communication.
 Every opioid-pain-clinical-practice-guideline should support an informed-person-centered-pain-care-decision.
 If there is an opioid-pain-clinical-practice-guideline and there is a primary-care-clinician then the opioid-pain-clinical-practice-guideline applies to the primary-care-clinician.
-Every opioid-pain-clinical-practice-guideline applies to a pain-care-clinician.
+If there is an opioid-pain-clinical-practice-guideline and a pain-care-clinician provides a pain-care to an adult-outpatient that has an acute-pain then the opioid-pain-clinical-practice-guideline applies to the pain-care-clinician.
+If there is an opioid-pain-clinical-practice-guideline and a pain-care-clinician provides a pain-care to an adult-outpatient that has a subacute-pain then the opioid-pain-clinical-practice-guideline applies to the pain-care-clinician.
+If there is an opioid-pain-clinical-practice-guideline and a pain-care-clinician provides a pain-care to an adult-outpatient that has a chronic-pain then the opioid-pain-clinical-practice-guideline applies to the pain-care-clinician.
 If an outpatient has an age and the age includes at least 18 years then the outpatient is an adult-outpatient.
 If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has an acute-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
 If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has a subacute-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
@@ -15,5 +17,5 @@ If a patient has a subacute-pain then the subacute-pain lasts for at least 1 mon
 If a patient has a chronic-pain then the chronic-pain lasts for more than 3 months.
 Every opioid-pain-clinical-practice-guideline is a flexible-guideline.
 Every opioid-pain-clinical-practice-guideline should support a person-centered-decision.
-Every clinician should consider an expected-health-outcome during a person-centered-decision.
-Every clinician should consider a well-being during a person-centered-decision.
+If a patient has a person-centered-decision then every clinician should consider an expected-health-outcome for the patient during the person-centered-decision.
+If a patient has a person-centered-decision then every clinician should consider a well-being for the patient during the person-centered-decision.

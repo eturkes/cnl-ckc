@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp14',ace_sha256('6c4a9bc5a245048f640943322d0fcab524ada7c02eaaaec669782cee8d16460c'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-rec02-imp14',ace_sha256('6c4a9bc5a245048f640943322d0fcab524ada7c02eaaaec669782cee8d16460c'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If there is a clinician then it is recommended that the clinician does not consider a first-line-opioid-therapy for a subacute-pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp14',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec02-imp14',1,box(1),[A]),'$guideline_id'(context,'cdc2022-opioid-rec02-imp14',1,box(2),[A]),-) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

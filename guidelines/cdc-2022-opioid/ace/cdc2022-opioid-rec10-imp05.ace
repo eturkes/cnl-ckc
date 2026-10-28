@@ -1,2 +1,3 @@
 If a patient has a toxicology-screening-result then every clinician should consider the toxicology-screening-result with an other-clinical-information for the patient.
-If a potential-toxicology-screening-limitation is addressable then every clinician should consider a toxicology-screening.
+Every toxicology-screening-result possibly can be useful.
+If a toxicology-screening has a potential-limitation and the potential-limitation is addressable then every clinician should consider the toxicology-screening.

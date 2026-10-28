@@ -7,6 +7,9 @@
 5	ace	135	reach
 5	ace	143	taper-agreement
 0	ace	168	patient
+2	ace	189	opioid-regimen
+2	ace	234	imminent
+2	ace	290	other-injury
 2	src	7	existing opioid regimen
 0	src	48	patient
 2	src	59	imminent risk for overdose or other injury

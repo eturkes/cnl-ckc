@@ -1,8 +1,12 @@
 If a patient has a low-back-pain and the low-back-pain is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the low-back-pain.
 If a patient has a neck-pain and the neck-pain is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the neck-pain.
 If a patient has a painful-musculoskeletal-injury and the painful-musculoskeletal-injury is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the painful-musculoskeletal-injury.
-If a patient has a minor-surgery-pain and the minor-surgery-pain is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the minor-surgery-pain.
+If a patient has a minimal-injury-mild-postoperative-pain-minor-surgery-pain and the minimal-injury-mild-postoperative-pain-minor-surgery-pain is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the minimal-injury-mild-postoperative-pain-minor-surgery-pain.
 If a patient has a dental-pain and the dental-pain is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the dental-pain.
 If a patient has a kidney-stone-pain and the kidney-stone-pain is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the kidney-stone-pain.
 If a patient has a headache and the headache is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the headache.
 If a patient has an episodic-migraine-pain and the episodic-migraine-pain is acute and there is an opioid-therapy then it is recommended that the opioid-therapy is not first-line for the episodic-migraine-pain.
+Every opioid-therapy shows an at-most-NSAID-equal-acute-pain-effectiveness.
+Every acute-pain-opioid-therapy carries a long-term-opioid-use-risk.
+A musculoskeletal-injury-example includes a sprain-example and includes a strain-example and includes a tendonitis-example and includes a bursitis-example.
+A minor-surgery-example is a simple-dental-extraction-example.

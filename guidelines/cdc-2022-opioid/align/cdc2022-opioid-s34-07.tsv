@@ -1,32 +1,41 @@
 1	ace	15	conducts
 1	ace	27	acute-pain-treatment
-1	ace	48	with an opioid
+0	ace	56	opioid
 0	ace	70	opioid-naive-patient
 2	ace	100	few-day-period
-3	ace	143	opioid-dosage-increase
-5	ace	166	usually
-7	ace	177	unnecessary
-0	ace	197	opioid-naive-patient
-3	ace	234	increases
-3	ace	247	opioid-dosage
-1	ace	271	acute-pain-treatment
-0	ace	299	opioid-naive-patient
-2	ace	329	few-day-period
-6	ace	370	closely
-8	ace	378	monitor
-0	ace	390	opioid-naive-patient
-0	ace	482	opioid-naive-patient
-2	ace	512	few-day-period
-10	ace	545	does not provably
-6	ace	563	closely
-8	ace	571	monitor
-3	ace	655	increase an opioid-dosage
+0	ace	123	opioid-naive-patient
+0	ace	150	outpatient
+3	ace	189	opioid-dosage-increase
+5	ace	212	usually
+7	ace	223	unnecessary
+0	ace	243	opioid-naive-patient
+3	ace	280	increases
+3	ace	293	opioid-dosage
+1	ace	317	acute-pain-treatment
+0	ace	345	opioid-naive-patient
+2	ace	375	few-day-period
+6	ace	416	closely
+8	ace	424	monitor
+0	ace	436	opioid-naive-patient
+1	ace	473	conducts
+1	ace	485	acute-pain-treatment
+0	ace	514	opioid
+0	ace	528	opioid-naive-patient
+2	ace	558	few-day-period
+6	ace	609	closely
+8	ace	617	monitor
+0	ace	629	opioid-naive-patient
+3	ace	701	increase
+3	ace	713	opioid-dosage
+0	ace	735	opioid-naive-patient
+3	ace	763	opioid-dosage-increase
+11	ace	798	respiratory-depression
 0	src	4	opioid-naïve outpatients
 1	src	34	acute pain treated with an opioid
 2	src	72	a few days or less
 3	src	92	dosage increases
 5	src	113	usually
 7	src	121	unnecessary
-10	src	161	without
 6	src	169	close
 8	src	175	monitoring
+11	src	211	respiratory depression

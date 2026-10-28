@@ -1,4 +1,3 @@
-Every clinical-practice-organization should provide an overdose-prevention-education to a patient.
-Every clinical-practice-organization should provide a naloxone-use-education to a patient.
-Every clinical-practice-organization should offer an overdose-prevention-education to a patient-household-member.
-Every clinical-practice-organization should offer a naloxone-use-education to a patient-household-member.
+If there is a patient then every clinical-practice-organization should provide an overdose-prevention-education to the patient.
+If there is a patient then every clinical-practice-organization should provide a naloxone-use-education to the patient.
+If a patient has a household-member then every clinical-practice-organization should offer an overdose-prevention-education to the household-member and should offer a naloxone-use-education to the household-member.

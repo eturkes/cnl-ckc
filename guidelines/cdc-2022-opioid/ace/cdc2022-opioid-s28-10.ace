@@ -1,6 +1,7 @@
 Every clinician may assess a patient-function with a PEG-assessment-scale.
 Every clinician may assess a pain-severity with a PEG-assessment-scale.
 Every clinician may assess a quality-of-life with a PEG-assessment-scale.
-Every clinician may monitor a patient-function with a PEG-assessment-scale.
-Every clinician may monitor a pain-severity with a PEG-assessment-scale.
-Every clinician may monitor a quality-of-life with a PEG-assessment-scale.
+If a clinician assesses a patient-function with a PEG-assessment-scale then the clinician may monitor the patient-function with the PEG-assessment-scale.
+If a clinician assesses a pain-severity with a PEG-assessment-scale then the clinician may monitor the pain-severity with the PEG-assessment-scale.
+If a clinician assesses a quality-of-life with a PEG-assessment-scale then the clinician may monitor the quality-of-life with the PEG-assessment-scale.
+Every PEG-assessment-scale includes a pain-average-item and includes an enjoyment-of-life-interference-item and includes a general-activity-interference-item.

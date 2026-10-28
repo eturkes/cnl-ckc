@@ -4,8 +4,20 @@
 3	ace	113	NSAID
 2	ace	122	preferred
 0	ace	140	kidney-stone-pain
+3	ace	165	NSAID
+0	ace	208	kidney-stone-pain
+3	ace	247	NSAID
+4	ace	257	decrease
+5	ace	268	ureteral-smooth-muscle-tone
+4	ace	304	decrease
+6	ace	315	ureteral-spasm
+6	ace	337	ureteral-spasm
+0	ace	364	kidney-stone-pain
 0	src	10	kidney stone pain
 3	src	29	NSAIDs
+4	src	88	decrease
+5	src	101	ureteral smooth muscle tone
+6	src	133	ureteral spasm
 0	src	162	kidney stone pain
 2	src	189	preferred
 0	src	203	kidney stone pain

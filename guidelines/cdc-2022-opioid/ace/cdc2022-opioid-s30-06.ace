@@ -1,5 +1,5 @@
 If a patient has a single-modality-therapy-nonresponse then every clinician should consider a multimodal-therapy for the patient.
-Every clinician should individualize a multimodal-therapy with a patient-need.
-Every clinician should individualize a multimodal-therapy with a treatment-cost.
-Every clinician should individualize a multimodal-therapy with a treatment-convenience.
-Every clinician should individualize a multimodal-therapy with an individual-factor.
+If a clinician considers a multimodal-therapy for a patient then the clinician should individualize the multimodal-therapy with a patient-need.
+If a clinician considers a multimodal-therapy for a patient then the clinician should individualize the multimodal-therapy with a treatment-cost.
+If a clinician considers a multimodal-therapy for a patient then the clinician should individualize the multimodal-therapy with a treatment-convenience.
+If a clinician considers a multimodal-therapy for a patient then the clinician should individualize the multimodal-therapy with an individual-factor.

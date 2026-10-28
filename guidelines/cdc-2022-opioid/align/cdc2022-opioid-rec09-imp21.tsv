@@ -4,9 +4,10 @@
 1	ace	84	likely
 2	ace	116	consider
 3	ace	127	toxicology-testing
-4	ace	170	assess
-6	ace	179	withdrawal-risk
-5	ace	205	opioid-discontinuation
+6	ace	168	withdrawal
+0	ace	225	opioid
+0	ace	266	prescription-opioid
+0	ace	332	prescription-opioid
 0	src	5	diverting
 0	src	16	sharing
 0	src	27	selling
@@ -16,7 +17,4 @@
 1	src	86	likely
 2	src	94	consider
 3	src	103	toxicology testing
-4	src	135	determining
-5	src	155	prescription opioids
-5	src	183	discontinued
 6	src	212	withdrawal

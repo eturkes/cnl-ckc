@@ -1,54 +1,100 @@
 0	ace	6	opioid-pain-clinical-practice-guideline
+17	ace	49	not
 1	ace	55	clinical-judgment-replacement
 0	ace	92	opioid-pain-clinical-practice-guideline
+17	ace	135	not
 2	ace	142	individualized-person-centered-care-replacement
-0	ace	197	opioid-pain-clinical-practice-guideline
-3	ace	247	inflexible-standard
-0	ace	283	opioid-pain-clinical-practice-guideline
-18	ace	334	recommended
-0	ace	355	opioid-pain-clinical-practice-guideline
-17	ace	400	not
-16	ace	404	cause
-4	ace	412	rapid-opioid-taper
-0	ace	447	opioid-pain-clinical-practice-guideline
-18	ace	498	recommended
-0	ace	519	opioid-pain-clinical-practice-guideline
+0	ace	206	opioid-pain-clinical-practice-guideline
+20	ace	261	health-care-professional
+18	ace	297	recommended
+20	ace	318	health-care-professional
+17	ace	348	not
+0	ace	362	opioid-pain-clinical-practice-guideline
+3	ace	408	inflexible-standard
+0	ace	444	opioid-pain-clinical-practice-guideline
+21	ace	499	health-system
+18	ace	524	recommended
+21	ace	545	health-system
 17	ace	564	not
-16	ace	568	cause
-5	ace	577	abrupt-opioid-discontinuation
-0	ace	614	opioid-pain-clinical-practice-guideline
-9	ace	663	clinical-practice
-6	ace	681	law
-0	ace	692	opioid-pain-clinical-practice-guideline
-9	ace	741	clinical-practice
-7	ace	759	regulation
-0	ace	777	opioid-pain-clinical-practice-guideline
-9	ace	826	clinical-practice
-8	ace	844	policy
-0	ace	858	opioid-pain-clinical-practice-guideline
-10	ace	908	FDA-approved-labeling-substitute
-11	ace	961	sickle-cell-disease-pain
-17	ace	991	it is false that
-19	ace	1025	applies
-12	ace	1068	cancer-related-pain
-17	ace	1093	it is false that
-19	ace	1127	applies
-13	ace	1175	palliative-care
-17	ace	1196	it is false that
-19	ace	1230	applies
-14	ace	1279	end-of-life-care
-17	ace	1301	it is false that
-19	ace	1335	applies
-0	ace	1365	opioid-pain-clinical-practice-guideline
-15	ace	1415	opioid-use-disorder-medication-guideline
+0	ace	578	opioid-pain-clinical-practice-guideline
+3	ace	624	inflexible-standard
+0	ace	660	opioid-pain-clinical-practice-guideline
+18	ace	735	recommended
+17	ace	770	not
+0	ace	784	opioid-pain-clinical-practice-guideline
+3	ace	830	inflexible-standard
+0	ace	866	opioid-pain-clinical-practice-guideline
+22	ace	921	third-party-payer
+18	ace	950	recommended
+22	ace	971	third-party-payer
+17	ace	994	not
+0	ace	1008	opioid-pain-clinical-practice-guideline
+3	ace	1054	inflexible-standard
+0	ace	1090	opioid-pain-clinical-practice-guideline
+23	ace	1145	governmental-jurisdiction
+18	ace	1182	recommended
+23	ace	1203	governmental-jurisdiction
+17	ace	1234	not
+0	ace	1248	opioid-pain-clinical-practice-guideline
+3	ace	1294	inflexible-standard
+0	ace	1330	opioid-pain-clinical-practice-guideline
+18	ace	1381	recommended
+0	ace	1402	opioid-pain-clinical-practice-guideline
+17	ace	1447	not
+16	ace	1451	cause
+5	ace	1460	opioid
+0	ace	1509	opioid-pain-clinical-practice-guideline
+18	ace	1560	recommended
+0	ace	1581	opioid-pain-clinical-practice-guideline
+17	ace	1626	not
+16	ace	1630	cause
+5	ace	1639	opioid
+0	ace	1690	opioid-pain-clinical-practice-guideline
+17	ace	1733	not
+9	ace	1739	clinical-practice
+6	ace	1757	law
+0	ace	1768	opioid-pain-clinical-practice-guideline
+17	ace	1811	not
+9	ace	1817	clinical-practice
+7	ace	1835	regulation
+0	ace	1853	opioid-pain-clinical-practice-guideline
+17	ace	1896	not
+9	ace	1902	clinical-practice
+8	ace	1920	policy
+0	ace	1934	opioid-pain-clinical-practice-guideline
+17	ace	1977	not
+10	ace	1984	FDA-approved-labeling-substitute
+24	ace	2023	patient
+11	ace	2037	sickle-cell-disease-pain
+19	ace	2101	applies
+24	ace	2116	patient
+24	ace	2130	patient
+12	ace	2144	cancer-related-pain
+19	ace	2203	applies
+24	ace	2218	patient
+24	ace	2232	patient
+13	ace	2251	palliative-care
+19	ace	2306	applies
+24	ace	2321	patient
+24	ace	2335	patient
+14	ace	2355	end-of-life-care
+19	ace	2411	applies
+24	ace	2426	patient
+0	ace	2441	opioid-pain-clinical-practice-guideline
+17	ace	2484	not
+15	ace	2491	opioid-use-disorder-medication-guideline
 0	src	5	clinical practice guideline
 17	src	36	not
 1	src	42	replacement for clinical judgment
 2	src	79	individualized, person-centered care
 18	src	117	intended
 3	src	143	inflexible standards of care
+24	src	179	patients
+20	src	214	health care professionals
+21	src	241	health systems
+22	src	269	third-party payers
+23	src	292	governmental jurisdictions
 16	src	325	lead to
-4	src	337	rapid tapering
 5	src	355	abrupt discontinuation of opioids
 6	src	405	law
 7	src	410	regulation

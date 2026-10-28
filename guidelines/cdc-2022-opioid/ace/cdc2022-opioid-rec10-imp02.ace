@@ -1,1 +1,1 @@
-If a patient has a toxicology-test-result then every clinician should avoid a patient-dismissal-from-care for the patient.
+If a patient has a toxicology-test-result and there is a clinician then it is recommended that the clinician does not dismiss the patient from a care on a toxicology-test-result-basis.

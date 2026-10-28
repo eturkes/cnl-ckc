@@ -7,11 +7,18 @@
 6	ace	88	pharmacologic
 7	ace	102	bowel
 8	ace	108	therapy
+9	ace	122	regular
+5	ace	148	prophylactic
+10	ace	214	stimulant-laxative
+11	ace	267	stool-softener
 5	src	0	Prophylactic
 6	src	13	pharmacologic
 8	src	27	therapy
+10	src	44	stimulant laxative
+11	src	96	stool softener
 3	src	115	usually
 4	src	123	needed
+9	src	140	regular
 7	src	148	bowel
 2	src	167	opioids
 1	src	179	taken

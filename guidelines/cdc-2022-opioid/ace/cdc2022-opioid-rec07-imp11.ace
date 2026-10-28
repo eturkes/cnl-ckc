@@ -1,3 +1,5 @@
-If a virtual-visit is a standard-care in a practice-context then every clinician may conduct an observational-telehealth-follow-up-assessment with a patient.
+If a clinician works in a practice-context and a virtual-visit is a standard-care in the practice-context then the clinician may conduct an observational-telehealth-follow-up-assessment with a patient.
 If a patient has an in-person-follow-up-visit-challenge then every clinician may conduct an observational-telehealth-follow-up-assessment with the patient.
-Every observational-telehealth-follow-up-assessment can enable a clinician-patient-communication and can enable a patient-observation.
+If a clinician conducts an observational-telehealth-follow-up-assessment with a patient then the clinician can communicate with the patient through the observational-telehealth-follow-up-assessment and can observe the patient through the observational-telehealth-follow-up-assessment.
+A virtual-visit-standard-care-practice-context-example is a distance-or-other-context-challenged-remote-area-example.
+An in-person-follow-up-visit-challenge-example is a frail-patient-example.

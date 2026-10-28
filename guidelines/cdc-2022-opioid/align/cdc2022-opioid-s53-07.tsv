@@ -17,31 +17,30 @@
 12	ace	308	toxicology-expert
 13	ace	326	availability
 14	ace	346	unexpected
-14	ace	368	result
-10	ace	382	health-system
-11	ace	400	ensure
-12	ace	409	toxicology-expert
-13	ace	427	availability
-14	ace	447	unexpected
-14	ace	469	result
-9	ace	492	practice
-11	ace	518	ensure
-15	ace	527	non-burdensome
-16	ace	542	patient-cost
-10	ace	562	health-system
-11	ace	580	ensure
-15	ace	589	non-burdensome
-16	ace	604	patient-cost
-9	ace	633	practice
-11	ace	659	ensure
-17	ace	668	bias-minimizing
-18	ace	684	testing
-19	ace	692	policy
-10	ace	706	health-system
-11	ace	724	ensure
-17	ace	733	bias-minimizing
-18	ace	749	testing
-19	ace	757	policy
+10	ace	393	health-system
+11	ace	411	ensure
+12	ace	420	toxicology-expert
+13	ace	438	availability
+14	ace	458	unexpected
+9	ace	514	practice
+11	ace	540	ensure
+15	ace	549	non-burdensome
+16	ace	564	patient-cost
+10	ace	584	health-system
+11	ace	602	ensure
+15	ace	611	non-burdensome
+16	ace	626	patient-cost
+9	ace	655	practice
+11	ace	681	ensure
+17	ace	690	bias
+10	ace	742	health-system
+11	ace	760	ensure
+17	ace	769	bias
+3	ace	817	toxicology
+4	ace	843	includes
+12	ace	854	laboratorian
+4	ace	879	includes
+12	ace	890	toxicologist
 0	src	13	clinicians
 6	src	28	become familiar with
 5	src	53	drugs
@@ -60,6 +59,4 @@
 14	src	256	unexpected results
 16	src	281	costs to patients
 15	src	303	not burdensome
-19	src	328	practice policies
-18	src	356	testing
 17	src	382	minimize bias

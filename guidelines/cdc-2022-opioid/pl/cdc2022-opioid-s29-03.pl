@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s29-03',ace_sha256('043d90bc786094aca97ae4bafc386ef0c7ccd4eea09b997d9ec1ae54e6e163f8'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s29-03',ace_sha256('8bbd21f5f3dc0d18a1d5290b6a505179ec793d78fad633ba80116a8e45954089'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every clinician should explicitly and realistically discuss an expected-opioid-benefit with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-03',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-03',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s29-03',1,ref(2),[A]),'expected-opioid-benefit',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -87,3 +87,23 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-s29-03',4,box(1),[A]),'$
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s29-03',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s29-03',4,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s29-03',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s29-03',4,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s29-03',4,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s29-03',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s29-03',4,ref(4),[A]),with,'$guideline_id'(product,'cdc2022-opioid-s29-03',4,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S5: There is no robust-long-term-opioid-pain-improvement-evidence.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-03',5,box(1),[]),-).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-03',5,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',5,ref(1),[]),'robust-long-term-opioid-pain-improvement-evidence',countable).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s29-03',5,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',5,ref(1),[]),na,eq,1).
+% S6: There is no robust-long-term-opioid-function-improvement-evidence.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-03',6,box(1),[]),-).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-03',6,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',6,ref(1),[]),'robust-long-term-opioid-function-improvement-evidence',countable).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s29-03',6,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',6,ref(1),[]),na,eq,1).
+% S7: It is possible that an opioid-therapy does not likely eliminate a pain completely.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(1),[]),can).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(1),[]),'opioid-therapy',countable).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(1),[]),na,eq,1).
+guideline_operator('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(1),[]),'$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),-).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(2),[]),pain,countable).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(2),[]),na,eq,1).
+guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(3),[]),possibility,likely).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(3),[]),eliminate).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(1),[])).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(2),[])).
+guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s29-03',7,box(2),[]),'$guideline_id'(product,'cdc2022-opioid-s29-03',7,ref(3),[]),manner,completely).

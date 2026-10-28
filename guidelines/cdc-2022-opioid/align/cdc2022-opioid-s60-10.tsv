@@ -2,6 +2,9 @@
 0	ace	54	opioid-use-disorder-diagnosis
 2	ace	109	consider
 1	ace	120	buprenorphine-for-pain-transition
+1	ace	177	buprenorphine
+3	ace	211	full-agonist-opioid
 0	src	15	diagnosis of opioid use disorder
 1	src	49	transitioning to buprenorphine for pain
 2	src	101	considered
+3	src	203	full agonist opioids

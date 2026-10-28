@@ -1,24 +1,35 @@
 0	ace	5	patient
 3	ace	19	depression
-2	ace	53	higher-opioid-harm-risk
-4	ace	97	mental-health-condition
-2	ace	144	higher-opioid-harm-risk
-5	ace	188	substance-use-disorder-history
-2	ace	242	higher-opioid-harm-risk
-6	ace	287	overdose-history
-2	ace	327	higher-opioid-harm-risk
-7	ace	371	combined-opioid-dosage
-7	ace	402	combined-opioid-dosage
-7	ace	434	at least
-7	ace	443	50 MME-units-per-day
-2	ace	487	higher-opioid-harm-risk
-8	ace	533	central-nervous-system-depressant
-9	ace	567	with an opioid
-2	ace	605	higher-opioid-harm-risk
-2	ace	649	higher-opioid-harm-risk
-1	ace	684	clinician
-10	ace	701	reevaluate
-11	ace	724	at an interval of less than 3 months
+0	ace	39	patient
+2	ace	60	opioid-use-disorder-or-overdose
+0	ace	103	patient
+4	ace	117	mental-health-condition
+0	ace	150	patient
+2	ace	171	opioid-use-disorder-or-overdose
+0	ace	214	patient
+5	ace	228	substance-use-disorder-history
+0	ace	268	patient
+2	ace	289	opioid-use-disorder-or-overdose
+0	ace	332	patient
+6	ace	347	overdose-history
+0	ace	373	patient
+2	ace	394	opioid-use-disorder-or-overdose
+0	ace	437	patient
+7	ace	451	combined-opioid-dosage
+7	ace	482	combined-opioid-dosage
+0	ace	553	patient
+2	ace	574	opioid-use-disorder-or-overdose
+0	ace	617	patient
+8	ace	633	central-nervous-system-depressant
+2	ace	675	opioid
+0	ace	691	patient
+2	ace	712	opioid-use-disorder-or-overdose
+0	ace	755	patient
+2	ace	776	opioid-use-disorder-or-overdose
+1	ace	824	clinician
+10	ace	841	reevaluate
+0	ace	856	patient
+11	ace	894	months
 1	src	0	Clinicians
 10	src	18	reevaluate
 0	src	29	patients
@@ -29,5 +40,4 @@
 6	src	203	history of overdose
 7	src	224	taking ≥50 MME/day
 8	src	260	central nervous system depressants
-9	src	295	with opioids
 11	src	309	more frequently than every 3 months

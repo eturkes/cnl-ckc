@@ -1,6 +1,6 @@
-Every clinician may discuss a continued-opioid-benefit-perception with a patient.
-Every clinician may discuss a continued-opioid-risk-perception with a patient.
-Every clinician may discuss a continued-opioid-adverse-effect-perception with a patient.
-Every clinician may include a patient-concern in a taper-plan.
-If a patient receives more than 1 prescribed-opioid then every clinician may include the patient in a medication-first-decrease-decision.
-Every clinician may include a patient in a taper-speed-decision.
+If a patient has a continued-opioid-benefit-perception then every clinician may discuss the continued-opioid-benefit-perception with the patient.
+If a patient has a continued-opioid-risk-perception then every clinician may discuss the continued-opioid-risk-perception with the patient.
+If a patient has a continued-opioid-adverse-effect-perception then every clinician may discuss the continued-opioid-adverse-effect-perception with the patient.
+If a patient has a patient-concern and a clinician plans an opioid-taper for the patient then the clinician may include the patient-concern in a taper-plan for the patient.
+If a patient receives more than 1 prescribed-opioid and a clinician plans an opioid-taper for the patient then the clinician may include the patient in a medication-first-decrease-decision for the opioid-taper.
+If a clinician plans an opioid-taper for a patient then the clinician may include the patient in a taper-speed-decision for the opioid-taper.

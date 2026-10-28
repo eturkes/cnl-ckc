@@ -1,6 +1,22 @@
 0	ace	6	payer
 1	ace	16	support
 2	ace	26	broader-nonpharmacologic-intervention-array
+2	ace	81	nonpharmacologic-intervention
+3	ace	131	exercise
+4	ace	163	multidisciplinary-rehabilitation
+5	ace	219	mind-body-intervention
+6	ace	265	cognitive-behavioral-therapy
+7	ace	333	complementary-and-integrative-medicine
+7	ace	407	complementary-and-integrative-medicine
+8	ace	474	acupuncture
+9	ace	509	spinal-manipulation
 0	src	19	payers
 1	src	30	support
 2	src	40	broader array of nonpharmacologic interventions
+3	src	96	exercise
+4	src	106	multidisciplinary rehabilitation
+5	src	140	mind-body interventions
+6	src	165	cognitive behavioral therapy
+7	src	207	complementary and integrative medicine
+8	src	263	acupuncture
+9	src	279	spinal manipulation

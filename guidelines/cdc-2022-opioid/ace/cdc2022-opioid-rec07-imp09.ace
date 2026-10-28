@@ -1,2 +1,3 @@
-If a patient has a treatment-course then every clinician should regularly screen the patient for an opioid-risk-condition during the treatment-course.
-Every opioid-risk-condition can change during a treatment-course.
+If a patient receives an opioid-therapy then every clinician should regularly screen the patient for an opioid-risk-condition during the opioid-therapy.
+If a patient receives an opioid-therapy and has an opioid-risk-condition then the opioid-risk-condition can change during the opioid-therapy.
+An opioid-risk-condition-example includes a depression-example and includes a mental-health-condition-example and includes a substance-use-disorder-history-example and includes an overdose-history-example and includes an at-least-50-MME-per-day-dosage-example and includes a concurrent-central-nervous-system-depressant-use-example.

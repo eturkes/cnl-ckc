@@ -1,4 +1,4 @@
-6	ace	18	not
+5	ace	18	not
 2	ace	30	objective-opioid-withdrawal-sign
 4	ace	99	recommended
 5	ace	135	not
@@ -6,10 +6,12 @@
 1	ace	149	conduct
 0	ace	168	buprenorphine
 1	ace	182	initiation
+0	ace	216	buprenorphine
+7	ace	235	partial-agonist
+7	src	5	partial agonist
 0	src	22	buprenorphine
 4	src	36	should
 3	src	43	generally
 5	src	53	not
 1	src	60	initiated
-6	src	70	until
 2	src	86	objective signs of withdrawal

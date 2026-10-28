@@ -11,8 +11,13 @@
 1	ace	237	offer
 2	ace	245	naloxone-dose
 0	ace	266	patient
+3	ace	297	naloxone
+5	ace	318	required
+6	ace	337	opioid-prescription
 3	src	34	cost of naloxone
 4	src	55	access for some patients
+5	src	143	required
+6	src	160	opioid prescriptions
 0	src	196	patient
 3	src	205	without a way to afford naloxone
 2	src	274	naloxone

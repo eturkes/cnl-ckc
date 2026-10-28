@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp26',ace_sha256(cc22c80a2e2d7c5ef078f2ead5e85761e16bfd196940b426966dab687a597dc3),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-rec05-imp26',ace_sha256(cc22c80a2e2d7c5ef078f2ead5e85761e16bfd196940b426966dab687a597dc3),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: A communication-principle is relevant during a shorter-duration-opioid-discontinuation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(1),[]),'communication-principle',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(1),[]),na,eq,1).
@@ -54,6 +54,7 @@ guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(4),[]),be).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(3),[])).
+guideline_qualifier(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(4),[]),applicability,relevant).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(2),[])).
 % S2: A pain-management-principle is relevant during a shorter-duration-opioid-discontinuation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(1),[]),'pain-management-principle',countable).
@@ -64,6 +65,7 @@ guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(4),[]),be).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(3),[])).
+guideline_qualifier(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(4),[]),applicability,relevant).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',2,ref(2),[])).
 % S3: A behavioral-support-principle is relevant during a shorter-duration-opioid-discontinuation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(1),[]),'behavioral-support-principle',countable).
@@ -74,6 +76,7 @@ guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(4),[]),be).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(3),[])).
+guideline_qualifier(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(4),[]),applicability,relevant).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',3,ref(2),[])).
 % S4: A slower-taper-principle is relevant during a shorter-duration-opioid-discontinuation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(1),[]),'slower-taper-principle',countable).
@@ -84,6 +87,7 @@ guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),be).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(3),[])).
+guideline_qualifier(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),applicability,relevant).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(2),[])).
 % S5: If there is a recommendation-5 and there is a long-term-opioid-therapy and there is a subacute-pain then the recommendation-5 applies during the long-term-opioid-therapy for the subacute-pain.
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[A,B,C]),apply) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'subacute-pain',countable), guideline_cardinality(actual,C,na,eq,1).

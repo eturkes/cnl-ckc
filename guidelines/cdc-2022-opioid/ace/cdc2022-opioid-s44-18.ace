@@ -1,5 +1,6 @@
 Every clinician should ask a patient about a common-opioid-adverse-effect.
-Every clinician should ask a patient about an overdose-warning-sign.
-Every clinician should assess an overdose-warning-sign for a patient.
-Every clinician should ask a patient about an opioid-use-disorder-warning-sign.
-Every clinician should assess an opioid-use-disorder-warning-sign for a patient.
+If there is a clinician then it is recommended that the clinician asks a patient about a possible-early-overdose-warning-sign and assesses the possible-early-overdose-warning-sign for the patient.
+If there is a clinician then it is recommended that the clinician asks a patient about a possible-early-opioid-use-disorder-warning-sign and assesses the possible-early-opioid-use-disorder-warning-sign for the patient.
+A common-opioid-adverse-effect-example includes a constipation-example and includes a drowsiness-example.
+A possible-early-overdose-warning-sign-example includes a sedation-example and includes a slurred-speech-example.
+A possible-early-opioid-use-disorder-warning-sign-example includes a craving-example and includes a greater-than-prescribed-quantity-or-frequency-wish-example and includes an opioid-use-control-difficulty-example and includes an opioid-use-related-work-social-or-family-problem-example.

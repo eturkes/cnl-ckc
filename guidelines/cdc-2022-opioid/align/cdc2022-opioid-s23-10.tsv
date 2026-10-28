@@ -11,10 +11,16 @@
 1	ace	261	patient
 4	ace	269	uses
 4	ace	276	central-nervous-system-depressant
+2	ace	318	opioid
 6	ace	353	particularly
 0	ace	366	discuss
 2	ace	377	opioid-driving-or-machinery-safety-effect
 1	ace	428	patient
+2	ace	443	opioid
+2	ace	477	vehicle
+4	ace	519	central-nervous-system-depressant
+7	ace	572	benzodiazepine
+8	ace	611	alcohol
 0	src	0	Discuss
 2	src	8	effects that opioids might have
 1	src	45	person
@@ -22,4 +28,6 @@
 6	src	110	particularly
 3	src	128	opioids are initiated
 4	src	158	other central nervous system depressants
+7	src	206	benzodiazepines
+8	src	225	alcohol
 4	src	234	are used concurrently

@@ -10,18 +10,31 @@
 1	ace	167	assess
 5	ace	176	quality-of-life
 6	ace	199	PEG-assessment-scale
-0	ace	227	clinician
-2	ace	241	monitor
-3	ace	251	patient-function
-6	ace	275	PEG-assessment-scale
-0	ace	303	clinician
-2	ace	317	monitor
-4	ace	327	pain-severity
-6	ace	348	PEG-assessment-scale
-0	ace	376	clinician
-2	ace	390	monitor
-5	ace	400	quality-of-life
-6	ace	423	PEG-assessment-scale
+0	ace	226	clinician
+3	ace	247	patient-function
+6	ace	271	PEG-assessment-scale
+0	ace	301	clinician
+2	ace	315	monitor
+3	ace	327	patient-function
+6	ace	353	PEG-assessment-scale
+0	ace	380	clinician
+4	ace	401	pain-severity
+6	ace	422	PEG-assessment-scale
+0	ace	452	clinician
+2	ace	466	monitor
+4	ace	478	pain-severity
+6	ace	501	PEG-assessment-scale
+0	ace	528	clinician
+5	ace	549	quality-of-life
+6	ace	572	PEG-assessment-scale
+0	ace	602	clinician
+2	ace	616	monitor
+5	ace	628	quality-of-life
+6	ace	653	PEG-assessment-scale
+6	ace	681	PEG-assessment-scale
+7	ace	713	pain-average
+8	ace	747	enjoyment-of-life
+9	ace	798	general-activity
 0	src	0	Clinicians
 1	src	15	assess
 2	src	31	follow
@@ -29,4 +42,7 @@
 4	src	48	pain severity
 5	src	67	quality of life
 6	src	118	PEG
+7	src	123	Pain average
+8	src	155	Enjoyment of life
+9	src	196	General activity
 6	src	214	assessment scale

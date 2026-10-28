@@ -1,2 +1,3 @@
-If a patient has a negative-toxicology-test for a prescribed-opioid then the negative-toxicology-test can possibly indicate a prescribed-opioid-nonuse for the patient.
-If a patient has a negative-toxicology-test for a prescribed-opioid and a clinician reviews the negative-toxicology-test then the clinician should consider a false-negative-test-result and should consider a test-result-misinterpretation.
+If a patient has a negative-toxicology-test for a prescribed-opioid then the negative-toxicology-test can possibly indicate a prescribed-opioid-nonuse for the patient and it is possible that the patient does not take the prescribed-opioid.
+If a patient has a negative-toxicology-test for a prescribed-opioid and a clinician reviews the negative-toxicology-test then the clinician should consider an other-possible-test-result-reason.
+A test-result-reason-example includes a false-negative-test-result-example and includes a test-result-misinterpretation-example.

@@ -1,5 +1,5 @@
 0	ace	5	clinician
-2	ace	15	continues an opioid-therapy
+2	ace	28	opioid-therapy
 1	ace	49	patient
 1	ace	65	patient
 3	ace	80	overdose-history
@@ -8,14 +8,15 @@
 5	ace	134	increased-overdose-risk
 1	ace	167	patient
 13	ace	186	carefully
-6	ace	196	weigh an opioid-benefit against a substantial-opioid-risk
+2	ace	205	opioid
+6	ace	230	substantial
 1	ace	262	patient
 7	ace	281	incorporate
 8	ace	295	risk-mitigation-strategy
 9	ace	325	management-plan
 1	ace	350	patient
 0	ace	364	clinician
-2	ace	374	continues an opioid-therapy
+2	ace	387	opioid-therapy
 1	ace	408	patient
 1	ace	424	patient
 3	ace	439	overdose-history
@@ -23,9 +24,8 @@
 10	ace	479	offer
 11	ace	487	naloxone-dose
 1	ace	508	patient
-12	ace	520	may increase
-12	ace	535	patient-monitoring
-1	ace	562	patient
+1	ace	535	patient
+1	ace	572	patient
 0	src	3	clinicians
 2	src	14	continue opioid therapy
 1	src	41	patients
@@ -39,4 +39,3 @@
 9	src	273	management plan
 10	src	296	offering
 11	src	305	naloxone
-12	src	318	increasing frequency of monitoring

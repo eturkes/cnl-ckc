@@ -1,3 +1,4 @@
 If a clinician conducts an MME-dosage-determination then it is recommended that the clinician does not include a buprenorphine in the MME-dosage-determination.
 Every buprenorphine has a partial-opioid-receptor-agonist-property.
 Every buprenorphine has a respiratory-depression-ceiling-effect.
+If a buprenorphine has a partial-opioid-receptor-agonist-property and has a respiratory-depression-ceiling-effect then the partial-opioid-receptor-agonist-property causes the respiratory-depression-ceiling-effect.

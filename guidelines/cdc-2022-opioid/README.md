@@ -65,17 +65,18 @@ that it was published with.
   Other skipped KK ordinals mark impl-list regions ruled `restates(...)`
   or `uncovered(...)` in `coverage.tsv`; their ordinals stay reserved.
   Each document holds one or more knowledge sentences — typically
-  universal rules (21 documents hold a single sentence, the rest 2 to 25).
+  universal rules (17 documents hold a single sentence, the rest 2 to 28).
   The sentences project the region's directive, per
   `audit/projection-notes.tsv`. For a region that states a benefit or a
   possibility rather than an imperative, they state the claim under
   "can" with its qualifier (schema S2). Implementation considerations carry no
   category/evidence parenthetical. Three non-clinician actor regions use
   their own classes:
-  - S24-02 `health-insurer-or-health-system` (neutral);
-  - S36-03 `payer-health-system-or-state-medical-board` (neutral);
-  - S35-09 `taper-support-team-member` (human — nurses, pharmacists, and
-    behavioral-health specialists serving as taper-support team members).
+  - S24-02 `health-insurer` and `health-system` (neutral);
+  - S36-03 `opioid-policy-setter` (neutral; the document states that every
+    payer, health system and state medical board is an opioid policy setter);
+  - S35-09 `taper-team-member` (human; nurses, pharmacists and behavioral
+    health professionals are its examples).
 - `ace/cdc2022-opioid-<region-id>.ace` — one ACE document per formalized
   front-matter or recommendation 1–5 supporting-rationale region outside
   the implementation-consideration lists (127 documents; docid = the

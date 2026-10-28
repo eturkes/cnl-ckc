@@ -15,12 +15,21 @@
 3	ace	195	consider
 4	ace	207	increased-combination-overdose-risk
 1	ace	254	prescribe
-10	ace	268	immediate-release
-12	ace	286	opioid
+2	ace	268	immediate-release-opioid
 2	ace	293	with
-11	ace	302	ER-LA
-12	ace	308	opioid
+2	ace	302	ER-LA-opioid
 6	ace	315	cautiously
+10	ace	330	immediate-release
+10	ace	406	immediate-release
+14	ace	482	short-term-opioid
+15	ace	556	acute-pain
+9	ace	582	combined
+10	ace	591	immediate-release
+11	ace	613	ER-LA
+12	ace	619	opioid
+13	ace	626	prescription
+7	ace	643	possibly
+4	ace	664	overdose-risk
 0	src	31	clinicians
 7	src	42	might
 8	src	48	need
@@ -29,6 +38,8 @@
 11	src	88	ER/LA
 12	src	94	opioids
 9	src	102	together
+14	src	273	short-term opioids
+15	src	448	acute pain
 0	src	461	clinicians
 3	src	479	consider
 4	src	492	potential for increased overdose risk

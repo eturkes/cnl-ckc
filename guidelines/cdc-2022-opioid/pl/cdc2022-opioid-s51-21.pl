@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s51-21',ace_sha256('9dd277c3d0a69ecbaeec61a81e98dc679f637ed8fc358e85083241d602549043'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s51-21',ace_sha256('6ba836ee4af72b24c9c53182810499cdb1586b2569ef98767a7b032fd653eacb'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every PDMP-risk-score-algorithm can reportedly generate a PDMP-risk-score.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]),can) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',1,ref(2),[A]),'PDMP-risk-score',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -53,59 +53,71 @@ guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',1,ref(3),[A]),generate) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',1,ref(3),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',1,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',1,ref(2),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-% S2: Every PDMP-risk-score-algorithm uses a patient-EHR-information and uses an other-source-information.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(2),[A]),'patient-EHR-information',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+% S2: Every PDMP-risk-score-algorithm is a proprietary-algorithm and is not a publicly-available-algorithm.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(2),[A]),'proprietary-algorithm',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(3),[A]),use) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(3),[A]),be) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(2),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(4),[A]),'other-source-information',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(4),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(5),[A]),use) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(5),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(5),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(4),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-% S3: An other-source-example includes a court-record-example and includes a criminal-history-example and includes a sexual-trauma-history-example.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(1),[]),'other-source-example',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(2),[]),'court-record-example',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(2),[]),na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(3),[]),include).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(2),[])).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(4),[]),'criminal-history-example',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(4),[]),na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(5),[]),include).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(4),[])).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(6),[]),'sexual-trauma-history-example',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(6),[]),na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(7),[]),include).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(7),[]),1,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(7),[]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(6),[])).
-% S4: Every PDMP-risk-score-algorithm can possibly affect a woman disparately.
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),can) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(2),[A]),woman,countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[A]),possibility,possibly) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event('$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[A]),affect) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(2),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[A]),manner,disparately) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-% S5: Every PDMP-risk-score-algorithm can possibly affect a person-of-color disparately.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s51-21',2,box(1),[A]),-) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(4),[A]),'publicly-available-algorithm',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s51-21',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(4),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-s51-21',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(5),[A]),be) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(5),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(5),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',2,ref(4),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+% S3: Every PDMP-risk-score-algorithm uses a patient-EHR-information and uses an other-source-information.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(2),[A]),'patient-EHR-information',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(3),[A]),use) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(3),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(2),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(4),[A]),'other-source-information',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(4),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(5),[A]),use) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(5),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(5),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',3,ref(4),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+% S4: An other-source-example includes a court-record-example and includes a criminal-history-example and includes a sexual-trauma-history-example.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(1),[]),'other-source-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(2),[]),'court-record-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(2),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(4),[]),'criminal-history-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(4),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(5),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(6),[]),'sexual-trauma-history-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(6),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(7),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(7),[]),1,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(7),[]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',4,ref(6),[])).
+% S5: Every PDMP-risk-score-algorithm can possibly affect a woman disparately.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),can) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(2),[A]),'person-of-color',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(2),[A]),woman,countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(3),[A]),possibility,possibly) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(3),[A]),affect) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(3),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(2),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',5,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',5,ref(3),[A]),manner,disparately) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-% S6: Every PDMP-risk-score-algorithm can possibly affect a person-living-in-poverty disparately.
+% S6: Every PDMP-risk-score-algorithm can possibly affect a person-of-color disparately.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),can) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(2),[A]),'person-living-in-poverty',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(2),[A]),'person-of-color',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(3),[A]),possibility,possibly) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_event('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(3),[A]),affect) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(3),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(2),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',6,ref(3),[A]),manner,disparately) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+% S7: Every PDMP-risk-score-algorithm can possibly affect a person-living-in-poverty disparately.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),can) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(2),[A]),'person-living-in-poverty',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(3),[A]),possibility,possibly) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(3),[A]),affect) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(3),[A]),1,A) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(2),[A])) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s51-21',7,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',7,ref(3),[A]),manner,disparately) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).

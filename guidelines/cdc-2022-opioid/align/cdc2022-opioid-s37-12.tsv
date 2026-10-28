@@ -3,6 +3,20 @@
 4	ace	65	taper
 5	ace	75	benzodiazepine
 3	ace	90	gradually
+6	ace	107	benzodiazepine-withdrawal
+7	ace	146	anxiety
+8	ace	170	hallucination
+9	ace	200	seizure
+10	ace	227	delirium-tremens
+11	ace	252	rarely
+12	ace	267	death
 5	src	0	Benzodiazepines
 4	src	26	tapered
 3	src	34	gradually
+7	src	62	anxiety
+8	src	71	hallucinations
+9	src	87	seizures
+10	src	97	delirium tremens
+11	src	120	rarely
+12	src	128	death
+6	src	138	benzodiazepine withdrawal

@@ -9,13 +9,26 @@
 5	ace	129	opioid
 11	ace	136	with
 0	ace	143	central-nervous-system-depressant
-6	ace	186	clinician
-7	ace	196	should
-8	ace	203	weigh
-9	ace	211	benefit
-8	ace	219	against
-10	ace	229	risk
+0	ace	185	central-nervous-system-depressant
+6	ace	252	clinician
+7	ace	262	should
+8	ace	269	weigh
+9	ace	277	benefit
+8	ace	285	against
+10	ace	295	risk
+0	ace	303	central-nervous-system-depressant
+12	ace	356	muscle-relaxant
+13	ace	395	nonbenzodiazepine-sedative-hypnotic
+14	ace	454	potentially-sedating-anticonvulsant
+14	ace	501	potentially-sedating-anticonvulsant
+15	ace	556	gabapentin
+16	ace	590	pregabalin
 0	src	27	central nervous system depressants
+12	src	69	muscle relaxants
+13	src	87	nonbenzodiazepine sedative hypnotics
+14	src	129	potentially sedating anticonvulsant
+15	src	185	gabapentin
+16	src	200	pregabalin
 1	src	218	can
 2	src	222	potentiate
 3	src	233	respiratory depression

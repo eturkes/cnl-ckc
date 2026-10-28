@@ -1,2 +1,2 @@
 If a patient has a pain then the patient should receive an appropriate-pain-treatment.
-Every clinician should carefully weigh a treatment-benefit against a treatment-risk in a patient-circumstance.
+If a patient has a pain and a treatment-option has a treatment-benefit and has a treatment-risk then every clinician should carefully weigh the treatment-benefit against the treatment-risk for the patient in a patient-circumstance.

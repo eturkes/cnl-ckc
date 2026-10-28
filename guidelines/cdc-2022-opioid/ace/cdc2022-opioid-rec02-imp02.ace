@@ -1,25 +1,28 @@
-Every clinician should recommend an exercise-therapy for a back-pain.
-Every clinician should recommend an exercise-therapy for a fibromyalgia.
-Every clinician should recommend an exercise-therapy for a hip-osteoarthritis.
-Every clinician should recommend an exercise-therapy for a knee-osteoarthritis.
-Every clinician should recommend a weight-loss for a knee-osteoarthritis.
-Every clinician should recommend a manual-therapy for a hip-osteoarthritis.
-Every clinician should recommend a psychological-therapy for a low-back-pain.
-Every clinician should recommend a spinal-manipulation for a low-back-pain.
-Every clinician should recommend a low-level-laser-therapy for a low-back-pain.
-Every clinician should recommend a massage for a low-back-pain.
-Every clinician should recommend a mindfulness-based-stress-reduction for a low-back-pain.
-Every clinician should recommend a yoga for a low-back-pain.
-Every clinician should recommend an acupuncture for a low-back-pain.
-Every clinician should recommend a multidisciplinary-rehabilitation for a low-back-pain.
-Every clinician should recommend a mind-body-practice for a neck-pain.
-Every clinician should recommend a massage for a neck-pain.
-Every clinician should recommend an acupuncture for a neck-pain.
-Every clinician should recommend a cognitive-behavioral-therapy for a fibromyalgia.
-Every clinician should recommend a myofascial-release-massage for a fibromyalgia.
-Every clinician should recommend a mindfulness-practice for a fibromyalgia.
-Every clinician should recommend a tai-chi for a fibromyalgia.
-Every clinician should recommend a qigong for a fibromyalgia.
-Every clinician should recommend an acupuncture for a fibromyalgia.
-Every clinician should recommend a multidisciplinary-rehabilitation for a fibromyalgia.
-Every clinician should recommend a spinal-manipulation for a tension-headache.
+If a patient has a back-pain and an exercise-or-exercise-therapy is appropriate for the patient then every clinician should recommend the exercise-or-exercise-therapy to the patient for the back-pain.
+If a patient has a fibromyalgia and an exercise-or-exercise-therapy is appropriate for the patient then every clinician should recommend the exercise-or-exercise-therapy to the patient for the fibromyalgia.
+If a patient has a hip-osteoarthritis and an exercise-or-exercise-therapy is appropriate for the patient then every clinician should recommend the exercise-or-exercise-therapy to the patient for the hip-osteoarthritis.
+If a patient has a knee-osteoarthritis and an exercise-or-exercise-therapy is appropriate for the patient then every clinician should recommend the exercise-or-exercise-therapy to the patient for the knee-osteoarthritis.
+If a patient has a knee-osteoarthritis and a weight-loss is appropriate for the patient then every clinician should recommend the weight-loss to the patient for the knee-osteoarthritis.
+If a patient has a hip-osteoarthritis and a manual-therapy is appropriate for the patient then every clinician should recommend the manual-therapy to the patient for the hip-osteoarthritis.
+If a patient has a low-back-pain and a psychological-therapy is appropriate for the patient then every clinician should recommend the psychological-therapy to the patient for the low-back-pain.
+If a patient has a low-back-pain and a spinal-manipulation is appropriate for the patient then every clinician should recommend the spinal-manipulation to the patient for the low-back-pain.
+If a patient has a low-back-pain and a low-level-laser-therapy is appropriate for the patient then every clinician should recommend the low-level-laser-therapy to the patient for the low-back-pain.
+If a patient has a low-back-pain and a massage is appropriate for the patient then every clinician should recommend the massage to the patient for the low-back-pain.
+If a patient has a low-back-pain and a mindfulness-based-stress-reduction is appropriate for the patient then every clinician should recommend the mindfulness-based-stress-reduction to the patient for the low-back-pain.
+If a patient has a low-back-pain and a yoga is appropriate for the patient then every clinician should recommend the yoga to the patient for the low-back-pain.
+If a patient has a low-back-pain and an acupuncture is appropriate for the patient then every clinician should recommend the acupuncture to the patient for the low-back-pain.
+If a patient has a low-back-pain and a multidisciplinary-rehabilitation is appropriate for the patient then every clinician should recommend the multidisciplinary-rehabilitation to the patient for the low-back-pain.
+If a patient has a neck-pain and a mind-body-practice is appropriate for the patient then every clinician should recommend the mind-body-practice to the patient for the neck-pain.
+If a patient has a neck-pain and a massage is appropriate for the patient then every clinician should recommend the massage to the patient for the neck-pain.
+If a patient has a neck-pain and an acupuncture is appropriate for the patient then every clinician should recommend the acupuncture to the patient for the neck-pain.
+If a patient has a fibromyalgia and a cognitive-behavioral-therapy is appropriate for the patient then every clinician should recommend the cognitive-behavioral-therapy to the patient for the fibromyalgia.
+If a patient has a fibromyalgia and a myofascial-release-massage is appropriate for the patient then every clinician should recommend the myofascial-release-massage to the patient for the fibromyalgia.
+If a patient has a fibromyalgia and a mindfulness-practice is appropriate for the patient then every clinician should recommend the mindfulness-practice to the patient for the fibromyalgia.
+If a patient has a fibromyalgia and a tai-chi is appropriate for the patient then every clinician should recommend the tai-chi to the patient for the fibromyalgia.
+If a patient has a fibromyalgia and a qigong is appropriate for the patient then every clinician should recommend the qigong to the patient for the fibromyalgia.
+If a patient has a fibromyalgia and an acupuncture is appropriate for the patient then every clinician should recommend the acupuncture to the patient for the fibromyalgia.
+If a patient has a fibromyalgia and a multidisciplinary-rehabilitation is appropriate for the patient then every clinician should recommend the multidisciplinary-rehabilitation to the patient for the fibromyalgia.
+If a patient has a tension-headache and a spinal-manipulation is appropriate for the patient then every clinician should recommend the spinal-manipulation to the patient for the tension-headache.
+An exercise-example includes an aerobic-exercise-example and includes an aquatic-exercise-example and includes a resistance-exercise-example.
+Every exercise-therapy is a prominent-physical-therapy-modality.
+A mind-body-practice-example includes a yoga-example and includes a tai-chi-example and includes a qigong-example.

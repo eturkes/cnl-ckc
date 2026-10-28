@@ -16,10 +16,28 @@
 3	ace	289	nonpharmacologic
 4	ace	306	therapy
 5	ace	322	specific-condition
+2	ace	344	nonopioid-pharmacologic
+7	ace	395	topical
+8	ace	433	oral-NSAID
+9	ace	468	acetaminophen
+3	ace	493	nonpharmacologic
+10	ace	565	heat
+11	ace	594	elevation
+12	ace	627	rest
+13	ace	656	immobilization
+14	ace	695	exercise
 0	src	0	Clinicians
 1	src	18	maximize
 2	src	34	nonopioid pharmacologic
+7	src	65	topical
+8	src	76	oral NSAIDs
+9	src	89	acetaminophen
 3	src	108	nonpharmacologic
+10	src	137	heat
+11	src	143	elevation
+12	src	154	rest
+13	src	160	immobilization
+14	src	179	exercise
 4	src	189	therapies
 6	src	199	as appropriate
 5	src	222	specific condition

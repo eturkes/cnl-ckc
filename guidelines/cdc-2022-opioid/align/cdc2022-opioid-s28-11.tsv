@@ -2,19 +2,38 @@
 1	ace	20	elicit
 2	ace	29	meaningful-functional-goal
 3	ace	63	patient
-0	ace	78	clinician
-4	ace	92	use
-2	ace	98	meaningful-functional-goal
-5	ace	135	opioid-benefit-assessment
-0	ace	168	clinician
-4	ace	182	use
-2	ace	188	meaningful-functional-goal
-6	ace	224	continued-opioid-benefit-risk-weighing
+2	ace	85	functional-goal
+7	ace	124	walking
+8	ace	155	block
+9	ace	192	part-time-work
+10	ace	237	family-event
+11	ace	284	recreational
+0	ace	331	clinician
+2	ace	351	meaningful-functional-goal
+3	ace	385	patient
+0	ace	402	clinician
+4	ace	416	use
+2	ace	424	meaningful-functional-goal
+5	ace	461	opioid-benefit-assessment
+3	ace	495	patient
+0	ace	509	clinician
+2	ace	529	meaningful-functional-goal
+3	ace	563	patient
+0	ace	580	clinician
+4	ace	594	use
+2	ace	602	meaningful-functional-goal
+6	ace	638	continued-opioid-benefit-risk-weighing
+3	ace	685	patient
 0	src	0	Clinicians
 1	src	15	ask
 3	src	19	patients
 2	src	34	functional goals
 2	src	61	meaning
+7	src	85	walking
+8	src	123	block
+9	src	143	part-time work
+10	src	173	family events
+11	src	190	recreational
 4	src	225	use
 5	src	244	assessing benefits of opioid therapy
 6	src	285	weighing benefits against risks of continued opioid therapy

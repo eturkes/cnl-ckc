@@ -7,10 +7,13 @@
 5	ace	133	opioid-overdose-education
 6	ace	170	offer
 7	ace	178	naloxone-dose
+8	ace	199	opioid-tolerance
+3	ace	234	abrupt-previous-higher-dose-return-overdose-risk
 0	src	0	Clinicians
 2	src	18	advise
 1	src	25	patients
 3	src	40	increased risk for overdose on abrupt return to a previously prescribed higher dose
+8	src	143	opioid tolerance
 4	src	161	provide
 5	src	169	opioid overdose education
 6	src	200	offer

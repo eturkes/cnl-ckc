@@ -16,6 +16,10 @@
 0	ace	367	patient
 5	ace	380	mental-health-specialist
 6	ace	411	treatment
+5	ace	424	mental-health-specialist
+7	ace	468	psychologist
+8	ace	504	psychiatrist
+9	ace	540	clinical-social-worker
 0	src	0	Patients
 1	src	31	anxiety
 2	src	42	fear
@@ -23,3 +27,6 @@
 4	src	125	referred
 6	src	138	treatment
 5	src	155	mental health specialist
+7	src	187	psychologist
+8	src	201	psychiatrist
+9	src	218	clinical social worker

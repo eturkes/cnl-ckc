@@ -1,7 +1,6 @@
 1	ace	5	patient
 2	ace	20	age
 2	ace	32	age
-9	ace	45	at least 65
 10	ace	57	years
 0	ace	69	clinician
 7	ace	79	initiates
@@ -34,13 +33,27 @@
 8	ace	486	opioid
 6	ace	493	cautiously
 1	ace	512	patient
+1	ace	526	patient
+2	ace	541	age
+2	ace	553	age
+10	ace	578	years
+1	ace	613	patient
+11	ace	642	therapeutic-window
+1	ace	667	patient
+3	ace	681	renal-insufficiency
+1	ace	730	patient
+11	ace	759	therapeutic-window
+1	ace	784	patient
+3	ace	798	hepatic-insufficiency
+1	ace	849	patient
+11	ace	878	therapeutic-window
 0	src	0	Clinicians
 6	src	33	caution
 7	src	46	initiating
 8	src	57	opioids
 1	src	69	patients
 2	src	78	aged
-9	src	83	≥65
 10	src	87	years
 1	src	97	patients
 3	src	111	renal or hepatic insufficiency
+11	src	175	therapeutic window

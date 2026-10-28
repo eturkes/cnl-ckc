@@ -1,12 +1,13 @@
 0	ace	2	recommendation
 1	ace	22	category-A
 2	ace	58	evidence-type-4
-3	ace	96	opioid is needed
+3	ace	96	opioid
+3	ace	106	needed
 4	ace	120	acute-pain
 5	ace	142	clinician
 6	ace	159	limit
 7	ace	168	opioid-quantity
-8	ace	191	expected-severe-pain-duration
+8	ace	191	expected
 3	src	5	opioids are needed
 4	src	28	acute pain
 5	src	40	clinicians

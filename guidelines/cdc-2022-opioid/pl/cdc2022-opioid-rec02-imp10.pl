@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec02-imp10',ace_sha256('96b8c234a8a8f3017e0e150197e2df685d30863fe9218041326ac21042d7cdab'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-rec02-imp10',ace_sha256('3351560ff74a4cea709f578efbfffba98826954e5dbc28d76f9ad38b405225dd'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every clinician may consider a tricyclic-antidepressant for a neuropathic-pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp10',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec02-imp10',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',1,ref(2),[A]),'tricyclic-antidepressant',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -105,3 +105,21 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec02-imp10',6,box(1),[A
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp10',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',6,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec02-imp10',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',6,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',6,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec02-imp10',6,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',6,ref(4),[A]),for,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',6,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S7: A selected-anticonvulsant-example includes a pregabalin-example and includes a gabapentin-enacarbil-example and includes an oxcarbazepine-example.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(1),[]),'selected-anticonvulsant-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(2),[]),'pregabalin-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(3),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(2),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(4),[]),'gabapentin-enacarbil-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(4),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(5),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(6),[]),'oxcarbazepine-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(6),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(7),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(7),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(7),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec02-imp10',7,ref(6),[])).

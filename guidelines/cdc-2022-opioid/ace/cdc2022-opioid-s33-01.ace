@@ -18,12 +18,22 @@ Every equianalgesic-dose-conversion is an estimate.
 No equianalgesic-dose-conversion can capture an individual-genetic-variability.
 No equianalgesic-dose-conversion can capture an individual-pharmacokinetic-variability.
 If there is a clinician then it is recommended that the clinician does not use a calculated-MME-dosage for an opioid-conversion-dosage.
-Every clinician can typically use a substantially-lower-opioid-dosage during an opioid-conversion.
+Every clinician can typically use a substantially-lower-opioid-dosage during an opioid-conversion for an overdose-avoidance.
+Every opioid-conversion can involve an incomplete-cross-tolerance and can involve an individual-opioid-pharmacokinetic-variability.
 If a clinician converts a methadone-dose then the clinician should particularly convert the methadone-dose cautiously.
+Every methadone has a long-and-variable-half-life.
+Every methadone-peak-respiratory-depressant-effect occurs after a methadone-peak-analgesic-effect and outlasts the methadone-peak-analgesic-effect.
 If a clinician prescribes a transdermal-fentanyl then the clinician should particularly prescribe the transdermal-fentanyl cautiously.
+Every transdermal-fentanyl-dose is a micrograms-per-hour-dose.
+Every heat-exposure can affect a transdermal-fentanyl-absorption.
+Every other-absorption-factor can affect a transdermal-fentanyl-absorption.
 Every clinician should consider a transdermal-fentanyl-dosing during a transdermal-fentanyl-prescription.
 Every clinician should consider a transdermal-fentanyl-absorption during a transdermal-fentanyl-prescription.
 An MME-conversion-table does not list a buprenorphine-pain-product.
+Every buprenorphine-pain-product shows a partial-mu-receptor-agonist-activity and shows a ceiling-effect.
 If there is a clinician then it is recommended that the clinician does not use a conversion-factor for an opioid-use-disorder-dosage-decision.
 Every tapentadol-medication is a mu-receptor-agonist and is a norepinephrine-reuptake-inhibitor.
 Every tramadol-medication is a mu-receptor-agonist and is a norepinephrine-reuptake-inhibitor and is a serotonin-reuptake-inhibitor.
+Every MME-value reflects a mu-receptor-agonist-activity-degree.
+A tapentadol-versus-sole-mu-receptor-agonist-dose-dependent-overdose-association-comparison is unknown.
+A tramadol-versus-sole-mu-receptor-agonist-dose-dependent-overdose-association-comparison is unknown.

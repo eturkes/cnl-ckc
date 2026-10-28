@@ -1,1 +1,1 @@
-If a patient has a postsurgical-hospital-discharge then an inpatient-opioid-course-and-dosage can help an ongoing-pain-management-need-prediction for the patient.
+If a patient has a postsurgical-hospital-discharge and the patient receives an opioid-course-and-dosage during a hospitalization before the postsurgical-hospital-discharge then the opioid-course-and-dosage can help an ongoing-pain-management-need-prediction for the patient.

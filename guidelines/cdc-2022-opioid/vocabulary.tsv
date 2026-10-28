@@ -90,6 +90,8 @@ qualifier	reasonably	manner
 qualifier	disparately	manner
 qualifier	solely	focus
 qualifier	routinely	usuality
+qualifier	relevant	applicability
+qualifier	specifically	focus
 scope	recommendation	cdc-2022-opioid
 exclusion	apply	scope
 superseded	S39-14	20221229 https://www.govinfo.gov/content/pkg/PLAW-117publ328/html/PLAW-117publ328.htm Consolidated Appropriations Act, 2023 (Public Law 117-328), Division FF, section 1262(a)(1)

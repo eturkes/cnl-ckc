@@ -1,2 +1,4 @@
-If a patient has a pain and the patient has a single-joint-osteoarthritis and a nonpharmacologic-intervention does not improve the pain then it is possible that a topical-NSAID treats the pain.
-If a patient has a pain and the patient has a few-joint-osteoarthritis and a nonpharmacologic-intervention does not improve the pain then it is possible that a topical-NSAID treats the pain.
+If a patient has a pain and the patient has a single-joint-osteoarthritis that affects a near-skin-joint and the patient has an insufficient-nonpharmacologic-intervention-response for the pain then it is possible that a topical-NSAID treats the pain.
+If a patient has a pain and the patient has a few-joint-osteoarthritis that affects a near-skin-joint and the patient has an insufficient-nonpharmacologic-intervention-response for the pain then it is possible that a topical-NSAID treats the pain.
+A near-skin-joint-example is a knee-example.
+A nonpharmacologic-intervention-example is an exercise-for-arthritis-pain-example.

@@ -1,11 +1,13 @@
 A recommendation is a category-A-recommendation and is an evidence-type-2-recommendation.
-If a patient has a subacute-pain and a nonopioid-therapy is appropriate for the patient then every clinician should maximize the nonopioid-therapy for the subacute-pain.
-If a patient has a chronic-pain and a nonopioid-therapy is appropriate for the patient then every clinician should maximize the nonopioid-therapy for the chronic-pain.
 If a patient has a subacute-pain then every nonopioid-therapy is preferred for the subacute-pain.
 If a patient has a chronic-pain then every nonopioid-therapy is preferred for the chronic-pain.
-If an opioid-benefit does not likely outweigh an opioid-risk and there is a clinician then it is recommended that the clinician does not consider an opioid-therapy.
-Every clinician should discuss a realistic-benefit with a patient before an initiation.
-Every clinician should discuss a known-risk with a patient before an initiation.
-Every clinician should establish a pain-goal with a patient.
-Every clinician should establish a function-goal with a patient.
-If an opioid-benefit does not outweigh an opioid-risk then every clinician should consider a discontinuation.
+If a patient has a subacute-pain and a nonpharmacologic-therapy is appropriate for the subacute-pain and is appropriate for the patient then every clinician should maximize the nonpharmacologic-therapy for the subacute-pain.
+If a patient has a subacute-pain and a nonopioid-pharmacologic-therapy is appropriate for the subacute-pain and is appropriate for the patient then every clinician should maximize the nonopioid-pharmacologic-therapy for the subacute-pain.
+If a patient has a chronic-pain and a nonpharmacologic-therapy is appropriate for the chronic-pain and is appropriate for the patient then every clinician should maximize the nonpharmacologic-therapy for the chronic-pain.
+If a patient has a chronic-pain and a nonopioid-pharmacologic-therapy is appropriate for the chronic-pain and is appropriate for the patient then every clinician should maximize the nonopioid-pharmacologic-therapy for the chronic-pain.
+If a patient has a subacute-pain and an expected-pain-and-function-opioid-benefit does not likely outweigh an opioid-risk for the patient and there is a clinician then it is recommended that the clinician does not consider an opioid-therapy-initiation for the subacute-pain.
+If a patient has a chronic-pain and an expected-pain-and-function-opioid-benefit does not likely outweigh an opioid-risk for the patient and there is a clinician then it is recommended that the clinician does not consider an opioid-therapy-initiation for the chronic-pain.
+If a patient has a subacute-pain and a clinician considers an opioid-therapy-initiation for the subacute-pain then the clinician should discuss a realistic-benefit with the patient before the opioid-therapy-initiation and should discuss a known-risk with the patient before the opioid-therapy-initiation.
+If a patient has a subacute-pain and a clinician considers an opioid-therapy-initiation for the subacute-pain then the clinician should establish a pain-goal with the patient before the opioid-therapy-initiation and should establish a function-goal with the patient before the opioid-therapy-initiation and should consider an insufficient-benefit-discontinuation-plan before the opioid-therapy-initiation.
+If a patient has a chronic-pain and a clinician considers an opioid-therapy-initiation for the chronic-pain then the clinician should discuss a realistic-benefit with the patient before the opioid-therapy-initiation and should discuss a known-risk with the patient before the opioid-therapy-initiation.
+If a patient has a chronic-pain and a clinician considers an opioid-therapy-initiation for the chronic-pain then the clinician should establish a pain-goal with the patient before the opioid-therapy-initiation and should establish a function-goal with the patient before the opioid-therapy-initiation and should consider an insufficient-benefit-discontinuation-plan before the opioid-therapy-initiation.

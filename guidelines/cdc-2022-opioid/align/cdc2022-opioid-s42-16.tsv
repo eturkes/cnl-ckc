@@ -1,17 +1,15 @@
 0	ace	5	patient
 1	ace	19	continuous-opioid-use
-2	ace	46	lasts for at least 1 week
-3	ace	72	for less than 1 month
+2	ace	67	week
+3	ace	88	month
 4	ace	105	clinician
 10	ace	115	may
 11	ace	119	consider
 9	ace	130	gradual-taper
 0	ace	152	patient
-10	ace	164	may
-7	ace	168	reduce a daily-opioid-dosage
-8	ace	200	20 approximate percent
-6	ace	223	at an interval of 2 days
-0	ace	256	patient
+9	ace	171	taper
+7	ace	195	daily
+6	ace	277	days
 0	src	5	patients
 1	src	19	taken opioids continuously
 2	src	50	≥1 week
@@ -21,5 +19,4 @@
 11	src	89	consider
 9	src	100	slower taper
 7	src	120	reducing the daily dosage
-8	src	149	approximately 20%
 6	src	167	every 2 days

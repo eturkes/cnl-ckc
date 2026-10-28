@@ -9,10 +9,8 @@
 3	ace	193	clinician
 4	ace	210	consider
 5	ace	221	testing-benefit
-1	ace	237	at an interval of at most 1 year
 4	ace	281	consider
 6	ace	292	testing-risk
-1	ace	305	at an interval of at most 1 year
 7	ace	345	toxicology-testing
 8	ace	368	assess
 9	ace	377	prescribed-opioid
@@ -26,9 +24,12 @@
 11	ace	552	illicit-opioid
 8	ace	575	assess
 12	ace	584	benzodiazepine
+10	ace	647	controlled-substance
+0	ace	676	opioid
+10	ace	717	controlled-substance
+13	ace	742	increase
+14	ace	754	overdose
 0	src	7	starting opioids
-1	src	28	periodically
-1	src	51	annually
 2	src	68	opioid therapy
 3	src	84	clinicians
 4	src	102	consider
@@ -40,6 +41,8 @@
 10	src	193	other prescription
 10	src	216	nonprescription
 10	src	232	controlled substances
+13	src	259	increase
+14	src	277	overdose
 11	src	324	nonprescribed
 11	src	342	illicit opioids
 12	src	362	benzodiazepines

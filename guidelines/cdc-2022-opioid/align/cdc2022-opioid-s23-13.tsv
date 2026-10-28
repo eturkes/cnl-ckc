@@ -23,6 +23,8 @@
 8	ace	444	other-opioid
 2	ace	457	respiratory-depression
 1	ace	480	risk
+7	ace	503	nonprescribed-or-illicit-drug
+9	ace	546	heroin
 0	src	0	Review
 1	src	7	increased risks
 2	src	27	respiratory depression
@@ -31,4 +33,5 @@
 5	src	95	other sedatives
 6	src	112	alcohol
 7	src	121	nonprescribed or illicit drugs
+9	src	159	heroin
 8	src	171	other opioids

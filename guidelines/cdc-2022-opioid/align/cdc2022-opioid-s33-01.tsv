@@ -1,81 +1,105 @@
 1	ace	8	codeine
 13	ace	16	milligrams-per-day
-53	ace	93	does not provably serve
+57	ace	57	opioid
+57	ace	79	opioid
+35	ace	98	not
 56	ace	120	opioid-use-disorder-management
+57	ace	160	opioid
 12	ace	188	MME-units-per-day
-11	ace	212	Y = X *
-1	ace	220	0.15
 2	ace	234	transdermal-fentanyl
 13	ace	255	micrograms-per-hour
-53	ace	333	does not provably serve
+57	ace	297	opioid
+57	ace	319	opioid
+35	ace	338	not
 56	ace	360	opioid-use-disorder-management
+57	ace	400	opioid
 12	ace	428	MME-units-per-day
-11	ace	452	Y = X *
-2	ace	460	2.4
 3	ace	473	hydrocodone
-53	ace	562	does not provably serve
+57	ace	526	opioid
+57	ace	548	opioid
+35	ace	567	not
 56	ace	589	opioid-use-disorder-management
+57	ace	629	opioid
 12	ace	657	MME-units-per-day
-11	ace	681	Y = X *
-3	ace	689	1.0
 4	ace	702	hydromorphone
-53	ace	793	does not provably serve
+57	ace	757	opioid
+57	ace	779	opioid
+35	ace	798	not
 56	ace	820	opioid-use-disorder-management
+57	ace	860	opioid
 12	ace	888	MME-units-per-day
-11	ace	912	Y = X *
-4	ace	920	5.0
 5	ace	933	methadone
-53	ace	1020	does not provably serve
+57	ace	984	opioid
+57	ace	1006	opioid
+35	ace	1025	not
 56	ace	1047	opioid-use-disorder-management
+57	ace	1087	opioid
 12	ace	1115	MME-units-per-day
-11	ace	1139	Y = X *
-5	ace	1147	4.7
 6	ace	1160	morphine
-53	ace	1246	does not provably serve
+57	ace	1210	opioid
+57	ace	1232	opioid
+35	ace	1251	not
 56	ace	1273	opioid-use-disorder-management
+57	ace	1313	opioid
 12	ace	1341	MME-units-per-day
-11	ace	1365	Y = X *
-6	ace	1373	1.0
 7	ace	1386	oxycodone
-53	ace	1473	does not provably serve
+57	ace	1437	opioid
+57	ace	1459	opioid
+35	ace	1478	not
 56	ace	1500	opioid-use-disorder-management
+57	ace	1540	opioid
 12	ace	1568	MME-units-per-day
-11	ace	1592	Y = X *
-7	ace	1600	1.5
 8	ace	1613	oxymorphone
-53	ace	1702	does not provably serve
+57	ace	1666	opioid
+57	ace	1688	opioid
+35	ace	1707	not
 56	ace	1729	opioid-use-disorder-management
+57	ace	1769	opioid
 12	ace	1797	MME-units-per-day
-11	ace	1821	Y = X *
-8	ace	1829	3.0
 9	ace	1842	tapentadol
-53	ace	1930	does not provably serve
+57	ace	1894	opioid
+57	ace	1916	opioid
+35	ace	1935	not
 56	ace	1957	opioid-use-disorder-management
+57	ace	1997	opioid
 12	ace	2025	MME-units-per-day
-11	ace	2049	Y = X *
-9	ace	2057	0.4
 10	ace	2070	tramadol
-53	ace	2156	does not provably serve
+57	ace	2120	opioid
+57	ace	2142	opioid
+35	ace	2161	not
 56	ace	2183	opioid-use-disorder-management
+57	ace	2223	opioid
 12	ace	2251	MME-units-per-day
-11	ace	2275	Y = X *
-10	ace	2283	0.2
-14	ace	2327	exactly 5 hydrocodone-milligrams-per-dose
-15	ace	2382	exactly 325 acetaminophen-milligrams-per-dose
-16	ace	2438	exactly 4 doses-per-day
-17	ace	2612	yields some daily-hydrocodone-milligrams Y and Y = X * Z
-18	ace	2783	includes some MME-units-per-day Y and Y = X * 1.0
-19	ace	2837	extended-release-oxycodone-regimen-example contains exactly 10 oxycodone-milligrams-per-dose
-20	ace	2940	exactly 2 doses-per-day
-21	ace	3143	yields some daily-oxycodone-milligrams Y and Y = X * Z
-22	ace	3341	includes some MME-units-per-day Y and Y = X * 1.5
+3	ace	2290	hydrocodone
+3	ace	2337	hydrocodone
+15	ace	2394	acetaminophen
+58	ace	2448	doses
+3	ace	2468	hydrocodone
+3	ace	2510	hydrocodone
+58	ace	2559	doses
+3	ace	2584	hydrocodone
+17	ace	2624	daily
+3	ace	2675	hydrocodone
+17	ace	2715	daily
+3	ace	2755	hydrocodone
+12	ace	2797	MME-units-per-day
+19	ace	2837	extended-release
+7	ace	2900	oxycodone
+58	ace	2950	doses
+19	ace	2971	extended-release
+7	ace	3028	oxycodone
+58	ace	3075	doses
+19	ace	3100	extended-release
+17	ace	3155	daily
+19	ace	3205	extended-release
+17	ace	3260	daily
+19	ace	3298	extended-release
+12	ace	3355	MME-units-per-day
 23	ace	3398	equianalgesic-dose-conversion
-24	ace	3431	an estimate
+24	ace	3434	estimate
 23	ace	3447	equianalgesic-dose-conversion
-25	ace	3477	can capture
 26	ace	3492	individual-genetic-variability
 23	ace	3527	equianalgesic-dose-conversion
-25	ace	3557	can capture
 27	ace	3572	individual-pharmacokinetic-variability
 35	ace	3647	recommended
 35	ace	3683	not
@@ -83,39 +107,67 @@
 37	ace	3693	calculated-MME-dosage
 38	ace	3722	opioid-conversion-dosage
 39	ace	3768	typically
-40	ace	3778	use
+36	ace	3778	use
 41	ace	3784	substantially-lower-opioid-dosage
 42	ace	3828	opioid-conversion
-43	ace	3862	converts
-44	ace	3873	methadone-dose
-45	ace	3914	particularly
-43	ace	3927	convert
-44	ace	3939	methadone-dose
-46	ace	3954	cautiously
-47	ace	3994	transdermal-fentanyl
-48	ace	4041	particularly
-47	ace	4068	transdermal-fentanyl
-49	ace	4089	cautiously
-50	ace	4124	consider
-50	ace	4135	transdermal-fentanyl-dosing
-47	ace	4172	transdermal-fentanyl
-51	ace	4230	consider
-51	ace	4241	transdermal-fentanyl-absorption
-47	ace	4282	transdermal-fentanyl
-29	ace	4320	MME-conversion-table does not list
-28	ace	4357	buprenorphine-pain-product
-52	ace	4420	recommended
-53	ace	4456	not
-54	ace	4460	use
-55	ace	4466	conversion-factor
-56	ace	4491	opioid-use-disorder-dosage-decision
-30	ace	4534	tapentadol-medication
-32	ace	4561	mu-receptor-agonist
-33	ace	4590	norepinephrine-reuptake-inhibitor
-31	ace	4631	tramadol-medication
-32	ace	4656	mu-receptor-agonist
-34	ace	4685	norepinephrine-reuptake-inhibitor
-34	ace	4728	serotonin-reuptake-inhibitor
+59	ace	3853	overdose
+42	ace	3879	opioid-conversion
+60	ace	3912	incomplete-cross-tolerance
+61	ace	3969	opioid-pharmacokinetic
+43	ace	4020	converts
+44	ace	4031	methadone-dose
+45	ace	4072	particularly
+43	ace	4085	convert
+44	ace	4097	methadone-dose
+46	ace	4112	cautiously
+5	ace	4130	methadone
+62	ace	4146	long-and-variable-half-life
+63	ace	4191	peak-respiratory-depressant-effect
+64	ace	4226	occurs
+65	ace	4251	peak-analgesic-effect
+65	ace	4300	peak-analgesic-effect
+47	ace	4351	transdermal-fentanyl
+45	ace	4398	particularly
+47	ace	4425	transdermal-fentanyl
+46	ace	4446	cautiously
+47	ace	4464	transdermal-fentanyl
+58	ace	4515	dose
+51	ace	4527	heat
+51	ace	4554	transdermal-fentanyl-absorption
+51	ace	4593	other
+51	ace	4630	transdermal-fentanyl-absorption
+50	ace	4686	consider
+50	ace	4697	transdermal-fentanyl-dosing
+47	ace	4734	transdermal-fentanyl
+50	ace	4792	consider
+51	ace	4803	transdermal-fentanyl-absorption
+47	ace	4844	transdermal-fentanyl
+66	ace	4886	conversion
+35	ace	4908	not
+28	ace	4919	buprenorphine-pain-product
+28	ace	4953	buprenorphine-pain-product
+67	ace	4999	receptor-agonist-activity
+68	ace	5037	ceiling-effect
+35	ace	5088	recommended
+35	ace	5124	not
+36	ace	5128	use
+55	ace	5134	conversion-factor
+56	ace	5159	opioid-use-disorder-dosage-decision
+30	ace	5202	tapentadol-medication
+32	ace	5229	mu-receptor-agonist
+33	ace	5258	norepinephrine-reuptake-inhibitor
+31	ace	5299	tramadol-medication
+32	ace	5324	mu-receptor-agonist
+33	ace	5353	norepinephrine-reuptake-inhibitor
+34	ace	5396	serotonin-reuptake-inhibitor
+67	ace	5456	receptor-agonist-activity
+67	ace	5518	receptor-agonist
+69	ace	5585	unknown
+67	ace	5620	receptor-agonist
+69	ace	5687	unknown
+58	src	30	doses
+57	src	60	opioids
+66	src	97	Conversion
 1	src	117	Codeine
 1	src	126	0.15
 2	src	132	Fentanyl transdermal (in mcg/hr)
@@ -136,21 +188,13 @@
 9	src	287	0.4
 10	src	292	Tramadol
 10	src	303	0.2
-11	src	310	Multiply the dose for each opioid by the conversion factor
 12	src	382	the dose in MMEs
-14	src	432	hydrocodone 5 mg
 15	src	453	acetaminophen 325 mg
-16	src	474	taken four times a day
 17	src	511	a total of 20 mg of hydrocodone daily
-18	src	550	equivalent to 20 MME daily
 19	src	578	extended-release tablets containing oxycodone 10 mg
-20	src	634	taken twice a day
-21	src	666	a total of 20 mg of oxycodone daily
-22	src	703	equivalent to 30 MME daily
 13	src	774	All doses are in mg/day except for fentanyl, which is mcg/hr
 23	src	839	Equianalgesic dose conversions
 24	src	874	only estimates
-25	src	893	cannot account for
 26	src	912	individual variability in genetics
 27	src	951	pharmacokinetics
 35	src	972	Do not
@@ -159,27 +203,30 @@
 38	src	1014	determine the doses to use when converting one opioid to another
 42	src	1085	converting opioids
 39	src	1123	typically
-40	src	1133	dosed
 41	src	1144	substantially lower dose
+59	src	1207	overdose
+60	src	1227	incomplete cross-tolerance
+61	src	1284	opioid pharmacokinetics
 45	src	1316	particular
 46	src	1327	caution
 44	src	1340	methadone dose
 43	src	1355	conversions
-48	src	1524	particular
-49	src	1535	caution
+62	src	1391	long and variable half-life
+63	src	1424	peak respiratory depressant effect
+64	src	1459	occurs
+65	src	1494	peak analgesic effect
 47	src	1548	transdermal fentanyl
 50	src	1583	dosed in mcg/hr instead of mg/day
 51	src	1626	absorption is affected by heat and other factors
 28	src	1679	Buprenorphine products approved for the treatment of pain
-29	src	1737	are not included in the table
+67	src	1794	receptor agonist activity
+68	src	1834	ceiling effects
 55	src	1899	conversion factors
-52	src	1918	should
-53	src	1925	not
-54	src	1932	applied
 56	src	1943	dosage decisions related to the management of opioid use disorder
 30	src	2012	Tapentadol
 32	src	2028	µ-receptor agonist
 33	src	2051	norepinephrine reuptake inhibitor
+69	src	2158	unknown
 31	src	2315	Tramadol
 32	src	2329	µ-receptor agonist
 34	src	2352	norepinephrine and serotonin reuptake inhibitor

@@ -1,4 +1,6 @@
-If there is a patient-education and there is an outpatient-opioid-therapy then the patient-education is critical before the outpatient-opioid-therapy.
-If there is a patient-discussion and there is an outpatient-opioid-therapy then the patient-discussion is critical before the outpatient-opioid-therapy.
-A patient-preference can inform a clinical-decision.
-A patient-value can inform a clinical-decision.
+If there is a patient-education and there is an outpatient-opioid-therapy then the patient-education is critical before the outpatient-opioid-therapy for a patient-preference-and-value-understanding-and-use.
+If there is a patient-discussion and there is an outpatient-opioid-therapy then the patient-discussion is critical before the outpatient-opioid-therapy for a patient-preference-and-value-understanding-and-use.
+If a patient has a patient-preference then the patient-preference can inform a clinical-decision for the patient.
+If a patient has a patient-value then the patient-value can inform a clinical-decision for the patient.
+If a patient has a patient-preference then it is possible that a clinician understands the patient-preference.
+If a patient has a patient-value then it is possible that a clinician understands the patient-value.

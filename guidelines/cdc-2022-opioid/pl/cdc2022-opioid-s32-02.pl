@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s32-02',ace_sha256('34e7bfe454658c77aef1f7419d523f0c62345bfefc0cb29cb7a10b05a7c0a0eb'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s32-02',ace_sha256(d7c9409a38c189642b3733b9a3988068cc18804fecc3c1cd18a9fe98b3f3d164),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every clinician can possibly need a combined-immediate-release-and-ER-LA-opioid-prescription.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s32-02',1,box(1),[A]),can) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s32-02',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s32-02',1,ref(2),[A]),'combined-immediate-release-and-ER-LA-opioid-prescription',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -66,3 +66,29 @@ guideline_arg('$guideline_id'(context,'cdc2022-opioid-s32-02',2,box(2),[A,B,C,D]
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s32-02',2,box(2),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s32-02',2,ref(7),[A,B,C,D]),2,B) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'immediate-release-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'ER-LA-opioid',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
 guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s32-02',2,box(2),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s32-02',2,ref(7),[A,B,C,D]),manner,cautiously) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'immediate-release-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'ER-LA-opioid',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s32-02',2,box(2),[A,B,C,D]),'$guideline_id'(product,'cdc2022-opioid-s32-02',2,ref(7),[A,B,C,D]),with,C) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'immediate-release-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'ER-LA-opioid',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,with,C).
+% S3: An immediate-release-and-ER-LA-opioid-combination-example includes an ER-LA-to-immediate-release-transition-example and includes a temporary-postoperative-short-term-opioid-use-example and includes a methadone-stabilized-patient-acute-pain-example.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(1),[]),'immediate-release-and-ER-LA-opioid-combination-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(2),[]),'ER-LA-to-immediate-release-transition-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(3),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(2),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(4),[]),'temporary-postoperative-short-term-opioid-use-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(4),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(5),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(6),[]),'methadone-stabilized-patient-acute-pain-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(6),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(7),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(7),[]),1,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(7),[]),2,'$guideline_id'(product,'cdc2022-opioid-s32-02',3,ref(6),[])).
+% S4: Every combined-immediate-release-and-ER-LA-opioid-prescription can possibly increase an overdose-risk.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s32-02',4,box(1),[A]),can) :- guideline_entity(actual,A,'combined-immediate-release-and-ER-LA-opioid-prescription',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-s32-02',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s32-02',4,ref(2),[A]),'overdose-risk',countable) :- guideline_entity(actual,A,'combined-immediate-release-and-ER-LA-opioid-prescription',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-s32-02',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s32-02',4,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'combined-immediate-release-and-ER-LA-opioid-prescription',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_qualifier('$guideline_id'(context,'cdc2022-opioid-s32-02',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s32-02',4,ref(3),[A]),possibility,possibly) :- guideline_entity(actual,A,'combined-immediate-release-and-ER-LA-opioid-prescription',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-s32-02',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s32-02',4,ref(3),[A]),increase) :- guideline_entity(actual,A,'combined-immediate-release-and-ER-LA-opioid-prescription',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s32-02',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s32-02',4,ref(3),[A]),1,A) :- guideline_entity(actual,A,'combined-immediate-release-and-ER-LA-opioid-prescription',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-s32-02',4,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s32-02',4,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s32-02',4,ref(2),[A])) :- guideline_entity(actual,A,'combined-immediate-release-and-ER-LA-opioid-prescription',countable), guideline_cardinality(actual,A,na,eq,1).

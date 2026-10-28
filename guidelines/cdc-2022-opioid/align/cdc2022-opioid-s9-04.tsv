@@ -1,16 +1,27 @@
 0	ace	6	pain-duration-definition
 2	ace	37	approximate-guide
 0	ace	62	pain-duration-definition
-1	ace	90	not an absolute-boundary
+1	ace	97	absolute
 0	ace	122	pain-duration-definition
 3	ace	151	facilitate
 6	ace	164	recommendation
 4	ace	179	consideration
-0	ace	200	pain-duration-definition
-3	ace	229	facilitate
-5	ace	242	practical
-6	ace	252	recommendation
-5	ace	267	use
+7	ace	199	clinician
+3	ace	217	facilitate
+6	ace	230	recommendation
+4	ace	245	consideration
+8	ace	265	patient
+0	ace	280	pain-duration-definition
+3	ace	309	facilitate
+5	ace	322	practical
+6	ace	332	recommendation
+5	ace	347	use
+7	ace	357	clinician
+3	ace	375	facilitate
+5	ace	388	practical
+6	ace	398	recommendation
+5	ace	413	use
+8	ace	423	patient
 0	src	6	time-bound definitions
 1	src	33	not meant to be absolute
 2	src	75	approximate guides
@@ -18,3 +29,5 @@
 4	src	112	consideration
 5	src	130	practical use
 6	src	151	recommendations
+7	src	170	clinicians
+8	src	185	patients

@@ -19,15 +19,15 @@
 0	ace	296	clinician
 7	ace	313	ensure
 8	ace	323	appropriate
-6	ace	335	care
-1	ace	348	patient
-1	ace	362	patient
-10	ace	377	opioid-use-complication
-0	ace	412	clinician
-7	ace	429	ensure
-8	ace	439	appropriate
-6	ace	451	care
-1	ace	464	patient
+1	ace	353	patient
+1	ace	367	patient
+10	ace	382	opioid-use-complication
+0	ace	417	clinician
+7	ace	434	ensure
+10	ace	456	opioid-use
+1	ace	493	patient
+10	ace	505	opioid-use
+13	ace	543	opioid-use-disorder
 0	src	0	Clinicians
 2	src	18	avoid
 3	src	24	abrupt discontinuation of opioids
@@ -46,3 +46,4 @@
 9	src	236	pain
 1	src	245	patient
 10	src	259	complications from opioid use
+13	src	296	opioid use disorder

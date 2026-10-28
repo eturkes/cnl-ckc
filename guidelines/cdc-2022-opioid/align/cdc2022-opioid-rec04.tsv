@@ -31,7 +31,8 @@
 8	ace	604	subacute-pain
 3	ace	626	clinician
 10	ace	636	prescribe
-13	ace	647	an opioid at a dosage
+13	ace	650	opioid
+13	ace	662	dosage
 3	ace	678	clinician
 10	ace	695	prescribe
 13	ace	709	opioid
@@ -43,7 +44,8 @@
 9	ace	791	chronic-pain
 3	ace	812	clinician
 10	ace	822	prescribe
-13	ace	833	an opioid at a dosage
+13	ace	836	opioid
+13	ace	848	dosage
 3	ace	864	clinician
 10	ace	881	prescribe
 13	ace	895	opioid
@@ -83,16 +85,22 @@
 8	ace	1428	subacute-pain
 3	ace	1451	clinician
 20	ace	1468	avoid
-21	ace	1477	increase above
-22	ace	1494	diminishing-return-level
-3	ace	1525	clinician
-12	ace	1535	continues
-5	ace	1548	opioid-therapy
-9	ace	1569	chronic-pain
-3	ace	1591	clinician
-20	ace	1608	avoid
-21	ace	1617	increase above
-22	ace	1634	diminishing-return-level
+5	ace	1477	opioid
+21	ace	1500	above
+11	ace	1508	dosage
+22	ace	1526	likely
+25	ace	1570	relative-to-risk
+3	ace	1600	clinician
+12	ace	1610	continues
+5	ace	1623	opioid-therapy
+9	ace	1644	chronic-pain
+3	ace	1666	clinician
+20	ace	1683	avoid
+5	ace	1692	opioid
+21	ace	1715	above
+11	ace	1723	dosage
+22	ace	1741	likely
+25	ace	1785	relative-to-risk
 5	src	5	opioids
 4	src	17	initiated
 6	src	31	opioid-naïve patients
@@ -119,6 +127,7 @@
 20	src	377	avoid
 21	src	383	increasing dosage above
 22	src	407	levels likely to yield diminishing returns
+25	src	462	relative to risks
 0	src	493	recommendation
 1	src	508	category: A
 2	src	521	evidence type: 3

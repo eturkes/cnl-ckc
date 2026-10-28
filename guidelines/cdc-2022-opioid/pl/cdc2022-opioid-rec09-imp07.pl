@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec09-imp07',ace_sha256('002cd274955903921e3d557806771695f98b4a3ca01dc95c43d79f1d676d3dc7'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-rec09-imp07',ace_sha256('15fff7152dc836b03ad0c26208b13a5989302c572b1acb7743c645caebefc3d2'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every PDMP-generated-risk-score is not a validated-clinical-outcome-predictor.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec09-imp07',1,box(1),[A]),-) :- guideline_entity(actual,A,'PDMP-generated-risk-score',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec09-imp07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',1,ref(2),[A]),'validated-clinical-outcome-predictor',countable) :- guideline_entity(actual,A,'PDMP-generated-risk-score',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -61,3 +61,11 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec09-imp07',2,box(2),[A
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec09-imp07',2,box(2),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',2,ref(5),[A,B,C]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'PDMP-generated-risk-score',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,consider), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec09-imp07',2,box(2),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',2,ref(5),[A,B,C]),2,B) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'PDMP-generated-risk-score',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,consider), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec09-imp07',2,box(2),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',2,ref(5),[A,B,C]),as,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',2,ref(4),[A,B,C])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'PDMP-generated-risk-score',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,consider), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
+% S3: A clinical-outcome-example is an overdose-example.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(1),[]),'clinical-outcome-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(2),[]),'overdose-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(3),[]),be).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec09-imp07',3,ref(2),[])).

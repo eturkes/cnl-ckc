@@ -11,6 +11,20 @@
 6	ace	255	shared-decision-making
 0	ace	287	patient
 4	ace	303	contraception
+0	ace	323	patient
+1	ace	337	reproductive-potential
+3	ace	370	future-pregnancy-intention
+3	ace	417	future-pregnancy-intention
+7	ace	460	core
+0	ace	486	patient
+1	ace	500	reproductive-potential
+4	ace	532	contraception
+5	ace	549	appropriate
+0	ace	569	patient
+0	ace	585	patient
+6	ace	613	shared-decision-making
+6	ace	659	shared-decision-making
+7	ace	687	core
 0	src	8	persons
 1	src	21	reproductive potential
 2	src	45	discussing
@@ -18,3 +32,4 @@
 6	src	100	shared decision-making
 4	src	133	contraception
 5	src	151	appropriate
+7	src	169	core

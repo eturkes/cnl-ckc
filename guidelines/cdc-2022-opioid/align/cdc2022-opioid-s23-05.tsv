@@ -6,10 +6,21 @@
 7	ace	98	prophylactic-pharmacologic
 8	ace	125	bowel
 9	ace	131	therapy
+10	ace	145	regular
+7	ace	171	prophylactic-pharmacologic
+11	ace	231	stimulant-laxative
+11	ace	261	stimulant-laxative
+12	ace	293	senna
+7	ace	330	prophylactic-pharmacologic
+13	ace	390	stool-softener
 7	src	0	Prophylactic pharmacologic
 9	src	27	therapy
+11	src	44	stimulant laxative
+12	src	71	senna
+13	src	96	stool softener
 5	src	112	might
 6	src	121	needed
+10	src	138	regular
 8	src	146	bowel
 1	src	165	opioids are used
 0	src	186	more than

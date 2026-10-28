@@ -1,7 +1,8 @@
 If a clinician works in a practice-context and the practice-context uses a toxicology-screening-panel and the toxicology-screening-panel includes a drug then the clinician can know the drug and can understand a toxicology-result-interpretation for the drug.
-Every clinical-practice-organization can ensure a toxicology-expert-availability for an unexpected-toxicology-result.
-Every health-system can ensure a toxicology-expert-availability for an unexpected-toxicology-result.
+Every clinical-practice-organization can ensure a toxicology-expert-availability for an unexpected-toxicology-result-discussion.
+Every health-system can ensure a toxicology-expert-availability for an unexpected-toxicology-result-discussion.
 Every clinical-practice-organization can ensure a non-burdensome-patient-cost.
 Every health-system can ensure a non-burdensome-patient-cost.
-Every clinical-practice-organization can ensure a bias-minimizing-testing-policy.
-Every health-system can ensure a bias-minimizing-testing-policy.
+Every clinical-practice-organization can ensure a bias-minimizing-testing-and-frequency-policy.
+Every health-system can ensure a bias-minimizing-testing-and-frequency-policy.
+A toxicology-expert-example includes a laboratorian-example and includes a toxicologist-example.

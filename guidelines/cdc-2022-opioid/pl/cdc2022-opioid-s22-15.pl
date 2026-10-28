@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s22-15',ace_sha256(cc10a3b9277ef5ad7ce9c6df4c2829838f234abb6ad81b4b2b52df292201de3a),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s22-15',ace_sha256(cc10a3b9277ef5ad7ce9c6df4c2829838f234abb6ad81b4b2b52df292201de3a),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every new-long-term-opioid-use-risk-finding is a previously-opioid-naive-patient-specific-finding.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-15',1,ref(2),[A]),'previously-opioid-naive-patient-specific-finding',countable) :- guideline_entity(actual,A,'new-long-term-opioid-use-risk-finding',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-15',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'new-long-term-opioid-use-risk-finding',countable), guideline_cardinality(actual,A,na,eq,1).

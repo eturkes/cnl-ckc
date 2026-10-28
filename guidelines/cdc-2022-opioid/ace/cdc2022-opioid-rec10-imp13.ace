@@ -1,2 +1,3 @@
-If a patient has an unexplained-unexpected-toxicology-screening-result then a same-sample-selective-confirmatory-test possibly can be warranted for the patient.
-A same-sample-selective-confirmatory-test can differentiate a specific-opioid and can differentiate an opioid-metabolite.
+If a patient has an unexpected-toxicology-screening-result from a sample and the unexpected-toxicology-screening-result does not provably have an explanation then it is possible that a selective-confirmatory-test that uses the sample is warranted for the patient.
+Every selective-confirmatory-test can differentiate a specific-opioid and can differentiate an opioid-metabolite.
+A selective-confirmatory-method-example includes a gas-chromatography-mass-spectrometry-example and includes a liquid-chromatography-mass-spectrometry-example.

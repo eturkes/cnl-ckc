@@ -3,8 +3,15 @@
 2	ace	75	use
 1	ace	82	anesthesia-assisted
 0	ace	102	ultrarapid-detoxification
+1	ace	135	anesthesia-assisted
+0	ace	155	ultrarapid-detoxification
+5	ace	191	substantial-risk
+5	ace	211	substantial-risk
+6	ace	241	death
 0	src	0	Ultrarapid detoxification
 1	src	26	under anesthesia
+5	src	62	substantial risks
+6	src	91	death
 3	src	102	should
 4	src	109	not
 2	src	116	used

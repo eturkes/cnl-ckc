@@ -2,3 +2,4 @@ If a patient does not take an opioid then every clinician can determine a lowest
 If a patient does not take an opioid and a dose-calibration is needed for the patient then every clinician can calibrate a lowest-effective-dose with a pain-severity.
 If a patient does not take an opioid and the patient has a renal-insufficiency and a dose-calibration is needed for the patient then every clinician can calibrate a lowest-effective-dose with a renal-insufficiency.
 If a patient does not take an opioid and the patient has a hepatic-insufficiency and a dose-calibration is needed for the patient then every clinician can calibrate a lowest-effective-dose with a hepatic-insufficiency.
+If a patient does not take an opioid and the patient has an other-clinical-factor and a dose-calibration is needed for the patient then every clinician can calibrate a lowest-effective-dose with the other-clinical-factor.

@@ -1,12 +1,14 @@
 0	ace	20	initial-opioid-prescription
 0	ace	56	initial-opioid-prescription
 6	ace	90	duration
-1	ace	115	needs a taper
-2	ace	136	taper-duration
-5	ace	155	possibly
-7	ace	164	need
-8	ace	172	adjustment
-6	ace	191	duration
+1	ace	123	taper
+1	ace	137	taper
+2	ace	149	taper-duration
+2	ace	173	taper-duration
+5	ace	192	possibly
+7	ace	201	need
+8	ace	209	adjustment
+6	ace	228	duration
 1	src	5	taper is needed
 2	src	22	taper durations
 5	src	38	might

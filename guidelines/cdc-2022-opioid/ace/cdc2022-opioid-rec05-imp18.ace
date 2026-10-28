@@ -1,2 +1,2 @@
-If a clinician determines an opioid-discontinuation-goal with a patient and the patient reaches a smallest-available-dose then the clinician can extend a dose-interval.
-If a clinician determines an opioid-discontinuation-goal with a patient and the patient reaches a smallest-available-dose and the patient uses an opioid at an interval of more than 1 day then the clinician can stop the opioid.
+If a clinician determines an ultimate-opioid-discontinuation-goal with a patient and the patient reaches a smallest-available-dose then the clinician can extend a dose-interval.
+If a clinician determines an ultimate-opioid-discontinuation-goal with a patient and the patient reaches a smallest-available-dose and the patient uses an opioid at an interval of more than 1 day then the clinician can stop the opioid.

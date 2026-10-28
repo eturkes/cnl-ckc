@@ -1,1 +1,3 @@
-If a clinician considers a new-drug-prescription then the clinician should review a current-medication before the new-drug-prescription and should review an over-the-counter-drug before the new-drug-prescription and should review a natural-remedy before the new-drug-prescription.
+If a clinician considers a new-drug-prescription for a patient and the patient takes a current-medication then the clinician should review the current-medication before the new-drug-prescription.
+If a clinician considers a new-drug-prescription for a patient and the patient takes an over-the-counter-drug then the clinician should review the over-the-counter-drug before the new-drug-prescription.
+If a clinician considers a new-drug-prescription for a patient and the patient takes a natural-remedy then the clinician should review the natural-remedy before the new-drug-prescription.

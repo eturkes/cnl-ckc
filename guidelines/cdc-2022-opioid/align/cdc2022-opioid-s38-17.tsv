@@ -12,10 +12,9 @@
 3	ace	165	expectation
 1	ace	182	patient
 0	ace	197	clinician
-9	ace	211	provide
-10	ace	227	process
-9	ace	235	support
-1	ace	248	patient
+2	ace	211	explain
+0	ace	221	clinician
+1	ace	261	patient
 1	src	5	patients
 0	src	72	clinicians
 1	src	92	patients
@@ -26,5 +25,3 @@
 7	src	202	pain might worsen
 6	src	220	at first
 8	src	233	usually improves
-9	src	283	supporting
-10	src	311	process

@@ -1,2 +1,3 @@
-If a patient has an oxycodone-prescription then every clinician should order an agent-specific-toxicology-testing for the patient.
-If a patient has a nonmorphine-based-opioid-prescription then every clinician should order an agent-specific-toxicology-testing for the patient.
+If a patient has an oxycodone-prescription then every clinician should order an oxycodone-specific-toxicology-testing for the patient.
+If a patient receives a prescribed-nonmorphine-based-opioid then every clinician should order a specific-toxicology-testing for the prescribed-nonmorphine-based-opioid for the patient.
+A nonmorphine-based-opioid-example includes a buprenorphine-example and includes a methadone-example.

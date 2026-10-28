@@ -27,11 +27,18 @@
 9	ace	419	lidocaine
 7	ace	429	patch
 1	ace	441	neuropathic-pain
+6	ace	461	selected-anticonvulsant
+11	ace	504	pregabalin
+12	ace	538	gabapentin-enacarbil
+13	ace	583	oxcarbazepine
 3	src	0	Tricyclic
 4	src	11	tetracyclic
 5	src	28	SNRI
 2	src	33	antidepressants
 6	src	50	selected anticonvulsants
+11	src	82	pregabalin
+12	src	94	gabapentin enacarbil
+13	src	116	oxcarbazepine
 8	src	136	capsaicin
 9	src	150	lidocaine
 7	src	160	patches

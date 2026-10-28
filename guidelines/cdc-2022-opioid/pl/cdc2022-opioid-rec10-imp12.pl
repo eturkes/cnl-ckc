@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec10-imp12',ace_sha256('1ecba20ed2775a3f8d19321580fd8101858b8850d8e66e6be0b8cade6f02b9c3'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-rec10-imp12',ace_sha256('5dc1a62c18eb6d95ce7e6bab2003ad99d244ed27cfac44ae6198aaf81588116f'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every clinician should nonjudgmentally discuss an unexpected-toxicology-result with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',1,ref(2),[A]),'unexpected-toxicology-result',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -66,3 +66,16 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-rec10-imp12',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(4),[A]),during,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',2,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
+% S3: A potentially-stigmatizing-language-example includes a clean-specimen-description-example and includes a dirty-specimen-description-example.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(1),[]),'potentially-stigmatizing-language-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(2),[]),'clean-specimen-description-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(3),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(2),[])).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(4),[]),'dirty-specimen-description-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(4),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(5),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(5),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec10-imp12',3,ref(4),[])).

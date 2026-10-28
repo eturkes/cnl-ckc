@@ -13,6 +13,9 @@ cdc2022-opioid-rec04-imp03	3	dosage-reduction	inert-join	kept as asserted: the c
 cdc2022-opioid-rec04-imp03	4	dosage-reduction	inert-join	kept as asserted: the committed query dosage-reduction-content answers from it; rec07-imp15 S6 reads dosage-reduction through request, which these facts never assert
 cdc2022-opioid-rec05	1	category-B-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
 cdc2022-opioid-rec05	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec05-imp25	9	opioid-policy-setter	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-rec05-imp25	10	opioid-policy-setter	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-rec05-imp25	11	opioid-policy-setter	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
 cdc2022-opioid-rec06	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
 cdc2022-opioid-rec06	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
 cdc2022-opioid-rec07	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
@@ -61,6 +64,8 @@ cdc2022-opioid-s33-01	13	MME-unit-per-day	formula-result	a conversion rule deriv
 cdc2022-opioid-s33-01	16	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
 cdc2022-opioid-s39-20	3	alpha-2-agonist	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
 cdc2022-opioid-s39-20	4	alpha-2-agonist	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s42-16	2	interval	example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-s42-16	2	percent	example	the reduction percent of a worked example over example-only nouns
 cdc2022-opioid-s44-04	3	follow-up	chained-event	the follow-up binds the antecedent's clinician + patient; rec07-imp12 reads it by design
 cdc2022-opioid-s44-04	3	interval	time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
 cdc2022-opioid-s44-04	4	follow-up	chained-event	the follow-up binds the antecedent's clinician + patient; rec07-imp12 reads it by design
@@ -81,9 +86,9 @@ cdc2022-opioid-s57-05	10	opioid-use-disorder-criterion	be-edge	a universal copul
 cdc2022-opioid-s57-05	11	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
 cdc2022-opioid-s57-05	12	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
 cdc2022-opioid-s57-08	5	full-agonist-opioid	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
-cdc2022-opioid-s9-05	10	acute-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
-cdc2022-opioid-s9-05	11	subacute-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
-cdc2022-opioid-s9-05	12	chronic-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
-cdc2022-opioid-s9-05	13	month	time-quantity	the duration of a pain class (the converse of the class definition)
-cdc2022-opioid-s9-05	14	month	time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-s9-05	12	acute-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	13	subacute-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	14	chronic-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
 cdc2022-opioid-s9-05	15	month	time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-s9-05	16	month	time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-s9-05	17	month	time-quantity	the duration of a pain class (the converse of the class definition)

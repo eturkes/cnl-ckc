@@ -10,6 +10,16 @@ statement gets the coverage status `uncovered(inexpressible: <reason>)`.
   Each document's projection notes record what its ACE text dropped or
   approximated. This measures recorded projection loss. It does not
   prove that v1 cannot express the content.
+- Projection-notes census of the CDC 2022 opioid guideline, before the
+  first release: all 492 documents and their 1,695 recorded losses.
+  Each loss is classed as typable, carrier-less or no loss. The 350
+  typable losses, in 210 documents, were re-authored, so the ACE now
+  carries them. The 229 carrier-less losses fall into these classes
+  (losses, documents): relation-structure (109, 95), temporal (30, 27),
+  strength (26, 21), regimen-choice (26, 25), quantification (22, 22),
+  dose-arithmetic (10, 9), probability (3, 3), numeric-threshold (2, 2)
+  and derived-measure (1, 1). The census and its validator are in
+  `.agent/archive/revp-census/`.
 - Statement sample: 96 normative statements from 12 other guidelines
   of the compendium (6 federal, 6 society), judged against the v1
   schema. The sample is purposive, not a prevalence estimate.

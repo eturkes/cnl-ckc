@@ -41,6 +41,8 @@
 5	ace	490	risk
 16	ace	508	opportunity
 19	ace	528	patient
+27	ace	539	pain-treatment
+28	ace	572	functional-goal
 8	src	9	evidence
 9	src	21	insufficient
 7	src	55	point
@@ -59,7 +61,9 @@
 14	src	258	treatment
 15	src	268	plan
 18	src	276	achieve
+27	src	284	pain treatment
 17	src	299	goals
+28	src	316	functional goals
 25	src	356	long
 26	src	361	term
 23	src	380	tapering

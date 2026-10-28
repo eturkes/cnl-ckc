@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s47-21',ace_sha256('2b8d1140d74bd1baee7a69ee92b50f2e8af427a9e9191a24b730e01ac4c650ac'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s47-21',ace_sha256(d00286f2eb4df53071e9cb8f7de4823177582a9e3edc9d2c42690a3bdc866dda),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every opioid-use-criminalization discourages a pregnant-person-care-seeking.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',1,ref(2),[A]),'pregnant-person-care-seeking',countable) :- guideline_entity(actual,A,'opioid-use-criminalization',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-use-criminalization',countable), guideline_cardinality(actual,A,na,eq,1).
@@ -89,9 +89,17 @@ guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',7,r
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',7,ref(3),[]),be).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',7,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s47-21',7,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',7,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s47-21',7,ref(2),[])).
-% S8: Every nonpunitive-public-health-treatment-approach results in a better-outcome.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(2),[A]),'better-outcome',countable) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(3),[A]),result) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(3),[A]),1,A) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(3),[A]),in,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(2),[A])) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
+% S8: An opioid-use-example is an opioid-use-disorder-treatment-example.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(1),[]),'opioid-use-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(2),[]),'opioid-use-disorder-treatment-example',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(3),[]),be).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s47-21',8,ref(2),[])).
+% S9: Every nonpunitive-public-health-treatment-approach results in a better-outcome.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',9,ref(2),[A]),'better-outcome',countable) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',9,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',9,ref(3),[A]),result) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',9,ref(3),[A]),1,A) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s47-21',9,ref(3),[A]),in,'$guideline_id'(product,'cdc2022-opioid-s47-21',9,ref(2),[A])) :- guideline_entity(actual,A,'nonpunitive-public-health-treatment-approach',countable), guideline_cardinality(actual,A,na,eq,1).
