@@ -54,7 +54,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] DQ2 fixed-witness NAF completeness (deferred row; its Accept).
 - [x] ba98a09a DQ3 colleague review return (deferred row; its Accept).
 - [x] a4406990 DQ4 workflow hardening below the gate persona (deferred row; its Accept).
-- [ ] DQ5 stacks without a committed scanner (deferred row; its Accept).
+- [x] fc98e23b DQ5 stacks without a committed scanner (deferred row; its Accept).
 - [x] 43fd5e95 DQ6 `bump-verus` upstream strings (deferred row; its Accept).
 - [ ] DQ7 Rust toolchain by version only (deferred row; its Accept).
 - [ ] DQ8 concurrent connections in the reviewer server (deferred row; its Accept).

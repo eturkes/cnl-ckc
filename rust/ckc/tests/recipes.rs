@@ -325,6 +325,76 @@ fn verus_case(
     channel: &str,
     vstd: &str,
 ) -> (Output, Fixture) {
+    let manifest = rust_manifest(&RUST_COMPONENTS.map(|(file, body)| (file, hex(body.as_bytes()))));
+    let sha = hex(manifest.as_bytes());
+    verus_case_with(s, name, justfile, failing, channel, vstd, (&manifest, &sha))
+}
+
+// The six components `just tools` installs: fixture file name + bytes.
+const RUST_COMPONENTS: [(&str, &str); 6] = [
+    ("rustc-1.96.0-x86_64-unknown-linux-gnu.tar.xz", "rustc\n"),
+    (
+        "rust-std-1.96.0-x86_64-unknown-linux-gnu.tar.xz",
+        "rust-std gnu\n",
+    ),
+    (
+        "rust-std-1.96.0-x86_64-unknown-linux-musl.tar.xz",
+        "rust-std musl\n",
+    ),
+    ("cargo-1.96.0-x86_64-unknown-linux-gnu.tar.xz", "cargo\n"),
+    ("clippy-1.96.0-x86_64-unknown-linux-gnu.tar.xz", "clippy\n"),
+    (
+        "rustfmt-1.96.0-x86_64-unknown-linux-gnu.tar.xz",
+        "rustfmt\n",
+    ),
+];
+const RUST_DIST: &str = "https://static.rust-lang.org/dist";
+
+// A channel manifest naming each (file, xz_hash) under its package section, in RUST_COMPONENTS order,
+// beside a package `just tools` never installs.
+fn rust_manifest(components: &[(&str, String)]) -> String {
+    let sections = [
+        "rustc.target.x86_64-unknown-linux-gnu",
+        "rust-std.target.x86_64-unknown-linux-gnu",
+        "rust-std.target.x86_64-unknown-linux-musl",
+        "cargo.target.x86_64-unknown-linux-gnu",
+        "clippy-preview.target.x86_64-unknown-linux-gnu",
+        "rustfmt-preview.target.x86_64-unknown-linux-gnu",
+    ];
+    let mut text = "manifest-version = \"2\"\ndate = \"2026-08-30\"\n\n[pkg.rust-docs.target.x86_64-unknown-linux-gnu]\navailable = true\nxz_url = \"https://static.rust-lang.org/dist/2026-08-30/rust-docs-1.96.0-x86_64-unknown-linux-gnu.tar.xz\"\nxz_hash = \"0000000000000000000000000000000000000000000000000000000000000000\"\n".to_owned();
+    for (section, (file, hash)) in sections.iter().zip(components) {
+        text.push_str(&format!(
+            "\n[pkg.{section}]\navailable = true\nxz_url = \"{RUST_DIST}/2026-08-30/{file}\"\nxz_hash = \"{hash}\"\n"
+        ));
+    }
+    text
+}
+
+// verus.lock's rows for RUST_COMPONENTS under a manifest with sha256 `manifest_sha`.
+fn rust_rows(channel: &str, manifest_sha: &str) -> String {
+    let mut rows = format!(
+        "rust_manifest_url\t{RUST_DIST}/channel-rust-{channel}.toml\nrust_manifest_sha256\t{manifest_sha}\n"
+    );
+    for (file, body) in RUST_COMPONENTS {
+        rows.push_str(&format!(
+            "rust_component\t{RUST_DIST}/2026-08-30/{file}\t{}\n",
+            hex(body.as_bytes())
+        ));
+    }
+    rows
+}
+
+// `served` = the channel manifest bytes + the sha256 its published .sha256 names.
+fn verus_case_with(
+    s: &Scratch,
+    name: &str,
+    justfile: &str,
+    failing: &str,
+    channel: &str,
+    vstd: &str,
+    served: (&str, &str),
+) -> (Output, Fixture) {
+    let (manifest, manifest_sha) = served;
     let tag = "release/0.2026.08.30.b432e82";
     let api = "https://api.github.com/repos/verus-lang/verus";
     let commit = "b".repeat(40);
@@ -352,13 +422,17 @@ fn verus_case(
             "[package]\nname = \"vstd\"\nversion = \"{vstd}\"\n"
         )),
     );
-    let rows =
-        "verus_release verus_asset verus_asset_sha256 verus_asset_url rustc_toolchain z3_version";
+    fx.route(
+        &format!("{RUST_DIST}/channel-rust-{channel}.toml.sha256"),
+        format!("{manifest_sha}  channel-rust-{channel}.toml\n"),
+    );
+    fx.route(
+        &format!("{RUST_DIST}/channel-rust-{channel}.toml"),
+        manifest,
+    );
     put(
         &fx.root.join("rust/verus.lock"),
-        rows.split(' ')
-            .map(|k| format!("{k}\told\n"))
-            .collect::<String>(),
+        verus_case_seed("rust/verus.lock"),
     );
     put(
         &fx.root.join("rust/kani.lock"),
@@ -394,7 +468,15 @@ fn bump_verus_version_probes_fail_the_recipe() {
     };
     let (out, fx) = case("control", &text, "");
     assert_eq!(out.status.code(), Some(0), "control: {}", show(&out));
-    assert!(fx.read("rust/verus.lock").contains("z3_version\t4.15.2\n"));
+    let manifest = rust_manifest(&RUST_COMPONENTS.map(|(file, body)| (file, hex(body.as_bytes()))));
+    assert_eq!(
+        fx.read("rust/verus.lock"),
+        format!(
+            "verus_release\trelease/0.2026.08.30.b432e82\nverus_asset\tverus-0.2026.08.30.b432e82-x86-linux.zip\nverus_asset_sha256\t{}\nverus_asset_url\thttps://github.com/verus-lang/verus/releases/download/release%2F0.2026.08.30.b432e82/verus-0.2026.08.30.b432e82-x86-linux.zip\nrustc_toolchain\t1.96.0-x86_64-unknown-linux-gnu\n{}z3_version\t4.15.2\n",
+            "a".repeat(64),
+            rust_rows("1.96.0", &hex(manifest.as_bytes()))
+        )
+    );
     assert!(
         fx.read("rust/kani.lock")
             .contains("bootstrap_rustc_version\trustc 1.96.0 (fixture 2026-08-30)\n")
@@ -492,6 +574,47 @@ fn bump_verus_refuses_upstream_strings_outside_their_shapes() {
         }
         assert_eq!(fx.calls(), "", "{what}: nested just ran");
     }
+    // A manifest entry outside its shape (a quote + sed command in a file name) or manifest bytes
+    // off their published .sha256 stop the recipe before any write too.
+    let good = RUST_COMPONENTS.map(|(file, body)| (file, hex(body.as_bytes())));
+    let mut bad = good.clone();
+    bad[3].0 = "cargo\"/e;s/x/y.tar.xz";
+    let (hostile, honest) = (rust_manifest(&bad), rust_manifest(&good));
+    let manifests = [
+        (
+            "manifest-entry",
+            &hostile,
+            hex(hostile.as_bytes()),
+            "unexpected manifest entry for cargo",
+        ),
+        (
+            "manifest-digest",
+            &honest,
+            "b".repeat(64),
+            "manifest digest mismatch",
+        ),
+    ];
+    for (what, manifest, sha, why) in manifests {
+        let (out, fx) = verus_case_with(
+            &s,
+            what,
+            &text,
+            "",
+            "1.96.0",
+            "0.0.0-2026-08-30-0058",
+            (manifest, &sha),
+        );
+        assert_ne!(out.status.code(), Some(0), "{what}: {}", show(&out));
+        assert!(
+            String::from_utf8_lossy(&out.stderr).contains(&format!("bump-verus: {why}")),
+            "{what}: {}",
+            show(&out)
+        );
+        for f in files {
+            assert_eq!(fx.read(f), verus_case_seed(f), "{what}: {f} rewritten");
+        }
+        assert_eq!(fx.calls(), "", "{what}: nested just ran");
+    }
     // The pre-fix recipe (no shape checks) writes the lock rows before its sed runs.
     let checks = &text[text
         .find("    # Upstream strings reach sed + the lock rows")
@@ -519,13 +642,173 @@ fn bump_verus_refuses_upstream_strings_outside_their_shapes() {
 fn verus_case_seed(file: &str) -> &'static str {
     match file {
         "rust/verus.lock" => {
-            "verus_release\told\nverus_asset\told\nverus_asset_sha256\told\nverus_asset_url\told\nrustc_toolchain\told\nz3_version\told\n"
+            "verus_release\told\nverus_asset\told\nverus_asset_sha256\told\nverus_asset_url\told\nrustc_toolchain\told\nrust_manifest_url\told\nrust_manifest_sha256\told\nrust_component\told\told\nrust_component\told\told\nz3_version\told\n"
         }
         "rust/kani.lock" => "bootstrap_rustc_toolchain\told\nbootstrap_rustc_version\told\n",
         "rust/rust-toolchain.toml" => "channel = \"old\"\n",
         "rust/Cargo.toml" => "vstd = \"=old\"\n",
         _ => unreachable!("{file}"),
     }
+}
+
+// Mock rustup: logs its arguments, then each file of the RUSTUP_DIST_SERVER mirror + its sha256,
+// and lays down the toolchain's rustc.
+const RUSTUP: &str = r#"#!/usr/bin/env bash
+{
+    echo "$*"
+    if [ -n "${RUSTUP_DIST_SERVER:-}" ]; then
+        (cd "${RUSTUP_DIST_SERVER#file://}" && find . \( -type f -o -type l \) | sort | while read -r f; do
+            printf '%s %s\n' "$f" "$(sha256sum < "$f" | cut -d' ' -f1)"
+        done)
+    fi
+} >> "$MOCK_DATA/rustup.log"
+mkdir -p "$RUSTUP_HOME/toolchains/$4/bin"
+printf '#!/bin/sh\n' > "$RUSTUP_HOME/toolchains/$4/bin/rustc"
+chmod +x "$RUSTUP_HOME/toolchains/$4/bin/rustc"
+"#;
+
+// One `just tools` run whose only open install is the Rust toolchain: tools.lock holds no row,
+// ESLint + Verus sit installed at their pins, and curl serves the manifest + components, each
+// with one byte flipped where named.
+fn tools_case(s: &Scratch, name: &str, justfile: &str, flipped: &str) -> Fixture {
+    let fx = Fixture::new(s, name, justfile);
+    let flip = |what: &str, bytes: &[u8]| {
+        let mut bytes = bytes.to_vec();
+        if what == flipped {
+            bytes[0] ^= 1;
+        }
+        bytes
+    };
+    let manifest = rust_manifest(&RUST_COMPONENTS.map(|(file, body)| (file, hex(body.as_bytes()))));
+    fx.route(
+        &format!("{RUST_DIST}/channel-rust-1.96.0.toml"),
+        flip("manifest", manifest.as_bytes()),
+    );
+    for (file, body) in RUST_COMPONENTS {
+        fx.route(
+            &format!("{RUST_DIST}/2026-08-30/{file}"),
+            flip(file, body.as_bytes()),
+        );
+    }
+    put(
+        &fx.root.join("rust/verus.lock"),
+        format!(
+            "key\tvalue\nverus_release\trelease/0.2026.08.30.b432e82\nverus_asset_sha256\t{}\nrustc_toolchain\t1.96.0-x86_64-unknown-linux-gnu\n{}z3_version\t4.15.2\n",
+            "a".repeat(64),
+            rust_rows("1.96.0", &hex(manifest.as_bytes()))
+        ),
+    );
+    put(
+        &fx.root.join("rust/tools.lock"),
+        "tool\tversion\tasset\tsha256\turl\n",
+    );
+    let lock = "{\"lockfileVersion\": 3}\n";
+    put(&fx.root.join("tools/eslint/package.json"), "{}\n");
+    put(&fx.root.join("tools/eslint/package-lock.json"), lock);
+    put_exec(
+        &fx.toolchain
+            .join("eslint/node_modules/eslint/bin/eslint.js"),
+        "#!/bin/sh\n",
+    );
+    put(
+        &fx.toolchain.join("eslint/.pin"),
+        format!("{}\n", hex(lock.as_bytes())),
+    );
+    put_exec(&fx.toolchain.join("verus-x86-linux/verus"), "#!/bin/sh\n");
+    put(
+        &fx.toolchain.join("verus-x86-linux/.pin"),
+        format!("{}\n", "a".repeat(64)),
+    );
+    put_exec(&fx.toolchain.join("cargo/bin/rustup"), RUSTUP);
+    fx
+}
+
+// `just tools` installs the Rust toolchain from a local mirror of digest-checked files (security
+// review SEC P2): rustup sees the pinned manifest + components alone, and a manifest or component
+// off its verus.lock row stops the recipe before rustup runs.
+#[test]
+fn tools_installs_rust_from_the_pinned_manifest_alone() {
+    let s = scratch("tools");
+    let text = justfile();
+    let rustup_log = |fx: &Fixture| fs::read_to_string(fx.data.join("rustup.log")).ok();
+    let manifest = rust_manifest(&RUST_COMPONENTS.map(|(file, body)| (file, hex(body.as_bytes()))));
+    let man_sha = hex(manifest.as_bytes());
+    let mut mirror = vec![
+        format!("./dist/channel-rust-1.96.0.toml {man_sha}"),
+        format!(
+            "./dist/channel-rust-1.96.0.toml.sha256 {}",
+            hex(format!("{man_sha}  channel-rust-1.96.0.toml\n").as_bytes())
+        ),
+    ];
+    for (file, body) in RUST_COMPONENTS {
+        mirror.push(format!("./dist/2026-08-30/{file} {}", hex(body.as_bytes())));
+    }
+    mirror.sort();
+    let expected = format!(
+        "-q toolchain install 1.96.0-x86_64-unknown-linux-gnu --profile minimal --component clippy --component rustfmt --target x86_64-unknown-linux-musl\n{}\n",
+        mirror.join("\n")
+    );
+    let fx = tools_case(&s, "control", &text, "");
+    let out = fx.run("tools", &[]);
+    assert_eq!(out.status.code(), Some(0), "control: {}", show(&out));
+    assert_eq!(
+        rustup_log(&fx).as_deref(),
+        Some(expected.as_str()),
+        "control mirror"
+    );
+    assert!(
+        fx.toolchain.join("rust-toolchain/.pin").is_file(),
+        "control: no pin"
+    );
+    // Installed at its pin: the next run leaves rustup alone.
+    let out = fx.run("tools", &[]);
+    assert_eq!(out.status.code(), Some(0), "rerun: {}", show(&out));
+    assert_eq!(
+        rustup_log(&fx).as_deref(),
+        Some(expected.as_str()),
+        "rerun ran rustup"
+    );
+    let flips = ["manifest", RUST_COMPONENTS[0].0, RUST_COMPONENTS[5].0];
+    for flipped in flips {
+        let fx = tools_case(&s, &format!("flip-{flipped}"), &text, flipped);
+        let out = fx.run("tools", &[]);
+        assert_ne!(
+            out.status.code(),
+            Some(0),
+            "{flipped} flipped: {}",
+            show(&out)
+        );
+        assert_eq!(rustup_log(&fx), None, "{flipped} flipped: rustup ran");
+        assert!(
+            !fx.toolchain.join("rustup/toolchains").exists()
+                && !fx.toolchain.join("rust-toolchain/.pin").exists(),
+            "{flipped} flipped: toolchain touched"
+        );
+    }
+    // The pre-fix recipe: rustup fetches the channel manifest itself, so a flipped one installs.
+    let tools = recipe(&text, "tools");
+    let start = tools
+        .find("    # rustup installs from a local mirror")
+        .expect("tools: no mirror block");
+    let end = tools
+        .find("    if [ ! -x \"$T/verus-x86-linux/verus\" ]")
+        .expect("tools: no verus block");
+    let planted = plant(
+        &text,
+        &[(
+            &tools[start..end],
+            "    \"$T/cargo/bin/rustup\" -q toolchain install \"$tc\" --profile minimal --component clippy --component rustfmt \\\n        --target x86_64-unknown-linux-musl\n",
+        )],
+    );
+    let fx = tools_case(&s, "planted", &planted, "manifest");
+    let out = fx.run("tools", &[]);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "the planted pre-fix tools recipe no longer slips through: {}",
+        show(&out)
+    );
+    assert!(rustup_log(&fx).is_some(), "planted: rustup never ran");
 }
 
 const KANI_LOCK: &str = "# fixture\nkani_version\told\n";

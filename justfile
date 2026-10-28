@@ -126,9 +126,25 @@ tools:
         printf '%s\n' "$lockv" > "$T/eslint/.pin"
     fi
     tc=$(lock rustc_toolchain)
-    # musl target = `just build-static` (the CI container jobs' binary).
-    "$T/cargo/bin/rustup" -q toolchain install "$tc" --profile minimal --component clippy --component rustfmt \
-        --target x86_64-unknown-linux-musl
+    # rustup installs from a local mirror of digest-checked files, never from the network: the channel
+    # manifest (verus.lock sha256) pins each component's hash, which rustup checks; the rust_component rows
+    # name the files this install needs. Pin = those rows.
+    rpin=$(awk -F'\t' '$1 == "rust_manifest_sha256" || $1 == "rust_component"' "{{ ROOT }}/rust/verus.lock" | sha256sum | cut -d' ' -f1)
+    if [ ! -x "$RUSTUP_HOME/toolchains/$tc/bin/rustc" ] || ! pinned "$T/rust-toolchain" "$rpin"; then
+        man=$(lock rust_manifest_url); m=${man##*/}
+        fetch "$m" "$man" "$(lock rust_manifest_sha256)"
+        mirror=$(mktemp -d); trap 'rm -rf "$mirror"' EXIT
+        mkdir -p "$mirror/dist"; ln -s "$DL/$m" "$mirror/dist/$m"
+        printf '%s  %s\n' "$(lock rust_manifest_sha256)" "$m" > "$mirror/dist/$m.sha256"
+        while IFS=$'\t' read -r _ url sha; do
+            fetch "${url##*/}" "$url" "$sha"
+            p=${url#https://static.rust-lang.org/}; mkdir -p "$mirror/${p%/*}"; ln -s "$DL/${url##*/}" "$mirror/$p"
+        done < <(awk -F'\t' '$1 == "rust_component"' "{{ ROOT }}/rust/verus.lock")
+        # musl target = `just build-static` (the CI container jobs' binary).
+        RUSTUP_DIST_SERVER="file://$mirror" "$T/cargo/bin/rustup" -q toolchain install "$tc" --profile minimal \
+            --component clippy --component rustfmt --target x86_64-unknown-linux-musl
+        mkdir -p "$T/rust-toolchain"; printf '%s\n' "$rpin" > "$T/rust-toolchain/.pin"
+    fi
     if [ ! -x "$T/verus-x86-linux/verus" ] || ! pinned "$T/verus-x86-linux" "$(lock verus_asset_sha256)"; then
         fetch "$(lock verus_asset)" "$(lock verus_asset_url)" "$(lock verus_asset_sha256)"
         rm -rf "$T/verus-x86-linux"
@@ -202,8 +218,10 @@ _relock crate version:
 
 # A pin = a stable `release/<version>` tag: the Monday cron rebuilds the rolling tag into one, and every
 # push to verus main deletes the rolling assets. Rows: GitHub release asset name + `digest` + URL, the tag
-# commit's rust-toolchain.toml channel + source/vstd version, Z3 = the bundled z3's version; rust-toolchain.toml,
-# the vstd pin + kani.lock bootstrap rows follow; `just tools` installs the release; the vstd family relocks.
+# commit's rust-toolchain.toml channel + source/vstd version, that channel's manifest sha256 (its published
+# .sha256, checked against the download) + each installed component's xz_url + xz_hash, Z3 = the bundled z3's
+# version; rust-toolchain.toml, the vstd pin + kani.lock bootstrap rows follow; `just tools` installs the
+# release; the vstd family relocks.
 # Verus bump: repin to the stable release <tag> (e.g. release/0.2026.10.04.426d8b0); then `just rust`.
 bump-verus tag:
     #!/usr/bin/env bash
@@ -232,6 +250,22 @@ bump-verus tag:
     [[ "$channel" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "unexpected rust-toolchain channel: $channel"
     [[ "$vstd" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+)*$ ]] || fail "unexpected vstd version: $vstd"
     tc="$channel-x86_64-unknown-linux-gnu"
+    # The channel manifest pins each component's hash (rustup checks every file against it): its sha256 +
+    # the xz_url + xz_hash of each component `just tools` installs = verus.lock rows.
+    man_url="https://static.rust-lang.org/dist/channel-rust-$channel.toml"
+    man_sha=$(get "$man_url.sha256" | cut -d' ' -f1)
+    [[ "$man_sha" =~ ^[0-9a-f]{64}$ ]] || fail "unexpected manifest digest: $man_sha"
+    w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    get -o "$w/manifest.toml" "$man_url"
+    [ "$(sha256sum < "$w/manifest.toml" | cut -d' ' -f1)" = "$man_sha" ] || fail "manifest digest mismatch: $man_url"
+    g=${tc#*-}; rows=""
+    for c in "rustc $g" "rust-std $g" "rust-std x86_64-unknown-linux-musl" "cargo $g" "clippy-preview $g" "rustfmt-preview $g"; do
+        row=$(awk -v s="[pkg.${c% *}.target.${c#* }]" '$0 == s {f = 1; next} /^\[/ {f = 0}
+            f && /^xz_url = / {u = $3} f && /^xz_hash = / {h = $3} END {gsub(/"/, "", u); gsub(/"/, "", h); print u "\t" h}' "$w/manifest.toml")
+        [[ "$row" =~ ^https://static\.rust-lang\.org/dist/[0-9]{4}-[0-9]{2}-[0-9]{2}/[A-Za-z0-9._-]+\.tar\.xz$'\t'[0-9a-f]{64}$ ]] \
+            || fail "unexpected manifest entry for $c: $row"
+        rows+="rust_component"$'\t'"$row"$'\n'
+    done
     set_row() { # lock key value: replace the value of an existing key row
         [ -n "$3" ] || fail "empty $2"
         grep -q "^$2"$'\t' "$1" || fail "$1 has no $2 row"
@@ -242,6 +276,10 @@ bump-verus tag:
     set_row rust/verus.lock verus_asset_sha256 "$sha"
     set_row rust/verus.lock verus_asset_url "https://github.com/verus-lang/verus/releases/download/$enc/$asset"
     set_row rust/verus.lock rustc_toolchain "$tc"
+    set_row rust/verus.lock rust_manifest_url "$man_url"
+    set_row rust/verus.lock rust_manifest_sha256 "$man_sha"
+    R="$rows" awk '$1 == "rust_component" {next} {print} $1 == "rust_manifest_sha256" {printf "%s", ENVIRON["R"]}' \
+        rust/verus.lock > rust/verus.lock.new; mv rust/verus.lock.new rust/verus.lock
     sed -i "s/^channel = \".*\"$/channel = \"$channel\"/" rust/rust-toolchain.toml
     sed -i "s/^vstd = \"=.*\"$/vstd = \"=$vstd\"/" rust/Cargo.toml
     just tools > /dev/null
