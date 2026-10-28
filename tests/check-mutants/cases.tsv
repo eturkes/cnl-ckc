@@ -101,3 +101,6 @@ vocabulary-comment-row	corpus_vocabulary	1
 vocabulary-comment-precedence	corpus_vocabulary	1
 vocabulary-retired-alone	corpus_vocabulary	2
 vocabulary-retired-beside	corpus_vocabulary	2
+derived-entity-unruled	corpus_derived	1
+derived-entity-stale	corpus_derived	1
+derived-entity-header	corpus_derived	1

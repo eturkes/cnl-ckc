@@ -1,0 +1,89 @@
+# format: docid	sentence	noun	class	reason
+cdc2022-opioid-rec01	1	category-B-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec01	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec01-imp03	2	interval	example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-rec01-imp03	3	interval	example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-rec02	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec02	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec03	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec03	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec04	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec04	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec04-imp03	3	dosage-reduction	inert-join	kept as asserted: the committed query dosage-reduction-content answers from it; rec07-imp15 S6 reads dosage-reduction through request, which these facts never assert
+cdc2022-opioid-rec04-imp03	4	dosage-reduction	inert-join	kept as asserted: the committed query dosage-reduction-content answers from it; rec07-imp15 S6 reads dosage-reduction through request, which these facts never assert
+cdc2022-opioid-rec05	1	category-B-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec05	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec06	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec06	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec07	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec07	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec07-imp06	3	interval	time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-rec07-imp06	3	month	time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-rec08	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec08	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec09	1	category-B-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec09	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec10	1	category-B-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec10	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec10-imp14	1	opioid-dosage-management-decision	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-rec10-imp14	2	opioid-dosage-management-decision	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-rec11	1	category-B-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec11	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec12	1	category-A-recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec12	1	recommendation	grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec12	4	overdose	inert-join	readers join `risk` through outweigh (rec05 S4, s56-04 S4) and `overdose` through experience (rec07-imp15 S8, s37-14 S9), which this sentence never asserts
+cdc2022-opioid-rec12	4	risk	inert-join	readers join `risk` through outweigh (rec05 S4, s56-04 S4) and `overdose` through experience (rec07-imp15 S8, s37-14 S9), which this sentence never asserts
+cdc2022-opioid-s10-13	5	palliative-care	class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s10-15	1	end-of-life-care	class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s10-15	2	end-of-life-care	class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s10-15	3	end-of-life-care	class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s19-07	1	pain-equity-duty-holder	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s19-07	2	pain-equity-duty-holder	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s19-07	3	pain-equity-duty-holder	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s19-07	4	pain-equity-duty-holder	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s22-05	3	interval	example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-s22-05	4	interval	example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-s23-20	3	interval	example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-s31-07	1	ER-LA-opioid	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s31-07	2	ER-LA-opioid	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s31-07	3	ER-LA-opioid	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s33-01	1	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	2	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	3	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	4	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	5	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	6	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	7	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	8	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	9	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	10	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	13	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	16	MME-unit-per-day	formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s39-20	3	alpha-2-agonist	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s39-20	4	alpha-2-agonist	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s44-04	3	follow-up	chained-event	the follow-up binds the antecedent's clinician + patient; rec07-imp12 reads it by design
+cdc2022-opioid-s44-04	3	interval	time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-s44-04	4	follow-up	chained-event	the follow-up binds the antecedent's clinician + patient; rec07-imp12 reads it by design
+cdc2022-opioid-s44-04	4	interval	time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-s56-04	1	medication-taper-sequencing-decision	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s56-04	2	medication-taper-sequencing-decision	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s56-04	3	medication-taper-sequencing-decision	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	1	opioid-use-disorder	class-derivation	met criteria derive opioid use disorder, which other conditions read by design
+cdc2022-opioid-s57-05	2	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	3	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	4	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	5	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	6	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	7	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	8	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	9	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	10	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	11	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	12	opioid-use-disorder-criterion	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-08	5	full-agonist-opioid	be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s9-05	10	acute-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	11	subacute-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	12	chronic-pain	class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	13	month	time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-s9-05	14	month	time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-s9-05	15	month	time-quantity	the duration of a pain class (the converse of the class definition)

@@ -1,6 +1,6 @@
 use super::common::*;
 use super::{
-    adjudication, census, coverage, functors, inventories::Guideline, lexicon, projection,
+    adjudication, census, coverage, derived, functors, inventories::Guideline, lexicon, projection,
 };
 use ckc_kernel::ECoverage;
 pub(super) fn check(g: &Guideline) -> Result {
@@ -25,6 +25,7 @@ pub(super) fn check(g: &Guideline) -> Result {
         }
         functors::check(&g.path, id)?;
     }
+    derived::check(g)?;
     let c = coverage::check(g, true)?;
     supersession_rows(g, &c)?;
     let status = coverage::statuses(&c);

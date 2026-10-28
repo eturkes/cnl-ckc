@@ -27,6 +27,7 @@ const SHADOW: &str = "guidelines/cdc-2022-opioid/audit/lexicon-shadow.tsv";
 const EVIDENCE: &str = "guidelines/cdc-2022-opioid/source/box3-extraction.txt";
 const SPEC: &str = ".agent/spec.md";
 const VOCABULARY: &str = "guidelines/cdc-2022-opioid/vocabulary.tsv";
+const DERIVED: &str = "guidelines/cdc-2022-opioid/audit/derived-entities.tsv";
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -386,6 +387,24 @@ fn mutate(t: &Path, name: &str) {
             replace(t, SHADOW, &row, b"");
         }
         "red-pin-missing" => remove(t, "tests/red/ape_messages--unknown-word.expect"),
+        // DQ-D: the compiled `Every recommendation is relevant to a clinician.` as rec02 S12 —
+        // a clinician per recommendation that every clinician condition reads.
+        "derived-entity-unruled" => append(
+            t,
+            "guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec02.pl",
+            b"guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02',12,ref(2),[A]),clinician,countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).\n",
+        ),
+        "derived-entity-stale" => append(
+            t,
+            DERIVED,
+            b"cdc2022-opioid-rec02\t12\tclinician\tbe-edge\ta row naming no flagged entity\n",
+        ),
+        "derived-entity-header" => replace(
+            t,
+            DERIVED,
+            b"# format: docid\tsentence\tnoun\tclass\treason\n",
+            b"# format: docid\tnoun\n",
+        ),
         other => panic!("unknown mutant {other}"),
     }
 }
@@ -489,12 +508,17 @@ fn check_mutant_battery() {
         .map(|l| l.split('\t').collect())
         .collect();
     let count = |prefix: &str| rows.iter().filter(|r| r[0].starts_with(prefix)).count();
-    let (files, c1) = (count("temporal-v3-"), count("vocabulary-"));
+    let (files, c1, dq) = (
+        count("temporal-v3-"),
+        count("vocabulary-"),
+        count("derived-entity-"),
+    );
     assert_eq!(
-        rows.len() - files - c1,
+        rows.len() - files - c1 - dq,
         63,
         "tests/check-mutants legacy row count"
     );
+    assert_eq!(dq, 3, "tests/check-mutants derived-entity plant count");
     let q13 = count("temporal-v3-q13-");
     assert_eq!(files - q13, 21, "tests/check-mutants q12 file-plant count");
     assert_eq!(q13, 14, "tests/check-mutants q13 file-plant count");
