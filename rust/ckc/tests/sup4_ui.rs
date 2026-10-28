@@ -2,6 +2,8 @@
 // CKC_SUP4_TEST_BIN selects seed/candidate; characterization tests say so.
 #[path = "../../../tests/sup4-ui/cases.rs"]
 mod cases;
+#[path = "../../../tests/frozen-pages/dq10.rs"]
+mod dq10;
 #[path = "../../../tests/sup4-ui/oracle.rs"]
 mod oracle;
 #[path = "../../../tests/frozen-pages/rev_k.rs"]

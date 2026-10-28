@@ -1,5 +1,7 @@
 // UR P1–P7: contract-only renderer oracle + frozen pre-unit fixture census.
 // CKC_UR_TEST_BIN selects the binary for seed/base replay; default = release ckc.
+#[path = "../../../tests/frozen-pages/dq10.rs"]
+mod dq10;
 #[path = "../../../tests/ur-ui/legacy.rs"]
 mod legacy;
 #[path = "../../../tests/ur-ui/oracle.rs"]

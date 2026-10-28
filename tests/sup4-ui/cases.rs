@@ -1,5 +1,5 @@
 use super::oracle::{self, Model, Row};
-use super::rev_k;
+use super::{dq10, rev_k};
 use super::support::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -22,10 +22,10 @@ fn stripped(c: &mut Checks, model: &Model, path: &str, body: &[u8], label: &str)
     }
 }
 
-// The pins hold pre-REV-K renderer bytes: a page's REV-K sites map back before its hash.
+// The pins hold pre-REV-K renderer bytes: a page's DQ10 + REV-K sites map back before its hash.
 fn pre_rev_k(path: &str, bytes: &[u8]) -> Vec<u8> {
     if path.ends_with(".html") {
-        rev_k::map(std::str::from_utf8(bytes).unwrap(), false).into_bytes()
+        rev_k::map(&dq10::map(std::str::from_utf8(bytes).unwrap(), false), false).into_bytes()
     } else {
         bytes.to_owned()
     }

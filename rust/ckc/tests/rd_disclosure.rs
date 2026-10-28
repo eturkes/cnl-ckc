@@ -1,5 +1,7 @@
 // RD D1/D2/D4/P3: contract literal + frozen fixture inputs; renderer implementation unread.
 // CKC_UI_TEST_BIN selects the candidate; CKC_RD_MIGRATION selects the replay script.
+#[path = "../../../tests/frozen-pages/dq10.rs"]
+mod dq10;
 #[path = "../../../tests/frozen-pages/rev_k.rs"]
 mod rev_k;
 use sha2::{Digest, Sha256};
@@ -56,9 +58,9 @@ fn text(bytes: &[u8]) -> &str {
 }
 
 // The 065d814b goldens + the non-document pins hold pre-REV-K renderer bytes: a current page's
-// REV-K sites map back before the comparison.
+// DQ10 + REV-K sites map back before the comparison.
 fn pre_rev_k(page: &[u8]) -> Vec<u8> {
-    rev_k::map(text(page), false).into_bytes()
+    rev_k::map(&dq10::map(text(page), false), false).into_bytes()
 }
 
 fn write(path: &Path, bytes: &[u8]) {

@@ -893,20 +893,23 @@ mobile:
     "$bin" ui render "$w/superseded-pages" "$w/superseded-tree" >/dev/null
     probe "$w/superseded-pages"
     n=$(find "$w/pages" -name '*.html' | wc -l)
-    red() { # name anchor min-bad: the anchor sits on every page; stripped, ≥ min-bad pages fail (rc 1)
-        cp -a "$w/pages" "$w/$1"
-        [ "$(grep -rlF -- "$2" "$w/$1" | wc -l)" = "$n" ] || { echo "mobile: $1: anchor missing from a page" >&2; exit 2; }
-        find "$w/$1" -name '*.html' -exec sed -i "s|$2||" {} +
-        ! grep -rqF -- "$2" "$w/$1" || { echo "mobile: $1: anchor left on a page" >&2; exit 2; }
+    red() { # name pages anchor min-bad: the anchor sits on every page; stripped, ≥ min-bad pages fail (rc 1)
+        local m; m=$(find "$2" -name '*.html' | wc -l)
+        cp -a "$2" "$w/$1"
+        [ "$(grep -rlF -- "$3" "$w/$1" | wc -l)" = "$m" ] || { echo "mobile: $1: anchor missing from a page" >&2; exit 2; }
+        find "$w/$1" -name '*.html' -exec sed -i "s|$3||" {} +
+        ! grep -rqF -- "$3" "$w/$1" || { echo "mobile: $1: anchor left on a page" >&2; exit 2; }
         rc=0; out=$(probe "$w/$1") || rc=$?
         bad=$(sed -n 's/^ui-mobile: [0-9]* pages, \([0-9]*\) bad.*/\1/p' <<< "$out")
-        if ! { [ "$rc" = 1 ] && [ "${bad:-0}" -ge "$3" ]; }; then
-            printf '%s\n' "$out" >&2; echo "mobile: $1: rc $rc, $bad bad pages (≥ $3 expected)" >&2; exit 1
+        if ! { [ "$rc" = 1 ] && [ "${bad:-0}" -ge "$4" ]; }; then
+            printf '%s\n' "$out" >&2; echo "mobile: $1: rc $rc, $bad bad pages (≥ $4 expected)" >&2; exit 1
         fi
-        echo "mobile: red input $1: $bad of $n pages bad"
+        echo "mobile: red input $1: $bad of $m pages bad"
     }
-    red no-viewport-meta '<meta name="viewport" content="width=device-width, initial-scale=1">' "$n"
-    red no-narrow-table-rule '@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }' 1
+    red no-viewport-meta "$w/pages" '<meta name="viewport" content="width=device-width, initial-scale=1">' "$n"
+    red no-narrow-table-rule "$w/pages" '@media screen and (max-width: 40rem) { table { display: block; overflow-x: auto; } }' 1
+    # The superseded tree's z page cites a 120-character run without a space (DQ10).
+    red no-superseded-wrap "$w/superseded-pages" 'section.superseded p { overflow-wrap: anywhere; }' 1
     tree tests/ur-ui/browser/tree reading-tree
     "$bin" ui render "$w/reading-pages" "$w/reading-tree" >/dev/null
     reading() { "{{ TOOLCHAIN }}/bin/node" tools/ui-reading-probe.mjs "{{ TOOLCHAIN }}/bin/chrome-headless-shell" "$1"; }

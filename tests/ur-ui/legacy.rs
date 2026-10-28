@@ -1,6 +1,6 @@
 use super::base64;
 use super::oracle::{CSS, NARROW, PRINT_CSS};
-use super::rev_k;
+use super::{dq10, rev_k};
 use super::support::*;
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -22,6 +22,8 @@ const RD_NOTE: &str = "<p>Your name and comment are published with your decision
 // REV-K (contract rev-k P1/P2) re-colors four stylesheet rules + puts each count noun in its
 // number; the replay runs its script after RD.
 const REV_K: &str = ".agent/archive/migrations/rev-k-repin.py";
+// DQ10 adds the superseded-notice wrap rule to the stylesheet; the replay runs its script after REV-K.
+const DQ10: &str = ".agent/archive/migrations/dq10-repin.py";
 const PRINT_END: &str =
     ".chip { border: 1px solid #111827; background: none; color: inherit; }\n}\n</style>";
 
@@ -232,7 +234,7 @@ fn transformed(path: &Path, bytes: &[u8], new_script: &str) -> Vec<u8> {
         &RD_ANCHOR.replacen("</fieldset>\n", &format!("</fieldset>\n{RD_NOTE}"), 1),
         1,
     );
-    repin_csp(&rev_k::map(&text, true), new_script).into_bytes()
+    repin_csp(&dq10::map(&rev_k::map(&text, true), true), new_script).into_bytes()
 }
 
 struct LegacyFixture {
@@ -572,6 +574,19 @@ fn p7_golden_migration_is_complete_bounded_and_idempotent() {
             c.require(
                 out.status.success(),
                 format!("P7 REV-K migration pass {pass}: rc={:?}", out.status.code()),
+            );
+            let out = command(
+                Path::new("python3"),
+                &base.0,
+                &[
+                    "-I",
+                    root().join(DQ10).to_str().unwrap(),
+                    base.0.to_str().unwrap(),
+                ],
+            );
+            c.require(
+                out.status.success(),
+                format!("P7 DQ10 migration pass {pass}: rc={:?}", out.status.code()),
             );
             let after = files(&ui);
             compare_migration(

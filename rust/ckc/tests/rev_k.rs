@@ -1,5 +1,8 @@
 // Contract rev-k P1–P3; CLI-only, independent contrast/count/ordinal models.
-// CKC_REVK_TEST_BIN selects the pre-fix binary for red replay.
+// CKC_REVK_TEST_BIN selects the pre-fix binary for red replay. Rendered pages map back
+// through DQ10 (a later generation) first.
+#[path = "../../../tests/frozen-pages/dq10.rs"]
+mod dq10;
 #[path = "../../../tests/rev-k/ordinal.rs"]
 mod ordinal;
 use sha2::{Digest, Sha256};
@@ -176,7 +179,7 @@ fn rendered() -> &'static Pages {
                         "fixture/{name}/{}",
                         path.strip_prefix(&target).unwrap().display()
                     );
-                    assert!(pages.insert(key, read(&path)).is_none());
+                    assert!(pages.insert(key, dq10::map(&read(&path), false)).is_none());
                     count += 1;
                 }
             }
@@ -552,7 +555,7 @@ fn tallies() -> &'static Pages {
             for route in ["index", "records"] {
                 pages.insert(
                     format!("tally/{}/{route}", tally.key()),
-                    s.get(&tree, &format!("/g/alpha/{route}.html")),
+                    dq10::map(&s.get(&tree, &format!("/g/alpha/{route}.html")), false),
                 );
             }
         }
@@ -624,7 +627,10 @@ fn line_pages() -> &'static Pages {
                 let s = Scratch::new(label);
                 let tree = s.copy_tree("header-only-ledger");
                 write(&tree.join("guidelines/alpha/pl/a.pl"), pl);
-                (format!("line/{label}"), s.get(&tree, "/g/alpha/doc/a.html"))
+                (
+                    format!("line/{label}"),
+                    dq10::map(&s.get(&tree, "/g/alpha/doc/a.html"), false),
+                )
             })
             .collect()
     })
