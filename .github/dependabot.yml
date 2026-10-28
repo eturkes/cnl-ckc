@@ -1,10 +1,17 @@
 # Update automation. Cargo, toolchain and verifier pins = the weekly `updates`
 # job (`just outdated`; bump procedure in .claude/rules/rust.md): Dependabot's
 # cargo updater cannot resolve the vendored-sources replacement in rust/.cargo.
+# The ESLint lock (tools/eslint, `just eslint`) = Dependabot's npm updater.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+  - package-ecosystem: npm
+    directory: /tools/eslint
     schedule:
       interval: weekly
     cooldown:

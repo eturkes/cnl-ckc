@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   # Rust chain = `just rust`: verusfmt, clippy -D warnings, Verus --no-cheating,
-  # build, trust-audit, tests, cargo-deny, gitleaks, zizmor; then the phone-layout
+  # build, trust-audit, tests, cargo-deny, gitleaks, zizmor, ShellCheck, ESLint; then the phone-layout
   # check (`just mobile`: the pinned headless Chrome, whose libraries the runner image
   # carries). Tools + toolchain come from the sha256-pinned locks (rust/verus.lock,
   # rust/tools.lock) via `just tools`; the SWI-backed test harnesses use the pinned
@@ -46,7 +46,7 @@ jobs:
             .toolchain
             !.toolchain/dl
             !.toolchain/swipl-*
-          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
+          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml', 'tools/eslint/package-lock.json') }}
 
       - name: Install pinned tools
         run: just tools
@@ -199,7 +199,8 @@ jobs:
           chmod +x "$RUNNER_TEMP/ckc-bin/ckc"
           CKC_BIN="$RUNNER_TEMP/ckc-bin/ckc" just certify
 
-  # Weekly: RustSec advisories + license/source policy over the committed Cargo.lock.
+  # Weekly: RustSec advisories + license/source policy over the committed Cargo.lock, Trivy over
+  # the container image digest, RustSec advisories over the Kani installer's Cargo.lock.
   advisories:
     name: advisories
     if: github.event_name == 'schedule'
@@ -219,13 +220,21 @@ jobs:
           path: |
             .toolchain
             !.toolchain/dl
-          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
+          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml', 'tools/eslint/package-lock.json') }}
 
       - name: Install pinned tools
         run: just tools
 
       - name: Dependency audit
         run: just deny
+
+      - name: Container image scan
+        if: ${{ !cancelled() }}
+        run: just image-scan
+
+      - name: Kani installer advisories
+        if: ${{ !cancelled() }}
+        run: just kani-advisories
 
   # Weekly: Kani bounded model checking over the kernel's public exec surface.
   kani:
@@ -248,7 +257,7 @@ jobs:
           path: |
             .toolchain
             !.toolchain/dl
-          key: kani-${{ runner.os }}-${{ hashFiles('rust/kani.lock', 'rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
+          key: kani-${{ runner.os }}-${{ hashFiles('rust/kani.lock', 'rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml', 'tools/eslint/package-lock.json') }}
 
       - name: Install pinned tools
         run: just tools
@@ -277,7 +286,7 @@ jobs:
           path: |
             .toolchain
             !.toolchain/dl
-          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml') }}
+          key: toolchain-${{ runner.os }}-${{ hashFiles('rust/verus.lock', 'rust/tools.lock', 'rust/rust-toolchain.toml', 'tools/eslint/package-lock.json') }}
 
       - name: Install pinned tools
         run: just tools

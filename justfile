@@ -16,12 +16,12 @@ export PATH := (TOOLCHAIN / "bin") + ":" + (TOOLCHAIN / "verus-x86-linux") + ":"
 default:
     @just --list --unsorted
 
-RUST_STEPS := "fmt-check clippy verify build trust test deny secrets workflows"
+RUST_STEPS := "fmt-check clippy verify build trust test deny secrets workflows shellcheck eslint"
 
 # Full gate: rust chain, phone layout, corpus chain, emission certification.
 gate: (_timed RUST_STEPS + " mobile check certify")
 
-# Rust chain: format, lint, verify, build, trust-audit, test, dependency audit, secret scan, workflow scan.
+# Rust chain: format, lint, verify, build, trust-audit, test, dependency, secret, workflow, shell + JavaScript scans.
 rust: (_timed RUST_STEPS)
 
 # CI gate (.claude/rules/ops.md): the full gate as the ci.yml fan-out on HEAD, pushed to ci/<unit>.
@@ -31,7 +31,8 @@ ci unit:
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}"
-    [[ "{{ unit }}" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "ci: unit must match [A-Za-z0-9._-]+" >&2; exit 2; }
+    unit="{{ unit }}"
+    [[ "$unit" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "ci: unit must match [A-Za-z0-9._-]+" >&2; exit 2; }
     status=$(git status --porcelain)
     [ -z "$status" ] || { echo "ci: working tree differs from HEAD (commit first)" >&2; exit 2; }
     b="ci/{{ unit }}"; sha=$(git rev-parse HEAD); tree=$(git rev-parse "HEAD^{tree}")
@@ -69,7 +70,8 @@ _timed steps:
     #!/usr/bin/env bash
     set -uo pipefail
     start=$SECONDS
-    for s in {{ steps }}; do
+    steps=({{ steps }})
+    for s in "${steps[@]}"; do
         t=$SECONDS
         just --justfile "{{ justfile() }}" --no-deps "$s"; rc=$?
         echo "time: $s $((SECONDS - t)) s"
@@ -92,7 +94,7 @@ tools:
     }
     # $T/<tool>/.pin = the lock row's sha256 at install; any other value reinstalls.
     pinned() { [ "$(cat "$1/.pin" 2>/dev/null)" = "$2" ]; }
-    while IFS=$'\t' read -r tool version asset sha url; do
+    while IFS=$'\t' read -r tool _ asset sha url; do
         [ "$tool" = tool ] && continue
         if [ "$tool" = rustup-init ]; then
             [ -x "$T/cargo/bin/rustup" ] && pinned "$T/$tool" "$sha" && continue
@@ -103,7 +105,7 @@ tools:
         fi
         [ -x "$T/bin/$tool" ] && pinned "$T/$tool" "$sha" && continue
         fetch "$asset" "$url" "$sha"
-        rm -rf "$T/$tool"; mkdir -p "$T/$tool"
+        rm -rf "${T:?}/$tool"; mkdir -p "$T/$tool"
         case "$asset" in
             *.tar.gz) tar -xzf "$DL/$asset" -C "$T/$tool" ;;
             *.tar.xz) tar -xJf "$DL/$asset" -C "$T/$tool" ;;
@@ -114,6 +116,15 @@ tools:
         ln -sfn "$bin" "$T/bin/$tool"
         printf '%s\n' "$sha" > "$T/$tool/.pin"
     done < "{{ ROOT }}/rust/tools.lock"
+    # ESLint = tools/eslint/package-lock.json (an integrity hash per package) through the pinned node's npm.
+    lockv=$(sha256sum < "{{ ROOT }}/tools/eslint/package-lock.json" | cut -d' ' -f1)
+    if [ ! -x "$T/eslint/node_modules/eslint/bin/eslint.js" ] || ! pinned "$T/eslint" "$lockv"; then
+        rm -rf "${T:?}/eslint"; mkdir -p "$T/eslint"
+        cp "{{ ROOT }}/tools/eslint/package.json" "{{ ROOT }}/tools/eslint/package-lock.json" "$T/eslint/"
+        npm=$(find "$T/node" -path '*lib/node_modules/npm/bin/npm-cli.js' | head -n 1)
+        (cd "$T/eslint" && "$T/bin/node" "$npm" ci --ignore-scripts --no-audit --no-fund > /dev/null)
+        printf '%s\n' "$lockv" > "$T/eslint/.pin"
+    fi
     tc=$(lock rustc_toolchain)
     # musl target = `just build-static` (the CI container jobs' binary).
     "$T/cargo/bin/rustup" -q toolchain install "$tc" --profile minimal --component clippy --component rustfmt \
@@ -324,7 +335,7 @@ bump-tool tool version:
     set -euo pipefail
     cd "{{ ROOT }}"
     fail() { echo "bump-tool: $*" >&2; exit 1; }
-    L=rust/tools.lock t="{{ tool }}" v="{{ version }}" DL="{{ TOOLCHAIN }}/dl" sha= md5=
+    L=rust/tools.lock t="{{ tool }}" v="{{ version }}" DL="{{ TOOLCHAIN }}/dl" sha='' md5=''
     row=$(awk -F'\t' -v t="$t" 'NR > 1 && $1 == t' "$L")
     [ -n "$row" ] || fail "no $t row in $L"
     IFS=$'\t' read -r _ old asset _ url <<< "$row"
@@ -350,8 +361,9 @@ bump-tool tool version:
                 | jq -r '.md5Hash // empty' | base64 -d | od -An -tx1 | tr -d ' \n') ;;
         *) fail "no release source for $url" ;;
     esac
-    [[ -n "$url" ]] && { [[ "$sha" =~ ^[0-9a-f]{64}$ ]] || [[ "$md5" =~ ^[0-9a-f]{32}$ ]]; } \
-        || fail "no $asset with a digest for $t $v"
+    if ! { [[ -n "$url" ]] && { [[ "$sha" =~ ^[0-9a-f]{64}$ ]] || [[ "$md5" =~ ^[0-9a-f]{32}$ ]]; }; }; then
+        fail "no $asset with a digest for $t $v"
+    fi
     mkdir -p "$DL"; w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
     get -o "$w/$asset" "$url"
     got=$(sha256sum < "$w/$asset" | cut -d' ' -f1)
@@ -369,11 +381,11 @@ bump-tool tool version:
 
 # Reformat the workspace (verusfmt inside verus!, rustfmt outside).
 fmt:
-    cd "{{ ROOT }}/rust" && verusfmt --edition 2024 $(find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' | sort)
+    cd "{{ ROOT }}/rust" && find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' -print0 | sort -z | xargs -0 verusfmt --edition 2024
 
 [doc("Check the workspace format (verusfmt inside verus!, rustfmt outside).")]
 fmt-check:
-    cd "{{ ROOT }}/rust" && verusfmt --edition 2024 --check $(find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' | sort)
+    cd "{{ ROOT }}/rust" && find ckc-spec/src ckc-kernel/src ckc/src ckc/tests -name '*.rs' -print0 | sort -z | xargs -0 verusfmt --edition 2024 --check
     @echo "gate: fmt ok"
 
 [doc("Lint every workspace target; a warning fails the step.")]
@@ -461,7 +473,7 @@ trust: build
 test:
     #!/usr/bin/env bash
     set -uo pipefail
-    cd "{{ ROOT }}/rust"
+    cd "{{ ROOT }}/rust" || exit 2
     mkdir -p target; log=target/test.log
     # cargo's status lines stay on, uncolored: each `Running` | `Doc-tests` line names the binary
     # whose `test result` line follows; libtest stays terse.
@@ -497,8 +509,90 @@ secrets:
 
 # Workflow scan: zizmor's auditor persona over .github/ (offline audits; online audits too when GH_TOKEN is set).
 workflows:
-    cd "{{ ROOT }}" && zizmor --no-progress --color never --persona auditor $([ -n "${GH_TOKEN:-}" ] || echo --offline) .github
+    cd "{{ ROOT }}" && if [ -n "${GH_TOKEN:-}" ]; then zizmor --no-progress --color never --persona auditor .github; else zizmor --no-progress --color never --persona auditor --offline .github; fi
     @echo "gate: workflows ok"
+
+# Shell scan: ShellCheck over every recipe body (tools/shell-recipes.awk renders `just --dump`; an
+# interpolation renders as one word) + the repository's shell scripts; its own red input runs every
+# time: an unquoted expansion must be flagged.
+[doc("Check the recipe bodies and the shell scripts with ShellCheck.")]
+shellcheck:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    mkdir "$w/recipes"
+    just --justfile "{{ justfile() }}" --dump | awk -v DIR="$w/recipes" -f tools/shell-recipes.awk
+    shellcheck "$w"/recipes/*.sh rust/kani/bootstrap.sh rust/verus-canary/run.sh .agent/spec-lint
+    # shellcheck disable=SC2016 # the red input's `$x` stays literal on purpose
+    printf '#!/usr/bin/env bash\nx="a b"\nrm -- $x\n' > "$w/red.sh"
+    if shellcheck "$w/red.sh" > /dev/null; then echo "shellcheck: the unquoted red input passed" >&2; exit 2; fi
+    echo "gate: shellcheck ok"
+
+# JavaScript scan: ESLint (dynamic-code + DOM-sink rules, tools/eslint/eslint.config.mjs) over the
+# review page's script (rust/ckc-spec/src/ui.rs script_html) + the browser probes, inside a scratch
+# dir beside the pinned node_modules; its own red input runs every time: an innerHTML sink.
+[doc("Check the review page script and the browser probes with ESLint.")]
+eslint:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    ln -s "{{ TOOLCHAIN }}/eslint/node_modules" "$w/node_modules"
+    cp tools/eslint/eslint.config.mjs tools/*.mjs "$w/"
+    awk '/^pub open spec fn script_html/ {f = 1} f && /^<\/script>"##@/ {exit} f && p {print} f && /r##"<script>$/ {p = 1}' \
+        rust/ckc-spec/src/ui.rs > "$w/page.js"
+    [ -s "$w/page.js" ] || { echo "eslint: no page script in rust/ckc-spec/src/ui.rs" >&2; exit 2; }
+    lint() { (cd "$w" && "{{ TOOLCHAIN }}/bin/node" node_modules/eslint/bin/eslint.js --max-warnings 0 "$@"); }
+    lint page.js ./*.mjs
+    printf 'document.body.innerHTML = location.hash;\n' > "$w/red.js"
+    if lint red.js > /dev/null 2>&1; then echo "eslint: the innerHTML red input passed" >&2; exit 2; fi
+    echo "gate: eslint ok"
+
+# Image scan (weekly, network): Trivy over the CI container image digest; a vulnerability with a
+# fixed version at HIGH or CRITICAL fails it. Red input first: alpine 3.9.6 by digest (known CVEs).
+[doc("Scan the pinned CI container image with Trivy (network).")]
+image-scan:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    img=$(grep -oE 'docker\.io/library/swipl:[0-9.]+@sha256:[0-9a-f]{64}' .github/workflows/ci.yml | sort -u)
+    [ "$(printf '%s\n' "$img" | wc -l)" = 1 ] || { echo "image-scan: expected one container image in ci.yml" >&2; exit 2; }
+    w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    scan() { trivy image --quiet --cache-dir "$w" --image-src remote --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$@"; }
+    red=docker.io/library/alpine@sha256:65b3a80ebe7471beecbc090c5b2cdd0aafeaefa0715f8f12e40dc918a3a70e32
+    if scan --format json --output "$w/red.json" "$red" 2> /dev/null || ! grep -q '"VulnerabilityID"' "$w/red.json"; then
+        echo "image-scan: the known-vulnerable red input passed" >&2; exit 2
+    fi
+    scan "$img"
+    echo "gate: image-scan ok"
+
+# Kani installer advisories (weekly, network): cargo-deny over the Cargo.lock of the kani-verifier
+# crate rust/kani.lock pins (outside the workspace's `just deny`). Red input first: a lock holding
+# smallvec 0.6.13 (RUSTSEC-2021-0003).
+[doc("Check the Kani installer crate's locked dependencies against RustSec (network).")]
+kani-advisories:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ ROOT }}"
+    row() { awk -F'\t' -v k="$1" '$1 == k {print $2}' rust/kani.lock; }
+    # Outside rust/ no rust-toolchain.toml applies, and `just tools` installs rustup without a default.
+    RUSTUP_TOOLCHAIN=$(awk -F'\t' '$1 == "rustc_toolchain" {print $2}' rust/verus.lock); export RUSTUP_TOOLCHAIN
+    w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
+    curl -sSfL --retry 3 --proto '=https' -o "$w/installer.crate" "$(row installer_url)"
+    printf '%s  %s\n' "$(row installer_sha256)" "$w/installer.crate" | sha256sum -c --quiet
+    tar -xzf "$w/installer.crate" -C "$w"
+    src=$(find "$w" -maxdepth 1 -type d -name 'kani-verifier-*')
+    printf '%s  %s\n' "$(row installer_cargo_lock_sha256)" "$src/Cargo.lock" | sha256sum -c --quiet
+    deny() { cargo-deny --manifest-path "$1/Cargo.toml" check advisories; }
+    mkdir -p "$w/red/src"; : > "$w/red/src/lib.rs"
+    printf '[package]\nname = "red"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\nsmallvec = "=0.6.13"\n' > "$w/red/Cargo.toml"
+    (cd "$w/red" && cargo generate-lockfile -q)
+    if deny "$w/red" > "$w/red.log" 2>&1 || ! grep -q RUSTSEC-2021-0003 "$w/red.log"; then
+        echo "kani-advisories: the vulnerable red input passed" >&2; exit 2
+    fi
+    deny "$src"
+    echo "gate: kani-advisories ok"
 
 # Prints `pin current latest status [detail]`; rc 1 = drift (bump procedure: .claude/rules/rust.md),
 # rc 2 = a failed or empty upstream answer or a failed dry run; CKC_OUTDATED_ROOT = tree holding rust/ (locks + manifests).
@@ -552,7 +646,7 @@ outdated:
         hub=$(get "https://hub.docker.com/v2/repositories/library/swipl/tags/$sl" | jq -r '.digest // empty') || hub=
     fi
     report swipl-image "${img:-?}" "${hub:+$sl@$hub}"
-    while IFS=$'\t' read -r tool version asset sha url; do
+    while IFS=$'\t' read -r tool version _ _ url; do
         [ "$tool" = tool ] && continue
         case "$url" in
             https://github.com/*) latest=$(latest_tag "$(cut -d/ -f4-5 <<< "$url")" | sed 's/^v//') ;;
@@ -575,7 +669,9 @@ outdated:
             fixable+=$(sed -n -e 's/^ *\(Updating\|Downgrading\) \([^ ]*\) v\([^ ]*\) -> v\([^ ]*\).*/\2 \3 to \4/p' \
                 -e 's/^ *Removing \([^ ]*\) v\([^ ]*\).*/\1 \2 removed/p' <<< "$out")$'\n'
         else
-            errors=$((errors + 1)); printf 'cargo-update:%s\t-\t?\terror\n' "$m"; sed 's/^/  /' <<< "$out" >&2
+            errors=$((errors + 1)); printf 'cargo-update:%s\t-\t?\terror\n' "$m"
+            # shellcheck disable=SC2001 # a per-line prefix has no parameter-expansion form
+            sed 's/^/  /' <<< "$out" >&2
         fi
     done
     # Requirements the workspace members declare (`member version crate req`, tab-separated, from
@@ -664,7 +760,7 @@ kani:
 late-mutants:
     #!/usr/bin/env bash
     set -uo pipefail
-    cd "{{ ROOT }}"
+    cd "{{ ROOT }}" || exit 2
     bin="${CKC_BIN:-}"
     if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
     bin=$(readlink -f "$bin")
@@ -766,7 +862,9 @@ mobile:
         ! grep -rqF -- "$2" "$w/$1" || { echo "mobile: $1: anchor left on a page" >&2; exit 2; }
         rc=0; out=$(probe "$w/$1") || rc=$?
         bad=$(sed -n 's/^ui-mobile: [0-9]* pages, \([0-9]*\) bad.*/\1/p' <<< "$out")
-        [ "$rc" = 1 ] && [ "${bad:-0}" -ge "$3" ] || { printf '%s\n' "$out" >&2; echo "mobile: $1: rc $rc, $bad bad pages (≥ $3 expected)" >&2; exit 1; }
+        if ! { [ "$rc" = 1 ] && [ "${bad:-0}" -ge "$3" ]; }; then
+            printf '%s\n' "$out" >&2; echo "mobile: $1: rc $rc, $bad bad pages (≥ $3 expected)" >&2; exit 1
+        fi
         echo "mobile: red input $1: $bad of $n pages bad"
     }
     red no-viewport-meta '<meta name="viewport" content="width=device-width, initial-scale=1">' "$n"
@@ -778,8 +876,10 @@ mobile:
     "{{ TOOLCHAIN }}/bin/node" tools/ui-reading-probe.mjs --strip-handler "$w/reading-pages" "$w/no-reading-handler"
     rc=0; out=$(reading "$w/no-reading-handler") || rc=$?
     bad=$(sed -n 's/^ui-reading: [0-9]* transitions, \([0-9]*\) failures$/\1/p' <<< "$out")
-    [ "$rc" = 1 ] && [ "${bad:-0}" -gt 0 ] && grep -qF 'visible reading' <<< "$out" \
-        || { printf '%s\n' "$out" >&2; echo "mobile: no-reading-handler: rc $rc, $bad failed transitions (rc 1 + reading failures expected)" >&2; exit 1; }
+    if ! { [ "$rc" = 1 ] && [ "${bad:-0}" -gt 0 ] && grep -qF 'visible reading' <<< "$out"; }; then
+        printf '%s\n' "$out" >&2
+        echo "mobile: no-reading-handler: rc $rc, $bad failed transitions (rc 1 + reading failures expected)" >&2; exit 1
+    fi
     echo "mobile: red input no-reading-handler: $bad failed transitions"
     echo "gate: mobile ok"
 

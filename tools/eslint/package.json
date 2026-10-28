@@ -1,0 +1,9 @@
+{
+  "name": "cnl-ckc-eslint",
+  "private": true,
+  "description": "The pinned JavaScript lint of just eslint (DOM-sink + eval rules).",
+  "devDependencies": {
+    "eslint": "10.13.0",
+    "eslint-plugin-no-unsanitized": "4.1.5"
+  }
+}
