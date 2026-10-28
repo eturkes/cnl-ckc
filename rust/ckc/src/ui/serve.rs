@@ -5,14 +5,19 @@ use ckc_kernel::ERequest;
 use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{Ipv4Addr, Shutdown, TcpListener, TcpStream};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::sync::mpsc::{SyncSender, sync_channel};
 use std::time::{Duration, Instant};
 
 // One deadline for reading the request (line, headers, body) and a fresh one
-// for writing the answer: a slow client cannot hold the single-threaded loop,
-// and a slow snapshot or ledger write never cuts off an answer already earned.
+// for writing the answer: a slow client holds its connection slot for a bounded
+// time, and a slow snapshot or ledger write never cuts off an answer already earned.
 const DEADLINE: Duration = Duration::from_secs(10);
+// Connections run on their own threads, at most this many at a time (each
+// ledger write holds the ledger lock): stalled clients take slots, never the
+// loop; past the cap, newcomers wait in the listen backlog.
+const CONNECTIONS: usize = 32;
 // The decision form is a few hundred bytes; a larger body is never read.
 const BODY_CAP: usize = 64 * 1024;
 
@@ -205,6 +210,13 @@ fn linger(stream: &TcpStream) {
         }
     }
 }
+// A connection slot: dropping it, also while a panic unwinds, frees the slot.
+struct Slot(SyncSender<()>);
+impl Drop for Slot {
+    fn drop(&mut self) {
+        let _ = self.0.send(());
+    }
+}
 fn handle(stream: &TcpStream, root: &Path, config: &Config) -> Result<()> {
     let result = answer(stream, root, config);
     linger(stream);
@@ -249,11 +261,24 @@ pub(super) fn run(root: &Path, port: u16) -> Result<()> {
             again.announce();
         }
     });
-    for stream in listener.incoming() {
-        let stream = stream.map_err(|e| format!("ui: socket: {e}"))?;
-        if let Err(error) = handle(&stream, root, &config) {
-            eprintln!("{error}");
+    let (root, config) = (Arc::new(PathBuf::from(root)), Arc::new(config));
+    let (free, taken) = sync_channel(CONNECTIONS);
+    for _ in 0..CONNECTIONS {
+        free.send(()).map_err(|e| format!("ui: serve: {e}"))?;
+    }
+    loop {
+        taken.recv().map_err(|e| format!("ui: serve: {e}"))?;
+        let slot = Slot(free.clone());
+        let (stream, _) = listener.accept().map_err(|e| format!("ui: socket: {e}"))?;
+        let (root, config) = (Arc::clone(&root), Arc::clone(&config));
+        let spawned = std::thread::Builder::new().spawn(move || {
+            let _slot = slot;
+            if let Err(error) = handle(&stream, &root, &config) {
+                eprintln!("{error}");
+            }
+        });
+        if let Err(error) = spawned {
+            eprintln!("ui: serve: {error}");
         }
     }
-    Ok(())
 }

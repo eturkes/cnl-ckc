@@ -914,6 +914,62 @@ fn stalled_client_is_cut_at_the_deadline() {
     assert!(rest.is_empty() || rest.starts_with(b"HTTP/1.0 400 "));
 }
 
+// Connections run concurrently up to a cap: eight clients stalled mid-request
+// leave a signed-in page request answered within a second.
+#[test]
+fn stalled_clients_leave_a_request_answered_at_once() {
+    let (work, tree, tmp) = fixture("concurrent");
+    let run_dir = private_dir(&work.0.join("run"));
+    let port = free_port();
+    let stdout_path = work.0.join("concurrent.stdout");
+    let _server = Server(
+        serve(port, &tree, &work.0, &tmp, &run_dir)
+            .stdout(File::create(&stdout_path).unwrap())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    let signin = printed_address(&stdout_path, port);
+    let cookie = format!("ckc-session-{port}={}", signin.rsplit('/').next().unwrap());
+    let page = |what: &str| {
+        let mut stream = TcpStream::connect(("127.0.0.1", port)).unwrap();
+        stream
+            .set_read_timeout(Some(Duration::from_secs(3)))
+            .unwrap();
+        let request = format!(
+            "GET / HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nCookie: {cookie}\r\nConnection: close\r\n\r\n"
+        );
+        stream.write_all(request.as_bytes()).unwrap();
+        let start = Instant::now();
+        let mut raw = Vec::new();
+        stream
+            .read_to_end(&mut raw)
+            .unwrap_or_else(|e| panic!("{what}: no answer within 3 s ({e})"));
+        assert!(
+            raw.starts_with(b"HTTP/1.0 200 "),
+            "{what}: {}",
+            String::from_utf8_lossy(&raw)
+        );
+        start.elapsed()
+    };
+    // The first page builds the process-wide chrome once; the timed one waits on nothing else.
+    page("warm-up");
+    let stalled: Vec<TcpStream> = (0..8)
+        .map(|_| {
+            let mut s = TcpStream::connect(("127.0.0.1", port)).unwrap();
+            s.write_all(b"GET / HTTP/1.1\r\n").unwrap();
+            s
+        })
+        .collect();
+    std::thread::sleep(Duration::from_millis(500));
+    let waited = page("behind 8 stalled clients");
+    assert!(
+        waited < Duration::from_secs(1),
+        "a page waited {waited:?} behind 8 stalled clients"
+    );
+    drop(stalled);
+}
+
 // A refused POST whose body the gate never read must still deliver its whole
 // answer: closing with unread bytes would reset the connection instead.
 #[test]

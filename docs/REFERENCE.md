@@ -293,7 +293,9 @@ browser opens; when no browser opens, the terminal shows the sign-in
 address. Every request must carry the cookie. The interface refuses a
 request without it, or with a foreign `Host` header, before it reads
 anything else. It never reads a request body larger than 64 KiB, and
-each connection has 10 seconds to send its request. Browsers send a
+each connection has 10 seconds to send its request. The interface
+serves up to 32 connections at the same time, so a slow connection
+cannot delay the other connections. Browsers send a
 cookie for 127.0.0.1 to every port of that address. Another account on
 the same computer can therefore capture the key if the reviewer opens a
 page that this account serves on the computer.

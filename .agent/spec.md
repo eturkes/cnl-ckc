@@ -56,7 +56,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [x] a4406990 DQ4 workflow hardening below the gate persona (deferred row; its Accept).
 - [x] fc98e23b DQ5 stacks without a committed scanner (deferred row; its Accept).
 - [x] 43fd5e95 DQ6 `bump-verus` upstream strings (deferred row; its Accept).
-- [ ] DQ7 Rust toolchain by version only (deferred row; its Accept).
+- [x] a051eff2 DQ7 Rust toolchain by version only (deferred row; its Accept).
 - [ ] DQ8 concurrent connections in the reviewer server (deferred row; its Accept).
 - [ ] DQ9 S59-01 supersession date (deferred row; its Accept: a primary source dates the change, else a user ruling → DQ-ASK).
 - [ ] DQ10 superseded notice overflow (deferred row; its Accept).
