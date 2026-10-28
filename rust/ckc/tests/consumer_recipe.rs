@@ -375,10 +375,21 @@ fn dose_questions_answer_under_the_recipe_and_open_goals_diverge_without_it() {
     // contract bf) but does not exhaust every should box of the same composition.
     let goal = "bounded_all(20, plain, guideline_operator(actual, _, should))";
     let out = swipl(&s, &load(&s, Mode::Plain, &[world]), goal);
-    assert_eq!(
-        out, "bounded plain time_limit_exceeded\n",
-        "plain search exhausted every should box: the recipe text may be stale"
+    assert!(
+        unfinished(&out, "plain"),
+        "plain search exhausted every should box: the recipe text may be stale\n{out}"
     );
+}
+
+// A bounded run that did not finish: its one report line names the time limit or a resource
+// error. Which one a divergent search hits first depends on the host (user ruling: either one).
+fn unfinished(out: &str, name: &str) -> bool {
+    out.strip_prefix(&format!("bounded {name} "))
+        .and_then(|r| r.strip_suffix('\n'))
+        .is_some_and(|r| {
+            !r.contains('\n')
+                && (r == "time_limit_exceeded" || r.starts_with("error(resource_error("))
+        })
 }
 
 // Firing of the well-founded check: a recursion through negation reads undefined.

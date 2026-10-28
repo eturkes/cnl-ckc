@@ -8,12 +8,12 @@ If some oxycodone-milligrams-per-day X are contained by an opioid-dosage and the
 If some oxymorphone-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 3.0.
 If some tapentadol-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 0.4.
 If some tramadol-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 0.2.
-A hydrocodone-regimen-example contains exactly 5 hydrocodone-milligrams-per-dose and contains exactly 325 acetaminophen-milligrams-per-dose and has exactly 4 doses-per-day.
-If a hydrocodone-regimen-example contains some hydrocodone-milligrams-per-dose X and has some doses-per-day Z then the hydrocodone-regimen-example provides some daily-hydrocodone-milligrams Y and Y = X * Z.
-If a hydrocodone-regimen-example provides some daily-hydrocodone-milligrams X then the hydrocodone-regimen-example includes some MME-units-per-day Y and Y = X * 1.0.
-An extended-release-oxycodone-regimen-example contains exactly 10 oxycodone-milligrams-per-dose and has exactly 2 doses-per-day.
-If an extended-release-oxycodone-regimen-example contains some oxycodone-milligrams-per-dose X and has some doses-per-day Z then the extended-release-oxycodone-regimen-example provides some daily-oxycodone-milligrams Y and Y = X * Z.
-If an extended-release-oxycodone-regimen-example provides some daily-oxycodone-milligrams X then the extended-release-oxycodone-regimen-example includes some MME-units-per-day Y and Y = X * 1.5.
+A hydrocodone-regimen-example contains exactly 5 hydrocodone-milligrams-per-dose and contains exactly 325 acetaminophen-milligrams-per-dose and takes exactly 4 doses-per-day.
+If a hydrocodone-regimen-example contains some hydrocodone-milligrams-per-dose X and takes some doses-per-day Z then the hydrocodone-regimen-example yields some daily-hydrocodone-milligrams Y and Y = X * Z.
+If a hydrocodone-regimen-example yields some daily-hydrocodone-milligrams X then the hydrocodone-regimen-example includes some MME-units-per-day Y and Y = X * 1.0.
+An extended-release-oxycodone-regimen-example contains exactly 10 oxycodone-milligrams-per-dose and takes exactly 2 doses-per-day.
+If an extended-release-oxycodone-regimen-example contains some oxycodone-milligrams-per-dose X and takes some doses-per-day Z then the extended-release-oxycodone-regimen-example yields some daily-oxycodone-milligrams Y and Y = X * Z.
+If an extended-release-oxycodone-regimen-example yields some daily-oxycodone-milligrams X then the extended-release-oxycodone-regimen-example includes some MME-units-per-day Y and Y = X * 1.5.
 Every equianalgesic-dose-conversion is an estimate.
 No equianalgesic-dose-conversion can capture an individual-genetic-variability.
 No equianalgesic-dose-conversion can capture an individual-pharmacokinetic-variability.

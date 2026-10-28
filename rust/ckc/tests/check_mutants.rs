@@ -394,6 +394,11 @@ fn mutate(t: &Path, name: &str) {
             "guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec02.pl",
             b"guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec02',12,ref(2),[A]),clinician,countable) :- guideline_entity(actual,A,recommendation,countable), guideline_cardinality(actual,A,na,eq,1).\n",
         ),
+        // DQ1: formula plants appended to rec02 (`tests/check-mutants/<name>.pl.in`, fork-compiled).
+        name if name.starts_with("formula-cycle-") => {
+            let plant = fs::read(root().join(format!("tests/check-mutants/{name}.pl.in"))).unwrap();
+            append(t, "guidelines/cdc-2022-opioid/pl/cdc2022-opioid-rec02.pl", &plant);
+        }
         "derived-entity-stale" => append(
             t,
             DERIVED,
@@ -513,12 +518,14 @@ fn check_mutant_battery() {
         count("vocabulary-"),
         count("derived-entity-"),
     );
+    let cy = count("formula-cycle-");
     assert_eq!(
-        rows.len() - files - c1 - dq,
+        rows.len() - files - c1 - dq - cy,
         63,
         "tests/check-mutants legacy row count"
     );
     assert_eq!(dq, 3, "tests/check-mutants derived-entity plant count");
+    assert_eq!(cy, 4, "tests/check-mutants formula-cycle plant count");
     let q13 = count("temporal-v3-q13-");
     assert_eq!(files - q13, 21, "tests/check-mutants q12 file-plant count");
     assert_eq!(q13, 14, "tests/check-mutants q13 file-plant count");

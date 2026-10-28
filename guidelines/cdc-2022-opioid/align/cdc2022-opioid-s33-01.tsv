@@ -62,12 +62,12 @@
 10	ace	2283	0.2
 14	ace	2327	exactly 5 hydrocodone-milligrams-per-dose
 15	ace	2382	exactly 325 acetaminophen-milligrams-per-dose
-16	ace	2436	exactly 4 doses-per-day
-17	ace	2608	provides some daily-hydrocodone-milligrams Y and Y = X * Z
+16	ace	2438	exactly 4 doses-per-day
+17	ace	2612	yields some daily-hydrocodone-milligrams Y and Y = X * Z
 18	ace	2783	includes some MME-units-per-day Y and Y = X * 1.0
 19	ace	2837	extended-release-oxycodone-regimen-example contains exactly 10 oxycodone-milligrams-per-dose
-20	ace	2938	exactly 2 doses-per-day
-21	ace	3139	provides some daily-oxycodone-milligrams Y and Y = X * Z
+20	ace	2940	exactly 2 doses-per-day
+21	ace	3143	yields some daily-oxycodone-milligrams Y and Y = X * Z
 22	ace	3341	includes some MME-units-per-day Y and Y = X * 1.5
 23	ace	3398	equianalgesic-dose-conversion
 24	ace	3431	an estimate

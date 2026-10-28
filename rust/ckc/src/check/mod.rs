@@ -18,6 +18,7 @@ mod adjudication;
 mod adjudication_fixtures;
 mod corpus;
 mod coverage;
+mod cycle;
 mod derived;
 mod documents;
 mod green;

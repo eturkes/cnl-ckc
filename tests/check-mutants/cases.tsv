@@ -104,3 +104,7 @@ vocabulary-retired-beside	corpus_vocabulary	2
 derived-entity-unruled	corpus_derived	1
 derived-entity-stale	corpus_derived	1
 derived-entity-header	corpus_derived	1
+formula-cycle-include-pair	corpus_cycle	1
+formula-cycle-mme-target	corpus_cycle	1
+formula-cycle-dosage-first	corpus_cycle	1
+formula-cycle-time-condition	corpus_cycle	1

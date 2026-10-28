@@ -171,9 +171,14 @@ fn exhausted_plain_should_enumeration_is_still_unfinished_at_20_seconds() {
         "bounded(1,control,true),bounded(20,open,findall(B,guideline_operator(actual,B,should),_))",
         "35",
     );
-    assert_eq!(
-        checked(&out),
-        "bounded control yes\nbounded open time_limit_exceeded\n",
-        "plain exhausted enumeration changed; reconsider the documented tabling requirement"
+    // Unfinished = the time limit or a resource error, whichever the host reaches first (user ruling).
+    let out = checked(&out);
+    let open = out.strip_prefix("bounded control yes\nbounded open ");
+    assert!(
+        open.and_then(|r| r.strip_suffix('\n')).is_some_and(|r| {
+            !r.contains('\n')
+                && (r == "time_limit_exceeded" || r.starts_with("error(resource_error("))
+        }),
+        "plain exhausted enumeration changed; reconsider the documented tabling requirement\n{out}"
     );
 }
