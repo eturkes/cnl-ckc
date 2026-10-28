@@ -3,6 +3,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Range;
 
 pub const BASE: &str = "258ddc44";
+// The SGW commit: the first corpus the `_` spelling wrote (historical oracle side of P3).
+pub const SGW: &str = "4a257599";
 pub const INDICATORS: &[(&str, usize)] = &[
     ("guideline_schema_version", 1),
     ("guideline_document", 4),

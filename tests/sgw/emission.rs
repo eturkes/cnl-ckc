@@ -199,22 +199,18 @@ fn p2_question_and_proof_writers_stay_byte_identical() {
     let ulex = root().join(format!("{stem}.ulex"));
     let proof = compiler.compile(&s.0, "formula--product", &ace, Some(&ulex), None, "proof");
     proof.require("proof writer");
-    assert_eq!(
-        proof.out,
-        baseline(&format!("{stem}.proof.expect")),
-        "proof payload writer unchanged"
-    );
+    let pin = fs::read(root().join(format!("{stem}.proof.expect"))).unwrap();
+    assert_eq!(proof.out, pin, "proof payload = its committed pin");
+    assert_eq!(anonymous_count(&proof.out), 0, "proof payloads keep plain numbering");
     let fx = "tests/queries/green/dose-arithmetic/tree/guidelines/fx";
     let ace = fs::read_to_string(root().join(format!("{fx}/queries/q-mme.ace"))).unwrap();
     let ulex = root().join(format!("{fx}/lexicon.ulex"));
     let table = root().join(format!("{fx}/vocabulary.tsv"));
     let question = compiler.compile(&s.0, "q-mme", &ace, Some(&ulex), Some(&table), "question");
     question.require("question writer");
-    assert_eq!(
-        question.out,
-        baseline(&format!("{fx}/queries/pl/q-mme.pl")),
-        "question bytes stay letter-spelled"
-    );
+    let pin = fs::read(root().join(format!("{fx}/queries/pl/q-mme.pl"))).unwrap();
+    assert_eq!(question.out, pin, "question = its committed pin");
+    assert_eq!(anonymous_count(&question.out), 0, "question bytes stay letter-spelled");
 }
 
 #[test]
@@ -231,11 +227,11 @@ fn p2_compile_command_reemits_the_fixture_tree() {
     let mut checks = Checks::default();
     for id in ["conversion", "naloxone", "world"] {
         let rel = format!("guidelines/fx/pl/{id}.pl");
-        let letter = baseline(&format!("{fixture}/{rel}"));
+        let pin = fs::read(root().join(format!("{fixture}/{rel}"))).unwrap();
         let raw = fs::read(s.0.join(&rel)).unwrap();
-        checks.bytes(&raw, &anonymize(&letter), &format!("ckc compile {id}"));
+        checks.bytes(&raw, &pin, &format!("ckc compile {id} = its committed pin"));
         checks.require(
-            emission_ok(&raw, &letter),
+            emission_ok(&raw, &read(&raw).text),
             format!("ckc compile {id}: D1 + D2"),
         );
     }
