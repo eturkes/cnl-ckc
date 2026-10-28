@@ -1,0 +1,150 @@
+# SKO census (Tasks SKO; user rulings "Fund here, then cut" + "Fold into SKO"): every actual-context entity a compiled CDC document derives (rule) or asserts (root)
+# whose noun another document's condition reads, at b49c71bc (before) and after the re-authoring; scan = `python3 -I .agent/archive/sko-census/scan.py <pl-dir>`.
+docid	sentence	kind	noun	readers	ruling	reason
+cdc2022-opioid-rec01	1	root	category-B-recommendation	2	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec01	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec01-imp03	2	root	interval	1	allowed:example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-rec01-imp03	3	root	interval	1	allowed:example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-rec01-imp06	1	root	acute-pain	20	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec01-imp06	1	root	opioid-therapy	24	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec01-imp06	2	root	acute-pain	20	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec01-imp06	2	root	opioid-therapy	24	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec01-imp06	3	root	acute-pain	20	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec01-imp06	3	root	opioid-therapy	24	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec01-imp06	4	root	opioid-therapy	24	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec01-imp06	5	rule	opioid-therapy	24	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec02	1	root	category-A-recommendation	1	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec02	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec02	4	rule	nonopioid-therapy	2	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-rec02	5	rule	nonopioid-therapy	2	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-rec02-imp03	1	root	physical-therapy	2	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp03	2	rule	physical-therapy	2	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp03	3	rule	physical-therapy	2	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp06	1	rule	topical-NSAID	2	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp06	2	rule	topical-NSAID	2	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp17	1	rule	opioid	39	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp17	2	rule	opioid	39	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp17	3	rule	opioid	39	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp21	1	root	opioid-continuation	1	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec02-imp24	1	root	opioid-initiation	5	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec02-imp24	1	root	patient-education	3	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec02-imp24	2	root	opioid-initiation	5	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec03	1	root	category-A-recommendation	1	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec03	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec03-imp05	3	root	decreased-medication-clearance	1	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-rec04	1	root	category-A-recommendation	1	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec04	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec04-imp03	1	root	opioid-initiation	5	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec04-imp03	2	root	dosage-increase	3	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec04-imp03	3	root	dosage-reduction	1	allowed:inert-join	kept as asserted: the committed query dosage-reduction-content answers from it; rec07-imp15 S6 reads dosage-reduction through request, which these facts never assert
+cdc2022-opioid-rec04-imp03	4	root	dosage-reduction	1	allowed:inert-join	kept as asserted: the committed query dosage-reduction-content answers from it; rec07-imp15 S6 reads dosage-reduction through request, which these facts never assert
+cdc2022-opioid-rec05	1	root	category-B-recommendation	2	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec05	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec05-imp04	1	rule	patient	270	rebound	the role referent binds the antecedent's patient
+cdc2022-opioid-rec05-imp04	2	rule	patient	270	rebound	the role referent binds the antecedent's patient
+cdc2022-opioid-rec05-imp11	1	rule	taper	2	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec05-imp12	1	rule	taper	2	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec05-imp12	2	rule	opioid-dosage	11	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec05-imp26	5	root	long-term-opioid-therapy	7	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec05-imp26	5	root	subacute-pain	15	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec05-imp26	6	root	chronic-pain	16	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec05-imp26	6	root	long-term-opioid-therapy	7	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-rec06	1	root	category-A-recommendation	1	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec06	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec06-imp09	1	rule	few-day-period	8	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec07	1	root	category-A-recommendation	1	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec07	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec07-imp06	3	rule	interval	1	allowed:time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-rec07-imp06	3	rule	month	2	allowed:time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-rec08	1	root	category-A-recommendation	1	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec08	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec09	1	root	category-B-recommendation	2	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec09	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec10	1	root	category-B-recommendation	2	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec10	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec10	4	root	toxicology-testing	1	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-rec10-imp03	3	root	toxicology-testing	1	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-rec10-imp14	1	rule	opioid-dosage-management-decision	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-rec10-imp14	2	rule	opioid-dosage-management-decision	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-rec11	1	root	category-B-recommendation	2	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec11	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec11-imp01	1	rule	opioid-prescription	3	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-rec12	1	root	category-A-recommendation	1	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec12	1	root	recommendation	3	allowed:grade-record	the grade sentence names the document's recommendation referent; s12-01..03 read the grade by design (spec Decisions Strength class)
+cdc2022-opioid-rec12	4	rule	overdose	2	allowed:inert-join	readers join `risk` through outweigh (rec05 S4, s56-04 S4) and `overdose` through experience (rec07-imp15 S8, s37-14 S9), which this sentence never asserts
+cdc2022-opioid-rec12	4	rule	risk	2	allowed:inert-join	readers join `risk` through outweigh (rec05 S4, s56-04 S4) and `overdose` through experience (rec07-imp15 S8, s37-14 S9), which this sentence never asserts
+cdc2022-opioid-s10-13	5	rule	palliative-care	2	allowed:class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s10-15	1	rule	end-of-life-care	2	allowed:class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s10-15	2	rule	end-of-life-care	2	allowed:class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s10-15	3	rule	end-of-life-care	2	allowed:class-derivation	care received derives end-of-life or palliative care, which other conditions read by design
+cdc2022-opioid-s19-07	1	rule	pain-equity-duty-holder	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s19-07	2	rule	pain-equity-duty-holder	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s19-07	3	rule	pain-equity-duty-holder	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s19-07	4	rule	pain-equity-duty-holder	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s20-12	1	rule	NSAID	4	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-s22-05	3	root	interval	1	allowed:example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-s22-05	4	root	interval	1	allowed:example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-s22-11	1	root	patient-education	3	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-s23-20	3	root	interval	1	allowed:example	the spacing interval of a worked example over example-only nouns
+cdc2022-opioid-s30-05	2	root	medication-nonpharmacologic-therapy-combination	1	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-s30-07	2	root	nonopioid-medication	1	example-only	listed members are example-only nouns
+cdc2022-opioid-s30-07	3	root	nonopioid-medication	1	example-only	listed members are example-only nouns
+cdc2022-opioid-s30-07	3	root	opioid	39	example-only	listed members are example-only nouns
+cdc2022-opioid-s31-07	1	rule	ER-LA-opioid	5	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s31-07	2	rule	ER-LA-opioid	5	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s31-07	3	rule	ER-LA-opioid	5	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s33-01	1	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	2	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	3	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	4	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	5	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	6	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	7	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	8	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	9	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	10	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	13	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s33-01	16	rule	MME-unit-per-day	11	allowed:formula-result	a conversion rule derives the MME amount that threshold conditions read by design (contracts da2, da3)
+cdc2022-opioid-s34-07	1	rule	opioid-dosage-increase	4	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-s34-09	3	root	opioid-dosage	11	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-s34-09	3	root	overdose-risk	3	quantified	the generic claim quantifies its subject (`every`)
+cdc2022-opioid-s38-20	2	rule	opioid-dosage	11	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-s39-20	3	rule	alpha-2-agonist	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s39-20	4	rule	alpha-2-agonist	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s42-21	1	rule	few-day-period	8	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-s42-21	1	rule	opioid-therapy	24	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-s44-04	3	rule	follow-up	1	allowed:chained-event	the follow-up binds the antecedent's clinician + patient; rec07-imp12 reads it by design
+cdc2022-opioid-s44-04	3	rule	interval	1	allowed:time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-s44-04	4	rule	follow-up	1	allowed:chained-event	the follow-up binds the antecedent's clinician + patient; rec07-imp12 reads it by design
+cdc2022-opioid-s44-04	4	rule	interval	1	allowed:time-quantity	the interval of a recurrence annotation; every reader joins it through its own event
+cdc2022-opioid-s48-10	1	rule	additional-caution	1	boxed	the option claim sits inside `it is possible that`
+cdc2022-opioid-s56-04	1	rule	medication-taper-sequencing-decision	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s56-04	2	rule	medication-taper-sequencing-decision	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s56-04	3	rule	medication-taper-sequencing-decision	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	1	rule	opioid-use-disorder	21	allowed:class-derivation	met criteria derive opioid use disorder, which other conditions read by design
+cdc2022-opioid-s57-05	2	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	3	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	4	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	5	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	6	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	7	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	8	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	9	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	10	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	11	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-05	12	rule	opioid-use-disorder-criterion	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s57-08	5	rule	full-agonist-opioid	1	allowed:be-edge	a universal copula derives class membership (`Every X is a Y`) that other conditions read by design
+cdc2022-opioid-s9-05	4	rule	primary-care-clinician	2	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-s9-05	7	rule	acute-pain	19	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-s9-05	8	rule	subacute-pain	14	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-s9-05	9	rule	chronic-pain	15	generic	the class relation reads its classes as conditions (`If there is …`)
+cdc2022-opioid-s9-05	10	rule	acute-pain	19	allowed:class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	11	rule	subacute-pain	14	allowed:class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	12	rule	chronic-pain	15	allowed:class-derivation	a stated pain duration derives its pain class, which other conditions read by design
+cdc2022-opioid-s9-05	13	rule	month	2	allowed:time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-s9-05	14	rule	month	2	allowed:time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-s9-05	15	rule	month	2	allowed:time-quantity	the duration of a pain class (the converse of the class definition)
+cdc2022-opioid-rec04-imp01	1	root	opioid-dosage-recommendation	1	quantified	induced: rec04-imp03's generic rule reads the class; the generic claim quantifies its subject
+cdc2022-opioid-rec04-imp01	2	root	opioid-dosage-recommendation	1	quantified	induced: rec04-imp03's generic rule reads the class; the generic claim quantifies its subject
+cdc2022-opioid-rec04-imp01	3	root	opioid-dosage-recommendation	1	quantified	induced: rec04-imp03's generic rule reads the class; the generic claim quantifies its subject
+cdc2022-opioid-s22-11	2	root	patient-discussion	1	generic	induced: rec02-imp24's generic rule reads the class; the class relation reads its classes as conditions

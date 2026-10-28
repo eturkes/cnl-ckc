@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s50-03',ace_sha256('22260fd6f6ff38c2a7d861e8cf202b5706c47910b4611904a7073e19c670fc01'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s50-03',ace_sha256('22260fd6f6ff38c2a7d861e8cf202b5706c47910b4611904a7073e19c670fc01'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: If a clinical-practice-organization has a naloxone-training-resource then the clinical-practice-organization can facilitate a naloxone-coprescribing.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s50-03',1,box(1),[A,B,C]),can) :- guideline_entity(actual,A,'clinical-practice-organization',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'naloxone-training-resource',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s50-03',1,box(1),[A,B,C]),'$guideline_id'(product,'cdc2022-opioid-s50-03',1,ref(4),[A,B,C]),'naloxone-coprescribing',countable) :- guideline_entity(actual,A,'clinical-practice-organization',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'naloxone-training-resource',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).

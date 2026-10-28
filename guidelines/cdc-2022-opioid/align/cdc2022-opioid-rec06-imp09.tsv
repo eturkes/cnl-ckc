@@ -2,14 +2,14 @@
 0	ace	32	pain
 0	ace	50	common-nontraumatic-nonsurgical-pain-cause
 1	ace	109	needs an opioid
-2	ace	132	shorter-opioid-course
-8	ace	163	few-day
-7	ace	178	often
-9	ace	191	sufficient
-2	ace	225	shorter-opioid-course
-4	ace	251	reduce
-5	ace	261	opioid-taper-need
-6	ace	286	opioid-withdrawal-prevention
+2	ace	152	shorter-opioid-course
+8	ace	183	few-day
+7	ace	198	often
+9	ace	207	sufficient
+2	ace	241	shorter-opioid-course
+4	ace	267	reduce
+5	ace	277	opioid-taper-need
+6	ace	302	opioid-withdrawal-prevention
 0	src	9	common causes of nontraumatic, nonsurgical pain
 1	src	63	opioids are needed
 8	src	85	few days

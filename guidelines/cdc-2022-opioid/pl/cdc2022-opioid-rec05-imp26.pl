@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp26',ace_sha256(ef6880ecddcf8214eab4c60ed3ac4c8759459374cf812a854a9c7846dc65b6cf),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-rec05-imp26',ace_sha256(cc22c80a2e2d7c5ef078f2ead5e85761e16bfd196940b426966dab687a597dc3),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: A communication-principle is relevant during a shorter-duration-opioid-discontinuation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(1),[]),'communication-principle',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',1,ref(1),[]),na,eq,1).
@@ -85,25 +85,13 @@ guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,re
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(3),[])).
 guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',4,ref(2),[])).
-% S5: A recommendation-5 applies during a long-term-opioid-therapy for a subacute-pain.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(1),[]),'recommendation-5',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(2),[]),'long-term-opioid-therapy',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(2),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(3),[]),'subacute-pain',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(3),[]),na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),apply).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(1),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),for,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(3),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(2),[])).
-% S6: A recommendation-5 applies during a long-term-opioid-therapy for a chronic-pain.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(1),[]),'recommendation-5',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(2),[]),'long-term-opioid-therapy',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(2),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(3),[]),'chronic-pain',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(3),[]),na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),apply).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(1),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),for,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(3),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[]),during,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(2),[])).
+% S5: If there is a recommendation-5 and there is a long-term-opioid-therapy and there is a subacute-pain then the recommendation-5 applies during the long-term-opioid-therapy for the subacute-pain.
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[A,B,C]),apply) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'subacute-pain',countable), guideline_cardinality(actual,C,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[A,B,C]),1,A) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'subacute-pain',countable), guideline_cardinality(actual,C,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[A,B,C]),for,C) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'subacute-pain',countable), guideline_cardinality(actual,C,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',5,ref(4),[A,B,C]),during,B) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'subacute-pain',countable), guideline_cardinality(actual,C,na,eq,1).
+% S6: If there is a recommendation-5 and there is a long-term-opioid-therapy and there is a chronic-pain then the recommendation-5 applies during the long-term-opioid-therapy for the chronic-pain.
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[A,B,C]),apply) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'chronic-pain',countable), guideline_cardinality(actual,C,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[A,B,C]),1,A) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'chronic-pain',countable), guideline_cardinality(actual,C,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[A,B,C]),for,C) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'chronic-pain',countable), guideline_cardinality(actual,C,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-rec05-imp26',6,ref(4),[A,B,C]),during,B) :- guideline_entity(actual,A,'recommendation-5',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'long-term-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'chronic-pain',countable), guideline_cardinality(actual,C,na,eq,1).

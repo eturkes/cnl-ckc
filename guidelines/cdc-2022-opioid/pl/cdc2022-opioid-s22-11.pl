@@ -44,29 +44,21 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s22-11',ace_sha256(bed13f5c554d41f56a31f7ba540798ce461dce3797d43ce6c223554086524bb7),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
-% S1: A patient-education is critical before an outpatient-opioid-therapy.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(1),[]),'patient-education',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(2),[]),'outpatient-opioid-therapy',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(2),[]),na,eq,1).
-guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(3),[]),critical,pos).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[]),be).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(3),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(2),[])).
-guideline_order(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(2),[])).
-% S2: A patient-discussion is critical before an outpatient-opioid-therapy.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(1),[]),'patient-discussion',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(2),[]),'outpatient-opioid-therapy',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(2),[]),na,eq,1).
-guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(3),[]),critical,pos).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[]),be).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[]),2,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(3),[])).
-guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(2),[])).
-guideline_order(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[]),before,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(2),[])).
+guideline_document('cdc2022-opioid-s22-11',ace_sha256(cb8b2eff9bd5dd3c2f067aa68d0e08b52a879153e414d46912066c775a686e05),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+% S1: If there is a patient-education and there is an outpatient-opioid-therapy then the patient-education is critical before the outpatient-opioid-therapy.
+guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(3),[A,B]),critical,pos) :- guideline_entity(actual,A,'patient-education',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[A,B]),be) :- guideline_entity(actual,A,'patient-education',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[A,B]),1,A) :- guideline_entity(actual,A,'patient-education',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[A,B]),2,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(3),[A,B])) :- guideline_entity(actual,A,'patient-education',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[A,B]),before,B) :- guideline_entity(actual,A,'patient-education',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_order(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',1,ref(4),[A,B]),before,B) :- guideline_entity(actual,A,'patient-education',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+% S2: If there is a patient-discussion and there is an outpatient-opioid-therapy then the patient-discussion is critical before the outpatient-opioid-therapy.
+guideline_property(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(3),[A,B]),critical,pos) :- guideline_entity(actual,A,'patient-discussion',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[A,B]),be) :- guideline_entity(actual,A,'patient-discussion',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[A,B]),1,A) :- guideline_entity(actual,A,'patient-discussion',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[A,B]),2,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(3),[A,B])) :- guideline_entity(actual,A,'patient-discussion',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[A,B]),before,B) :- guideline_entity(actual,A,'patient-discussion',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
+guideline_order(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',2,ref(4),[A,B]),before,B) :- guideline_entity(actual,A,'patient-discussion',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'outpatient-opioid-therapy',countable), guideline_cardinality(actual,B,na,eq,1).
 % S3: A patient-preference can inform a clinical-decision.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',3,ref(1),[]),'patient-preference',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s22-11',3,ref(1),[]),na,eq,1).

@@ -1,11 +1,11 @@
-0	ace	3	opioid-dosage-recommendation
-1	ace	50	opioid-initiation
-0	ace	72	opioid-dosage-recommendation
-2	ace	118	dosage-increase
-3	ace	137	dosage-reduction
-4	ace	160	different-benefit
-3	ace	181	dosage-reduction
-5	ace	204	different-risk
+0	ace	15	opioid-dosage-recommendation
+1	ace	60	opioid-initiation
+0	ace	169	opioid-dosage-recommendation
+2	ace	213	dosage-increase
+3	ace	305	dosage-reduction
+4	ace	328	different-benefit
+3	ace	349	dosage-reduction
+5	ace	372	different-risk
 0	src	15	recommendations
 1	src	53	starting opioids
 2	src	76	increasing opioid dosages

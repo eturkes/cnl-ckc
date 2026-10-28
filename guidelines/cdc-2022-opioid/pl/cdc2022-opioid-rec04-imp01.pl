@@ -44,33 +44,27 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec04-imp01',ace_sha256('88cff65692bd021f33a1e81725736bb63df0e9ae0d438fc5d5ee4af0cfcd50e7'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
-% S1: An opioid-dosage-recommendation is not an inflexible-standard.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(1),[]),'opioid-dosage-recommendation',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(1),[]),na,eq,1).
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[]),-).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(2),[]),'inflexible-standard',countable).
-guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(2),[]),na,eq,1).
-guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(3),[]),be).
-guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(1),[])).
-guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(2),[])).
-% S2: An opioid-dosage-recommendation is not a rigid-standard.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(1),[]),'opioid-dosage-recommendation',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(1),[]),na,eq,1).
-guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[]),-).
-guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(2),[]),'rigid-standard',countable).
-guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(2),[]),na,eq,1).
-guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(3),[]),be).
-guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(1),[])).
-guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(2),[])).
-% S3: An opioid-dosage-recommendation is a decision-guidepost.
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(1),[]),'opioid-dosage-recommendation',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(2),[]),'decision-guidepost',countable).
-guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(2),[]),na,eq,1).
-guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(3),[]),be).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(1),[])).
-guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(2),[])).
+guideline_document('cdc2022-opioid-rec04-imp01',ace_sha256(a377229880b73177db24156c98612819c64b0747fd0ede083c2e99f4a530dd87),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+% S1: Every opioid-dosage-recommendation is not an inflexible-standard.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[A]),-) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(2),[A]),'inflexible-standard',countable) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(3),[A]),be) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',1,ref(2),[A])) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+% S2: Every opioid-dosage-recommendation is not a rigid-standard.
+guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[A]),-) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(2),[A]),'rigid-standard',countable) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(3),[A]),be) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg('$guideline_id'(context,'cdc2022-opioid-rec04-imp01',2,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',2,ref(2),[A])) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+% S3: Every opioid-dosage-recommendation is a decision-guidepost.
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(2),[A]),'decision-guidepost',countable) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(3),[A]),be) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(3),[A]),1,A) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
+guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(3),[A]),2,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',3,ref(2),[A])) :- guideline_entity(actual,A,'opioid-dosage-recommendation',countable), guideline_cardinality(actual,A,na,eq,1).
 % S4: A decision-guidepost can inform a clinician-patient-decision.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',4,ref(1),[]),'decision-guidepost',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-rec04-imp01',4,ref(1),[]),na,eq,1).

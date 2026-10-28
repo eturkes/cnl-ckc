@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s9-04',ace_sha256(d2694e97cea76ead5a23b518a6efabc20d5a5d698b8f82e05e7b95700c2891de),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s9-04',ace_sha256(d2694e97cea76ead5a23b518a6efabc20d5a5d698b8f82e05e7b95700c2891de),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: Every pain-duration-definition is an approximate-guide.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s9-04',1,ref(2),[A]),'approximate-guide',countable) :- guideline_entity(actual,A,'pain-duration-definition',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s9-04',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'pain-duration-definition',countable), guideline_cardinality(actual,A,na,eq,1).

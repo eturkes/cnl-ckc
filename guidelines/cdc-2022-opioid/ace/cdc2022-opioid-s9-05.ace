@@ -1,12 +1,12 @@
 Every opioid-pain-clinical-practice-guideline is a clinical-tool.
 Every opioid-pain-clinical-practice-guideline should improve a clinician-patient-communication.
 Every opioid-pain-clinical-practice-guideline should support an informed-person-centered-pain-care-decision.
-Every opioid-pain-clinical-practice-guideline applies to a primary-care-clinician.
+If there is an opioid-pain-clinical-practice-guideline and there is a primary-care-clinician then the opioid-pain-clinical-practice-guideline applies to the primary-care-clinician.
 Every opioid-pain-clinical-practice-guideline applies to a pain-care-clinician.
 If an outpatient has an age and the age includes at least 18 years then the outpatient is an adult-outpatient.
-Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has an acute-pain.
-Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a subacute-pain.
-Every opioid-pain-clinical-practice-guideline applies to an adult-outpatient that has a chronic-pain.
+If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has an acute-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
+If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has a subacute-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
+If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has a chronic-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
 If a patient has a pain that lasts for less than 1 month then the patient has an acute-pain.
 If a patient has a pain that lasts for at least 1 month for at most 3 months then the patient has a subacute-pain.
 If a patient has a pain that lasts for more than 3 months then the patient has a chronic-pain.

@@ -1694,3 +1694,5 @@ noun_sg('cited-dose-response-overdose-risk-study','cited-dose-response-overdose-
 noun_sg('PDMP-risk-score-algorithm','PDMP-risk-score-algorithm',neutr).
 noun_sg('unpredictable-opioid-or-benzodiazepine-use','unpredictable-opioid-or-benzodiazepine-use',neutr).
 noun_pl('buprenorphine-doses','buprenorphine-dose',neutr).
+noun_sg('nonopioid-medication-example','nonopioid-medication-example',neutr).
+noun_pl('nonopioid-medication-examples','nonopioid-medication-example',neutr).

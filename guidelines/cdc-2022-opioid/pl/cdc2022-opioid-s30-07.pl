@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s30-07',ace_sha256('8c6a54826383a05e5c1783bb56161ddc1cf699165ac0ac117c32a79c3c827d23'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s30-07',ace_sha256(d554b35e7deaae4381697b4b06589f7e36f17f104058ad736e25522429ba2e02),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: Every clinician may use a medication-combination during a patient-specific-comorbidity-and-benefit-risk-selection.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s30-07',1,box(1),[A]),may) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s30-07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-07',1,ref(2),[A]),'medication-combination',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
@@ -55,7 +55,7 @@ guideline_event('$guideline_id'(context,'cdc2022-opioid-s30-07',1,box(1),[A]),'$
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s30-07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-07',1,ref(4),[A]),1,A) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_arg('$guideline_id'(context,'cdc2022-opioid-s30-07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-07',1,ref(4),[A]),2,'$guideline_id'(product,'cdc2022-opioid-s30-07',1,ref(2),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_pp('$guideline_id'(context,'cdc2022-opioid-s30-07',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s30-07',1,ref(4),[A]),during,'$guideline_id'(product,'cdc2022-opioid-s30-07',1,ref(3),[A])) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
-% S2: A medication-combination-example includes exactly 2 nonopioid-medications that differ in a mechanism-of-action.
+% S2: A medication-combination-example includes exactly 2 nonopioid-medication-examples that differ in a mechanism-of-action.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(1),[]),'medication-combination-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(1),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(2),[]),include).
@@ -66,17 +66,17 @@ guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(4),
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(4),[]),1,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(3),[])).
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(5),[]),'mechanism-of-action',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(5),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(3),[]),'nonopioid-medication',countable).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(3),[]),'nonopioid-medication-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',2,ref(3),[]),na,exactly,2).
-% S3: A medication-combination-example includes a nonopioid-medication and includes an opioid.
+% S3: A medication-combination-example includes a nonopioid-medication-example and includes an opioid-example.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(1),[]),'medication-combination-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(2),[]),'nonopioid-medication',countable).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(2),[]),'nonopioid-medication-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(2),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(3),[]),include).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(3),[]),1,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(1),[])).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(3),[]),2,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(2),[])).
-guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(4),[]),opioid,countable).
+guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(4),[]),'opioid-example',countable).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(4),[]),na,eq,1).
 guideline_event(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(5),[]),include).
 guideline_arg(actual,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(5),[]),1,'$guideline_id'(product,'cdc2022-opioid-s30-07',3,ref(1),[])).

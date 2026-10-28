@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s9-10',ace_sha256('6dd48795ad6ad9c5344a8b57f246a2fe8706548ca67ea95f00767dc630f81fc0'),ulex(sha256('64c086862c2f48d491a9fde0ba9f0fcf090e25e84456b9749332ec3ace211ce4')),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
+guideline_document('cdc2022-opioid-s9-10',ace_sha256('6dd48795ad6ad9c5344a8b57f246a2fe8706548ca67ea95f00767dc630f81fc0'),ulex(sha256(de64e41d6ddfdcb89810d9fc156aa0ac54562519e3bd4b94b8f7324f773ceb91)),vocabulary(sha256('06621a3dca592ca4385262a4a36dd8184670cdaef31827cd8b224c8c870c2f7d'))).
 % S1: Every clinician can possibly work within a team-based-care.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s9-10',1,box(1),[A]),can) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s9-10',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s9-10',1,ref(2),[A]),'team-based-care',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

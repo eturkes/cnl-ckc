@@ -1,8 +1,8 @@
 A recommendation is a category-A-recommendation and is an evidence-type-2-recommendation.
 If a patient has a subacute-pain and a nonopioid-therapy is appropriate for the patient then every clinician should maximize the nonopioid-therapy for the subacute-pain.
 If a patient has a chronic-pain and a nonopioid-therapy is appropriate for the patient then every clinician should maximize the nonopioid-therapy for the chronic-pain.
-If a patient has a subacute-pain then a nonopioid-therapy is preferred for the subacute-pain.
-If a patient has a chronic-pain then a nonopioid-therapy is preferred for the chronic-pain.
+If a patient has a subacute-pain then every nonopioid-therapy is preferred for the subacute-pain.
+If a patient has a chronic-pain then every nonopioid-therapy is preferred for the chronic-pain.
 If an opioid-benefit does not likely outweigh an opioid-risk and there is a clinician then it is recommended that the clinician does not consider an opioid-therapy.
 Every clinician should discuss a realistic-benefit with a patient before an initiation.
 Every clinician should discuss a known-risk with a patient before an initiation.

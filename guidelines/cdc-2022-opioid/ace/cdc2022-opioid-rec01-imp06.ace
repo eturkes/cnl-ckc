@@ -1,5 +1,6 @@
-An opioid-therapy has an important-role for an acute-pain that relates to a severe-traumatic-injury.
-An opioid-therapy has an important-role for an acute-pain that relates to a crush-injury.
-An opioid-therapy has an important-role for an acute-pain that relates to a burn.
-An opioid-therapy has an important-role for a moderate-to-severe-postoperative-pain that relates to an invasive-surgery.
-If an NSAID is contraindicated and an other-therapy is contraindicated or an NSAID likely is ineffective and an other-therapy likely is ineffective then an opioid-therapy has an important-role for an other-severe-acute-pain.
+If there is an opioid-therapy and there is an acute-pain that relates to a severe-traumatic-injury then the opioid-therapy has an important-role for the acute-pain.
+If there is an opioid-therapy and there is an acute-pain that relates to a crush-injury then the opioid-therapy has an important-role for the acute-pain.
+If there is an opioid-therapy and there is an acute-pain that relates to a burn then the opioid-therapy has an important-role for the acute-pain.
+If there is an opioid-therapy and there is a moderate-to-severe-postoperative-pain that relates to an invasive-surgery then the opioid-therapy has an important-role for the moderate-to-severe-postoperative-pain.
+If there is an opioid-therapy and there is an other-severe-acute-pain and an NSAID is contraindicated and an other-therapy is contraindicated then the opioid-therapy has an important-role for the other-severe-acute-pain.
+If there is an opioid-therapy and there is an other-severe-acute-pain and an NSAID likely is ineffective and an other-therapy likely is ineffective then the opioid-therapy has an important-role for the other-severe-acute-pain.
