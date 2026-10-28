@@ -588,7 +588,10 @@ eslint:
     echo "gate: eslint ok"
 
 # Image scan (weekly, network): Trivy over the CI container image digest; a vulnerability with a
-# fixed version at HIGH or CRITICAL fails it. Red input first: alpine 3.9.6 by digest (known CVEs).
+# fixed version at HIGH or CRITICAL fails it unless .trivyignore.yaml lists it (a reason + an
+# expiry 30 days out; Trivy drops an expired entry, so the scan fails again). Red inputs first:
+# alpine 3.9.6 by digest (known CVEs); the ignore list with every entry expired, which must
+# report each listed CVE (an entry whose CVE no longer reaches the image = stale).
 [doc("Scan the pinned CI container image with Trivy (network).")]
 image-scan:
     #!/usr/bin/env bash
@@ -602,7 +605,17 @@ image-scan:
     if scan --format json --output "$w/red.json" "$red" 2> /dev/null || ! grep -q '"VulnerabilityID"' "$w/red.json"; then
         echo "image-scan: the known-vulnerable red input passed" >&2; exit 2
     fi
-    scan "$img"
+    ids=$(awk '$1 == "-" && $2 == "id:" {print $3}' .trivyignore.yaml)
+    if [ -n "$ids" ]; then
+        sed 's/^\( *expired_at:\).*/\1 2000-01-01/' .trivyignore.yaml > "$w/expired.yaml"
+        if scan --ignorefile "$w/expired.yaml" --format json --output "$w/expired.json" "$img" 2> /dev/null; then
+            echo "image-scan: the expired ignore list passed" >&2; exit 2
+        fi
+        for id in $ids; do
+            grep -q "\"VulnerabilityID\": \"$id\"" "$w/expired.json" || { echo "image-scan: $id: its expired entry reports nothing (stale entry)" >&2; exit 2; }
+        done
+    fi
+    scan --ignorefile .trivyignore.yaml "$img"
     echo "gate: image-scan ok"
 
 # Kani installer advisories (weekly, network): cargo-deny over the Cargo.lock of the kani-verifier
