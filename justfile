@@ -202,7 +202,7 @@ bump-verus tag:
     tag="{{ tag }}"; enc=${tag//\//%2F}; api=https://api.github.com/repos/verus-lang/verus
     [[ "$tag" =~ ^release/0\.[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9a-f]{7}$ ]] || fail "not a stable release tag: $tag"
     tok="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
-    get() { curl -sSfL --retry 3 --max-time 60 -A 'cnl-ckc-bump (https://github.com/eturkes/cnl-ckc)' \
+    get() { curl -sSfL --retry 3 --max-time 60 --proto '=https' -A 'cnl-ckc-bump (https://github.com/eturkes/cnl-ckc)' \
         ${tok:+-H "Authorization: Bearer $tok"} "$@"; }
     rel=$(get "$api/releases/tags/$enc")
     [ "$(jq -r .prerelease <<< "$rel")" = false ] || fail "$tag is a prerelease"
@@ -214,6 +214,12 @@ bump-verus tag:
     channel=$(file rust-toolchain.toml | sed -n 's/^channel = "\(.*\)"$/\1/p')
     vstd=$(file source/vstd/Cargo.toml | sed -n '0,/^version = /s/^version = "\(.*\)"$/\1/p')
     for x in asset sha commit channel vstd; do [ -n "${!x}" ] || fail "no $x for $tag"; done
+    # Upstream strings reach sed + the lock rows: each must match its strict shape before any write.
+    [[ "$asset" =~ ^verus-[0-9a-z.]+-x86-linux\.zip$ ]] || fail "unexpected asset name: $asset"
+    [[ "$sha" =~ ^[0-9a-f]{64}$ ]] || fail "unexpected asset digest: $sha"
+    [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || fail "unexpected tag commit: $commit"
+    [[ "$channel" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "unexpected rust-toolchain channel: $channel"
+    [[ "$vstd" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+)*$ ]] || fail "unexpected vstd version: $vstd"
     tc="$channel-x86_64-unknown-linux-gnu"
     set_row() { # lock key value: replace the value of an existing key row
         [ -n "$3" ] || fail "empty $2"

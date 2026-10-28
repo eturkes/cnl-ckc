@@ -315,67 +315,82 @@ fn swipl_version_probe_fails_the_recipe() {
     );
 }
 
+// One bump-verus run against a fixture release: its asset digest, tag commit, the channel
+// + vstd version the contents API answers, and the z3 + rustc probes.
+fn verus_case(
+    s: &Scratch,
+    name: &str,
+    justfile: &str,
+    failing: &str,
+    channel: &str,
+    vstd: &str,
+) -> (Output, Fixture) {
+    let tag = "release/0.2026.08.30.b432e82";
+    let api = "https://api.github.com/repos/verus-lang/verus";
+    let commit = "b".repeat(40);
+    let tc = format!("{channel}-x86_64-unknown-linux-gnu");
+    let content = |text: String| format!(r#"{{"content": "{}"}}"#, base64(text.as_bytes()));
+    let fx = Fixture::new(s, name, justfile);
+    fx.route(
+        &format!("{api}/releases/tags/release%2F0.2026.08.30.b432e82"),
+        format!(
+            r#"{{"prerelease": false, "assets": [{{"name": "verus-0.2026.08.30.b432e82-x86-linux.zip", "digest": "sha256:{}"}}]}}"#,
+            "a".repeat(64)
+        ),
+    );
+    fx.route(
+        &format!("{api}/git/ref/tags/{tag}"),
+        format!(r#"{{"object": {{"type": "commit", "sha": "{commit}"}}}}"#),
+    );
+    fx.route(
+        &format!("{api}/contents/rust-toolchain.toml?ref={commit}"),
+        content(format!("[toolchain]\nchannel = \"{channel}\"\n")),
+    );
+    fx.route(
+        &format!("{api}/contents/source/vstd/Cargo.toml?ref={commit}"),
+        content(format!(
+            "[package]\nname = \"vstd\"\nversion = \"{vstd}\"\n"
+        )),
+    );
+    let rows =
+        "verus_release verus_asset verus_asset_sha256 verus_asset_url rustc_toolchain z3_version";
+    put(
+        &fx.root.join("rust/verus.lock"),
+        rows.split(' ')
+            .map(|k| format!("{k}\told\n"))
+            .collect::<String>(),
+    );
+    put(
+        &fx.root.join("rust/kani.lock"),
+        "bootstrap_rustc_toolchain\told\nbootstrap_rustc_version\told\n",
+    );
+    put(
+        &fx.root.join("rust/rust-toolchain.toml"),
+        "channel = \"old\"\n",
+    );
+    put(&fx.root.join("rust/Cargo.toml"), "vstd = \"=old\"\n");
+    probe(
+        &fx.toolchain.join("verus-x86-linux/z3"),
+        "Z3 version 4.15.2 - 64 bit",
+        failing == "z3",
+    );
+    probe(
+        &fx.toolchain
+            .join(format!("rustup/toolchains/{tc}/bin/rustc")),
+        "rustc 1.96.0 (fixture 2026-08-30)",
+        failing == "rustc",
+    );
+    let out = fx.run("bump-verus", &[tag]);
+    (out, fx)
+}
+
 #[test]
 fn bump_verus_version_probes_fail_the_recipe() {
     let s = scratch("bump-verus");
     let text = justfile();
-    let tag = "release/0.2026.08.30.b432e82";
-    let api = "https://api.github.com/repos/verus-lang/verus";
-    let (channel, vstd, commit) = ("1.96.0", "0.0.0-2026-08-30-0058", "b".repeat(40));
-    let tc = format!("{channel}-x86_64-unknown-linux-gnu");
-    let content = |text: String| format!(r#"{{"content": "{}"}}"#, base64(text.as_bytes()));
+    let vstd = "0.0.0-2026-08-30-0058";
     let case = |name: &str, justfile: &str, failing: &str| {
-        let fx = Fixture::new(&s, name, justfile);
-        fx.route(
-            &format!("{api}/releases/tags/release%2F0.2026.08.30.b432e82"),
-            format!(
-                r#"{{"prerelease": false, "assets": [{{"name": "verus-0.2026.08.30.b432e82-x86-linux.zip", "digest": "sha256:{}"}}]}}"#,
-                "a".repeat(64)
-            ),
-        );
-        fx.route(
-            &format!("{api}/git/ref/tags/{tag}"),
-            format!(r#"{{"object": {{"type": "commit", "sha": "{commit}"}}}}"#),
-        );
-        fx.route(
-            &format!("{api}/contents/rust-toolchain.toml?ref={commit}"),
-            content(format!("[toolchain]\nchannel = \"{channel}\"\n")),
-        );
-        fx.route(
-            &format!("{api}/contents/source/vstd/Cargo.toml?ref={commit}"),
-            content(format!(
-                "[package]\nname = \"vstd\"\nversion = \"{vstd}\"\n"
-            )),
-        );
-        let rows = "verus_release verus_asset verus_asset_sha256 verus_asset_url rustc_toolchain z3_version";
-        put(
-            &fx.root.join("rust/verus.lock"),
-            rows.split(' ')
-                .map(|k| format!("{k}\told\n"))
-                .collect::<String>(),
-        );
-        put(
-            &fx.root.join("rust/kani.lock"),
-            "bootstrap_rustc_toolchain\told\nbootstrap_rustc_version\told\n",
-        );
-        put(
-            &fx.root.join("rust/rust-toolchain.toml"),
-            "channel = \"old\"\n",
-        );
-        put(&fx.root.join("rust/Cargo.toml"), "vstd = \"=old\"\n");
-        probe(
-            &fx.toolchain.join("verus-x86-linux/z3"),
-            "Z3 version 4.15.2 - 64 bit",
-            failing == "z3",
-        );
-        probe(
-            &fx.toolchain
-                .join(format!("rustup/toolchains/{tc}/bin/rustc")),
-            "rustc 1.96.0 (fixture 2026-08-30)",
-            failing == "rustc",
-        );
-        let out = fx.run("bump-verus", &[tag]);
-        (out, fx)
+        verus_case(&s, name, justfile, failing, "1.96.0", vstd)
     };
     let (out, fx) = case("control", &text, "");
     assert_eq!(out.status.code(), Some(0), "control: {}", show(&out));
@@ -434,6 +449,82 @@ fn bump_verus_version_probes_fail_the_recipe() {
             show(&out)
         );
         assert!(fx.calls().contains("_relock"));
+    }
+}
+
+// Upstream strings feed sed (`s/…/$channel/`: GNU sed's `e` flag runs a command) and the lock
+// rows (security review SEC I2): each must match its shape before the recipe writes anything.
+#[test]
+fn bump_verus_refuses_upstream_strings_outside_their_shapes() {
+    let s = scratch("bump-verus-strings");
+    let text = justfile();
+    // bump-verus' get() is the justfile's only `--max-time 60` bump client.
+    assert!(
+        text.contains(
+            "    get() { curl -sSfL --retry 3 --max-time 60 --proto '=https' -A 'cnl-ckc-bump"
+        ),
+        "bump-verus get() without --proto '=https'"
+    );
+    let files = [
+        "rust/verus.lock",
+        "rust/kani.lock",
+        "rust/rust-toolchain.toml",
+        "rust/Cargo.toml",
+    ];
+    let hostile = [
+        ("channel", "1.0/e;s/x/y", "0.0.0-2026-08-30-0058"),
+        ("vstd", "1.96.0", "0.0.0\"/e;s/x/y"),
+    ];
+    for (what, channel, vstd) in hostile {
+        let (out, fx) = verus_case(&s, &format!("{what}-hostile"), &text, "", channel, vstd);
+        assert_ne!(out.status.code(), Some(0), "{what}: {}", show(&out));
+        assert!(
+            String::from_utf8_lossy(&out.stderr).contains("bump-verus: unexpected"),
+            "{what}: {}",
+            show(&out)
+        );
+        let before: Vec<String> = files
+            .iter()
+            .map(|f| verus_case_seed(f).to_owned())
+            .collect();
+        for (f, seed) in files.iter().zip(&before) {
+            assert_eq!(&fx.read(f), seed, "{what}: {f} rewritten");
+        }
+        assert_eq!(fx.calls(), "", "{what}: nested just ran");
+    }
+    // The pre-fix recipe (no shape checks) writes the lock rows before its sed runs.
+    let checks = &text[text
+        .find("    # Upstream strings reach sed + the lock rows")
+        .unwrap()
+        ..text
+            .find("    tc=\"$channel-x86_64-unknown-linux-gnu\"")
+            .unwrap()];
+    let planted = plant(&text, &[(checks, "")]);
+    let (_, fx) = verus_case(
+        &s,
+        "channel-planted",
+        &planted,
+        "",
+        "1.0/e;s/x/y",
+        "0.0.0-2026-08-30-0058",
+    );
+    assert_ne!(
+        fx.read("rust/verus.lock"),
+        verus_case_seed("rust/verus.lock"),
+        "the planted pre-fix recipe no longer slips through"
+    );
+}
+
+// The bytes verus_case seeds into each file it lets the recipe rewrite.
+fn verus_case_seed(file: &str) -> &'static str {
+    match file {
+        "rust/verus.lock" => {
+            "verus_release\told\nverus_asset\told\nverus_asset_sha256\told\nverus_asset_url\told\nrustc_toolchain\told\nz3_version\told\n"
+        }
+        "rust/kani.lock" => "bootstrap_rustc_toolchain\told\nbootstrap_rustc_version\told\n",
+        "rust/rust-toolchain.toml" => "channel = \"old\"\n",
+        "rust/Cargo.toml" => "vstd = \"=old\"\n",
+        _ => unreachable!("{file}"),
     }
 }
 

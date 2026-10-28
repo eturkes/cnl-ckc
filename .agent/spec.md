@@ -62,7 +62,7 @@ Approved; env = `.claude/rules/ops.md` + `.claude/rules/rust.md`; `ckc` = `rust/
 - [ ] DQ10 superseded notice overflow (deferred row; its Accept).
 - [x] ba0a840b DQ11 CI bootstrap repetition (deferred row; its Accept).
 - [ ] DQ12 run-wide test caches (deferred row; its Accept).
-- [ ] DQ13 `just ci` job timing before GitHub records the end (deferred row; its Accept).
+- [x] 234d299f DQ13 `just ci` job timing before GitHub records the end (deferred row; its Accept).
 - [ ] DQ-ASK one closing `AskUserQuestion`: deontic conditions in scoped documents (user-ruled IMPLEMENT route) + patient-question engine (IMPLEMENT-scale): route after the cut or fund; S59-01 when no source dates it; every find needing the user.
 - [ ] SKO Skolem role entities (deferred row; user rulings: before the cut, run in this session — "Fund here, then cut"): corpus units per `ops.md` Corpus loop, census + rules re-authored, consumer-recipe counts before/after.
 - [ ] REV-P projection-notes census against the authoring principle before the cut (user rulings: fix it before the pre-release if feasible; run in this session after SKO — "Fund here, then cut"): `rg -c -i 'approximat|identity split|fresh witness|nominaliz|example drop|dropped' guidelines/cdc-2022-opioid/audit/projection-notes.tsv` = 130 of 494 rows mention a loss; accept = each such row classed carrier-less (a gap class in `docs/m7-gap-taxonomy.md`) or typable, every typable loss re-authored.
