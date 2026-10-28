@@ -176,6 +176,33 @@ fn commit_row(
             format!("ledger row {index} commit absent from repository: {commit}"),
         ));
     }
+    // The site renders from HEAD and records HEAD or an ancestor; a row joined from a
+    // colleague's clone must name a commit of this line's history too.
+    let args = ["merge-base", "--is-ancestor", commit.as_str(), "HEAD"];
+    let ancestry = Command::new("git")
+        .args(args)
+        .output()
+        .map_err(|_| fail("git", "not executable: git"))?;
+    match ancestry.status.code() {
+        Some(0) => {}
+        Some(1) => {
+            return Err(violation(
+                "adjudication",
+                format!("ledger row {index} commit is not HEAD or an ancestor of HEAD: {commit}"),
+            ));
+        }
+        _ => {
+            let why = String::from_utf8_lossy(&ancestry.stderr);
+            return Err(fail(
+                "git",
+                format!(
+                    "{} failed: {}",
+                    args.join(" "),
+                    why.lines().next().unwrap_or("")
+                ),
+            ));
+        }
+    }
     // The recorded commit is the one the reviewer viewed: its bundle must re-derive to
     // the ledger digest even when the digest is current.
     if !cache.contains_key(&row.commit) {

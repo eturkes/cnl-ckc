@@ -554,6 +554,82 @@ fn check_mutant_battery() {
 // A kill skips the `ckc check` scratch Drop: a leftover whose creator pid is gone
 // must neither stop the run nor outlive it. The fake swipl ends the run at the APE
 // stage build, the first step past the scratch.
+// A colleague's ledger rows join the line (REFERENCE § Releasing, "To review with a
+// colleague"): a row naming a commit of the line's history passes adjudication (the fake swipl
+// then ends the run at the APE stage build); a row naming a commit of the colleague's own clone
+// that HEAD does not contain is refused, though its bundle there matches (same tree).
+#[test]
+fn colleague_ledger_rows_join_the_line() {
+    let scratch = Scratch(root().join(format!(
+        "rust/target/check-colleague/{}",
+        std::process::id()
+    )));
+    let _ = fs::remove_dir_all(&scratch.0);
+    fs::create_dir_all(&scratch.0).unwrap();
+    let head = String::from_utf8(git(&root(), &["rev-parse", "HEAD"])).unwrap();
+    let head = head.trim();
+    let swipl = scratch.0.join("swipl");
+    fs::write(
+        &swipl,
+        "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 10.0.2 for x86_64-linux'; exit 0; }\necho 'fake swipl: stage build' >&2\nexit 3\n",
+    )
+    .unwrap();
+    fs::set_permissions(&swipl, fs::Permissions::from_mode(0o755)).unwrap();
+    let joined = clone_head(&scratch.0, "joined", head);
+    ledger(&joined, head.as_bytes(), LEDGER_DATE, None);
+    let out = check(&program(), &joined, Some(&swipl)).unwrap();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert_eq!(
+        (out.status.code(), String::from_utf8_lossy(&out.stderr)),
+        (Some(3), "fake swipl: stage build\n".into()),
+        "joined: stdout {stdout}"
+    );
+    assert!(
+        stdout.contains(
+            "ckc: adjudication cdc-2022-opioid approved=1 rejected=0 contested=0 stale=0 "
+        ),
+        "joined: stdout {stdout}"
+    );
+    let off = clone_head(&scratch.0, "off-line", head);
+    let side = Command::new("git")
+        .args([
+            "commit-tree",
+            "HEAD^{tree}",
+            "-p",
+            "HEAD",
+            "-m",
+            "a colleague's local commit",
+        ])
+        .current_dir(&off)
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_SYSTEM", "/dev/null")
+        .env("GIT_AUTHOR_NAME", "colleague")
+        .env("GIT_AUTHOR_EMAIL", "colleague@localhost")
+        .env("GIT_COMMITTER_NAME", "colleague")
+        .env("GIT_COMMITTER_EMAIL", "colleague@localhost")
+        .output()
+        .unwrap();
+    assert!(
+        side.status.success(),
+        "commit-tree: {}",
+        String::from_utf8_lossy(&side.stderr)
+    );
+    let side = String::from_utf8(side.stdout).unwrap();
+    let side = side.trim();
+    ledger(&off, side.as_bytes(), LEDGER_DATE, None);
+    let out = check(&program(), &off, Some(&swipl)).unwrap();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert_eq!(
+        (out.status.code(), out.stderr.is_empty(), stdout.lines().last()),
+        (
+            Some(1),
+            true,
+            Some(format!("ckc: adjudication: ledger row 2 commit is not HEAD or an ancestor of HEAD: {side}").as_str())
+        ),
+        "off-line: stdout {stdout}"
+    );
+}
+
 #[test]
 fn check_scratch_leftover() {
     let scratch = Scratch(root().join(format!("rust/target/check-scratch/{}", std::process::id())));

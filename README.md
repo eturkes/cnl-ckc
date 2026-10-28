@@ -141,6 +141,8 @@ candidate and each release publishes the reviewer program
 6. In the clone, run `<download directory>/ckc-x86_64-linux ui serve`.
    "Reviewing" tells how to review. The site writes your decisions to
    `guidelines/<guideline-id>/audit/adjudication.tsv` in the clone.
+7. When your review is complete, send that file to the person who
+   maintains the release line. They add your decisions to the line.
 
 ## Run
 

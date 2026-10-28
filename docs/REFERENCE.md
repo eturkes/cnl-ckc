@@ -1769,6 +1769,24 @@ To review on the line:
    again. A corrected state gets the next candidate tag, as in steps 3
    and 4.
 
+To review with a colleague: the colleague reviews a candidate with the
+reviewer program in a clone of the branch (README "Install"). The site
+writes each decision to the ledger of that clone, and each row names
+the commit of the line that the page showed. To add these decisions to
+the line:
+
+- Ask the colleague to send the ledger file
+  `guidelines/<id>/audit/adjudication.tsv` of the clone. A pull request
+  of the commit that holds that file against `release/kb-YYYY-MM-DD`
+  also works.
+- In `.release/kb-YYYY-MM-DD`, add the rows of the colleague below the
+  rows of the ledger. Keep one header line.
+- Run `ckc check`. It refuses a row whose commit is not HEAD or an
+  ancestor of HEAD, and a row whose digest differs from the review
+  digest of its document at that commit.
+- Commit the ledger on the branch, then run `just amend-manifest`, as
+  in step 7.
+
 To release the line:
 
 9. Confirm that the review is complete: `ckc check` prints the label
