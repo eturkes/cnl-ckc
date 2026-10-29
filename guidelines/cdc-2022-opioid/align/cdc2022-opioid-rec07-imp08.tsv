@@ -17,11 +17,13 @@
 0	ace	437	patient
 7	ace	451	combined-opioid-dosage
 7	ace	482	combined-opioid-dosage
+7	ace	514	at least
+7	ace	523	50 MME-units-per-day
 0	ace	553	patient
 2	ace	574	opioid-use-disorder-or-overdose
 0	ace	617	patient
 8	ace	633	central-nervous-system-depressant
-2	ace	675	opioid
+12	ace	667	with an opioid
 0	ace	691	patient
 2	ace	712	opioid-use-disorder-or-overdose
 0	ace	755	patient
@@ -29,7 +31,7 @@
 1	ace	824	clinician
 10	ace	841	reevaluate
 0	ace	856	patient
-11	ace	894	months
+11	ace	864	at an interval of less than 3 months
 1	src	0	Clinicians
 10	src	18	reevaluate
 0	src	29	patients
@@ -40,4 +42,5 @@
 6	src	203	history of overdose
 7	src	224	taking ≥50 MME/day
 8	src	260	central nervous system depressants
+12	src	295	with opioids
 11	src	309	more frequently than every 3 months

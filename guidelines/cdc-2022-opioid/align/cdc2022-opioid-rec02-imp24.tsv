@@ -22,10 +22,8 @@
 6	ace	560	inform
 7	ace	569	clinical-decision
 0	ace	595	patient
-0	ace	609	patient
 4	ace	623	patient-preference
 4	ace	695	patient-preference
-0	ace	720	patient
 5	ace	734	patient-value
 5	ace	801	patient-value
 0	src	0	Patient education

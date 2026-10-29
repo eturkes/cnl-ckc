@@ -1,7 +1,7 @@
 0	ace	5	patient
 1	ace	19	continuous-opioid-use
-2	ace	67	week
-3	ace	88	month
+2	ace	46	lasts for at least 1 week
+3	ace	72	for less than 1 month
 4	ace	105	clinician
 10	ace	115	may
 11	ace	119	consider

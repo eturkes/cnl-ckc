@@ -1,13 +1,11 @@
 3	ace	6	clinician
 5	ace	23	evaluate
-6	ace	34	risk
-6	ace	46	opioid-related-harm
+6	ace	34	risk for an opioid-related-harm
 0	ace	76	opioid-initiation
 3	ace	101	clinician
 14	ace	118	periodically
 5	ace	131	evaluate
-6	ace	142	risk
-6	ace	154	opioid-related-harm
+6	ace	142	risk for an opioid-related-harm
 15	ace	183	continued
 2	ace	193	opioid-therapy
 3	ace	214	clinician
@@ -16,8 +14,7 @@
 3	ace	270	clinician
 14	ace	287	periodically
 7	ace	300	discuss
-6	ace	310	risk
-6	ace	322	opioid-related-harm
+6	ace	310	risk for an opioid-related-harm
 4	ace	351	patient
 9	ace	365	risk-mitigation-strategy
 16	ace	393	relevant

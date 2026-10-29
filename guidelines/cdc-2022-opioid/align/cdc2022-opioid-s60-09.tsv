@@ -1,13 +1,11 @@
 0	ace	5	patient
-5	ace	24	opioid
-5	ace	61	opioid
+11	ace	13	chooses an opioid-taper
 3	ace	85	clinician
 4	ace	99	reassess
 5	ace	111	opioid-use-disorder
 0	ace	139	patient
 0	ace	153	patient
-5	ace	172	opioid
-5	ace	209	opioid
+11	ace	161	chooses an opioid-taper
 5	ace	233	opioid-use-disorder
 6	ace	253	criteria-match
 3	ace	279	clinician
@@ -21,6 +19,7 @@
 0	ace	414	patient
 10	ace	428	methadone-treatment
 0	src	4	patients
+11	src	17	choose to
 3	src	52	clinicians
 4	src	67	reassess
 5	src	80	opioid use disorder

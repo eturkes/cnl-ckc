@@ -1,18 +1,18 @@
 1	ace	5	patient
-2	ace	28	naltrexone
+2	ace	13	discontinues a naltrexone-treatment
 0	ace	60	clinician
 3	ace	77	warn
 1	ace	86	patient
 4	ace	103	overdose-risk
 5	ace	125	opioid-use-resumption
 1	ace	153	patient
-2	ace	176	naltrexone
+2	ace	161	discontinues a naltrexone-treatment
 1	ace	206	patient
 6	ace	222	previous-opioid-dosage
 1	ace	261	patient
 6	ace	277	previous-opioid-dosage
 1	ace	318	patient
-5	ace	337	opioid-use
+5	ace	326	resumes an opioid-use
 5	ace	357	opioid-use
 4	ace	390	overdose-death
 1	ace	413	patient

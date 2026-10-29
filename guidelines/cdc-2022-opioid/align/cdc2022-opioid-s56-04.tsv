@@ -4,9 +4,9 @@
 3	ace	124	medication-taper-sequencing-decision
 2	ace	168	careful-full-agonist-opioid-buprenorphine-transition-decision
 3	ace	235	medication-taper-sequencing-decision
-4	ace	298	opioid
+4	ace	286	receives an opioid
 5	ace	310	current-opioid-dosage
-4	ace	347	benzodiazepine
+4	ace	336	receives a benzodiazepine
 5	ace	367	current-benzodiazepine-dosage
 6	ace	403	risk
 7	ace	408	outweighs
@@ -16,7 +16,6 @@
 3	ace	638	medication-taper-sequencing-decision
 2	ace	694	buprenorphine
 2	ace	727	carefully
-4	ace	753	benzodiazepine
 6	src	3	risks
 7	src	27	outweigh
 8	src	36	benefits

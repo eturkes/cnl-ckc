@@ -58,7 +58,7 @@
 22	ace	837	screening
 4	ace	847	toxicology
 5	ace	863	result
-23	ace	896	other-explanation
+23	ace	870	does not provably have an other-explanation
 12	ace	935	should
 13	ace	942	use
 0	ace	948	confirmatory-testing

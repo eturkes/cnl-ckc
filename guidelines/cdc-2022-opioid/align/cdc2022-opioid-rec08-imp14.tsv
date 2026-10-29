@@ -1,7 +1,7 @@
 0	ace	5	patient
 2	ace	19	potentially-hazardous-job
 0	ace	53	patient
-3	ace	73	opioid
+3	ace	61	receives an opioid
 1	ace	91	clinician
 8	ace	108	assess
 9	ace	117	safe-hazardous-task-performance-ability

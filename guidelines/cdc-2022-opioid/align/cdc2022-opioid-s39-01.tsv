@@ -15,7 +15,7 @@
 8	ace	272	original-dose
 10	ace	335	remaining-opioid-dose
 9	ace	363	approximately-ten-percent
-14	ace	409	week
+15	ace	389	at an interval of 1 week
 0	ace	422	patient
 1	ace	433	shorter
 14	ace	474	weeks
@@ -30,6 +30,7 @@
 7	src	163	approximately 30%
 8	src	188	original dose
 13	src	205	reached
+15	src	228	weekly
 9	src	247	approximately 10%
 10	src	272	remaining dose
 0	src	362	patients

@@ -11,19 +11,19 @@
 1	ace	386	patient
 2	ace	401	opioid-use-disorder
 8	ace	432	SAMHSA-certified-opioid-treatment-program
-3	ace	478	provide
+12	ace	474	may provide
 10	ace	488	methadone-treatment
 1	ace	516	patient
 1	ace	530	patient
 2	ace	545	opioid-use-disorder
 8	ace	576	SAMHSA-certified-opioid-treatment-program
-3	ace	622	provide
+12	ace	618	may provide
 11	ace	632	buprenorphine-treatment
 1	ace	664	patient
 1	ace	678	patient
 2	ace	693	opioid-use-disorder
 0	ace	719	clinician
-3	ace	736	provide
+3	ace	729	cannot provide
 2	ace	747	opioid-use-disorder
 1	ace	785	patient
 0	ace	802	clinician
@@ -36,7 +36,7 @@
 1	ace	919	patient
 2	ace	934	opioid-use-disorder
 0	ace	960	clinician
-3	ace	977	provide
+3	ace	970	cannot provide
 2	ace	988	opioid-use-disorder
 1	ace	1026	patient
 0	ace	1043	clinician
@@ -48,7 +48,7 @@
 1	ace	1166	patient
 2	ace	1181	opioid-use-disorder
 0	ace	1207	clinician
-3	ace	1224	provide
+3	ace	1217	cannot provide
 2	ace	1235	opioid-use-disorder
 1	ace	1273	patient
 0	ace	1290	clinician
@@ -70,6 +70,7 @@
 7	src	221	treatment provider
 8	src	253	opioid treatment program
 8	src	278	certified by SAMHSA
+12	src	301	provide
 10	src	309	methadone
 11	src	322	buprenorphine
 1	src	340	patients

@@ -1,6 +1,6 @@
 4	ace	19	low-back-pain
 4	ace	41	low-back-pain
-14	ace	58	acute
+23	ace	55	is acute
 0	ace	80	opioid
 1	ace	87	therapy
 2	ace	106	recommended
@@ -11,7 +11,7 @@
 4	ace	168	low-back-pain
 5	ace	202	neck-pain
 5	ace	220	neck-pain
-14	ace	233	acute
+23	ace	230	is acute
 0	ace	255	opioid
 1	ace	262	therapy
 2	ace	281	recommended
@@ -22,7 +22,7 @@
 5	ace	343	neck-pain
 6	ace	373	painful-musculoskeletal-injury
 6	ace	412	painful-musculoskeletal-injury
-14	ace	446	acute
+23	ace	443	is acute
 0	ace	468	opioid
 1	ace	475	therapy
 2	ace	494	recommended
@@ -33,7 +33,7 @@
 6	ace	556	painful-musculoskeletal-injury
 15	ace	622	mild-postoperative-pain
 15	ace	688	mild-postoperative-pain
-14	ace	734	acute
+23	ace	731	is acute
 0	ace	756	opioid
 1	ace	763	therapy
 2	ace	782	recommended
@@ -44,7 +44,7 @@
 15	ace	859	mild-postoperative-pain
 8	ace	922	dental-pain
 8	ace	942	dental-pain
-14	ace	957	acute
+23	ace	954	is acute
 0	ace	979	opioid
 1	ace	986	therapy
 2	ace	1005	recommended
@@ -55,7 +55,7 @@
 8	ace	1067	dental-pain
 9	ace	1099	kidney-stone-pain
 9	ace	1125	kidney-stone-pain
-14	ace	1146	acute
+23	ace	1143	is acute
 0	ace	1168	opioid
 1	ace	1175	therapy
 2	ace	1194	recommended
@@ -66,7 +66,7 @@
 9	ace	1256	kidney-stone-pain
 12	ace	1294	headache
 12	ace	1311	headache
-14	ace	1323	acute
+23	ace	1320	is acute
 0	ace	1345	opioid
 1	ace	1352	therapy
 2	ace	1371	recommended
@@ -77,7 +77,7 @@
 12	ace	1433	headache
 10	ace	1463	episodic-migraine-pain
 10	ace	1494	episodic-migraine-pain
-14	ace	1520	acute
+23	ace	1517	is acute
 0	ace	1542	opioid
 1	ace	1549	therapy
 2	ace	1568	recommended
@@ -106,6 +106,7 @@
 2	src	170	recommended
 3	src	185	first-line
 1	src	196	therapy
+23	src	220	acute
 4	src	253	low back pain
 5	src	268	neck pain
 6	src	279	pain

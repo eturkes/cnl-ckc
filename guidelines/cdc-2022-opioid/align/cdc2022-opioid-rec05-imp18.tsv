@@ -18,7 +18,7 @@
 1	ace	317	patient
 8	ace	325	uses
 11	ace	333	opioid
-7	ace	346	interval
+12	ace	340	at an interval of more than 1 day
 0	ace	383	clinician
 9	ace	397	stop
 11	ace	406	opioid
@@ -33,3 +33,4 @@
 11	src	202	opioids
 9	src	217	stopped
 8	src	230	taken
+12	src	236	less frequently than once a day

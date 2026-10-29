@@ -42,7 +42,6 @@
 0	ace	1402	opioid-pain-clinical-practice-guideline
 17	ace	1447	not
 16	ace	1451	cause
-5	ace	1460	opioid
 0	ace	1509	opioid-pain-clinical-practice-guideline
 18	ace	1560	recommended
 0	ace	1581	opioid-pain-clinical-practice-guideline
@@ -66,18 +65,22 @@
 10	ace	1984	FDA-approved-labeling-substitute
 24	ace	2023	patient
 11	ace	2037	sickle-cell-disease-pain
+17	ace	2067	it is false that
 19	ace	2101	applies
 24	ace	2116	patient
 24	ace	2130	patient
 12	ace	2144	cancer-related-pain
+17	ace	2169	it is false that
 19	ace	2203	applies
 24	ace	2218	patient
 24	ace	2232	patient
 13	ace	2251	palliative-care
+17	ace	2272	it is false that
 19	ace	2306	applies
 24	ace	2321	patient
 24	ace	2335	patient
 14	ace	2355	end-of-life-care
+17	ace	2377	it is false that
 19	ace	2411	applies
 24	ace	2426	patient
 0	ace	2441	opioid-pain-clinical-practice-guideline

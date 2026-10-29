@@ -2,7 +2,7 @@
 1	ace	22	category-B
 2	ace	58	evidence-type-4
 4	ace	95	patient
-5	ace	115	opioid-therapy
+5	ace	103	receives an opioid-therapy
 3	ace	141	clinician
 23	ace	158	carefully
 30	ace	168	weigh
@@ -10,12 +10,12 @@
 32	ace	194	risk
 4	ace	207	patient
 3	ace	221	clinician
-35	ace	242	opioid-dosage
+46	ace	231	changes an opioid-dosage
 4	ace	262	patient
-5	ace	287	opioid-therapy
+5	ace	275	receives an opioid-therapy
 3	ace	311	clinician
 23	ace	328	carefully
-35	ace	349	opioid-dosage
+46	ace	338	change the opioid-dosage
 4	ace	369	patient
 5	ace	389	opioid-therapy
 5	ace	412	opioid-therapy
@@ -106,6 +106,7 @@
 30	src	75	weigh
 31	src	81	benefits
 32	src	94	risks
+46	src	123	changing opioid dosage
 31	src	150	benefits
 10	src	159	outweigh
 32	src	168	risks

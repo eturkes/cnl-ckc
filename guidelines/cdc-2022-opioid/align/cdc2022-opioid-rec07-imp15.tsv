@@ -16,13 +16,14 @@
 1	ace	451	patient
 4	ace	465	combined-opioid-dosage
 4	ace	496	combined-opioid-dosage
+4	ace	528	at least
+4	ace	537	50 MME-units-per-day
 1	ace	566	patient
 5	ace	600	evidence-of-opioid-benefit
 1	ace	636	patient
 17	ace	658	taper
 1	ace	681	patient
-2	ace	698	opioid
-6	ace	712	benzodiazepine
+6	ace	689	takes an opioid with a benzodiazepine
 1	ace	735	patient
 5	ace	769	evidence-of-opioid-benefit
 1	ace	805	patient
@@ -54,6 +55,7 @@
 1	ace	1350	patient
 17	ace	1372	taper
 0	ace	1400	clinician
+20	ace	1417	collaborate with
 1	ace	1438	patient
 17	ace	1463	taper
 1	ace	1475	patient
@@ -62,8 +64,7 @@
 16	ace	1548	possible
 1	ace	1565	patient
 0	ace	1584	clinician
-14	ace	1598	reduce
-14	ace	1608	opioid-dosage
+14	ace	1598	reduce an opioid-dosage
 1	ace	1630	patient
 1	ace	1644	patient
 17	ace	1666	taper
@@ -71,8 +72,7 @@
 16	ace	1716	possible
 1	ace	1733	patient
 0	ace	1752	clinician
-15	ace	1766	discontinue
-2	ace	1781	opioid
+15	ace	1766	discontinue an opioid
 1	ace	1796	patient
 2	src	3	risks outweigh benefits of continued opioid therapy
 1	src	65	patients
@@ -88,6 +88,7 @@
 10	src	482	overdose
 11	src	500	serious adverse events
 0	src	525	clinicians
+20	src	543	work with
 17	src	565	taper
 14	src	575	reduce opioid dosage
 17	src	599	taper

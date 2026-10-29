@@ -9,8 +9,10 @@
 3	ace	193	clinician
 4	ace	210	consider
 5	ace	221	testing-benefit
+15	ace	237	at an interval of at most 1 year
 4	ace	281	consider
 6	ace	292	testing-risk
+15	ace	305	at an interval of at most 1 year
 7	ace	345	toxicology-testing
 8	ace	368	assess
 9	ace	377	prescribed-opioid
@@ -30,6 +32,8 @@
 13	ace	742	increase
 14	ace	754	overdose
 0	src	7	starting opioids
+15	src	28	periodically
+15	src	51	annually
 2	src	68	opioid therapy
 3	src	84	clinicians
 4	src	102	consider

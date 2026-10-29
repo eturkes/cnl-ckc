@@ -1,22 +1,16 @@
 0	ace	5	patient
-1	ace	22	opioid
-1	ace	47	year
-2	ace	79	taper
-2	ace	107	months
-2	ace	140	taper
-2	ace	168	years
+1	ace	13	takes an opioid during at least 1 year
+2	ace	77	a taper continues during some months
+2	ace	138	a taper continues during some years
 0	ace	180	patient
-1	ace	197	opioid
-1	ace	222	year
+1	ace	188	takes an opioid during at least 1 year
 2	ace	254	taper-duration
 3	ace	269	depends
 4	ace	283	opioid-dosage
 0	ace	303	patient
 1	ace	322	long-term
-2	ace	374	taper
-2	ace	402	months
-2	ace	435	taper
-2	ace	463	years
+2	ace	372	a taper continues during some months
+2	ace	433	a taper continues during some years
 0	ace	475	patient
 1	ace	494	long-term
 2	ace	546	taper-duration

@@ -28,6 +28,7 @@
 12	ace	492	function-score
 11	ace	515	pain-score
 14	ace	526	improves
+15	ace	538	at least 30 percent
 12	ace	566	function-score
 14	ace	581	improves
 11	ace	622	pain-score
@@ -35,7 +36,6 @@
 12	ace	681	function-score
 14	ace	702	clinically-meaningful-improvement
 10	ace	743	PEG-assessment-scale
-10	ace	783	assessment
 0	src	0	Clinicians
 1	src	18	assess
 2	src	25	benefits
@@ -47,5 +47,6 @@
 9	src	138	functional goals
 10	src	246	PEG assessment scale
 14	src	274	clinically meaningful improvement
+15	src	330	30%
 11	src	365	pain
 12	src	374	function

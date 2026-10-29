@@ -1,5 +1,6 @@
 6	ace	5	patient
 1	ace	13	uses
+15	ace	18	at least 2
 3	ace	29	respiratory-depressant-medications
 6	ace	73	patient
 5	ace	85	possibly
@@ -14,6 +15,7 @@
 14	ace	253	opioid
 6	src	5	patients
 1	src	14	using
+15	src	20	more than one
 3	src	34	respiratory depressant
 13	src	64	benzodiazepines
 14	src	84	opioids

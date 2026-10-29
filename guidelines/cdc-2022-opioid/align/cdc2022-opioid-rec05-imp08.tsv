@@ -1,9 +1,10 @@
 0	ace	5	patient
-2	ace	27	opioid
+2	ace	13	engages in an opioid-taper
 1	ace	51	clinician
 4	ace	68	frequently
-3	ace	89	follow-up
+3	ace	79	conduct a follow-up
 0	ace	108	patient
+4	ace	116	at an interval of at most 1 month
 1	src	0	Clinicians
 3	src	18	follow up
 4	src	28	frequently

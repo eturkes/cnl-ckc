@@ -1,6 +1,7 @@
 1	ace	5	patient
 2	ace	20	age
 2	ace	32	age
+12	ace	45	at least 65
 10	ace	57	years
 0	ace	69	clinician
 7	ace	79	initiates
@@ -36,6 +37,7 @@
 1	ace	526	patient
 2	ace	541	age
 2	ace	553	age
+12	ace	566	at least 65
 10	ace	578	years
 1	ace	613	patient
 11	ace	642	therapeutic-window
@@ -53,6 +55,7 @@
 8	src	57	opioids
 1	src	69	patients
 2	src	78	aged
+12	src	83	≥65
 10	src	87	years
 1	src	97	patients
 3	src	111	renal or hepatic insufficiency

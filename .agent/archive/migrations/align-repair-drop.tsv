@@ -1,0 +1,15 @@
+ruling	docid	ace_offset	ace_span	reason
+drop	cdc2022-opioid-rec02-imp24	609	patient	L0229: the patient ≠ Patient education
+drop	cdc2022-opioid-rec02-imp24	720	patient	L0232: the patient ≠ Patient education
+drop	cdc2022-opioid-s23-14	491	experience	L0586: child ingestion ≠ others experiencing overdose
+drop	cdc2022-opioid-s23-14	560	experience	L0588: pet ingestion ≠ others experiencing overdose
+drop	cdc2022-opioid-s25-04	90	conducts	L0590: conducts has no passage counterpart; Evaluation ≠ conducting
+drop	cdc2022-opioid-s26-07	198	psychosocial	L0687: pain-contributor psychosocial ≠ the psychosocial-therapies occurrence
+drop	cdc2022-opioid-s33-01	4130	methadone	L0770: methadone half-life ≠ the table conversion factor
+drop	cdc2022-opioid-s33-01	4515	dose	L0777: fentanyl microgram dose ≠ the MME-doses title
+drop	cdc2022-opioid-s33-01	5456	receptor-agonist-activity	L0784: MME activity degree ≠ buprenorphine partial activity
+drop	cdc2022-opioid-s53-07	843	includes	L0986: expert-example includes ≠ drugs included in panels
+drop	cdc2022-opioid-s53-07	879	includes	L0988: expert-example includes ≠ drugs included in panels
+drop	cdc2022-opioid-s33-01	2559	doses	RP-3: an administration count (doses-per-day) ≠ the MME-doses title
+drop	cdc2022-opioid-s33-01	3075	doses	RP-3: an administration count (doses-per-day) ≠ the MME-doses title
+drop	cdc2022-opioid-s33-01	4792	consider	RP-3: considering absorption ≠ the dosing-units clause

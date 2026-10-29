@@ -1,6 +1,7 @@
 0	ace	5	patient
 1	ace	19	prescribed-opioid
 5	ace	47	prescribed-opioid-nonuse
+13	ace	76	at least 2
 12	ace	87	negative
 11	ace	96	tests
 4	ace	102	verify
@@ -12,16 +13,15 @@
 4	ace	216	verifies
 5	ace	229	prescribed-opioid-nonuse
 6	ace	263	clinician
-7	ace	277	discontinue
-1	ace	293	prescribed-opioid
+7	ace	277	discontinue the prescribed-opioid
 8	ace	311	without
-1	ace	322	opioid
 9	ace	343	discuss
 10	ace	353	safe-unused-opioid-disposal-option
 0	ace	397	patient
 0	ace	411	patient
 1	ace	425	prescribed-opioid
 5	ace	453	prescribed-opioid-nonuse
+13	ace	482	at least 2
 12	ace	493	negative
 11	ace	502	tests
 4	ace	508	verify
@@ -30,9 +30,10 @@
 4	ace	568	verifies
 5	ace	581	prescribed-opioid-nonuse
 0	ace	615	patient
-1	ace	643	opioid
+8	ace	623	does not require an opioid-taper
 11	src	3	tests
 1	src	13	prescribed opioids
+13	src	36	repeatedly
 12	src	47	negative
 3	src	67	confirmatory tests
 6	src	95	clinician

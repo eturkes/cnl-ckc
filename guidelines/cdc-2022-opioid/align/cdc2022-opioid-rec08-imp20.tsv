@@ -1,11 +1,13 @@
 1	ace	5	patient
 2	ace	20	opioid-dosage-reduction-indication
 0	ace	66	clinician
+14	ace	83	collaborate with
 1	ace	104	patient
 4	ace	121	dosage-reduction
 1	ace	144	patient
 2	ace	159	opioid-discontinuation-indication
 0	ace	204	clinician
+14	ace	221	collaborate with
 1	ace	242	patient
 5	ace	260	opioid-discontinuation
 1	ace	289	patient
@@ -27,6 +29,7 @@
 9	ace	578	continued-patient-support
 1	ace	612	patient
 0	src	0	Clinicians
+14	src	18	work with
 1	src	28	patients
 4	src	40	reduce opioid dosage
 5	src	68	discontinue opioids

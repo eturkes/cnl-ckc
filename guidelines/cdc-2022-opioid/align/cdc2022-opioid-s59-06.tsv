@@ -4,14 +4,14 @@
 0	ace	197	standard-buprenorphine-initiation
 0	ace	237	buprenorphine
 5	ace	268	needed
-0	ace	330	buprenorphine
+6	ace	319	increase a buprenorphine-dose
 0	ace	376	standard-buprenorphine-initiation
-3	ace	410	under
-3	ace	427	supervision
-4	ace	457	interval
+3	ace	410	under a clinical-supervision
+4	ace	439	at an approximate interval of 2 hours
 0	src	4	standard (not low-dose) buprenorphine initiation
 1	src	60	objective signs of withdrawal
 0	src	104	buprenorphine should be initiated
+6	src	147	titrated upward
 3	src	163	under supervision
 4	src	184	approximately 2-hour intervals
 5	src	215	as needed to control withdrawal symptoms
