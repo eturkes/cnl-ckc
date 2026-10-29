@@ -1710,8 +1710,10 @@ scope.
 A release is a dated snapshot of the knowledge base. A release line
 takes the snapshot from `main` to its publication. Development
 continues on `main` while the line exists. The line receives only
-three kinds of commits: review decisions, corrections of rejected
-documents, and the release record.
+four kinds of commits: review decisions, corrections of rejected
+documents, changes to the development tooling or the operating
+procedures that the maintainer requests, and the release record. A
+change of the third kind leaves the knowledge base unchanged.
 
 A release line has the identifier `kb-YYYY-MM-DD`, the date when it
 leaves `main`. A second line that leaves `main` on the same date adds
