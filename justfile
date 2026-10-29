@@ -459,11 +459,11 @@ build:
     @echo "gate: build ok"
 
 # The swipl:10.0.2 image (Debian glibc 2.36) cannot load the runner's glibc-2.43 build.
-# Static musl ckc = the binary of the CI container jobs + the reviewer program of a release.
+# Static musl ckc = the binary of the CI container jobs.
 # Panic locations name the vendored crates by absolute path; remapping the checkout path keeps
 # it out of the binary, and the pinned toolchain's rust-lld links it (the host `cc` adds its
 # own build-id + layout), so every checkout of a commit builds the same bytes on any host.
-[doc("Build the static ckc program for the CI containers and the release.")]
+[doc("Build the static ckc program for the CI containers.")]
 build-static:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -487,16 +487,31 @@ build-static:
     esac
     echo "gate: build-static ok"
 
-# Reviewer program of a release (docs/REFERENCE.md § Releasing): the static ckc as
-# <dest>/ckc-x86_64-linux + its sha256sum sidecar; prints the sidecar line.
-[doc("Write the release reviewer program and its sha256sum sidecar to <dest>.")]
-release-ckc dest="dist": build-static
+# The one published file of a candidate or release (docs/REFERENCE.md § Releasing; user rulings
+# in spec Decisions Publication scope): `ckc dist build` names the archive + its bag after the
+# source commit; the published copy carries the tag identifier, without the sidecar (the signed
+# notes carry its SHA-256). Both arguments arrive as environment variables (`$`), never spliced
+# into the script; the identifier reaches a file name ⇒ its shape is checked first.
+# CKC_BIN names a prebuilt binary. Prints `<sha256>  <file>` for the notes.
+[doc("Write the knowledge-base archive of tag <identifier> as <dest>/cnl-ckc-kb-only-<date>[-rc.<n>].tar.gz.")]
+release-kb $identifier $dest="dist":
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ ROOT }}"
-    mkdir -p "{{ dest }}"
-    install -m 0755 rust/target/x86_64-unknown-linux-musl/release/ckc "{{ dest }}/ckc-x86_64-linux"
-    cd "{{ dest }}" && sha256sum ckc-x86_64-linux | tee ckc-x86_64-linux.sha256
+    id="${identifier:?}" out="${dest:?}"
+    [[ "$id" =~ ^kb-[0-9]{4}-[0-9]{2}-[0-9]{2}(\.[0-9]+)?(-rc\.[0-9]+)?$ ]] || { echo "release-kb: identifier must be kb-YYYY-MM-DD[.<n>][-rc.<n>]" >&2; exit 2; }
+    bin="${CKC_BIN:-}"
+    if [ -z "$bin" ]; then just build >/dev/null; bin="{{ ROOT }}/rust/target/release/ckc"; fi
+    work=$(mktemp -d)
+    trap 'rm -rf "$work"' EXIT
+    "$bin" dist build "$work" >&2
+    shopt -s nullglob
+    bags=("$work"/cnl-ckc-kb-g*.tar.gz)
+    [ "${#bags[@]}" -eq 1 ] || { echo "release-kb: ckc dist build wrote ${#bags[@]} archives, expected 1" >&2; exit 2; }
+    name="cnl-ckc-kb-only-${id#kb-}.tar.gz"
+    mkdir -p "$out"
+    install -m 0644 "${bags[0]}" "$out/$name"
+    cd "$out" && sha256sum "$name"
 
 [doc("Run the trust audit: escape tokens, dependency set, trusted-surface pins.")]
 trust: build

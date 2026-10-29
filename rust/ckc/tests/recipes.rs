@@ -1980,6 +1980,98 @@ fn build_static_inspection_failures_fail_the_recipe() {
     );
 }
 
+// `release-kb` publishes one file: the archive `ckc dist build` writes, under the name its tag
+// identifier gives, without the sidecar; an identifier outside `kb-YYYY-MM-DD[.<n>][-rc.<n>]` or a
+// build that writes other than one archive leaves no destination. The guard-free recipe is
+// planted: a malformed identifier then names a published file.
+#[test]
+fn release_kb_publishes_the_archive_under_its_identifier() {
+    let s = scratch("release-kb");
+    let text = justfile();
+    let bag = b"fixture bag bytes\n";
+    let case = |name: &str, justfile: &str, archives: usize, args: &[&str]| {
+        let fx = Fixture::new(&s, name, justfile);
+        let mut ckc = String::from("#!/usr/bin/env bash\n[ \"$1 $2\" = 'dist build' ] || exit 9\n");
+        for k in 0..archives {
+            ckc.push_str(&format!(
+                "printf 'fixture bag bytes\\n' > \"$3/cnl-ckc-kb-g{k:012}.tar.gz\"\necho sidecar > \"$3/cnl-ckc-kb-g{k:012}.tar.gz.sha256\"\n"
+            ));
+        }
+        put_exec(&fx.mock.join("ckc"), &format!("{ckc}echo 'dist: ok'\n"));
+        let out = fx.run("release-kb", args);
+        (fx, out)
+    };
+    let listing = |dir: &Path| -> Vec<String> {
+        let mut names: Vec<String> = fs::read_dir(dir)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().into_string().unwrap())
+            .collect();
+        names.sort();
+        names
+    };
+    for (name, args, dest, file) in [
+        (
+            "control",
+            &["kb-2026-10-29-rc.1"][..],
+            "dist",
+            "cnl-ckc-kb-only-2026-10-29-rc.1.tar.gz",
+        ),
+        (
+            "second-line",
+            &["kb-2026-10-29.2", "out"][..],
+            "out",
+            "cnl-ckc-kb-only-2026-10-29.2.tar.gz",
+        ),
+    ] {
+        let (fx, out) = case(name, &text, 1, args);
+        assert_eq!(out.status.code(), Some(0), "{name}: {}", show(&out));
+        assert_eq!(
+            listing(&fx.root.join(dest)),
+            [file],
+            "{name}: published files"
+        );
+        assert_eq!(
+            fs::read(fx.root.join(dest).join(file)).unwrap(),
+            bag,
+            "{name}: bytes"
+        );
+        assert_eq!(
+            String::from_utf8(out.stdout).unwrap(),
+            format!("{}  {file}\n", hex(bag)),
+            "{name}: checksum line"
+        );
+    }
+    for (name, id, archives) in [
+        ("no-rc-dot", "kb-2026-10-29-rc1", 1),
+        ("no-prefix", "2026-10-29", 1),
+        ("short-year", "kb-26-10-29", 1),
+        ("path", "kb-2026-10-29-rc.1/x", 1),
+        ("no-archive", "kb-2026-10-29-rc.1", 0),
+        ("two-archives", "kb-2026-10-29-rc.1", 2),
+    ] {
+        let (fx, out) = case(name, &text, archives, &[id]);
+        assert_eq!(out.status.code(), Some(2), "{name}: {}", show(&out));
+        assert!(!fx.root.join("dist").exists(), "{name}: wrote dist/");
+    }
+    let planted = plant(
+        &text,
+        &[(
+            "    [[ \"$id\" =~ ^kb-",
+            "    [[ \"$id\" =~ ^ ]] || [[ \"$id\" =~ ^kb-",
+        )],
+    );
+    let (fx, out) = case("planted", &planted, 1, &["kb-2026-10-29-rc1"]);
+    assert!(
+        out.status.code() == Some(0)
+            && fx
+                .root
+                .join("dist/cnl-ckc-kb-only-2026-10-29-rc1.tar.gz")
+                .is_file(),
+        "the planted guard-free release-kb no longer slips through: {}",
+        show(&out)
+    );
+}
+
 // rust/kani/bootstrap.sh over a cached install: a version probe that prints the pinned
 // version and then exits 23 must fail the script, never stamp `kani: <v> ok`.
 #[test]
