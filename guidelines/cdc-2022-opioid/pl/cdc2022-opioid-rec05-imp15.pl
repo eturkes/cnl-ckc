@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec05-imp15',ace_sha256(b5d9b6ef2b359de12dfad5b9c5d11d599e31c493e011e7b6382c53027055201f),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-rec05-imp15',ace_sha256(b5d9b6ef2b359de12dfad5b9c5d11d599e31c493e011e7b6382c53027055201f),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a clinician conducts a taper then it is possible that the clinician must occasionally pause the taper.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec05-imp15',1,box(1),[A,B,C]),can) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,taper,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,conduct), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B).
 guideline_operator('$guideline_id'(context,'cdc2022-opioid-rec05-imp15',1,box(1),[A,B,C]),'$guideline_id'(context,'cdc2022-opioid-rec05-imp15',1,box(2),[A,B,C]),must) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,taper,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,conduct), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), \+ guideline_exclusion('cdc-2022-opioid').

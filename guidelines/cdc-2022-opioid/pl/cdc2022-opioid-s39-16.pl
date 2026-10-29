@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s39-16',ace_sha256('0914e0ca3c582a2239e0958ed321d662f9b86ab2fb7068a1f5e251b9efafc40b'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-s39-16',ace_sha256('0914e0ca3c582a2239e0958ed321d662f9b86ab2fb7068a1f5e251b9efafc40b'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every clinician should ensure a mild-to-moderate-full-agonist-opioid-withdrawal for a patient before a first-buprenorphine-dose.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s39-16',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s39-16',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s39-16',1,ref(2),[A]),'mild-to-moderate-full-agonist-opioid-withdrawal',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

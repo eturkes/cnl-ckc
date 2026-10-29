@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s45-01',ace_sha256(cb7dea4ac8df517861f7bd4acb25fb455c5dd5f25e747e2d1c96034115e1caea),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-s45-01',ace_sha256(cb7dea4ac8df517861f7bd4acb25fb455c5dd5f25e747e2d1c96034115e1caea),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every DAST is a validated-screening-tool.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s45-01',1,ref(2),[A]),'validated-screening-tool',countable) :- guideline_entity(actual,A,'DAST',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s45-01',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'DAST',countable), guideline_cardinality(actual,A,na,eq,1).

@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s51-21',ace_sha256('6ba836ee4af72b24c9c53182810499cdb1586b2569ef98767a7b032fd653eacb'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-s51-21',ace_sha256('6ba836ee4af72b24c9c53182810499cdb1586b2569ef98767a7b032fd653eacb'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every PDMP-risk-score-algorithm can reportedly generate a PDMP-risk-score.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]),can) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s51-21',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s51-21',1,ref(2),[A]),'PDMP-risk-score',countable) :- guideline_entity(actual,A,'PDMP-risk-score-algorithm',countable), guideline_cardinality(actual,A,na,eq,1).

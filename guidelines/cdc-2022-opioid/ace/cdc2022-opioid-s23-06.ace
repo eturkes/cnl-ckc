@@ -1,2 +1,2 @@
-If a patient uses a stool-softener and the patient does not provably use an additional-laxative then every clinician should avoid the stool-softener.
-If a patient uses a fiber-laxative and the patient does not provably use an additional-laxative then every clinician should avoid the fiber-laxative.
+If a patient uses a stool-softener and the patient does not provably use an additional-laxative and there is a clinician then it is recommended that the clinician does not use the stool-softener for the patient.
+If a patient uses a fiber-laxative and the patient does not provably use an additional-laxative and there is a clinician then it is recommended that the clinician does not use the fiber-laxative for the patient.

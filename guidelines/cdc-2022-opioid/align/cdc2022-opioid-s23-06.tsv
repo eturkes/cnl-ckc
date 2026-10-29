@@ -1,12 +1,15 @@
 1	ace	20	stool-softener
-3	ace	51	does not provably use an additional-laxative
-0	ace	124	avoid
-1	ace	134	stool-softener
-2	ace	170	fiber-laxative
-3	ace	201	does not provably use an additional-laxative
-0	ace	274	avoid
-2	ace	284	fiber-laxative
+5	ace	51	does not provably use an additional-laxative
+4	ace	132	recommended
+3	ace	168	not
+1	ace	180	stool-softener
+2	ace	232	fiber-laxative
+5	ace	263	does not provably use an additional-laxative
+4	ace	344	recommended
+3	ace	380	not
+2	ace	392	fiber-laxative
 1	src	0	Stool softeners
 2	src	19	fiber laxatives
-3	src	35	without another laxative
-0	src	70	avoided
+5	src	35	without another laxative
+4	src	60	should
+3	src	70	avoided

@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s52-18',ace_sha256(c2cc0525d621e3170d267a596a8e1d172fc687e3cc582512712fb25876e1303d),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-s52-18',ace_sha256(c2cc0525d621e3170d267a596a8e1d172fc687e3cc582512712fb25876e1303d),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every PDMP-review-recommendation-category-B-rating acknowledges a PDMP-availability-variation and acknowledges a circumstance-variation.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(2),[A]),'PDMP-availability-variation',countable) :- guideline_entity(actual,A,'PDMP-review-recommendation-category-B-rating',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_cardinality(actual,'$guideline_id'(product,'cdc2022-opioid-s52-18',1,ref(2),[A]),na,eq,1) :- guideline_entity(actual,A,'PDMP-review-recommendation-category-B-rating',countable), guideline_cardinality(actual,A,na,eq,1).

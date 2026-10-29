@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-rec08-imp04',ace_sha256('89ac51a4661272cb1c7ea06c8c974c48ba0f811be97243f0a873fa3b5f88a6bd'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-rec08-imp04',ace_sha256('89ac51a4661272cb1c7ea06c8c974c48ba0f811be97243f0a873fa3b5f88a6bd'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If there is a patient then every clinical-practice-organization should provide an overdose-prevention-education to the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec08-imp04',1,box(1),[A,B]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'clinical-practice-organization',countable), guideline_cardinality(actual,B,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-rec08-imp04',1,box(1),[A,B]),'$guideline_id'(product,'cdc2022-opioid-rec08-imp04',1,ref(3),[A,B]),'overdose-prevention-education',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'clinical-practice-organization',countable), guideline_cardinality(actual,B,na,eq,1).

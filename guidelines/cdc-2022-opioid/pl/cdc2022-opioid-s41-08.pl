@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s41-08',ace_sha256('29788e04a9ad418ad95ddfdae6e18023ab6b2d477a25c5ff9a976b93199739b2'),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-s41-08',ace_sha256('29788e04a9ad418ad95ddfdae6e18023ab6b2d477a25c5ff9a976b93199739b2'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every prescribed-opioid-duration-limitation can minimize an opioid-taper-need for a distressing-or-unpleasant-withdrawal-symptom-prevention.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s41-08',1,box(1),[A]),can) :- guideline_entity(actual,A,'prescribed-opioid-duration-limitation',countable), guideline_cardinality(actual,A,na,eq,1).
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s41-08',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s41-08',1,ref(2),[A]),'opioid-taper-need',countable) :- guideline_entity(actual,A,'prescribed-opioid-duration-limitation',countable), guideline_cardinality(actual,A,na,eq,1).

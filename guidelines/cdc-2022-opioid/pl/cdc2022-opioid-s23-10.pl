@@ -44,7 +44,7 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(1).
-guideline_document('cdc2022-opioid-s23-10',ace_sha256(dd0d0502aefbc8c3238a4240d29166ef27964a084d4e692f1b1fbf19cdb13b88),ulex(sha256('2733db8c734f4672e1d598cc0911538cb926c6072c8cc42898ec8aa2d7176379')),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
+guideline_document('cdc2022-opioid-s23-10',ace_sha256(dd0d0502aefbc8c3238a4240d29166ef27964a084d4e692f1b1fbf19cdb13b88),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every clinician should discuss an opioid-driving-or-machinery-safety-effect with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-10',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').
 guideline_entity('$guideline_id'(context,'cdc2022-opioid-s23-10',1,box(1),[A]),'$guideline_id'(product,'cdc2022-opioid-s23-10',1,ref(2),[A]),'opioid-driving-or-machinery-safety-effect',countable) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1).

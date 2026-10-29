@@ -126,7 +126,6 @@ noun_sg('opioid-continuation-benefit','opioid-continuation-benefit',neutr).
 noun_sg('opioid-continuation-risk','opioid-continuation-risk',neutr).
 noun_sg('opioid-discontinuation','opioid-discontinuation',neutr).
 noun_sg('opioid-pain-clinical-practice-guideline','opioid-pain-clinical-practice-guideline',neutr).
-noun_sg('opioid-pain-guideline-misapplication-beyond-intended-use','opioid-pain-guideline-misapplication-beyond-intended-use',neutr).
 noun_sg('opioid-taper-benefit','opioid-taper-benefit',neutr).
 noun_sg('opioid-taper-risk','opioid-taper-risk',neutr).
 noun_sg('opioid-therapy-duration-limitation','opioid-therapy-duration-limitation',neutr).
@@ -159,8 +158,6 @@ noun_sg('primary-care-clinician','primary-care-clinician',human).
 noun_sg('psychological-functioning','psychological-functioning',neutr).
 noun_sg('psychological-support','psychological-support',neutr).
 noun_sg('psychological-support-access','psychological-support-access',neutr).
-noun_sg('purported-guideline-derived-policy-with-potentially-harmful-patient-consequence','purported-guideline-derived-policy-with-potentially-harmful-patient-consequence',neutr).
-noun_sg('purported-guideline-derived-policy-with-unintended-patient-consequence','purported-guideline-derived-policy-with-unintended-patient-consequence',neutr).
 noun_sg('QT-prolongation-risk','QT-prolongation-risk',neutr).
 noun_sg('recommendation-consideration','recommendation-consideration',neutr).
 noun_sg('recommendation-only-guideline','recommendation-only-guideline',neutr).
@@ -462,7 +459,6 @@ noun_sg('manual-therapy','manual-therapy',neutr).
 noun_sg('meaningful-functional-goal','meaningful-functional-goal',neutr).
 noun_sg('medication-combination','medication-combination',neutr).
 noun_sg('medication-first-decrease-decision','medication-first-decrease-decision',neutr).
-noun_sg('medication-combination-use','medication-combination-use',neutr).
 noun_sg('medication-free-detoxification','medication-free-detoxification',neutr).
 noun_sg('medication-nonpharmacologic-therapy-combination','medication-nonpharmacologic-therapy-combination',neutr).
 noun_sg('medication-taper-sequencing-decision','medication-taper-sequencing-decision',neutr).
@@ -679,7 +675,6 @@ noun_sg('pain-treatment-initiation','pain-treatment-initiation',neutr).
 noun_sg('parenting-person','parenting-person',human).
 noun_sg('partial-opioid-receptor-agonist-property','partial-opioid-receptor-agonist-property',neutr).
 noun_sg('passive-nonpharmacologic-approach','passive-nonpharmacologic-approach',neutr).
-noun_sg('patient-abandonment','patient-abandonment',neutr).
 noun_sg('patient-and-fetus-harm-prevention','patient-and-fetus-harm-prevention',neutr).
 noun_sg('patient-care-improvement','patient-care-improvement',neutr).
 noun_sg('patient-care-team-member','patient-care-team-member',human).
@@ -735,7 +730,6 @@ noun_sg('potentially-reversible-ongoing-pain-cause','potentially-reversible-ongo
 noun_sg('potentially-stigmatizing-language','potentially-stigmatizing-language',neutr).
 noun_sg('practicable-clinical-practice-setting','practicable-clinical-practice-setting',neutr).
 noun_sg('practice-context','practice-context',neutr).
-noun_sg('precautionary-additional-opioid-prescription','precautionary-additional-opioid-prescription',neutr).
 noun_sg('predictable-pharmacokinetic-and-pharmacodynamic-ER-LA-opioid','predictable-pharmacokinetic-and-pharmacodynamic-ER-LA-opioid',neutr).
 noun_sg('pregnancy-capability','pregnancy-capability',neutr).
 noun_sg('pregnant-person','pregnant-person',human).
@@ -1011,7 +1005,6 @@ noun_sg('substantially-improved-pain-control','substantially-improved-pain-contr
 noun_sg('systemic-NSAID-risk','systemic-NSAID-risk',neutr).
 noun_sg('transdermal-fentanyl','transdermal-fentanyl',neutr).
 noun_sg('transdermal-fentanyl-dosing-effect','transdermal-fentanyl-dosing-effect',neutr).
-noun_sg('unnecessary-dosage-increase','unnecessary-dosage-increase',neutr).
 noun_sg('withdrawal-minimization','withdrawal-minimization',neutr).
 noun_sg(antiemetic,antiemetic,neutr).
 noun_sg('certain-daily-immediate-release-opioid-dosage','certain-daily-immediate-release-opioid-dosage',neutr).
@@ -2025,3 +2018,8 @@ noun_sg('pain-care','pain-care',neutr).
 noun_sg('decreased-clearance','decreased-clearance',neutr).
 noun_sg('reproductive-goal','reproductive-goal',neutr).
 noun_sg('prescribed-nonmorphine-based-opioid','prescribed-nonmorphine-based-opioid',neutr).
+noun_sg('intended-use','intended-use',neutr).
+noun_sg('precautionary-additional-opioid','precautionary-additional-opioid',neutr).
+noun_sg('purported-guideline-derived-policy','purported-guideline-derived-policy',neutr).
+noun_sg('unintended-patient-consequence','unintended-patient-consequence',neutr).
+noun_sg('potentially-harmful-patient-consequence','potentially-harmful-patient-consequence',neutr).

@@ -1,10 +1,16 @@
-0	ace	6	clinician
-4	ace	23	generally
-1	ace	33	avoid
-2	ace	41	precautionary
-3	ace	55	additional-opioid-prescription
+0	ace	14	clinician
+7	ace	35	recommended
+0	ace	56	clinician
+6	ace	71	not
+4	ace	75	generally
+3	ace	85	prescribe
+8	ace	97	precautionary
+3	ace	111	additional-opioid
+5	ace	134	patient
 0	src	0	Clinicians
+7	src	11	should
 4	src	18	generally
-1	src	28	avoid
+6	src	28	avoid
 3	src	34	prescribing additional opioids
-2	src	77	just in case
+5	src	68	patients
+8	src	77	just in case pain continues longer than expected
