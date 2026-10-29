@@ -18,6 +18,11 @@ const DEADLINE: Duration = Duration::from_secs(10);
 // ledger write holds the ledger lock): stalled clients take slots, never the
 // loop; past the cap, newcomers wait in the listen backlog.
 const CONNECTIONS: usize = 32;
+// A page load runs the snapshot's alignment check, which recurses once per character of
+// a table (`ckc_kernel::align_impl::split_at_seps`): the CDC corpus's 13.7K-character
+// table needs ~2.25 MiB, above a spawned thread's 2 MiB default. Virtual, so idle
+// connections cost no memory.
+const CONNECTION_STACK: usize = 64 << 20;
 // The decision form is a few hundred bytes; a larger body is never read.
 const BODY_CAP: usize = 64 * 1024;
 
@@ -271,12 +276,14 @@ pub(super) fn run(root: &Path, port: u16) -> Result<()> {
         let slot = Slot(free.clone());
         let (stream, _) = listener.accept().map_err(|e| format!("ui: socket: {e}"))?;
         let (root, config) = (Arc::clone(&root), Arc::clone(&config));
-        let spawned = std::thread::Builder::new().spawn(move || {
-            let _slot = slot;
-            if let Err(error) = handle(&stream, &root, &config) {
-                eprintln!("{error}");
-            }
-        });
+        let spawned = std::thread::Builder::new()
+            .stack_size(CONNECTION_STACK)
+            .spawn(move || {
+                let _slot = slot;
+                if let Err(error) = handle(&stream, &root, &config) {
+                    eprintln!("{error}");
+                }
+            });
         if let Err(error) = spawned {
             eprintln!("ui: serve: {error}");
         }

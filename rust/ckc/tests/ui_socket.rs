@@ -1060,3 +1060,46 @@ fn unreadable_request_answer_is_hardened() {
     assert_eq!(response.header("Cache-Control"), "no-store");
     assert!(response.body.is_empty());
 }
+
+// Each connection runs on its own thread, and a page load runs the alignment check of the
+// HEAD snapshot, which recurses once per character of a table: a 40,000-character table
+// needs more than the 2 MiB a spawned thread gets by default (seen: abort, stack overflow).
+#[test]
+fn a_long_alignment_table_loads_on_a_connection_thread() {
+    let (work, tree, tmp) = fixture("long-align");
+    let align = tree.join("guidelines/alpha/align");
+    fs::create_dir_all(&align).unwrap();
+    fs::write(align.join("a-2.tsv"), "0\tace\t0\tx\n".repeat(4000)).unwrap();
+    run(&["git", "add", "-A"], &tree, &tmp);
+    run(&["git", "commit", "-q", "-m", "long table"], &tree, &tmp);
+    let run_dir = private_dir(&work.0.join("run"));
+    let port = free_port();
+    let stdout_path = work.0.join("long-align.stdout");
+    let _server = Server(
+        serve(port, &tree, &work.0, &tmp, &run_dir)
+            .stdout(File::create(&stdout_path).unwrap())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    let signin = printed_address(&stdout_path, port);
+    let cookie = format!("ckc-session-{port}={}", signin.rsplit('/').next().unwrap());
+    for (what, path) in [("first page", "/"), ("second page", "/g/alpha/index.html")] {
+        let mut stream = TcpStream::connect(("127.0.0.1", port))
+            .unwrap_or_else(|e| panic!("{what}: the server is gone ({e})"));
+        stream
+            .set_read_timeout(Some(Duration::from_secs(30)))
+            .unwrap();
+        let request = format!(
+            "GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nCookie: {cookie}\r\nConnection: close\r\n\r\n"
+        );
+        stream.write_all(request.as_bytes()).unwrap();
+        let mut raw = Vec::new();
+        let _ = stream.read_to_end(&mut raw);
+        assert!(
+            raw.starts_with(b"HTTP/1.0 200 "),
+            "{what}: {}",
+            String::from_utf8_lossy(&raw[..raw.len().min(200)])
+        );
+    }
+}
