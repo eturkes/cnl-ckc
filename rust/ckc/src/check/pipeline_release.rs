@@ -272,7 +272,7 @@ fn readme(
     labels: &BTreeMap<String, String>,
     schema: &str,
 ) -> String {
-    let mut text = "# cnl-ckc knowledge base export\n\nThis archive is a BagIt 1.0 bag. It holds the compiled clinical-guideline knowledge base from the cnl-ckc repository. The archive name and the name of its root directory give the source commit.\n\n## Verification\n\nRun `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from this directory. Each line must report OK.\n\n## Contents\n\n".to_owned();
+    let mut text = "# cnl-ckc knowledge base export\n\nThis archive is a BagIt 1.0 bag. It holds the compiled clinical-guideline knowledge base from the cnl-ckc repository. The name of its root directory gives the source commit.\n\n## Verification\n\nRun `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from this directory. Each line must report OK.\n\n## Contents\n\n".to_owned();
     for gid in gids {
         let n = counts.get(gid).copied().unwrap_or(0);
         text += &match rs[gid][0][0].as_str() {

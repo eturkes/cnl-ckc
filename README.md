@@ -123,27 +123,6 @@ The project supports Linux on x86-64.
    lists the packages.
 5. Run `just build`. The program is `rust/target/release/ckc`.
 
-To review a release candidate, you do not need these tools. Each
-candidate and each release publishes the reviewer program
-`ckc-x86_64-linux`, which needs Git and tar only:
-
-1. On the release page of the candidate, download `ckc-x86_64-linux`.
-2. Clone the branch of the candidate, for example
-   `git clone --branch release/kb-YYYY-MM-DD https://github.com/eturkes/cnl-ckc`.
-3. In the clone, run
-   `git -c gpg.ssh.allowedSignersFile=docs/allowed_signers verify-tag kb-YYYY-MM-DD-rc.1`
-   with the tag of the candidate. The output must report a good
-   signature.
-4. In the download directory, run
-   `git -C <clone> tag -l --format='%(contents:body)' kb-YYYY-MM-DD-rc.1 | sha256sum -c --ignore-missing`.
-   The line of `ckc-x86_64-linux` must report OK.
-5. Run `chmod +x ckc-x86_64-linux`.
-6. In the clone, run `<download directory>/ckc-x86_64-linux ui serve`.
-   "Reviewing" tells how to review. The site writes your decisions to
-   `guidelines/<guideline-id>/audit/adjudication.tsv` in the clone.
-7. When your review is complete, send that file to the person who
-   maintains the release line. They add your decisions to the line.
-
 ## Run
 
 Run each command in the repository root. The examples call the program
@@ -210,16 +189,19 @@ lists every superseded passage under "Superseded passages".
 ## Releases
 
 A release of the knowledge base is a git tag with the name
-`kb-YYYY-MM-DD`. Its release notes give the archive name, the SHA-256
-of the archive, and the SHA-256 of the reviewer program. A tag that
-ends in `-rc.1`, `-rc.2`, and so on is a release candidate. The review
-of a release candidate is not complete. To use the knowledge base in
-other software, pin a release tag.
+`kb-YYYY-MM-DD`. Each release publishes one file, the archive of the
+knowledge base: `cnl-ckc-kb-only-YYYY-MM-DD.tar.gz`. Its release notes
+tell what the archive holds and how to load it, and give the SHA-256
+of the archive. A tag that ends in `-rc.1`, `-rc.2`, and so on is a
+release candidate. A release candidate publishes its archive as
+`cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz`. The review of a release
+candidate is not complete. To use the knowledge base in other
+software, pin a release tag.
 
 Each tag carries the SSH signature of the maintainer. To check a tag,
 run `git -c gpg.ssh.allowedSignersFile=docs/allowed_signers verify-tag kb-YYYY-MM-DD`
 in a clone. The output must report a good signature. "Releasing" in
-`docs/REFERENCE.md` states how to check the downloaded files against
+`docs/REFERENCE.md` states how to check the downloaded archive against
 the signed notes.
 
 Each release has its own branch, `release/kb-YYYY-MM-DD`. To review a

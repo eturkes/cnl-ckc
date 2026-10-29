@@ -1677,7 +1677,8 @@ where `<head12>` is the source commit prefix: the last commit that
 changed `guidelines/`, the vendored compiler, or the lexicon. The root
 directory of the bag has the same name. The manifest records content
 digests only, so a commit can include its own manifest. A `.sha256` sidecar
-accompanies it. To verify a bag, extract it and run
+accompanies it. A release candidate or a release publishes the archive
+under its own name ("Releasing"). To verify a bag, extract it and run
 `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from the bag
 root. Each line must report OK.
 
@@ -1726,8 +1727,11 @@ leaves `main`. A second line that leaves `main` on the same date adds
   commit that the release archive comes from. The release notes and `CITATION.cff` state the
   date of the release.
 
-The archive keeps its commit name; the release record outside the
-archive binds the identifier to the archive bytes. Every document ships
+A candidate or a release publishes one file: the archive of the
+knowledge base, as `cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz` for a
+candidate and `cnl-ckc-kb-only-YYYY-MM-DD.tar.gz` for a release. The
+bag inside the archive keeps its commit name ("Export"). The release
+record outside the archive binds the identifier to the archive bytes. Every document ships
 with its review label; the build blocks a rejected or a contested
 document only. A line freezes the schema identifier that it carries: a
 later change of the predicate set or of a predicate meaning on `main`
@@ -1743,21 +1747,24 @@ of the signer and create the tag:
 
 ```
 git -c gpg.format=ssh -c user.signingkey=<public key file> \
-    tag -s kb-YYYY-MM-DD-rc.1 -F <notes file> <commit>
+    tag -s --cleanup=verbatim kb-YYYY-MM-DD-rc.1 -F <notes file> <commit>
 ```
+
+`--cleanup=verbatim` keeps the Markdown headings of the notes. Without
+it, git removes each line that starts with `#`.
 
 To start a release line:
 
 1. Commit the snapshot on `main`. `just gate` and CI must be green.
 2. Create the branch `release/kb-YYYY-MM-DD` on that commit.
-3. Run `ckc dist build` and `just release-ckc`. Keep the four files
-   in `dist/`: the archive, the reviewer program `ckc-x86_64-linux`,
-   and the `.sha256` sidecar of each.
+3. Run `just release-kb kb-YYYY-MM-DD-rc.1`. It writes the archive
+   `dist/cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz` and prints its
+   `<SHA-256>  <file name>` line.
 4. Write the candidate notes, as in step 10 below. Create the signed
    annotated tag `kb-YYYY-MM-DD-rc.1` on the commit, with the notes as
-   its message. Verify the tag and the four files, as in "To verify a
+   its message. Verify the tag and the archive, as in "To verify a
    release" below. Push the branch and the tag. Publish a GitHub pre-release
-   for the tag, with the notes and the four files of step 3.
+   for the tag, with the notes and the archive of step 3.
 5. Add the review checkout:
    `git worktree add .release/kb-YYYY-MM-DD release/kb-YYYY-MM-DD`.
    In that directory, run
@@ -1774,8 +1781,8 @@ To review on the line:
    again. A corrected state gets the next candidate tag, as in steps 3
    and 4.
 
-To review with a colleague: the colleague reviews a candidate with the
-reviewer program in a clone of the branch (README "Install"). The site
+To review with a colleague: the colleague runs the reviewer interface
+in a clone of the branch (README "Install" and "Reviewing"). The site
 writes each decision to the ledger of that clone, and each row names
 the commit of the line that the page showed. To add these decisions to
 the line:
@@ -1797,11 +1804,13 @@ To release the line:
 9. Confirm that the review is complete: `ckc check` prints the label
    counts (`adjudication <id> approved=…`). `just gate` and CI must be
    green on the last commit of the branch.
-10. Run `ckc dist build` and `just release-ckc`. Write the release
-    notes. State the identifier, the date, the signer and the key
-    fingerprint, the archive name, one `<SHA-256>  <file name>` line
-    for each of the four files (the archive, `ckc-x86_64-linux`, and the
-    `.sha256` sidecar of each), the release commit, the
+10. Run `just release-kb kb-YYYY-MM-DD`. Write the release notes for
+    a reader who does not know the project. First state what the
+    knowledge base is, which file to download, what the archive holds,
+    how to load it, and the status of the tag. Then state the
+    identifier, the date, the signer and the key fingerprint, the
+    archive name, the `<SHA-256>  <file name>` line of the archive at
+    the start of a line, the release commit, the
     schema identifier, the source edition and digest of each guideline,
     and the review label counts. Classify the change from the previous
     release twice: the schema change (`none`, or the new identifier) and
@@ -1810,8 +1819,8 @@ To release the line:
 11. Create the signed annotated git tag `kb-YYYY-MM-DD` on that
     commit, with the release notes as its message. Verify it, as in "To
     verify a release" below. Push the tag. Publish a GitHub
-    release for the tag, with the notes and the four files of step 10.
-12. Deposit the archive and its sidecar on Zenodo as a new version of
+    release for the tag, with the notes and the archive of step 10.
+12. Deposit the archive on Zenodo as a new version of
     the project record. Link the preprint that describes the release.
     The version DOI then names the archive bytes.
 13. Update `CITATION.cff` on the branch: the version, the release date,
@@ -1838,16 +1847,9 @@ To verify a release:
    that `https://github.com/eturkes.keys` lists.
 2. In the directory of the downloaded files, run
    `git -C <clone> tag -l --format='%(contents:body)' kb-YYYY-MM-DD | sha256sum -c --ignore-missing`.
-   Each downloaded file must report OK. The other lines of the notes
-   cause one warning about lines that are not formatted as checksums.
+   The archive must report OK. The other lines of the notes cause one
+   warning about lines that are not formatted as checksums.
 3. Verify the bag of the archive, as in "Export" above.
-
-`ckc-x86_64-linux` is the static `ckc` of the tagged commit. A reviewer
-without the toolchain uses it to run the reviewer interface: it needs
-Git and tar only (README § Install). `just build-static` removes the
-path of the checkout from the program, so every checkout of a commit
-builds the same bytes with the pinned toolchain, and the recipe fails
-when the program still holds the checkout path.
 
 ## Licensing
 
