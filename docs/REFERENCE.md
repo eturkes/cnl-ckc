@@ -1678,7 +1678,8 @@ changed `guidelines/`, the vendored compiler, or the lexicon. The root
 directory of the bag has the same name. The manifest records content
 digests only, so a commit can include its own manifest. A `.sha256` sidecar
 accompanies it. A release candidate or a release publishes the archive
-under its own name ("Releasing"). To verify a bag, extract it and run
+under its own name, with a sidecar for that name ("Releasing"). To
+verify a bag, extract it and run
 `sha256sum -c manifest-sha256.txt tagmanifest-sha256.txt` from the bag
 root. Each line must report OK.
 
@@ -1727,9 +1728,12 @@ leaves `main`. A second line that leaves `main` on the same date adds
   commit that the release archive comes from. The release notes and `CITATION.cff` state the
   date of the release.
 
-A candidate or a release publishes one file: the archive of the
-knowledge base, as `cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz` for a
-candidate and `cnl-ckc-kb-only-YYYY-MM-DD.tar.gz` for a release. The
+A candidate or a release publishes two files. The first file is the
+archive of the knowledge base, as `cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz`
+for a candidate and `cnl-ckc-kb-only-YYYY-MM-DD.tar.gz` for a release.
+The second file is the checksum file of the archive, with the name of
+the archive followed by `.sha256`. It holds one line,
+`<SHA-256>  <file name>`, so `sha256sum -c` can check a download. The
 bag inside the archive keeps its commit name ("Export"). The release
 record outside the archive binds the identifier to the archive bytes. Every document ships
 with its review label; the build blocks a rejected or a contested
@@ -1741,9 +1745,10 @@ publication of schema `1`.
 Each tag carries the SSH signature of a key in `docs/allowed_signers`,
 and its message is the notes of the candidate or the release. The notes
 name the signer and the SHA-256 fingerprint of the key. They also hold
-one line `<SHA-256>  <file name>` for each published file, so the
-signed tag binds the bytes of these files. To sign, set the public key
-of the signer and create the tag:
+the line `<SHA-256>  <file name>` of the archive, so the signed tag
+binds the bytes of the archive. The checksum file holds the same line,
+so the notes do not give a separate line for it. To sign, set the
+public key of the signer and create the tag:
 
 ```
 git -c gpg.format=ssh -c user.signingkey=<public key file> \
@@ -1758,13 +1763,14 @@ To start a release line:
 1. Commit the snapshot on `main`. `just gate` and CI must be green.
 2. Create the branch `release/kb-YYYY-MM-DD` on that commit.
 3. Run `just release-kb kb-YYYY-MM-DD-rc.1`. It writes the archive
-   `dist/cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz` and prints its
-   `<SHA-256>  <file name>` line.
+   `dist/cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz` and its checksum file
+   `dist/cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz.sha256`. It prints the
+   `<SHA-256>  <file name>` line of the archive.
 4. Write the candidate notes, as in step 10 below. Create the signed
    annotated tag `kb-YYYY-MM-DD-rc.1` on the commit, with the notes as
    its message. Verify the tag and the archive, as in "To verify a
    release" below. Push the branch and the tag. Publish a GitHub pre-release
-   for the tag, with the notes and the archive of step 3.
+   for the tag, with the notes and the two files of step 3.
 5. Add the review checkout:
    `git worktree add .release/kb-YYYY-MM-DD release/kb-YYYY-MM-DD`.
    In that directory, run
@@ -1806,10 +1812,11 @@ To release the line:
    green on the last commit of the branch.
 10. Run `just release-kb kb-YYYY-MM-DD`. Write the release notes for
     a reader who does not know the project. First state what the
-    knowledge base is, which file to download, what the archive holds,
-    how to load it, and the status of the tag. Then state the
-    identifier, the date, the signer and the key fingerprint, the
-    archive name, the `<SHA-256>  <file name>` line of the archive at
+    knowledge base is, which files to download and how to check them,
+    what the archive holds, how to load it, and the status of the tag.
+    Then state the identifier, the date, the signer and the key
+    fingerprint, the names of the archive and of its checksum file, the
+    `<SHA-256>  <file name>` line of the archive at
     the start of a line, the release commit, the
     schema identifier, the source edition and digest of each guideline,
     and the review label counts. Classify the change from the previous
@@ -1819,7 +1826,7 @@ To release the line:
 11. Create the signed annotated git tag `kb-YYYY-MM-DD` on that
     commit, with the release notes as its message. Verify it, as in "To
     verify a release" below. Push the tag. Publish a GitHub
-    release for the tag, with the notes and the archive of step 10.
+    release for the tag, with the notes and the two files of step 10.
 12. Deposit the archive on Zenodo as a new version of
     the project record. Link the preprint that describes the release.
     The version DOI then names the archive bytes.
@@ -1840,16 +1847,20 @@ before the review is complete.
 
 To verify a release:
 
-1. In a clone of the repository, run
+1. In the directory of the downloaded files, run
+   `sha256sum -c cnl-ckc-kb-only-YYYY-MM-DD.tar.gz.sha256`. The archive
+   must report OK. This check finds a damaged download. It does not
+   show who published the archive. Steps 2 and 3 show that.
+2. In a clone of the repository, run
    `git -c gpg.ssh.allowedSignersFile=docs/allowed_signers verify-tag kb-YYYY-MM-DD`.
    The output must report a good signature for an allowed signer. The
    key fingerprint must equal the fingerprint in the notes and a key
    that `https://github.com/eturkes.keys` lists.
-2. In the directory of the downloaded files, run
+3. In the directory of the downloaded files, run
    `git -C <clone> tag -l --format='%(contents:body)' kb-YYYY-MM-DD | sha256sum -c --ignore-missing`.
    The archive must report OK. The other lines of the notes cause one
    warning about lines that are not formatted as checksums.
-3. Verify the bag of the archive, as in "Export" above.
+4. Verify the bag of the archive, as in "Export" above.
 
 ## Licensing
 

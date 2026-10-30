@@ -487,13 +487,15 @@ build-static:
     esac
     echo "gate: build-static ok"
 
-# The one published file of a candidate or release (docs/REFERENCE.md § Releasing; user rulings
-# in spec Decisions Publication scope): `ckc dist build` names the archive + its bag after the
-# source commit; the published copy carries the tag identifier, without the sidecar (the signed
-# notes carry its SHA-256). Both arguments arrive as environment variables (`$`), never spliced
-# into the script; the identifier reaches a file name ⇒ its shape is checked first.
-# CKC_BIN names a prebuilt binary. Prints `<sha256>  <file>` for the notes.
-[doc("Write the knowledge-base archive of tag <identifier> as <dest>/cnl-ckc-kb-only-<date>[-rc.<n>].tar.gz.")]
+# The published files of a candidate or release (docs/REFERENCE.md § Releasing; user rulings in
+# spec Decisions Publication scope): `ckc dist build` names the archive, its bag + its sidecar
+# after the source commit; the published copy carries the tag identifier ⇒ its sidecar is written
+# anew for that name (ckc's names the bag file, which `sha256sum -c` beside the download misses).
+# Both arguments arrive as environment variables (`$`), never spliced into the script; the
+# identifier reaches a file name ⇒ its shape is checked first. Sidecar staged in $work, then
+# installed (never written through a link in dest). CKC_BIN names a prebuilt binary. Prints the
+# sidecar line `<sha256>  <file>` for the notes.
+[doc("Write the knowledge-base archive of tag <identifier> as <dest>/cnl-ckc-kb-only-<date>[-rc.<n>].tar.gz, with its .sha256 file.")]
 release-kb $identifier $dest="dist":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -511,7 +513,9 @@ release-kb $identifier $dest="dist":
     name="cnl-ckc-kb-only-${id#kb-}.tar.gz"
     mkdir -p "$out"
     install -m 0644 "${bags[0]}" "$out/$name"
-    cd "$out" && sha256sum "$name"
+    (cd "$out" && sha256sum "$name") > "$work/$name.sha256"
+    install -m 0644 "$work/$name.sha256" "$out/$name.sha256"
+    cat "$out/$name.sha256"
 
 [doc("Run the trust audit: escape tokens, dependency set, trusted-surface pins.")]
 trust: build
