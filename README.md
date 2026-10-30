@@ -189,13 +189,17 @@ lists every superseded passage under "Superseded passages".
 ## Releases
 
 A release of the knowledge base is a git tag with the name
-`kb-YYYY-MM-DD`. Each release publishes one file, the archive of the
-knowledge base: `cnl-ckc-kb-only-YYYY-MM-DD.tar.gz`. Its release notes
-tell what the archive holds and how to load it, and give the SHA-256
-of the archive. A tag that ends in `-rc.1`, `-rc.2`, and so on is a
-release candidate. A release candidate publishes its archive as
-`cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz`. The review of a release
-candidate is not complete. To use the knowledge base in other
+`kb-YYYY-MM-DD`. Each release publishes the archive of the knowledge
+base, `cnl-ckc-kb-only-YYYY-MM-DD.tar.gz`, and its checksum file,
+`cnl-ckc-kb-only-YYYY-MM-DD.tar.gz.sha256`. To check a download, put
+the two files in one directory and run
+`sha256sum -c cnl-ckc-kb-only-YYYY-MM-DD.tar.gz.sha256` there. The
+release notes tell what the archive holds and how to load it, and give
+the SHA-256 of the archive. A tag that ends in `-rc.1`, `-rc.2`, and so
+on is a release candidate. A release candidate publishes its files as
+`cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz` and
+`cnl-ckc-kb-only-YYYY-MM-DD-rc.1.tar.gz.sha256`. The review of a
+release candidate is not complete. To use the knowledge base in other
 software, pin a release tag.
 
 Each tag carries the SSH signature of the maintainer. To check a tag,

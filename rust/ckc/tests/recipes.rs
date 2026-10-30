@@ -1980,10 +1980,11 @@ fn build_static_inspection_failures_fail_the_recipe() {
     );
 }
 
-// `release-kb` publishes one file: the archive `ckc dist build` writes, under the name its tag
-// identifier gives, without the sidecar; an identifier outside `kb-YYYY-MM-DD[.<n>][-rc.<n>]` or a
-// build that writes other than one archive leaves no destination. The guard-free recipe is
-// planted: a malformed identifier then names a published file.
+// `release-kb` publishes the archive `ckc dist build` writes, under the name its tag identifier
+// gives, + its sidecar `<file>.sha256` = the `<sha256>  <file>` line it prints (never ckc's
+// bag-named sidecar, which the mock fills with other bytes); an identifier outside
+// `kb-YYYY-MM-DD[.<n>][-rc.<n>]` or a build that writes other than one archive leaves no
+// destination. The guard-free recipe is planted: a malformed identifier then names a published file.
 #[test]
 fn release_kb_publishes_the_archive_under_its_identifier() {
     let s = scratch("release-kb");
@@ -2025,9 +2026,10 @@ fn release_kb_publishes_the_archive_under_its_identifier() {
     ] {
         let (fx, out) = case(name, &text, 1, args);
         assert_eq!(out.status.code(), Some(0), "{name}: {}", show(&out));
+        let sidecar = format!("{file}.sha256");
         assert_eq!(
             listing(&fx.root.join(dest)),
-            [file],
+            [file, sidecar.as_str()],
             "{name}: published files"
         );
         assert_eq!(
@@ -2035,9 +2037,15 @@ fn release_kb_publishes_the_archive_under_its_identifier() {
             bag,
             "{name}: bytes"
         );
+        let line = format!("{}  {file}\n", hex(bag));
+        assert_eq!(
+            fs::read_to_string(fx.root.join(dest).join(&sidecar)).unwrap(),
+            line,
+            "{name}: sidecar"
+        );
         assert_eq!(
             String::from_utf8(out.stdout).unwrap(),
-            format!("{}  {file}\n", hex(bag)),
+            line,
             "{name}: checksum line"
         );
     }
