@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # Verus-issue exposure scans (verus-lang/verus #3144 #3146 #3147 #3154-#3160) over ckc-kernel/src + ckc-spec/src, each pattern with a positive control.
-# usage: python3 -I .agent/archive/scans/verus-issues.py <repo-root>; rerun at every Verus bump (deferred row N17).
+# usage: python3 -I .agent/archive/scans/verus-issues.py <repo-root>; rerun at every Verus bump (deferred row N17) + every kernel unit (rust.md).
 import re, sys, pathlib, collections
 
 root = pathlib.Path(sys.argv[1])
-files = sorted(list((root / 'rust/ckc-kernel/src').glob('*.rs')) + list((root / 'rust/ckc-spec/src').glob('*.rs')))
+files = sorted(list((root / 'rust/ckc-kernel/src').rglob('*.rs')) + list((root / 'rust/ckc-spec/src').rglob('*.rs')))
 texts = {f: f.read_text(encoding='utf-8') for f in files}
 
 def strip(src):
