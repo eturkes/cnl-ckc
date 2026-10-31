@@ -79,21 +79,14 @@ impl Stage {
         if let Some(bytes) = ulex {
             fs::write(stage.dir.join("lexicon.ulex"), bytes).map_err(|_| "stage_ulex_failed.")?;
         }
-        let parser = ape.join("prolog/parser");
-        let parser_text = parser
-            .to_str()
-            .ok_or("stage_path_utf8.")?
-            .replace('\\', "\\\\")
-            .replace('\'', "\\'");
-        let goal = format!("working_directory(_, '{parser_text}'), [fit_to_plp], halt.");
-        let (rc, _) = crate::check::swipl_run(
-            Command::new(&stage.swipl)
-                .args(["-O", "-f", "none", "-F", "none", "-g", &goal, "-t", "halt"]),
-            None,
-        )?;
-        if rc != 0 || !parser.join("grammar.plp").is_file() {
-            return Err("stage_grammar_failed.".to_owned());
-        }
+        use crate::check::BuildFault;
+        ape.to_str().ok_or("stage_path_utf8.")?;
+        crate::check::build_stage(&ape, &stage.swipl).map_err(|fault| match fault {
+            BuildFault::Spawn { .. } => "swipl_unavailable.",
+            BuildFault::Timeout => "swipl_timeout.",
+            BuildFault::Grammar { .. } => "stage_grammar_failed.",
+            BuildFault::Lexicon(_) => "stage_lexicon_failed.",
+        })?;
         Ok(stage)
     }
 

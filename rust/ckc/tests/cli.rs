@@ -356,3 +356,122 @@ fn help_answers_with_the_usage_on_stdout() {
         assert!(out.stderr.is_empty(), "{flag}");
     }
 }
+
+// A fixture repository for the stage tests (contract qlf): the positive query fixture's
+// guideline `fx`, the repository's fork + M6 driver by symlink, and a Clex copy the test may
+// spoil. `CKC_QLF_TEST_BIN` selects a prebuilt binary for red replay.
+#[cfg(unix)]
+fn qlf_root(name: &str, clex_tail: &[u8]) -> (PathBuf, PathBuf) {
+    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let dir = std::env::temp_dir().join(format!("ckc-cli-qlf-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let root = dir.join("root");
+    std::fs::create_dir_all(root.join("rust/ckc")).unwrap();
+    std::fs::create_dir_all(root.join("vendor/clex")).unwrap();
+    std::os::unix::fs::symlink(repo.join("rust/ckc/prolog"), root.join("rust/ckc/prolog")).unwrap();
+    std::os::unix::fs::symlink(repo.join("vendor/ape"), root.join("vendor/ape")).unwrap();
+    let mut clex = std::fs::read(repo.join("vendor/clex/clex_lexicon.pl")).unwrap();
+    clex.extend_from_slice(clex_tail);
+    std::fs::write(root.join("vendor/clex/clex_lexicon.pl"), clex).unwrap();
+    let copy = Command::new("cp")
+        .arg("-a")
+        .arg(repo.join("tests/queries/green/positive/tree/guidelines"))
+        .arg(root.join("guidelines"))
+        .status()
+        .unwrap();
+    assert!(copy.success());
+    (dir, root)
+}
+
+#[cfg(unix)]
+fn qlf_ckc(root: &std::path::Path, args: &[&str], swipl: Option<&std::path::Path>) -> Output {
+    let bin = std::env::var_os("CKC_QLF_TEST_BIN")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_ckc")));
+    let mut command = Command::new(bin);
+    command.args(args).current_dir(root);
+    if let Some(swipl) = swipl {
+        command.env("SWIPL", swipl);
+    }
+    command.output().unwrap()
+}
+
+// The SWI-Prolog program the shell resolves (REFERENCE § Running: SWIPL, else PATH).
+#[cfg(unix)]
+fn real_swipl() -> PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    if let Some(path) = std::env::var_os("SWIPL") {
+        return PathBuf::from(path);
+    }
+    std::env::split_paths(&std::env::var_os("PATH").unwrap())
+        .map(|dir| dir.join("swipl"))
+        .find(|p| std::fs::metadata(p).is_ok_and(|m| m.permissions().mode() & 0o111 != 0))
+        .expect("swipl on PATH")
+}
+
+// Each per-document SWI-Prolog process of `ckc compile` + `ckc certify` loads the staged
+// Clex from its `.qlf` (contract qlf P1). A SWIPL wrapper probes every stage an invocation
+// names — the compiler's `-s <stage>/prolog/ace_to_pl.pl`, the M6 driver's `<stage>` argument —
+// by loading that stage's `clex` with `verbose_load(full)`, then runs the real program.
+#[test]
+#[cfg(unix)]
+fn per_document_processes_load_clex_from_its_qlf() {
+    use std::os::unix::fs::PermissionsExt;
+    let (dir, root) = qlf_root("load", b"");
+    let log = dir.join("probes");
+    let wrapper = dir.join("swipl");
+    let script = format!(
+        "#!/bin/sh\nfor a in \"$@\"; do\n  case \"$a\" in\n    */ape-stage) d=$a ;;\n    */ape-stage/prolog/ace_to_pl.pl) d=${{a%/prolog/ace_to_pl.pl}} ;;\n    *) continue ;;\n  esac\n  '{real}' -f none -F none -g \"set_prolog_flag(verbose_load, full), use_module('$d/prolog/lexicon/clex'), halt.\" -t halt 2>&1 | grep -o 'clex_lexicon [a-z]* into clex' >> '{log}'\ndone\nexec '{real}' \"$@\"\n",
+        real = real_swipl().display(),
+        log = log.display()
+    );
+    std::fs::write(&wrapper, script).unwrap();
+    std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
+    for args in [["compile", "fx"], ["certify", "fx"]] {
+        std::fs::remove_file(&log).ok();
+        let out = qlf_ckc(&root, &args, Some(&wrapper));
+        let probes = std::fs::read_to_string(&log).unwrap_or_default();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "{args:?}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(
+            !probes.is_empty(),
+            "{args:?}: no per-document process probed"
+        );
+        assert!(
+            probes.lines().all(|l| l == "clex_lexicon loaded into clex"),
+            "{args:?}: {probes}"
+        );
+    }
+    std::fs::remove_dir_all(&dir).unwrap();
+}
+
+// A malformed Clex stops the stage (contract qlf P2): per-document processes load the `.qlf`
+// in silence, so the qcompile run alone sees the syntax error and must refuse it.
+#[test]
+#[cfg(unix)]
+fn a_malformed_clex_stops_the_stage() {
+    let (dir, root) = qlf_root("malformed", b"\nnoun_sg(spoiled, spoiled, neutr.\n");
+    let out = qlf_ckc(&root, &["compile", "fx"], None);
+    let err = String::from_utf8_lossy(&out.stderr).into_owned();
+    assert_eq!(out.status.code(), Some(2), "{err}");
+    assert!(
+        err.starts_with("ckc: ape-stage: clex qcompile rc "),
+        "{err}"
+    );
+    assert!(err.contains("Syntax error"), "{err}");
+    let out = qlf_ckc(&root, &["certify", "fx"], None);
+    std::fs::remove_dir_all(&dir).unwrap();
+    assert_eq!(
+        (out.status.code(), out.stderr.as_slice()),
+        (
+            Some(1),
+            b"ckc: certify: fx: stage_lexicon_failed.\n".as_slice()
+        ),
+        "{}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+}

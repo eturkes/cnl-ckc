@@ -282,23 +282,95 @@ pub(super) fn stage(scratch: &Scratch, swipl: &Path) -> Result<PathBuf> {
         stage.join("prolog/lexicon/clex_lexicon.pl"),
     )
     .map_err(|e| fail("ape-stage", e.to_string()))?;
-    let parser = stage.join("prolog/parser");
-    let goal = format!(
-        "working_directory(_, '{}'), [fit_to_plp], halt.",
-        show(&parser)
-    );
-    let out = bounded(
-        Command::new(swipl).args(["-O", "-f", "none", "-F", "none", "-g", &goal, "-t", "halt"]),
-        "ape-stage build",
-        None,
-    )?;
-    if out.rc != 0 {
-        return Err(out.relay());
-    }
-    if !parser.join("grammar.plp").is_file() {
-        return Err(fail("ape-stage", "missing grammar.plp after build"));
-    }
+    build_stage(&stage, swipl).map_err(|fault| match fault {
+        BuildFault::Spawn { rc, err } => Failure {
+            rc,
+            out: vec![],
+            err,
+        },
+        BuildFault::Timeout => fail("swipl-timeout", "ape-stage build exceeded 300s wall clock"),
+        BuildFault::Grammar { rc: 0, .. } => fail("ape-stage", "missing grammar.plp after build"),
+        BuildFault::Grammar { rc, err } => Failure {
+            rc: rc as u8,
+            out: vec![],
+            err,
+        },
+        BuildFault::Lexicon(detail) => fail("ape-stage", detail),
+    })?;
     Ok(stage)
+}
+// Where building a copied APE stage stopped; each caller words it in its own vocabulary.
+pub(crate) enum BuildFault {
+    Spawn { rc: u8, err: Vec<u8> },
+    Timeout,
+    Grammar { rc: i32, err: Vec<u8> },
+    Lexicon(String),
+}
+// Builds a copied APE stage in place: the parser (`fit_to_plp`), then Clex qcompiled beside its
+// source with the options `clex.pl` loads it with, so each per-document process loads the `.qlf`
+// (0.10 s vs 1.24 s from source; contract qlf). From source a malformed lexicon reaches stderr in
+// every per-document run; from the `.qlf` only the qcompile run sees it ⇒ that run must exit 0
+// silent. SWI-Prolog 10.0.2 reloads from source only once the source's mtime passes the `.qlf`'s
+// (boot/init.pl `'$qlf_out_of_date'`), and recompiles a writable `.qlf` then ⇒ the order is checked.
+pub(crate) fn build_stage(stage: &Path, swipl: &Path) -> std::result::Result<(), BuildFault> {
+    let parser = stage.join("prolog/parser");
+    let built = build_run(Command::new(swipl).current_dir(&parser).args([
+        "-O",
+        "-f",
+        "none",
+        "-F",
+        "none",
+        "-g",
+        "[fit_to_plp], halt.",
+        "-t",
+        "halt",
+    ]))?;
+    if built.rc != 0 || !parser.join("grammar.plp").is_file() {
+        return Err(BuildFault::Grammar {
+            rc: built.rc,
+            err: built.err,
+        });
+    }
+    let lexicon = stage.join("prolog/lexicon");
+    let out = build_run(Command::new(swipl).current_dir(&lexicon).args([
+        "-q",
+        "-f",
+        "none",
+        "-F",
+        "none",
+        "-g",
+        "style_check(-discontiguous), qcompile(clex_lexicon, [encoding(utf8)]), halt.",
+        "-t",
+        "halt",
+    ]))?;
+    if out.rc != 0 || !out.out.is_empty() || !out.err.is_empty() {
+        return Err(BuildFault::Lexicon(format!(
+            "clex qcompile rc {}: {}{}",
+            out.rc,
+            String::from_utf8_lossy(&out.out),
+            String::from_utf8_lossy(&out.err)
+        )));
+    }
+    let modified = |name: &str| fs::metadata(lexicon.join(name)).and_then(|m| m.modified());
+    match (modified("clex_lexicon.pl"), modified("clex_lexicon.qlf")) {
+        (Ok(source), Ok(qlf)) if qlf >= source => Ok(()),
+        (_, Err(_)) => Err(BuildFault::Lexicon(
+            "missing clex_lexicon.qlf after qcompile".into(),
+        )),
+        _ => Err(BuildFault::Lexicon(
+            "clex_lexicon.qlf older than its source".into(),
+        )),
+    }
+}
+fn build_run(command: &mut Command) -> std::result::Result<Output, BuildFault> {
+    match walled(command, None, WALL) {
+        Err(f) => Err(BuildFault::Spawn {
+            rc: f.rc,
+            err: f.err,
+        }),
+        Ok((true, _)) => Err(BuildFault::Timeout),
+        Ok((false, out)) => Ok(out),
+    }
 }
 pub(super) fn compiler(swipl: &Path, stage: &Path, tail: &[String]) -> Command {
     let mut c = Command::new(swipl);

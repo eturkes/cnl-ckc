@@ -16,8 +16,10 @@ guidelines into executable Prolog through controlled natural language:
    `guidelines/<id>/lexicon.ulex`.
 3. **Compile** — `ckc compile` stages the vendored APE parser and
    overlays `vendor/clex/clex_lexicon.pl` as the general-English base
-   lexicon. It compiles every ACE document to plain Prolog under
-   `guidelines/<id>/pl/` via `vendor/ape/prolog/ace_to_pl.pl`.
+   lexicon. It precompiles that lexicon once per run, so that each
+   document loads it quickly. It compiles every ACE document to plain
+   Prolog under `guidelines/<id>/pl/` via
+   `vendor/ape/prolog/ace_to_pl.pl`.
 
 A Claude Code session drives all three steps from one pasted prompt
 ("Operating" below).

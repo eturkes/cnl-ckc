@@ -33,6 +33,7 @@ mod queries;
 mod query_fixtures;
 mod red;
 pub(crate) mod schema;
+pub(crate) use process::{BuildFault, build_stage};
 fn check() -> common::Result {
     fork::check()?;
     probes::docid()?;
