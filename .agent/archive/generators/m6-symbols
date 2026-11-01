@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 w = Path(sys.argv[1]).resolve()
-spec = (w / "rust/ckc-spec/src/emit.rs").read_text()
+spec = "".join((w / "rust/ckc-spec/src" / f).read_text() for f in ("emit.rs", "witness.rs"))
 values = sorted(set(re.findall(r'"([^"\\]+)"@', spec)) | {"$guideline_id", "$guideline_proof", ","})
 values = [v for v in values if not any(c.isspace() for c in v)]
 punctuation = {"-": "Minus", "/": "Slash", "=>": "Implies", "~": "Naf", "[|]": "Cons", ",": "Comma", "*": "Star", "=": "Equals", "+": "Plus", "some": "SomeWord"}

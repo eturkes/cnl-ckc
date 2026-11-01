@@ -17,3 +17,4 @@ pub mod trace;
 pub mod ui;
 pub mod v1text;
 pub mod vocabulary;
+pub mod witness;

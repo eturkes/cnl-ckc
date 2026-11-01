@@ -907,7 +907,12 @@ pub fn scoped_group(arena: &ETermArena, g: &Group, key: &Vec<u8>, record: &T, ex
             }
         }
     }
-    Group { k: g.k, pairs: copy_map(arena, &g.pairs), clauses }
+    Group {
+        k: g.k,
+        pairs: copy_map(arena, &g.pairs),
+        clauses,
+        sel: crate::m6_model::copy_sel(&g.sel),
+    }
 }
 
 pub fn scoped_groups(

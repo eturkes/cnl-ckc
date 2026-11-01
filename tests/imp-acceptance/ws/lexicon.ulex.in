@@ -1,0 +1,8 @@
+noun_sg('opioid-dosage','opioid-dosage',neutr).
+noun_pl('opioid-dosages','opioid-dosage',neutr).
+noun_sg('oxycodone-milligram-per-day','oxycodone-milligram-per-day',neutr).
+noun_pl('oxycodone-milligrams-per-day','oxycodone-milligram-per-day',neutr).
+noun_sg('codeine-milligram-per-day','codeine-milligram-per-day',neutr).
+noun_pl('codeine-milligrams-per-day','codeine-milligram-per-day',neutr).
+noun_sg('MME-unit-per-day','MME-unit-per-day',neutr).
+noun_pl('MME-units-per-day','MME-unit-per-day',neutr).

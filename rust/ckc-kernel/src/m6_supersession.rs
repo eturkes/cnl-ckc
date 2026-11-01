@@ -505,6 +505,7 @@ pub fn date_group(arena: &mut ETermArena, g: &Group, date: usize) -> (out: Group
             k: g.k,
             pairs: copy_map(arena, &g.pairs),
             clauses: crate::m6_project::copy_clauses(arena, &g.clauses),
+            sel: crate::m6_model::copy_sel(&g.sel),
         };
     }
     let ghost start = arena.nodes@;
@@ -512,6 +513,7 @@ pub fn date_group(arena: &mut ETermArena, g: &Group, date: usize) -> (out: Group
     proof {
         map_prefix(start, arena.nodes@, g.pairs@);
         clauses_prefix(start, arena.nodes@, g.clauses@);
+        crate::m6_model::sel_prefix(start, arena.nodes@, &g.sel);
     }
     let ghost a = arena.nodes@;
     let v = var(arena, n);
@@ -519,6 +521,7 @@ pub fn date_group(arena: &mut ETermArena, g: &Group, date: usize) -> (out: Group
         crate::k2_load::prefix_chain(start, a, arena.nodes@);
         map_prefix(a, arena.nodes@, g.pairs@);
         clauses_prefix(a, arena.nodes@, g.clauses@);
+        crate::m6_model::sel_prefix(a, arena.nodes@, &g.sel);
     }
     let ghost b = arena.nodes@;
     let witness = previous_date(arena, date);
@@ -526,6 +529,7 @@ pub fn date_group(arena: &mut ETermArena, g: &Group, date: usize) -> (out: Group
         crate::k2_load::prefix_chain(start, b, arena.nodes@);
         map_prefix(b, arena.nodes@, g.pairs@);
         clauses_prefix(b, arena.nodes@, g.clauses@);
+        crate::m6_model::sel_prefix(b, arena.nodes@, &g.sel);
         prefix(b, arena.nodes@, &v);
     }
     let ghost c = arena.nodes@;
@@ -534,6 +538,7 @@ pub fn date_group(arena: &mut ETermArena, g: &Group, date: usize) -> (out: Group
         crate::k2_load::prefix_chain(start, c, arena.nodes@);
         map_prefix(c, arena.nodes@, g.pairs@);
         clauses_prefix(c, arena.nodes@, g.clauses@);
+        crate::m6_model::sel_prefix(c, arena.nodes@, &g.sel);
         prefix(c, arena.nodes@, &v);
         prefix(c, arena.nodes@, &witness);
     }
@@ -609,8 +614,9 @@ pub fn date_group(arena: &mut ETermArena, g: &Group, date: usize) -> (out: Group
     }
     proof {
         assert(g@.clauses.take(i as int) =~= g@.clauses);
+        crate::m6_model::sel_prefix(start, arena.nodes@, &g.sel);
     }
-    Group { k: g.k, pairs, clauses }
+    Group { k: g.k, pairs, clauses, sel: crate::m6_model::copy_sel(&g.sel) }
 }
 
 pub fn date_groups(arena: &mut ETermArena, gs: &Vec<Group>, date: usize) -> (out: Vec<Group>)

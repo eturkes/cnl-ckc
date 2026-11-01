@@ -484,6 +484,101 @@ pub fn certify_doc(
     crate::m6_impl::certify_doc_impl(ace, asha, usha, docid, dump, pl, traw, tsha)
 }
 
+// Witness selection (contract ws P6): the walk report of every formula
+// variant of a certified document — candidates per operand, the winner's
+// digits or `none`, fragment membership; a refusal = `certify_doc`'s.
+pub fn certify_walks(
+    ace: &[u8],
+    asha: &[u8],
+    usha: Option<&Vec<u8>>,
+    docid: &[u8],
+    dump: &[u8],
+    pl: &[u8],
+    traw: Option<&Vec<u8>>,
+    tsha: Option<&Vec<u8>>,
+) -> (r: ckc_spec::replay::EOut)
+    ensures
+        r@ == ckc_spec::witness::certify_walks_output(
+            ace@,
+            asha@,
+            ckc_spec::emit::opt_view(usha),
+            docid@,
+            dump@,
+            pl@,
+            ckc_spec::emit::opt_view(traw),
+            ckc_spec::emit::opt_view(tsha),
+        ),
+{
+    crate::m6_witness::certify_walks_impl(ace, asha, usha, docid, dump, pl, traw, tsha)
+}
+
+// Witness selection D7 (contract ws): inside the fragment, tuples whose
+// coordinates share their cells replay alike — every head's replay outcome,
+// fuel-outs included, hence the verdict.
+pub proof fn ws_cell_invariance(
+    p: Seq<ckc_spec::v1text::DocClause>,
+    g: ckc_spec::emit::Group,
+    sel: ckc_spec::witness::Sel,
+    t: Seq<ckc_spec::term::Term>,
+    u: Seq<ckc_spec::term::Term>,
+)
+    requires
+        ckc_spec::witness::in_fragment(p, g, sel),
+        t.len() == sel.ops.len(),
+        u.len() == sel.ops.len(),
+        forall|i: int|
+            0 <= i < sel.ops.len() ==> ckc_spec::witness::same_cell(
+                ckc_spec::witness::boundaries(g, sel, i),
+                #[trigger] t[i],
+                u[i],
+            ),
+    ensures
+        forall|h: int|
+            0 <= h < g.clauses.len() ==> #[trigger] ckc_spec::witness::replay_of(p, g, sel, t, h)
+                == ckc_spec::witness::replay_of(p, g, sel, u, h),
+        ckc_spec::witness::win(p, g, sel, t) == ckc_spec::witness::win(p, g, sel, u),
+{
+    crate::m6_witness::cell_invariance(p, g, sel, t, u)
+}
+
+// … so a winner exists whenever some admitted rational tuple wins.
+pub proof fn ws_complete(
+    p: Seq<ckc_spec::v1text::DocClause>,
+    g: ckc_spec::emit::Group,
+    sel: ckc_spec::witness::Sel,
+    t: Seq<ckc_spec::term::Term>,
+)
+    requires
+        ckc_spec::witness::in_fragment(p, g, sel),
+        t.len() == sel.ops.len(),
+        forall|i: int|
+            0 <= i < t.len() ==> ckc_spec::witness::admits(sel.ops[i].cond, #[trigger] t[i]),
+        ckc_spec::witness::win(p, g, sel, t),
+    ensures
+        ckc_spec::witness::first_win(p, g, sel, 0) is Some,
+{
+    crate::m6_witness::complete(p, g, sel, t)
+}
+
+// Witness selection D6: an admitted tuple whose chain derives ⇒ the default
+// tuple's chain derives (so an underivable default chain = no tuple's).
+pub proof fn ws_default_chain(
+    g: ckc_spec::emit::Group,
+    sel: ckc_spec::witness::Sel,
+    t: Seq<ckc_spec::term::Term>,
+)
+    requires
+        ckc_spec::witness::chain_shape(sel),
+        t.len() == sel.ops.len(),
+        forall|i: int|
+            0 <= i < t.len() ==> ckc_spec::witness::admits(sel.ops[i].cond, #[trigger] t[i]),
+        ckc_spec::witness::tuple_pairs(g, sel, t) is Some,
+    ensures
+        ckc_spec::witness::tuple_pairs(g, sel, ckc_spec::witness::defaults(sel)) is Some,
+{
+    crate::m6_witness::default_chain(g, sel, t)
+}
+
 pub fn certify_query(
     ace: &[u8],
     asha: &[u8],

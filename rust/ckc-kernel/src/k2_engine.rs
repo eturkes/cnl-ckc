@@ -339,7 +339,7 @@ proof fn subst_absent_all(ts: Seq<Term>, x: nat, value: Term)
     }
 }
 
-proof fn occurs_bound(t: Term, x: nat)
+pub proof fn occurs_bound(t: Term, x: nat)
     requires
         ckc_spec::engine::nvars(t) <= x,
     ensures
@@ -354,7 +354,7 @@ proof fn occurs_bound(t: Term, x: nat)
     }
 }
 
-proof fn occurs_bound_all(ts: Seq<Term>, x: nat)
+pub proof fn occurs_bound_all(ts: Seq<Term>, x: nat)
     requires
         ckc_spec::engine::nvars_all(ts) <= x,
     ensures
@@ -1605,7 +1605,7 @@ proof fn bind_right_vars_decrease(x: nat, value: Term, rest: Seq<(Term, Term)>)
     after.lemma_subset_not_in_lt(before, x);
 }
 
-proof fn term_size_positive(t: Term)
+pub proof fn term_size_positive(t: Term)
     ensures
         term_size(t) > 0,
     decreases t,
@@ -2095,7 +2095,7 @@ pub open spec fn pairs_decrease(after: Seq<(Term, Term)>, before: Seq<(Term, Ter
     ).len() && pair_work(after) < pair_work(before))
 }
 
-proof fn unify_drop_step(u: ckc_spec::engine::UState)
+pub proof fn unify_drop_step(u: ckc_spec::engine::UState)
     requires
         u.pairs.len() > 0,
         u.pairs[0].0 == u.pairs[0].1,
@@ -2116,7 +2116,7 @@ proof fn unify_drop_step(u: ckc_spec::engine::UState)
     pair_drop_measure(u.pairs[0], u.pairs.drop_first());
 }
 
-proof fn unify_bind_step(u: ckc_spec::engine::UState, x: nat, value: Term)
+pub proof fn unify_bind_step(u: ckc_spec::engine::UState, x: nat, value: Term)
     requires
         u.pairs.len() > 0,
         u.pairs[0] == (Term::Var(x), value) || (u.pairs[0] == (value, Term::Var(x)) && !(
@@ -2147,7 +2147,7 @@ proof fn unify_bind_step(u: ckc_spec::engine::UState, x: nat, value: Term)
     }
 }
 
-proof fn unify_comp_step(
+pub proof fn unify_comp_step(
     u: ckc_spec::engine::UState,
     name: Seq<u8>,
     left: Seq<Term>,
@@ -2441,6 +2441,68 @@ pub proof fn clash_fails(u: ckc_spec::engine::UState)
                 unify_completed(u, 1);
             }
         },
+    }
+}
+
+// Occurs-check unification always completes: `unify` is never `Out`.
+pub proof fn unify_done(u: ckc_spec::engine::UState)
+    ensures
+        !(ckc_spec::engine::unify(u) is Out),
+    decreases pair_vars(u.pairs).len(), pair_work(u.pairs),
+{
+    if u.pairs.len() == 0 {
+        reveal_with_fuel(ckc_spec::engine::unify_n, 1);
+        unify_completed(u, 1);
+    } else {
+        let a = u.pairs[0].0;
+        let b = u.pairs[0].1;
+        let rest = u.pairs.drop_first();
+        match (a, b) {
+            (Term::Var(x), _) => {
+                if a == b {
+                    unify_drop_step(u);
+                    unify_done(ckc_spec::engine::UState { pairs: rest, ..u });
+                } else if ckc_spec::engine::occurs(x, b) {
+                    reveal_with_fuel(ckc_spec::engine::unify_n, 1);
+                    unify_completed(u, 1);
+                } else {
+                    unify_bind_step(u, x, b);
+                    unify_done(ckc_spec::engine::u_bind(u, rest, x, b));
+                }
+            },
+            (_, Term::Var(y)) => {
+                if ckc_spec::engine::occurs(y, a) {
+                    reveal_with_fuel(ckc_spec::engine::unify_n, 1);
+                    unify_completed(u, 1);
+                } else {
+                    unify_bind_step(u, y, a);
+                    unify_done(ckc_spec::engine::u_bind(u, rest, y, a));
+                }
+            },
+            (Term::Comp(n, xs), Term::Comp(m, ys)) => {
+                if n == m && xs.len() == ys.len() {
+                    unify_comp_step(u, n, xs, ys);
+                    unify_done(
+                        ckc_spec::engine::UState {
+                            pairs: ckc_spec::engine::zip(xs, ys) + rest,
+                            ..u
+                        },
+                    );
+                } else {
+                    reveal_with_fuel(ckc_spec::engine::unify_n, 1);
+                    unify_completed(u, 1);
+                }
+            },
+            _ => {
+                if a == b {
+                    unify_drop_step(u);
+                    unify_done(ckc_spec::engine::UState { pairs: rest, ..u });
+                } else {
+                    reveal_with_fuel(ckc_spec::engine::unify_n, 1);
+                    unify_completed(u, 1);
+                }
+            },
+        }
     }
 }
 
@@ -4400,7 +4462,7 @@ pub open spec fn item_nvars(item: ckc_spec::v1text::BodyItem) -> nat {
     }
 }
 
-fn shift_item(arena: &mut ETermArena, item: &EBodyItem, off: usize) -> (out: usize)
+pub fn shift_item(arena: &mut ETermArena, item: &EBodyItem, off: usize) -> (out: usize)
     requires
         arena_ok(old(arena)),
         body_item_valid(old(arena).nodes@, item),

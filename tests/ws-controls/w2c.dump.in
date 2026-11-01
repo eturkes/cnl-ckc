@@ -1,0 +1,3 @@
+sentences([[^,'If',an,'opioid-dosage',contains,less,than,2,'oxycodone-milligrams-per-day','X',and,does,not,provably,contain,at,most,1,'oxycodone-milligram-per-day',then,the,'opioid-dosage',includes,some,'MME-units-per-day','Y',and,'Y',=,'X',*,'$decimal'('1.5'),'.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,'opioid-dosage',countable,na,eq,1),/(1,3)),[-(predicate(C,contain,A,B),/(1,4)),-(object(B,'oxycodone-milligram-per-day',countable,na,less,2),/(1,8))],~(drs([D,E],[[-(predicate(E,contain,A,D),/(1,14)),-(object(D,'oxycodone-milligram-per-day',countable,na,leq,1),/(1,18))]]))]),drs([F,G],[-(object(F,'MME-unit-per-day',countable,na,geq,2),/(1,24)),-(predicate(G,include,A,F),/(1,22)),-(formula(F,=,expr(*,B,real('$decimal'('1.5')))),/(1,28))]))])).
+messages([]).

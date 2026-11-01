@@ -1,0 +1,4 @@
+% S1: A bird exists.
+guideline_entity(actual,A,bird,countable) :- guideline_entity(actual,A,bird,countable).
+guideline_entity(actual,'$guideline_id'(product,'ws-p4c',1,ref(1),[]),bird,countable).
+guideline_entity(actual,'$guideline_id'(product,'ws-p4c',1,ref(2),[]),bird,countable).

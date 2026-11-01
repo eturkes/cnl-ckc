@@ -936,6 +936,13 @@ pub proof fn operand_witness_admitted(op: Term, n: int)
     assert(g.len() != gr.len() && g.len() != ls.len() && l.len() != gr.len() && l.len()
         != ls.len());
     assert(gr.len() != ls.len());
+    // integers: number(Int(n)) = (n, 1) and canon(x, 1) = Int(x)
+    assert(a::number(Term::Int(n)) == Some((n, 1int)));
+    assert forall|x: int| #[trigger] a::canon(x, 1) == Term::Int(x) by {
+        assert(a::gcd(a::abs(x), 1) == 1) by {
+            reveal_with_fuel(a::gcd, 2);
+        }
+    }
 }
 
 pub fn operand_witness(arena: &mut ETermArena, op: &T, count: &T) -> (out: T)
@@ -949,52 +956,8 @@ pub fn operand_witness(arena: &mut ETermArena, op: &T, count: &T) -> (out: T)
         valid(final(arena).nodes@, &out),
         out@ == spec::operand_witness(op@, count@),
 {
-    if !is_int(arena, count) {
-        return count.cp();
-    }
-    let r = match decode_number(arena, count.root) {
-        Some(r) => r,
-        None => return count.cp(),
-    };
-    proof {
-        reveal(a::number);
-        assert(r.d@ == 1 && count@ == Term::Int(r.n@));
-    }
-    let zero = is_zero(&r.num, Ghost(a::abs(r.n@)));
-    let geq = is_atom(arena, op, &Sym::Geq);
-    let leq = is_atom(arena, op, &Sym::Leq);
-    let greater = is_atom(arena, op, &Sym::Greater);
-    let less = is_atom(arena, op, &Sym::Less);
-    proof {
-        reveal_strlit("geq");
-        reveal_strlit("leq");
-        reveal_strlit("greater");
-        reveal_strlit("less");
-    }
-    let shift: i8 = if geq && zero {
-        1
-    } else if leq && zero {
-        -1
-    } else if greater {
-        if shifted_zero(&r, true) {
-            2
-        } else {
-            1
-        }
-    } else if less {
-        if shifted_zero(&r, false) {
-            -2
-        } else {
-            -1
-        }
-    } else {
-        0
-    };
-    if shift == 0 {
-        return count.cp();
-    }
-    let root = int_shift(arena, &r, shift);
-    from_root(arena, root)
+    let cond = Some((op.cp(), count.cp()));
+    crate::m6_cands::w0(arena, &cond)
 }
 
 } // verus!

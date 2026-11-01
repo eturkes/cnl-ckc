@@ -414,7 +414,7 @@ proof fn mod_scale(k: int, x: int, y: int)
     lemma_fundamental_div_mod_converse(k * x, k * y, q, k * r);
 }
 
-proof fn gcd_scale(k: nat, x: nat, y: nat)
+pub proof fn gcd_scale(k: nat, x: nat, y: nat)
     requires
         k >= 1,
     ensures

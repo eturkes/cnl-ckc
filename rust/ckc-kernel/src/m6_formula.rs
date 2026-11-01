@@ -2133,7 +2133,7 @@ pub open spec fn fpass_model(f: &EFPass) -> spec::FPass {
 
 pub open spec fn fpass_valid(nodes: Seq<ENode>, f: &EFPass) -> bool {
     items_valid(nodes, f.aitems@) && items_valid(nodes, f.citems@) && valid_all(nodes, f.chain@)
-        && map_valid(nodes, f.pairs@)
+        && map_valid(nodes, f.pairs@) && arith_goals(f.chain@)
 }
 
 pub open spec fn step_result(r: &Result<(EFPass, usize), T>) -> Result<(spec::FPass, nat), Term> {
@@ -2571,6 +2571,17 @@ fn step_tail(
     proof {
         models_concat(acc.chain@, ch.goals@);
         valid_concat(n4, acc.chain@, ch.goals@);
+        assert forall|i: int| 0 <= i < chain_all.len() implies ((
+        #[trigger] chain_all@[i])@ matches Term::Comp(name, args) && ckc_spec::arith::is_arith(
+            name,
+            args.len(),
+        )) by {
+            if i < acc.chain.len() {
+                assert(chain_all@[i] == acc.chain@[i]);
+            } else {
+                assert(chain_all@[i] == ch.goals@[i - acc.chain.len()]);
+            }
+        }
     }
     Ok((EFPass { aitems: acc.aitems, citems, chain: chain_all, pairs }, ch.v))
 }

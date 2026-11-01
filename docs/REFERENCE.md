@@ -1168,18 +1168,59 @@ guideline_cardinality(actual,'$guideline_id'(product,…,ref(4),…),na,D,E) :-
 
 An operand with `some` directly before its noun keeps no
 `guideline_satisfies` condition. The proof obligation of the rule gives each
-operand one exact value that is not zero: 1 for such an operand, n for
-`exactly n` and `at least n`, n + 1 for `more than n`, n for `at most n`,
-and n − 1 for `less than n`. When this value is 0, the
-obligation takes the next integer in the direction that the condition
-allows, for example 1 for `at least 0` and −1 for `less than 1`. Only
-`exactly 0` keeps 0. The obligation computes the built-ins with these
-values, and the head of the rule takes the result. When a built-in derives
-nothing for these values, for example for a divisor of 0, the sentence
-rejects. The witness value is fixed: when it breaks another condition of
-the rule, such as `does not provably contain at least 1 cat`, the
-obligation fails although another value would satisfy the rule, and the
-compiler rejects the document with `underivable_obligation`.
+operand one exact value, its witness. The compiler selects the witnesses in
+these steps:
+
+1. The compiler gives each operand a default value that is not zero: 1 for
+   an operand with `some`, n for `exactly n` and `at least n`, n + 1 for
+   `more than n`, n for `at most n`, and n − 1 for `less than n`. When this
+   value is 0, the default takes the next integer in the direction that the
+   condition allows, for example 1 for `at least 0` and −1 for
+   `less than 1`. Only `exactly 0` keeps 0.
+2. The compiler collects the boundaries of each operand: the number of its
+   own comparison, the number of each comparison in a negated condition of
+   the rule that can apply to the operand, and 0.
+3. The candidates of an operand are its default, its boundaries, each
+   boundary plus 1 and minus 1, and the value halfway between two adjacent
+   boundaries. A candidate stays only when the condition of the operand
+   allows it. The default comes first. The other candidates follow in
+   ascending order. All candidates are exact numbers: a value that is not
+   an integer is a fraction, for example `rational(3,2)`.
+4. The compiler tries the combinations of the candidates in order. The
+   candidate of the last operand changes first. For each combination, the
+   compiler computes the built-ins, gives the head of the rule the result
+   and replays the proof obligation against all the clauses of the
+   document. The first combination whose obligation replays gives the
+   witnesses.
+
+When the built-ins derive nothing for the default values, for example for
+a divisor of 0, the sentence rejects. When no combination replays, the
+obligation keeps the default values and the compiler rejects the document
+with `underivable_obligation`. Thus a rule whose condition the default
+value breaks, such as `does not provably contain at least 1 cat`, compiles
+when another candidate satisfies the whole condition.
+
+The candidates are complete for a class of rules that the compiler
+recognizes. In this class, the witness facts hold each operand count once,
+and each head of the rule calls a predicate that only its own clause of the
+document can answer. The body of the clause calls only facts: the witness
+facts and the facts of the document, never another rule. A comparison reads
+an operand count only against a number from the boundaries of that operand.
+The arithmetic built-ins are the computation of the formula. They stand
+outside each negated condition, and no other condition reads their results.
+For a rule in this class, values in one cell of the boundaries give the same
+replay. Thus, when some exact values that the conditions allow make the
+obligation replay, a combination of candidates also replays, and the
+compiler finds the witnesses. The verified kernel proves this result
+(`ws_complete`). For a rule outside the class, the selection stays sound,
+because a selected witness always replays. But the compiler can fail to find
+a witness that exists.
+
+The selection reads only the clauses of the document. When the document
+loads with other guidelines, a rule of another guideline can change a
+negated condition of the rule. The replay of the whole composition decides
+that case: `ckc v1 aggregate-check` replays each obligation against all the
+loaded documents.
 
 A formula that breaks a rule rejects with `formula_shape(Why, S)`, class
 `unsupported`. The reason names the first check that fails, in this order:
@@ -1187,7 +1228,11 @@ A formula that breaks a rule rejects with `formula_shape(Why, S)`, class
 `literal`, `witness`. The check `operand` covers each operand of the formula
 before the check `operand_bound` starts. A question cannot hold a formula.
 The certifier derives each formula again from the DRS and the ACE text and
-reports a reject as `unsupported(sentence(S, formula_shape(Why)))`.
+reports a reject as `unsupported(sentence(S, formula_shape(Why)))`. The
+kernel also selects the witnesses again, with its own verified replay. For
+each document, `ckc certify` runs the compiler in proof mode and compares
+the two proof payloads. When they are different, the certification fails
+with `fork_payload_mismatch`.
 
 ### Scope exclusions
 

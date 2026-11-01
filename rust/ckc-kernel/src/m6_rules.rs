@@ -429,6 +429,7 @@ pub fn split_variants(
         crate::k2_load::prefix_chain(start, n5, n6);
         map_prefix(n5, n6, g1.pairs@);
         clauses_prefix(n5, n6, g1.clauses@);
+        crate::m6_model::sel_prefix(n5, n6, &g1.sel);
     }
     match g2_result {
         Err(e) => Err(e),

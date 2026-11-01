@@ -293,6 +293,7 @@ pub fn obligation(arena: &mut ETermArena, g: &Group, docid: &Vec<u8>, s: usize) 
     let ghost middle = arena.nodes@;
     proof {
         clauses_prefix(start, middle, g.clauses@);
+        crate::m6_model::sel_prefix(start, middle, &g.sel);
         map_prefix(start, middle, g.pairs@);
     }
     let unbound_heads = clause_heads(arena, &g.clauses);

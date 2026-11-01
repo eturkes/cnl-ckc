@@ -347,7 +347,24 @@ pub fn variant(
         crate::k2_load::prefix_chain(start, n4, arena.nodes@);
         map_prefix(n2, arena.nodes@, fp.pairs@);
     }
-    Ok(Group { k, pairs: fp.pairs, clauses: cs })
+    let ghost n5 = arena.nodes@;
+    proof {
+        items_prefix(start, n5, citems@);
+        items_prefix(n2, n5, fp.aitems@);
+        prefix_all(n2, n5, fp.chain@);
+    }
+    let fs = crate::m6_formula::top_formulas(arena, citems);
+    let sel = if fs.len() > 0 {
+        let refs = crate::m6_formula::formula_refs(arena, &fs);
+        let ops = crate::m6_witness::operands(arena, &fp.aitems, &refs);
+        Some(ESel { ops, chain: fp.chain })
+    } else {
+        None
+    };
+    proof {
+        reveal(sel_model);
+    }
+    Ok(Group { k, pairs: fp.pairs, clauses: cs, sel })
 }
 
 // The clause checks of `spec::variant` after both expansions.
@@ -680,8 +697,9 @@ pub fn fact_group(
     let pairs = Vec::new();
     proof {
         assert_seqs_equal!(map_model(pairs@) == Seq::<(Term, Term)>::empty());
+        sel_model_none();
     }
-    Ok((Group { k: 1, pairs, clauses: cs }, map2))
+    Ok((Group { k: 1, pairs, clauses: cs, sel: None }, map2))
 }
 
 } // verus!

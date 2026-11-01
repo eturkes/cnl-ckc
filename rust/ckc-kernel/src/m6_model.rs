@@ -575,10 +575,199 @@ pub proof fn clauses_prefix(before: Seq<ENode>, after: Seq<ENode>, cs: Seq<Claus
     }
 }
 
+// A formula variant's selection inputs (contract ws).
+pub struct EOpnd {
+    pub s: T,
+    pub n: T,
+    pub cond: Option<(T, T)>,
+}
+
+impl View for EOpnd {
+    type V = ckc_spec::witness::Opnd;
+
+    open spec fn view(&self) -> Self::V {
+        ckc_spec::witness::Opnd {
+            s: self.s@,
+            n: self.n@,
+            cond: match self.cond {
+                Some((op, b)) => Some((op@, b@)),
+                None => None,
+            },
+        }
+    }
+}
+
+pub struct ESel {
+    pub ops: Vec<EOpnd>,
+    pub chain: Vec<T>,
+}
+
+impl View for ESel {
+    type V = ckc_spec::witness::Sel;
+
+    open spec fn view(&self) -> Self::V {
+        ckc_spec::witness::Sel {
+            ops: self.ops@.map_values(|o: EOpnd| o@),
+            chain: self.chain@.map_values(|c: T| c@),
+        }
+    }
+}
+
+pub open spec fn opnd_valid(nodes: Seq<ENode>, o: &EOpnd) -> bool {
+    &&& valid(nodes, &o.s)
+    &&& valid(nodes, &o.n)
+    &&& match &o.cond {
+        Some((op, b)) => valid(nodes, op) && valid(nodes, b),
+        None => true,
+    }
+}
+
+// Every goal an arithmetic literal (`m6_formula::chain_pairs` evaluates them).
+pub open spec fn arith_goals(ts: Seq<T>) -> bool {
+    forall|i: int|
+        0 <= i < ts.len() ==> ((#[trigger] ts[i])@ matches ckc_spec::term::Term::Comp(name, args)
+            && ckc_spec::arith::is_arith(name, args.len()))
+}
+
+pub open spec fn sel_valid(nodes: Seq<ENode>, s: &Option<ESel>) -> bool {
+    match s {
+        Some(x) => (forall|i: int|
+            0 <= i < x.ops.len() ==> #[trigger] opnd_valid(nodes, &x.ops@[i])) && valid_all(
+            nodes,
+            x.chain@,
+        ) && arith_goals(x.chain@),
+        None => true,
+    }
+}
+
+pub proof fn sel_prefix(before: Seq<ENode>, after: Seq<ENode>, s: &Option<ESel>)
+    requires
+        before.is_prefix_of(after),
+        sel_valid(before, s),
+    ensures
+        sel_valid(after, s),
+{
+    match s {
+        Some(x) => {
+            assert forall|i: int| 0 <= i < x.ops.len() implies #[trigger] opnd_valid(
+                after,
+                &x.ops@[i],
+            ) by {
+                assert(opnd_valid(before, &x.ops@[i]));
+                prefix(before, after, &x.ops@[i].s);
+                prefix(before, after, &x.ops@[i].n);
+                match &x.ops@[i].cond {
+                    Some((op, b)) => {
+                        prefix(before, after, op);
+                        prefix(before, after, b);
+                    },
+                    None => {},
+                }
+            }
+            prefix_all(before, after, x.chain@);
+        },
+        None => {},
+    }
+}
+
+// Opaque: certification contexts compare group views without unfolding it.
+#[verifier::opaque]
+pub open spec fn sel_model(s: Option<ESel>) -> Option<ckc_spec::witness::Sel> {
+    match s {
+        Some(x) => Some(x@),
+        None => None,
+    }
+}
+
+pub proof fn sel_model_none()
+    ensures
+        sel_model(None) == Option::<ckc_spec::witness::Sel>::None,
+{
+    reveal(sel_model);
+}
+
+pub fn copy_sel(s: &Option<ESel>) -> (out: Option<ESel>)
+    ensures
+        sel_model(out) == sel_model(*s),
+        forall|nodes: Seq<ENode>| sel_valid(nodes, s) ==> #[trigger] sel_valid(nodes, &out),
+{
+    match s {
+        None => {
+            proof {
+                reveal(sel_model);
+            }
+            None
+        },
+        Some(x) => {
+            let mut ops: Vec<EOpnd> = Vec::new();
+            let mut i = 0usize;
+            while i < x.ops.len()
+                invariant
+                    i <= x.ops.len(),
+                    ops.len() == i,
+                    forall|j: int| 0 <= j < i ==> (#[trigger] ops@[j])@ == x.ops@[j]@,
+                    forall|j: int, nodes: Seq<ENode>|
+                        0 <= j < i && opnd_valid(nodes, &x.ops@[j]) ==> #[trigger] opnd_valid(
+                            nodes,
+                            &ops@[j],
+                        ),
+                decreases x.ops.len() - i,
+            {
+                let o = &x.ops[i];
+                let cond = match &o.cond {
+                    Some((op, b)) => Some((op.cp(), b.cp())),
+                    None => None,
+                };
+                ops.push(EOpnd { s: o.s.cp(), n: o.n.cp(), cond });
+                i += 1;
+            }
+            let mut chain: Vec<T> = Vec::new();
+            let mut m = 0usize;
+            while m < x.chain.len()
+                invariant
+                    m <= x.chain.len(),
+                    chain.len() == m,
+                    forall|j: int| 0 <= j < m ==> (#[trigger] chain@[j])@ == x.chain@[j]@,
+                    forall|j: int| 0 <= j < m ==> (#[trigger] chain@[j]).root == x.chain@[j].root,
+                decreases x.chain.len() - m,
+            {
+                chain.push(x.chain[m].cp());
+                m += 1;
+            }
+            proof {
+                reveal(sel_model);
+                assert_seqs_equal!(ops@.map_values(|o: EOpnd| o@) == x.ops@.map_values(|o: EOpnd| o@));
+                assert_seqs_equal!(chain@.map_values(|c: T| c@) == x.chain@.map_values(|c: T| c@));
+            }
+            let out = Some(ESel { ops, chain });
+            proof {
+                assert forall|nodes: Seq<ENode>| sel_valid(nodes, s) implies #[trigger] sel_valid(
+                    nodes,
+                    &out,
+                ) by {
+                    assert forall|j: int| 0 <= j < chain.len() implies #[trigger] valid(
+                        nodes,
+                        &chain@[j],
+                    ) by {
+                        assert(valid(nodes, &x.chain@[j]));
+                    }
+                    assert forall|j: int| 0 <= j < chain.len() implies ((
+                    #[trigger] chain@[j])@ matches ckc_spec::term::Term::Comp(name, args)
+                        && ckc_spec::arith::is_arith(name, args.len())) by {
+                        assert(chain@[j]@ == x.chain@[j]@);
+                    }
+                }
+            }
+            out
+        },
+    }
+}
+
 pub struct Group {
     pub k: usize,
     pub pairs: Vec<Binding>,
     pub clauses: Vec<Clause>,
+    pub sel: Option<ESel>,
 }
 
 impl View for Group {
@@ -589,12 +778,13 @@ impl View for Group {
             k: self.k as nat,
             pairs: map_model(self.pairs@),
             clauses: clause_models(self.clauses@),
+            sel: sel_model(self.sel),
         }
     }
 }
 
 pub open spec fn group_valid(nodes: Seq<ENode>, g: &Group) -> bool {
-    map_valid(nodes, g.pairs@) && clauses_valid(nodes, g.clauses@)
+    map_valid(nodes, g.pairs@) && clauses_valid(nodes, g.clauses@) && sel_valid(nodes, &g.sel)
 }
 
 pub open spec fn groups_valid(nodes: Seq<ENode>, gs: Seq<Group>) -> bool {
@@ -616,6 +806,7 @@ pub proof fn groups_prefix(before: Seq<ENode>, after: Seq<ENode>, gs: Seq<Group>
         assert(group_valid(before, &gs[i]));
         map_prefix(before, after, gs[i].pairs@);
         clauses_prefix(before, after, gs[i].clauses@);
+        sel_prefix(before, after, &gs[i].sel);
     }
 }
 

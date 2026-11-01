@@ -1,5 +1,7 @@
 // M6 shell: immutable input snapshots, upstream APE staging, duplicate DRS
-// runs, source hashes, verified certification. Derived payloads stay in memory.
+// runs, source hashes, verified certification, each certified document payload
+// equal to the fork's own proof run (contract ws D8). Derived payloads stay in
+// memory.
 use ckc_kernel::{EOut, ESrc};
 use std::fs;
 use std::io::{self, Write};
@@ -51,7 +53,12 @@ fn optional_ulex(path: &Path) -> Result<Option<Vec<u8>>, String> {
 }
 
 impl Stage {
-    fn new(root: &Path, swipl: &Path, ulex: Option<&[u8]>) -> Result<Self, String> {
+    fn new(
+        root: &Path,
+        swipl: &Path,
+        ulex: Option<&[u8]>,
+        table: Option<&[u8]>,
+    ) -> Result<Self, String> {
         let mut index = 0u64;
         let stage = loop {
             let path =
@@ -78,6 +85,10 @@ impl Stage {
         .map_err(|_| "stage_clex_failed.")?;
         if let Some(bytes) = ulex {
             fs::write(stage.dir.join("lexicon.ulex"), bytes).map_err(|_| "stage_ulex_failed.")?;
+        }
+        if let Some(bytes) = table {
+            fs::write(stage.dir.join("vocabulary.tsv"), bytes)
+                .map_err(|_| "stage_vocabulary_failed.")?;
         }
         use crate::check::BuildFault;
         ape.to_str().ok_or("stage_path_utf8.")?;
@@ -107,6 +118,33 @@ impl Stage {
         std::str::from_utf8(&out).map_err(|_| "invalid_utf8(dump).")?;
         Ok(out)
     }
+
+    // Contract ws D8: the fork's own proof run over the staged snapshots (c1 D5 argv), an
+    // untrusted producer whose payload must equal the certified one. Its stderr stays
+    // `ckc check`'s law: a C locale adds source-load warnings, never other payload bytes.
+    fn proof(&self, id: &str, ace: &[u8], ulex: bool, table: bool) -> Result<Vec<u8>, String> {
+        let ape = self.dir.join("ape-stage");
+        let slot = |staged: bool, name: &str| {
+            if staged {
+                self.dir.join(name).display().to_string()
+            } else {
+                "-".to_owned()
+            }
+        };
+        let tail = [
+            ape.display().to_string(),
+            id.to_owned(),
+            slot(table, "vocabulary.tsv"),
+            slot(ulex, "lexicon.ulex"),
+            "proof".to_owned(),
+        ];
+        let mut command = crate::check::compiler(&self.swipl, &ape, &tail);
+        let (rc, out) = crate::check::swipl_run(&mut command, Some(ace))?;
+        if rc != 0 {
+            return Err(format!("fork_failed({rc})."));
+        }
+        Ok(out)
+    }
 }
 
 // (raw vocabulary.tsv bytes, its sha256 hex): the annotating projection input (c1 D8).
@@ -123,8 +161,16 @@ fn optional_table(path: &Path) -> Result<Option<Table>, String> {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum Mode {
+    Doc,
+    Query,
+    // contract ws P6: the walk report of each formula variant
+    Walks,
+}
+
 fn certify(
-    query: bool,
+    mode: Mode,
     id: &str,
     ace: &[u8],
     usha: Option<&Vec<u8>>,
@@ -135,7 +181,18 @@ fn certify(
     let asha = crate::trust::sha256_hex(ace);
     let traw = table.map(|t| &t.0);
     let tsha = table.map(|t| &t.1);
-    if query {
+    if mode == Mode::Walks {
+        ckc_kernel::contract::certify_walks(
+            ace,
+            asha.as_bytes(),
+            usha,
+            id.as_bytes(),
+            dump,
+            pl,
+            traw,
+            tsha,
+        )
+    } else if mode == Mode::Query {
         ckc_kernel::contract::certify_query(
             ace,
             asha.as_bytes(),
@@ -182,9 +239,14 @@ pub(crate) fn name_ok(id: &str) -> bool {
 }
 
 pub fn run_one(args: &[String]) -> ExitCode {
-    let query = args[0] == "query";
+    let mode = match args[0].as_str() {
+        "doc" => Mode::Doc,
+        "query" => Mode::Query,
+        "walks" => Mode::Walks,
+        _ => return reject(&args[1], "arguments."),
+    };
     let id = &args[1];
-    if (!query && args[0] != "doc") || !name_ok(id) {
+    if !name_ok(id) {
         return reject(id, "arguments.");
     }
     let inputs = (|| {
@@ -213,7 +275,7 @@ pub fn run_one(args: &[String]) -> ExitCode {
                 .as_ref()
                 .map(|u| crate::trust::sha256_hex(u).into_bytes());
             emit(certify(
-                query,
+                mode,
                 id,
                 &ace,
                 usha.as_ref(),
@@ -273,7 +335,18 @@ fn certify_artifact(
     if first != second {
         return Err("dump_nondeterministic.".to_owned());
     }
-    let output = certify(artifact.query, &artifact.id, &ace, usha, table, &first, &pl);
+    let mode = if artifact.query {
+        Mode::Query
+    } else {
+        Mode::Doc
+    };
+    let output = certify(mode, &artifact.id, &ace, usha, table, &first, &pl);
+    if mode == Mode::Doc
+        && output.rc == 0
+        && stage.proof(&artifact.id, &ace, usha.is_some(), table.is_some())? != output.out
+    {
+        return Err("fork_payload_mismatch.".to_owned());
+    }
     Ok((pl, output))
 }
 
@@ -344,7 +417,12 @@ pub fn run(id: &str) -> ExitCode {
             return Err("retired_table(temporal.tsv).".to_owned());
         }
         let table = optional_table(&guideline.join("vocabulary.tsv"))?;
-        let stage = Stage::new(&root, &swipl, ulex.as_deref())?;
+        let stage = Stage::new(
+            &root,
+            &swipl,
+            ulex.as_deref(),
+            table.as_ref().map(|t| t.0.as_slice()),
+        )?;
         Ok::<_, String>((docs, queries, ulex, table, stage))
     })();
     let (docs, queries, ulex, table, stage) = match inputs {

@@ -47,7 +47,9 @@
 %   scope guard (contract sup1; the sup1_ prefix),
 %   and, with or without a table, a rule consequent's formula `Y = E` as a
 %   guideline_product/6 | guideline_quotient/6 chain whose result is Y's
-%   cardinality (contract da2; the da2_ prefix),
+%   cardinality (contract da2; the da2_ prefix), its operand witnesses the
+%   first candidate tuple whose obligation replays (contract ws; the ws_
+%   prefix),
 %   and admits relation/3 leaves + upper-bound condition lists in questions;
 %   rejects add unsupported temporal_shape(Why,S), grade_shape(Why,S),
 %   preference_shape(Why,S), qualifier_shape(Why,S), scope_shape(Why,S),
@@ -66,7 +68,11 @@
 %       2=usage|ape_load|ulex_load|vocabulary_load|uncaught.
 % Assurance: every compile (product or proof emission) derives per-group
 % witness worlds + obligations and replays them against the document's own
-% clauses; an underivable obligation rejects the document (class proof).
+% clauses; an underivable obligation rejects the document (class proof). A
+% formula variant replays each candidate tuple with fail-closed negation
+% (ws_solve, the fork's own bounded interpreter; ckc certify refuses a payload
+% that differs from the kernel's, contract ws D8); no tuple replaying =
+% underivable_obligation.
 % One schema on main, identifier 2 (contracts c1, id2; the release line keeps 1):
 % documents carry guideline_schema_version(2), questions the tag v2; the
 % projection lives under "schema projection" near the end of this file. It
@@ -104,6 +110,7 @@
 
 :- use_module(library(readutil), [read_stream_to_codes/2]).
 :- use_module(library(crypto), [crypto_data_hash/3]).
+:- use_module(library(pairs), [pairs_keys_values/3]).
 
 :- meta_predicate quarantined_call(+, +, +, 0).
 
@@ -2881,9 +2888,11 @@ nt1_assert_schema :-
 da2_seg_conds(seg(_, Conds), Conds).
 
 /* Raw = the rule's antecedent + consequent condition terms (anchor search);
-   Ordered/Map/DocId/K feed the witness pairs of the converted antecedent. */
+   Ordered/Map/DocId/K feed the witness pairs of the converted antecedent.
+   Kind = the group kind: rule, or formula(Operands, Chain) for a variant
+   with formulas (its witness selection inputs, contract ws D4). */
 da2_formula_pass(Raw, S, AItems, CItems, Ordered, Map, DocId, K,
-        AFree, CRest, Chain, Pairs) :-
+        AFree, CRest, Chain, Pairs, Kind) :-
     ( ( da2_misplaced(AItems, false) ; da2_misplaced(CItems, true) ) ->
         reject(unsupported, formula_shape(position, S))
     ; true
@@ -2899,7 +2908,12 @@ da2_formula_pass(Raw, S, AItems, CItems, Ordered, Map, DocId, K,
     exclude(da2_top_formula, CItems, CItems1),
     v1_witness_pairs(AFree, Ordered, Map, DocId, S, K, Ops, Pairs0),
     da2_steps(Fs, Fs, S, Toks, Line, An, AItems, CItems1, CRest, [], Chain,
-        Pairs0, Pairs).
+        Pairs0, Pairs),
+    ( Fs == [] ->
+        Kind = rule
+    ; ws_operands(AFree, Ops, [], Operands),
+      Kind = formula(Operands, Chain)
+    ).
 
 da2_misplaced([Item|Items], TopOk) :-
     ( da2_misplaced_item(Item, TopOk) ->
@@ -3276,13 +3290,18 @@ da2_rewrite_target([Item|Items], Y, OS-ON, [Item1|Items1]) :-
     ),
     da2_rewrite_target(Items, Y, OS-ON, Items1).
 
-% An operand's witness: an exact nonzero value its condition admits.
+% An operand's default witness (contract ws D2, exact rationals): a nonzero
+% value its condition admits.
 da2_operand_witness(Op, Count, W) :-
-    ( integer(Count) ->
-        ( Op == geq, Count =:= 0 -> W = 1
-        ; Op == leq, Count =:= 0 -> W = -1
-        ; Op == greater -> W0 is Count + 1, ( W0 =:= 0 -> W is Count + 2 ; W = W0 )
-        ; Op == less -> W0 is Count - 1, ( W0 =:= 0 -> W is Count - 2 ; W = W0 )
+    ( da2_arith(guideline_number(Count, P, Q)) ->
+        ( Op == geq, P =:= 0 -> W = 1
+        ; Op == leq, P =:= 0 -> W = -1
+        ; Op == greater ->
+            ( P + Q =:= 0 -> P1 is P + 2 * Q ; P1 is P + Q ),
+            da2_arith(guideline_canon(P1, Q, W))
+        ; Op == less ->
+            ( P =:= Q -> P1 is P - 2 * Q ; P1 is P - Q ),
+            da2_arith(guideline_canon(P1, Q, W))
         ; W = Count
         )
     ; W = Count
@@ -3445,9 +3464,9 @@ v1_plain_rule(Segs, CConds, ADom, S, DocId, Map, SGroups) :-
     maplist(da2_seg_conds, Segs, SegConds),
     append(SegConds, [CConds], Raw),
     da2_formula_pass(Raw, S, AItemsC, CItems, Ordered, Map, DocId, 1,
-        AItemsF, CItemsF, Chain, Pairs),
+        AItemsF, CItemsF, Chain, Pairs, Kind),
     v1_variant(AItemsF, CItemsF, Chain, Map, Sko, S, Clauses),
-    SGroups = [group(rule, 1, Pairs, Clauses)].
+    SGroups = [group(Kind, 1, Pairs, Clauses)].
 
 v1_seg_items([], _, _, N, N, []).
 v1_seg_items([seg(_, Conds)|Segs], S, DocId, N0, N, Items) :-
@@ -3499,13 +3518,13 @@ v1_split_rule(Shared, Arm1, Arm2, CConds, ADom, S, DocId, Map, SGroups) :-
     nt1_compare(Ante20, Ante2),
     Raw = [Shared, Arm1, Arm2, CConds],
     da2_formula_pass(Raw, S, Ante1, CItems1, Ordered, Map, DocId, 1,
-        Ante1F, CItems1F, Chain1, Pairs1),
+        Ante1F, CItems1F, Chain1, Pairs1, Kind1),
     v1_variant(Ante1F, CItems1F, Chain1, Map, Sko1, S, Clauses1),
     da2_formula_pass(Raw, S, Ante2, CItems2, Ordered, Map, DocId, 2,
-        Ante2F, CItems2F, Chain2, Pairs2),
+        Ante2F, CItems2F, Chain2, Pairs2, Kind2),
     v1_variant(Ante2F, CItems2F, Chain2, Map, Sko2, S, Clauses2),
-    SGroups = [group(rule, 1, Pairs1, Clauses1),
-               group(rule, 2, Pairs2, Clauses2)].
+    SGroups = [group(Kind1, 1, Pairs1, Clauses1),
+               group(Kind2, 2, Pairs2, Clauses2)].
 
 v1_arm_box(Arm, S, _, _) :-
     nonvar(Arm),
@@ -4827,8 +4846,13 @@ v1_prove_groups([group(supersession, _, _, _)|Groups], DocId, S, Obligations) :-
     !,
     v1_prove_groups(Groups, DocId, S, Obligations).
 v1_prove_groups([Group|Groups], DocId, S, [Obligation|Obligations]) :-
-    v1_group_obligation(Group, DocId, S, Obligation),
-    v1_check_obligation(Obligation),
+    ws_select(Group, Selected, Won),
+    v1_group_obligation(Selected, DocId, S, Obligation),
+    ( Won == none ->
+        arg(2, Group, K),
+        reject(proof, underivable_obligation(S, variant(K)))
+    ; v1_check_obligation(Obligation)
+    ),
     v1_prove_groups(Groups, DocId, S, Obligations).
 
 v1_group_obligation(group(Kind, K, Pairs, Clauses), DocId, S, Obligation) :-
@@ -4890,6 +4914,303 @@ v1_prove_heads([]).
 v1_prove_heads([Head|Heads]) :-
     v1_bounded_head_call(ace_to_pl_proof_world:Head),
     v1_prove_heads(Heads).
+
+/* ---------- witness selection (contract ws) ----------
+   A formula variant's witness = the first candidate tuple whose chain derives
+   and whose obligation replays over the document's program (D5), else none:
+   the default pairs stay and the variant rejects underivable_obligation (D6).
+   Candidates per operand (D3): its default first, then the numbers of B, b +/- 1
+   and the midpoints of B its own condition admits, ascending; B = its own bound,
+   the bound of each NAF comparison relevant to it, and 0. Tuples run in
+   odometer order, the last operand fastest (D4: backtracking over the lists).
+   The replay = the fork's own bounded interpreter with fail-closed negation
+   (D8): an inner search a depth cut pruned and that then fails ends the replay
+   incomplete. Spec = ckc-spec witness.rs; the kernel re-derives the selection
+   under K2, and ckc certify refuses a payload that differs from the kernel's. */
+ws_select(group(Kind, K, Pairs, Clauses), Selected, Won) :-
+    nonvar(Kind),
+    Kind = formula(Ops, Chain),
+    !,
+    ws_candidate_lists(Ops, Pairs, Clauses, Lists),
+    ( ws_first_win(Lists, Ops, Chain, Pairs, Clauses, Pairs1) ->
+        Won = won,
+        Selected = group(Kind, K, Pairs1, Clauses)
+    ; Won = none,
+      Selected = group(Kind, K, Pairs, Clauses)
+    ).
+ws_select(Group, Group, plain).
+
+% The distinct formula operands of a converted antecedent, condition order.
+ws_operands([], _, _, []).
+ws_operands([Item|Items], Refs, Seen, Ops) :-
+    ( ws_operand(Item, Refs, Seen, X, Op) ->
+        Ops = [Op|Ops1],
+        ws_operands(Items, Refs, [X|Seen], Ops1)
+    ; ws_operands(Items, Refs, Seen, Ops)
+    ).
+
+ws_operand(Item, Refs, Seen, X, Op) :-
+    nonvar(Item),
+    functor(Item, anchored, 2),
+    arg(2, Item, Inner),
+    nonvar(Inner),
+    ( functor(Inner, '$guideline_bound', 8) ->
+        arg(1, Inner, X),
+        \+ strict_member(X, Seen),
+        strict_member(X, Refs),
+        arg(5, Inner, CV),
+        arg(6, Inner, NV),
+        arg(7, Inner, Cmp),
+        arg(8, Inner, B),
+        Op = op(CV, NV, Cmp-B)
+    ; functor(Inner, '$guideline_amount', 6),
+      arg(1, Inner, X),
+      \+ strict_member(X, Seen),
+      arg(5, Inner, CV),
+      arg(6, Inner, NV),
+      Op = op(CV, NV, none)
+    ).
+
+ws_candidate_lists(Ops, Pairs, [clause(_, Goals)|_], Lists) :-
+    maplist(ws_count, Ops, Ns),
+    copy_term(Goals-Pairs-Ns, GoalsC-PairsC-NsC),
+    exclude(ws_count_key(NsC), PairsC, Open),
+    v1_bind_witness(Open),
+    v1_positive_goals(GoalsC, Skel),
+    ws_naf_items(GoalsC, Nafs),
+    ws_op_lists(Ops, NsC, Nafs, Skel, Lists).
+
+ws_count(op(_, NV, _), NV).
+
+ws_count_key(Ns, V-_) :-
+    strict_member(V, Ns).
+
+ws_naf_items([], []).
+ws_naf_items([Goal|Goals], Nafs) :-
+    ( nonvar(Goal), functor(Goal, naf, 2) ->
+        arg(2, Goal, Sub),
+        Nafs = [Sub|Nafs1]
+    ; Nafs = Nafs1
+    ),
+    ws_naf_items(Goals, Nafs1).
+
+ws_op_lists([], [], _, _, []).
+ws_op_lists([op(_, _, Cond)|Ops], [Slot|Slots], Nafs, Skel, [Cands|Lists]) :-
+    ws_boundaries(Cond, Nafs, Skel, Slot, Bs),
+    ws_candidates(Cond, Bs, Cands),
+    ws_op_lists(Ops, Slots, Nafs, Skel, Lists).
+
+ws_boundaries(Cond, Nafs, Skel, Slot, Bs) :-
+    ( Cond = _-B, ws_number(B) -> Own = [B] ; Own = [] ),
+    ws_naf_bounds(Nafs, Skel, Slot, NB),
+    append([Own, NB, [0]], Raw),
+    ws_ascending(Raw, Bs).
+
+ws_naf_bounds([], _, _, []).
+ws_naf_bounds([Sub|Subs], Skel, Slot, Bounds) :-
+    ws_item_bounds(Sub, Sub, Skel, Slot, B1),
+    ws_naf_bounds(Subs, Skel, Slot, B2),
+    append(B1, B2, Bounds).
+
+ws_item_bounds(_, [], _, _, []).
+ws_item_bounds(Sub, [C|Cs], Skel, Slot, Bounds) :-
+    ( nonvar(C),
+      functor(C, guideline_satisfies, 4),
+      arg(4, C, B),
+      ws_number(B),
+      ws_relevant(Sub, Skel, C, Slot) ->
+        Bounds = [B|Rest]
+    ; Bounds = Rest
+    ),
+    ws_item_bounds(Sub, Cs, Skel, Slot, Rest).
+
+% Some match of the item's semantic goals against the skeleton (one shared
+% substitution, occurs check) leaves the slot open as the comparison's count.
+ws_relevant(Sub, Skel, C, Slot) :-
+    exclude(nt1_builtin_goal, Sub, Sem),
+    \+ \+ ( ws_join(Sem, Skel),
+            arg(2, C, D),
+            var(Slot),
+            D == Slot
+          ).
+
+ws_join([], _).
+ws_join([G|Gs], Facts) :-
+    member(F, Facts),
+    unify_with_occurs_check(G, F),
+    ws_join(Gs, Facts).
+
+ws_candidates(Cond, Bs, [W0|Rest]) :-
+    ( Cond = Cmp-B -> da2_operand_witness(Cmp, B, W0) ; W0 = 1 ),
+    maplist(ws_plus(-1), Bs, Lo),
+    maplist(ws_plus(1), Bs, Hi),
+    ws_midpoints(Bs, Mids),
+    append([Bs, Lo, Hi, Mids], Raw),
+    include(ws_keep(Cond, W0), Raw, Kept),
+    ws_ascending(Kept, Rest).
+
+ws_keep(Cond, W0, X) :-
+    X \== W0,
+    ws_number(X),
+    ( Cond = Cmp-B -> da2_arith(guideline_satisfies(exactly, X, Cmp, B)) ; true ).
+
+ws_number(X) :-
+    da2_arith(guideline_number(X, _, _)).
+
+ws_plus(K, B, X) :-
+    da2_arith(guideline_number(B, P, Q)),
+    P1 is P + K * Q,
+    da2_arith(guideline_canon(P1, Q, X)).
+
+ws_midpoints([B1, B2|Bs], [M|Ms]) :-
+    !,
+    da2_arith(guideline_number(B1, P1, Q1)),
+    da2_arith(guideline_number(B2, P2, Q2)),
+    P is P1 * Q2 + P2 * Q1,
+    Q is 2 * Q1 * Q2,
+    da2_arith(guideline_canon(P, Q, M)),
+    ws_midpoints([B2|Bs], Ms).
+ws_midpoints(_, []).
+
+% The distinct numbers, ascending (canonical: equal values are equal terms).
+ws_ascending(Xs, Ys) :-
+    predsort(ws_order, Xs, Ys).
+
+ws_order(O, X, Y) :-
+    da2_arith(guideline_number(X, P1, Q1)),
+    da2_arith(guideline_number(Y, P2, Q2)),
+    A is P1 * Q2,
+    B is P2 * Q1,
+    compare(O, A, B).
+
+ws_first_win(Lists, Ops, Chain, Pairs, Clauses, Won) :-
+    ws_tuple(Lists, T),
+    ws_tuple_pairs(Ops, Chain, Pairs, T, TP),
+    ws_win(Clauses, TP),
+    !,
+    Won = TP.
+
+ws_tuple([], []).
+ws_tuple([L|Ls], [X|Xs]) :-
+    member(X, L),
+    ws_tuple(Ls, Xs).
+
+% The pairs under the tuple: each operand count + chain output re-valued.
+ws_tuple_pairs(Ops, Chain, Pairs, T, TP) :-
+    ws_op_pairs(Ops, T, OpPairs),
+    ws_chain_pairs(Chain, OpPairs, Vs),
+    maplist(ws_revalue(Vs), Pairs, TP).
+
+ws_op_pairs([], [], []).
+ws_op_pairs([op(CV, NV, _)|Ops], [X|Xs], [CV-exactly, NV-X|Rest]) :-
+    ws_op_pairs(Ops, Xs, Rest).
+
+ws_chain_pairs([], Vs, Vs).
+ws_chain_pairs([G|Gs], Vs0, Vs) :-
+    pairs_keys_values(Vs0, Keys, Vals),
+    copy_term(G-Keys, GC-KeysC),
+    ws_bind_keys(KeysC, Vals),
+    GC =.. [F, S1, N1, S2, N2, _, _],
+    G2 =.. [F, S1, N1, S2, N2, SV, NV],
+    once(da2_arith(G2)),
+    arg(5, G, OS),
+    arg(6, G, ON),
+    append(Vs0, [OS-SV, ON-NV], Vs1),
+    ws_chain_pairs(Gs, Vs1, Vs).
+
+ws_bind_keys([], []).
+ws_bind_keys([K|Ks], [V|Vs]) :-
+    ( var(K) -> K = V ; true ),
+    ws_bind_keys(Ks, Vs).
+
+ws_revalue(Vs, V-W, V-W1) :-
+    ( ws_lookup(Vs, V, W2) -> W1 = W2 ; W1 = W ).
+
+ws_lookup([K-X|Ps], V, W) :-
+    ( K == V -> W = X ; ws_lookup(Ps, V, W) ).
+
+% The obligation under the pairs replays: witness facts asserted in front,
+% every head proved with a fresh budget.
+ws_win(Clauses, TP) :-
+    copy_term(Clauses-TP, CC-CTP),
+    v1_bind_witness(CTP),
+    CC = [clause(_, Goals)|_],
+    v1_positive_goals(Goals, Facts),
+    v1_heads(CC, Heads),
+    v1_assert_witness(Facts, Refs),
+    ( ws_prove_heads(Heads) ->
+        v1_erase_refs(Refs)
+    ; v1_erase_refs(Refs),
+      fail
+    ).
+
+ws_prove_heads([]).
+ws_prove_heads([Head|Heads]) :-
+    ws_replay(Head),
+    ws_prove_heads(Heads).
+
+ws_replay(Goal) :-
+    v1_proof_depth_limit(Depth),
+    v1_proof_inference_limit(Fuel),
+    nb_setval(ws_fuel, Fuel),
+    nb_setval(ws_pruned, false),
+    catch(ws_solve(Goal, Depth), ws_incomplete, fail),
+    !.
+
+/* After the kernel's machine (spec engine.rs), not proven equal to it: goals
+   run leftmost (K2 lets an operator goal wait, contract eso) and fuel counts
+   dispatches alone (K2 also counts each redo, cut, pruned goal + solution).
+   A goal at depth 0 is pruned; a conjunction keeps its depth; a negation
+   proves its goal once at depth - 1 with the prune flag cleared (refuted: the
+   entry flag returns; exhausted after a prune: the replay ends incomplete); a
+   built-in runs once; a call resolves a clause in program order, its body at
+   depth - 1. One fuel per dispatch; none left = incomplete. */
+ws_solve(_, 0) :-
+    !,
+    nb_setval(ws_pruned, true),
+    fail.
+ws_solve(Goal, Depth) :-
+    ws_tick,
+    ( Goal = (A, B) ->
+        ws_solve(A, Depth),
+        ws_solve(B, Depth)
+    ; Goal = (\+ G) ->
+        D1 is Depth - 1,
+        ws_naf(G, D1)
+    ; nt1_builtin_goal(Goal) ->
+        once(ace_to_pl_proof_world:Goal)
+    ; D1 is Depth - 1,
+      clause(ace_to_pl_proof_world:Goal, Body),
+      ws_body(Body, D1)
+    ).
+
+ws_body(true, _) :-
+    !.
+ws_body((A, B), Depth) :-
+    !,
+    ws_body(A, Depth),
+    ws_body(B, Depth).
+ws_body(Goal, Depth) :-
+    ws_solve(Goal, Depth).
+
+ws_naf(G, Depth) :-
+    nb_getval(ws_pruned, Entry),
+    nb_setval(ws_pruned, false),
+    ( ws_solve(G, Depth) ->
+        nb_setval(ws_pruned, Entry),
+        fail
+    ; nb_getval(ws_pruned, true) ->
+        throw(ws_incomplete)
+    ; nb_setval(ws_pruned, Entry)
+    ).
+
+ws_tick :-
+    nb_getval(ws_fuel, F),
+    ( F =< 0 ->
+        throw(ws_incomplete)
+    ; F1 is F - 1,
+      nb_setval(ws_fuel, F1)
+    ).
 
 /* Payload rendering (P6): one ground term per line through the shared
    canonical writer; no comments, no environment traces. */

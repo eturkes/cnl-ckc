@@ -16,7 +16,7 @@ use vstd::prelude::*;
 
 verus! {
 
-proof fn ground_nvars(term: Term)
+pub proof fn ground_nvars(term: Term)
     ensures
         ground(term) == (ckc_spec::engine::nvars(term) == 0),
     decreases term, 0int,

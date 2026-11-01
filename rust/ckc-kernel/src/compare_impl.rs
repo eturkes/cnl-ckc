@@ -189,7 +189,10 @@ fn unit_scale(u: &Vec<u8>) -> (r: Option<(bool, usize)>)
 }
 
 // p/q as a signed decimal times the positive integer m: (magnitude, sign).
-fn scaled_value(r: &crate::arith_impl::ERat, m: &Vec<u8>, mv: Ghost<nat>) -> (out: (Vec<u8>, bool))
+pub fn scaled_value(r: &crate::arith_impl::ERat, m: &Vec<u8>, mv: Ghost<nat>) -> (out: (
+    Vec<u8>,
+    bool,
+))
     requires
         crate::arith_impl::rat_ok(r),
         m@ == udec_bytes(mv@),

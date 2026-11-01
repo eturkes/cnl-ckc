@@ -88,6 +88,7 @@ pub(crate) fn swipl_run(
         Ok((false, o)) => Ok((o.rc, o.out)),
     }
 }
+pub(crate) use process::compiler;
 pub fn run(root: &str) -> ExitCode {
     if std::env::set_current_dir(root).is_err() {
         return common::emit(Err(common::fail("check", format!("unreadable {root}"))));

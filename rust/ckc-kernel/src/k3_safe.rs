@@ -13,7 +13,7 @@ use vstd::prelude::*;
 
 verus! {
 
-proof fn stream_occurs(t: Term, x: nat)
+pub proof fn stream_occurs(t: Term, x: nat)
     ensures
         var_stream(t).contains(x) == occurs(x, t),
     decreases t,
@@ -32,7 +32,7 @@ proof fn stream_occurs(t: Term, x: nat)
     }
 }
 
-proof fn stream_all_occurs(ts: Seq<Term>, x: nat)
+pub proof fn stream_all_occurs(ts: Seq<Term>, x: nat)
     ensures
         var_stream_all(ts).contains(x) == occurs_all(x, ts),
     decreases ts,

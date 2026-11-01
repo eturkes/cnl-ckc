@@ -372,7 +372,7 @@ fn build_run(command: &mut Command) -> std::result::Result<Output, BuildFault> {
         Ok((false, out)) => Ok(out),
     }
 }
-pub(super) fn compiler(swipl: &Path, stage: &Path, tail: &[String]) -> Command {
+pub(crate) fn compiler(swipl: &Path, stage: &Path, tail: &[String]) -> Command {
     let mut c = Command::new(swipl);
     c.args(["-q", "-f", "none", "-F", "none", "-s"])
         .arg(stage.join("prolog/ace_to_pl.pl"))

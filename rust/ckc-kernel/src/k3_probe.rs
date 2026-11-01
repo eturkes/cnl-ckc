@@ -17,7 +17,7 @@ verus! {
 
 broadcast use {vstd::seq::group_seq_axioms, vstd::seq_lib::group_seq_properties};
 
-proof fn shift_ground(t: Term, off: nat)
+pub proof fn shift_ground(t: Term, off: nat)
     requires
         ground(t),
     ensures
@@ -29,7 +29,7 @@ proof fn shift_ground(t: Term, off: nat)
     }
 }
 
-proof fn shift_all_ground(ts: Seq<Term>, off: nat)
+pub proof fn shift_all_ground(ts: Seq<Term>, off: nat)
     requires
         ground_all(ts),
     ensures

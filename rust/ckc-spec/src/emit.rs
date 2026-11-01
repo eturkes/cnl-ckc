@@ -2982,33 +2982,10 @@ pub open spec fn chain_pairs(goals: Seq<Term>, pairs: Seq<(Term, Term)>) -> Opti
     }
 }
 
-// An operand's witness: an exact nonzero value its condition admits, where one
-// exists (contract da2 D4).
+// An operand's default witness = contract ws D2 (`witness::w0`, exact
+// rationals; for an integer bound da2 D4's value).
 pub open spec fn operand_witness(op: Term, count: Term) -> Term {
-    match count {
-        Term::Int(n) => Term::Int(
-            if op == atom("geq"@) && n == 0 {
-                1
-            } else if op == atom("leq"@) && n == 0 {
-                -1
-            } else if op == atom("greater"@) {
-                if n + 1 == 0 {
-                    n + 2
-                } else {
-                    n + 1
-                }
-            } else if op == atom("less"@) {
-                if n - 1 == 0 {
-                    n - 2
-                } else {
-                    n - 1
-                }
-            } else {
-                n
-            },
-        ),
-        _ => count,
-    }
+    crate::witness::w0(Option::Some((op, count)))
 }
 
 // Formula leaves that are referents, across the formulas.
@@ -3296,6 +3273,9 @@ pub ghost struct Group {
     pub k: nat,  // variant ordinal (1 for facts)
     pub pairs: Seq<(Term, Term)>,  // witness bindings
     pub clauses: Seq<DocClause>,
+    pub sel: Option<
+        crate::witness::Sel,
+    >,  // a formula variant's selection inputs (contract ws)
 }
 
 pub open spec fn rule_clauses(heads: Seq<Term>, body: Seq<BodyItem>) -> Seq<DocClause> {
@@ -3473,7 +3453,17 @@ pub open spec fn fact_group(
                         if !all_head_safe(cs) {
                             Result::Err(atom("head_variable_not_bound_in_body"@))
                         } else {
-                            Result::Ok((Group { k: 1, pairs: Seq::empty(), clauses: cs }, map2))
+                            Result::Ok(
+                                (
+                                    Group {
+                                        k: 1,
+                                        pairs: Seq::empty(),
+                                        clauses: cs,
+                                        sel: Option::None,
+                                    },
+                                    map2,
+                                ),
+                            )
                         }
                     },
                 }
@@ -3725,11 +3715,26 @@ pub open spec fn variant(
                     Result::Err(atom("head_variable_not_bound_in_body"@))
                 } else {
                     // The checks read the DRS order; the clauses run binding-first.
+                    let fs = top_formulas(citems0);
                     Result::Ok(
                         Group {
                             k,
                             pairs: fp.pairs,
                             clauses: rule_clauses(pos_terms(heads), bind_first(body)),
+                            sel: if fs.len() > 0 {
+                                Option::Some(
+                                    crate::witness::Sel {
+                                        ops: crate::witness::operands(
+                                            fp.aitems,
+                                            formula_refs(fs),
+                                            Seq::empty(),
+                                        ),
+                                        chain: fp.chain,
+                                    },
+                                )
+                            } else {
+                                Option::None
+                            },
                         },
                     )
                 }
@@ -4373,6 +4378,7 @@ pub open spec fn date_group(g: Group, date: nat) -> Group {
                 |c: DocClause|
                     DocClause { head: c.head, body: date_guarded(c.body, date_goals(v, date)) },
             ),
+            sel: g.sel,
         }
     }
 }
@@ -4753,6 +4759,35 @@ pub open spec fn first_mismatch(
     }
 }
 
+// The certified tail: the committed bundles = the projection's clauses,
+// sentence by sentence; then one ground obligation per group, each formula
+// variant under its selected witness over the document's program (contract ws).
+pub open spec fn certified(
+    doc: DocFile,
+    ps: Seq<Projected>,
+    docid: Seq<u8>,
+    lines: Seq<Seq<u8>>,
+) -> Result<Seq<Ob>, Term> {
+    match first_mismatch(doc.bundles, ps, lines, 0) {
+        Option::Some(s) => Result::Err(Term::Comp(ascii("clauses"@), seq![Term::Int(s as int)])),
+        Option::None => {
+            let obs = obligations(
+                crate::witness::select_doc(ps, crate::replay::doc_db(doc)),
+                docid,
+            );
+            match first_nonground(obs) {
+                Option::Some(o) => Result::Err(
+                    Term::Comp(
+                        ascii("nonground_obligation"@),
+                        seq![o.s, crate::replay::variant(o)],
+                    ),
+                ),
+                Option::None => Result::Ok(obs),
+            }
+        },
+    }
+}
+
 // certify_doc: Ok(obligations) iff the committed document is the projection
 // of the DRS the driver derived from its quoted source.
 pub open spec fn certify_doc(
@@ -4797,23 +4832,7 @@ pub open spec fn certify_doc(
                         srcs_of(d.sentences, lines),
                     ) {
                         Result::Err(e) => Result::Err(Term::Comp(ascii("unsupported"@), seq![e])),
-                        Result::Ok(ps) => match first_mismatch(doc.bundles, ps, lines, 0) {
-                            Option::Some(s) => Result::Err(
-                                Term::Comp(ascii("clauses"@), seq![Term::Int(s as int)]),
-                            ),
-                            Option::None => {
-                                let obs = obligations(ps, docid);
-                                match first_nonground(obs) {
-                                    Option::Some(o) => Result::Err(
-                                        Term::Comp(
-                                            ascii("nonground_obligation"@),
-                                            seq![o.s, crate::replay::variant(o)],
-                                        ),
-                                    ),
-                                    Option::None => Result::Ok(obs),
-                                }
-                            },
-                        },
+                        Result::Ok(ps) => certified(doc, ps, docid, lines),
                     }
                 }
             },
