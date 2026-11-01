@@ -1860,13 +1860,35 @@ To release the line:
     The version DOI then names the archive bytes.
 13. Update `CITATION.cff` on the branch: the version, the release date,
     and the version DOI. Commit the change on the branch.
-14. Merge the line into `main` with
-    `git merge --no-ff release/kb-YYYY-MM-DD`. If
-    `release-manifest.tsv` conflicts, keep either side and commit the
-    merge. If the schema on `main` has changed, compile again and commit.
-    Then run `just amend-manifest`: it reads the release inputs of the
-    new commit. Decisions that bind clauses which `main` has changed
-    read outdated on `main`.
+14. Merge the line into `main`. The line keeps the schema identifier of
+    its cut, and `main` can carry a later one. The merge therefore keeps
+    the compiled files of neither side: the compiler of `main` writes
+    them again.
+    1. On `main`, run `git merge --no-ff release/kb-YYYY-MM-DD`.
+    2. If an ACE file conflicts, decide which text is correct. Keep that
+       text, and record the decision in the message of the merge commit.
+       If the decided text moves a term that the alignment table of the
+       document links, author the alignment again (`ckc align`).
+    3. If a compiled product (`pl/`, `queries/`),
+       `audit/review-manifest.tsv` or `release-manifest.tsv` conflicts,
+       keep the side of `main`. Step 4 writes the compiled products and
+       the review manifest again, and step 6 writes the release
+       manifest again.
+    4. Stage the resolved files. Then, with the `ckc` of `main`, run
+       `ckc compile <id>`, `ckc queries <id>` and
+       `ckc review-manifest <id>` for each guideline that the merge
+       touches.
+    5. Stage the written files and commit the merge.
+    6. Run `just amend-manifest`. It amends the merge commit and keeps
+       both parents.
+    7. Run `ckc certify <id>` and `ckc check`. Both must pass.
+
+    The decisions of the line stay in the ledger unchanged. A decision
+    binds the compiled clauses of the commit that the reviewer saw, so
+    it reads outdated on `main` when the merge changes those clauses.
+    `.agent/archive/rehearsals/release-merge.py` rehearses the schema and
+    custody parts of this step in a disposable clone. It does not replay
+    every conflict that a real line tip can hold.
 15. Remove the review checkout:
     `git worktree remove .release/kb-YYYY-MM-DD`.
 
