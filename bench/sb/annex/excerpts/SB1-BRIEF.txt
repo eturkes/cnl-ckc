@@ -1,0 +1,12 @@
+Source: MAIN ruling (contract sb)
+source_sha256: 987b22e72529c463b305bf3961100b0dbaba17115361ed19f468689a406e575a
+
+[verbatim lines 1-8]
+Main's family decisions, binding:
+- F1a common-role residue + F1b all-renamed control: G = 100 (CDC + 99 transformed copies), k = 1, patient = the committed adult world `tests/consumer/adult.pl.in` (profile P-adult: transcribe its facts as ACE-like lines).
+- F2: the Buffel du Vaure et al. BMJ Open 2016 all-six-condition scenario (researcher-8 S3/S6): k = 10 active copies named after its ten guideline documents (titles, issuers, years), mechanism-isolation workload, never a clinical translation; G = 100 (10 active + 90 F1a-kind copies); CDC is not among the ten.
+- F3: researcher-5/6/7's strict fact → condition bridges, as fully qualified ids (report + row): CDC chronic-pain definition → VA/DoD opioid R15; CDC acute-pain definition → VA/DoD R11/R16; VA/DoD Appendix C OUD diagnosis → CDC R12; CDC OUD diagnosis → VA/DoD SUD R16/R17. Cluster = {CDC, VA/DoD opioids 2022, VA/DoD SUD 2021, TIP 63} + hubs {VA/DoD CKD 2025, VA/DoD T2DM 2023}; the rest dormant. If a report rejected a candidate bridge, record that rejection instead of using it.
+- F4: researcher-9's C4/C5 chain (VA/DoD Appendix C OUD diagnosis → ASAM 2020 "OUD is a SUD" → CDC s60-11 pain + SUD → MUST ongoing pain management) as links F4-L1..L3 with its scope breaks (C6).
+- F5: researcher-10's K7 profiles kept as separate people, never spliced. F5a = Mayo Patient 1; F5b = the fentanyl + oxycodone + alprazolam + gabapentin case. Window = CMS460v2 (K8). Per-key degrees from K1–K6, each marked observed or source-supported synthetic. A key with no source stays at its single observed value. Repeated pain-duration facts: none-found ⇒ degree 1.
+- MX: the F3 composition with the F5b medication degrees, plus three one-factor contrasts (drop one bridge | one repeated key | one active shard).
+- Nested subsets: G ∈ {1, 2, 4, 10, 100} where the mechanism fits (k ≤ G); mark the smoke-only points.

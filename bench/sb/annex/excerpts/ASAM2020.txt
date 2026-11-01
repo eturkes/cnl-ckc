@@ -1,0 +1,6 @@
+Source: https://downloads.asam.org/sitefinity-production-blobs/docs/default-source/guidelines/npg_2020_focus_update-final.pdf#page=7
+source_sha256: 2bad970c77e4ad42a7fbcb5dcddd3c93763595bfa380a472b29ed8aa5dc9f6ad
+
+[verbatim lines 39-40]
+Opioid use disorder: A substance use disorder involv-
+ing opioids. See Substance Use Disorder.

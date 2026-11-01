@@ -1,0 +1,9 @@
+Source: file:guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s3-03.ace
+Captured text: guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s3-03.ace
+source_sha256: 521b278d52375ed585372ddc1292d3cd4c2f16d304a1f5d63f680e3288e16464
+
+[verbatim lines 1-4]
+If a patient has a sickle-cell-disease-pain then it is false that a recommendation applies to the patient.
+If a patient has a cancer-related-pain then it is false that a recommendation applies to the patient.
+If a patient receives a palliative-care then it is false that a recommendation applies to the patient.
+If a patient receives an end-of-life-care then it is false that a recommendation applies to the patient.

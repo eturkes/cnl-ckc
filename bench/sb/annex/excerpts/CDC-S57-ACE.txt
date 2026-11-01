@@ -1,0 +1,7 @@
+Source: https://www.cdc.gov/mmwr/volumes/71/rr/rr7103a1.htm; file:guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s57-02.ace
+Captured text: guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s57-02.ace
+source_sha256: 8aa9789e06ebf4f1887034696e1a5ff38e571c82d75cc53bf77fde406cad7497
+
+[verbatim lines 1-2]
+Every opioid-use-disorder-identification can alter an expected-opioid-benefit and can alter an expected-opioid-risk.
+If a patient has a pain and the patient has an opioid-use-disorder then the patient must receive an ongoing-pain-management that maximizes a benefit over a risk.

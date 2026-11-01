@@ -1,0 +1,57 @@
+Source: https://www.ncbi.nlm.nih.gov/sites/books/NBK574910/pdf/Bookshelf_NBK574910.pdf
+source_sha256: dc48cfa79e58e3e1a4e0d0fdd3077ceefebea53b1f7f0c2eb54f15461b0357bc
+
+[verbatim lines 1-35]
+Medications for Opioid Use Disorder
+For Healthcare and Addiction Professionals, Policymakers, Patients, and Families
+
+                                UPDATED 2021
+
+
+
+
+                                   TREATMENT IMPROVEMENT PROTOCOL
+
+
+
+
+                                   TIP 63
+Please share your thoughts about this publication by completing a brief online survey at:
+                      https://www.surveymonkey.com/r/KAPPFS
+
+           The survey takes about 7 minutes to complete and is anonymous.
+              Your feedback will help SAMHSA develop future products.
+ TIP 63                                     MEDICATIONS FOR OPIOID USE DISORDER
+
+
+
+Treatment Improvement Protocol 63
+For Healthcare and Addiction Professionals, Policymakers, Patients, and Families
+This TIP reviews three Food and Drug Administration-approved medications for opioid use
+disorder treatment—methadone, naltrexone, and buprenorphine—and the other strategies and
+services needed to support people in recovery.
+
+
+TIP Navigation
+Executive Summary
+For healthcare and addiction professionals, policymakers, patients, and families
+
+Part 1: Introduction to Medications for Opioid Use Disorder Treatment
+
+[verbatim lines 2201-2208]
+  Opioid use disorder (OUD): Per DSM-5,7 a disorder characterized by loss of control of opioid use,
+  risky opioid use, impaired social functioning, tolerance, and withdrawal. Tolerance and withdrawal do
+  not count toward the diagnosis in people experiencing these symptoms when using opioids under
+  appropriate medical supervision. OUD covers a range of severity and replaces what the Diagnostic and
+  Statistical Manual of Mental Disorders, Fourth Edition, termed “opioid abuse” and “opioid dependence.”
+  An OUD diagnosis is applicable to a person who uses opioids and experiences at least 2 of the 11
+  symptoms in a 12-month period. (See Exhibit 2.13 and the Appendix in Part 2 for full DSM-5 diagnostic
+  criteria for OUD.)
+
+[verbatim lines 3658-3663]
+their drug use if they’re ashamed or fear being     Preventing Opioid-Related Overdose
+judged. Accepting, nonjudgmental attitudes help     Every patient who misuses opioids or has
+patients overcome shame and discuss concerns        OUD should receive opioid overdose preven-
+honestly while also instilling hope.                tion education and a naloxone prescription.95
+Every visit is a chance to help patients begin      Healthcare professionals should educate
+healthy changes and move toward treatment           patients and their families about overdose risk,

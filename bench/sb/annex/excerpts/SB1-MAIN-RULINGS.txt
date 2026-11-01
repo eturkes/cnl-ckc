@@ -1,0 +1,8 @@
+Source: MAIN ruling (contract sb)
+source_sha256: 3cb54a725f15acd254e87f55974f5f0a4ac6136d58a0ae1bbdb9e254f3adf7dd
+
+[verbatim lines 1-4]
+Rulings for the annex from main:
+(1) F3 k = 6 active = the 4 cluster members + the 2 hubs. The joint patient profile includes the hub conditions (CKD + type 2 diabetes beside chronic pain and the OUD criteria). Record it as an engineering assumption grounded in researcher-7's overlap evidence (CKD Appendix N overlapping CDC pain/OUD/drug safety), not as a clinical prevalence.
+(2) Padding up to G in F3, F4, F5 and MX = F1a-kind copies (common-role residue), the same transform as F1a.
+Your two primary-text limits are right. Record both exactly as you describe: F2 uses only its ten-document count, with the HTN/diabetes-uncomplicated vs CHD tension preserved; the CMS460v2 window is an engineering mapping with exposure-duration compliance unconfirmed. F5b's unreported fields stay unreported, with no invented single values.

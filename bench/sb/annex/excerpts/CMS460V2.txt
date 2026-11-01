@@ -1,0 +1,37 @@
+Source: https://ecqi.healthit.gov/sites/default/files/ecqm/measures/CMS460v2.html
+source_sha256: e50b445adeffbd84d55976e544c098f77811ef44789cc1054fe44c6b882d909e
+
+[verbatim lines 52-65]
+Long-term opioid therapy is defined as opioid use for 90 consecutive days or more (Dowell et al., 2016).
+High-dose usage is defined as at least a 90 MME dosage per day (Dowell et al., 2016).
+Morphine Milligram Equivalent (MME) is a value assigned to opioids to represent their relative potencies. For this measure, the MME is determined by calculating the prescribed maximum daily dose by the Center for Disease Control and Prevention's (CDC) conversion factors.
+Cumulative Medication Duration (cmd) is the total number of calendar days that an individual has an active medication during a specific period. This period includes multiple prescriptions with gaps in between that are 7 days or less.
+
+Abbreviations used in this measure:
+  CMD/cmd- cumulative medication duration (used in measure logic)
+  MME/mme - morphine milligram equivalents (used in measure narrative and logic) 
+  Scripts/scripts - prescriptions (used in the measure logic)
+Explanation of timings used in this measure:
+Period/period(s) - time frames referring to the relevant period of the opioid medication(s) or encounter(s) during the measurement period and indicating the length of time between prescription(s) (used in the measure logic).  
+The logic calculates the opioid medication time frame by assuming that the prescription is filled on the day of the order and using a stop time determined by the days supplied attribute (e.g., start time plus number of days supplied- start date February 1 and days supplied 7 therefore the end date is February 8). If the days supplied cannot be calculated, then the logic defaults to using the start and stop times of the prescription. If a stop time is not included in the order and the prescription is not discontinued, the measure algorithm assumes the ordered medication remains active. If the prescription includes refills, the measure assumes the patient requested all refills of the medication.
+This measure allows for up to 7 days between prescriptions for long-term opioid users. If a patient has a gap between prescriptions of 7 days or less but takes one or more opioids listed below for at least 90 days, he or she will still be included in the measure’s denominator. In the logic, the approach to find the periods in which the patient has opioid medications, determines the gaps of more than 7 days to provide the boundaries in which to create a list of periods with allowed gaps.   
+For this measure, the numerator applies to patients in the initial population with a 90-day or more supply of opioids with no more than a 7-day gap between prescriptions of 90 MMEs or higher per day.
+
+[verbatim lines 91-95]
+TBD
+
+Patients 18 years of age and older prescribed a 90 day or longer supply of opioids with 7 days or less between each opioid prescription and who have a qualifying encounter during the measurement period
+
+Equals Initial Population
+
+[verbatim lines 164-173]
+      - /\*Creates a list of periods where Cumulative Medication Duration greater than or equal to 90 days. The logic filters the result of “Periods with Allowed Gaps with Meds and Durations” result to only include the periods with a CMD greater or equal to 90. If there are any periods after the filter, and the patient has an encounter during the measurement period then they are in the Initial Population\*/ "Active Periods with Allowed Gaps with Medications and Durations" PeriodsWithGaps where PeriodsWithGaps.cmd >= 90
+      - ```
+/*Calculates individual MME for each day of every prescription, and a total daily MME across prescriptions, accounting for overlap*/
+"Active Periods with and without Allowed Gaps and Cumulative Medication Duration of 90 or More Days" PeriodWithAndWithoutGaps
+  let ScriptsMMEDays: "CalculateDailyMMEPerMedication"(PeriodWithAndWithoutGaps.medications, PeriodWithAndWithoutGaps.period)
+  return {
+    period: PeriodWithAndWithoutGaps.period,
+    medications: PeriodWithAndWithoutGaps.medications,
+    cmd: PeriodWithAndWithoutGaps.cmd,
+    mmeDays: ScriptsMMEDays,

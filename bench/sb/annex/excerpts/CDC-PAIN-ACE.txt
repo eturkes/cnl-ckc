@@ -1,0 +1,18 @@
+Source: https://www.cdc.gov/mmwr/volumes/71/rr/rr7103a1.htm; file:guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s9-05.ace
+Captured text: guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s9-05.ace
+source_sha256: b7777fbf0bc53fd70f5532592546dd0b028c60c3a14160879d505e31b9a28a6e
+
+[verbatim lines 5-17]
+If there is an opioid-pain-clinical-practice-guideline and a pain-care-clinician provides a pain-care to an adult-outpatient that has an acute-pain then the opioid-pain-clinical-practice-guideline applies to the pain-care-clinician.
+If there is an opioid-pain-clinical-practice-guideline and a pain-care-clinician provides a pain-care to an adult-outpatient that has a subacute-pain then the opioid-pain-clinical-practice-guideline applies to the pain-care-clinician.
+If there is an opioid-pain-clinical-practice-guideline and a pain-care-clinician provides a pain-care to an adult-outpatient that has a chronic-pain then the opioid-pain-clinical-practice-guideline applies to the pain-care-clinician.
+If an outpatient has an age and the age includes at least 18 years then the outpatient is an adult-outpatient.
+If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has an acute-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
+If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has a subacute-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
+If there is an opioid-pain-clinical-practice-guideline and there is an adult-outpatient that has a chronic-pain then the opioid-pain-clinical-practice-guideline applies to the adult-outpatient.
+If a patient has a pain that lasts for less than 1 month then the patient has an acute-pain.
+If a patient has a pain that lasts for at least 1 month for at most 3 months then the patient has a subacute-pain.
+If a patient has a pain that lasts for more than 3 months then the patient has a chronic-pain.
+If a patient has an acute-pain then the acute-pain lasts for less than 1 month.
+If a patient has a subacute-pain then the subacute-pain lasts for at least 1 month for at most 3 months.
+If a patient has a chronic-pain then the chronic-pain lasts for more than 3 months.

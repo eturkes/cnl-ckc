@@ -1,0 +1,106 @@
+Source: https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/Pain/cot/VADODOpioidsCPG.pdf
+source_sha256: 2d68b41cea0e6a230ea723f88af6aff466af12afc5b432da5936f48812aa24be
+
+[verbatim lines 1-38]
+        VA/DoD CLINICAL PRACTICE
+  GUIDELINE FOR THE USE OF OPIOIDS IN THE
+      MANAGEMENT OF CHRONIC PAIN
+
+                                    Department of Veterans Affairs
+                                       Department of Defense
+
+
+
+                                         QUALIFYING STATEMENTS
+
+The Department of Veterans Affairs and the Department of Defense guidelines are based upon the best
+information available at the time of publication. They are designed to provide information and assist
+decision making. They are not intended to define a standard of care and should not be construed as one.
+Neither should they be interpreted as prescribing an exclusive course of management.
+
+This Clinical Practice Guideline is based on a systematic review of both clinical and epidemiological
+evidence. Developed by a panel of multidisciplinary experts, it provides a clear explanation of the logical
+relationships between various care options and health outcomes while rating both the quality of the
+evidence and the strength of the recommendation.
+
+Variations in practice will inevitably and appropriately occur when clinicians take into account the needs of
+individual patients, available resources, and limitations unique to an institution or type of practice. Every
+healthcare professional making use of these guidelines is responsible for evaluating the appropriateness of
+applying them in the setting of any particular clinical situation with a patient-centered approach.
+
+These guidelines are not intended to represent Department of Veterans Affairs or TRICARE policy. Further,
+inclusion of recommendations for specific testing and/or therapeutic interventions within these guidelines
+does not guarantee coverage of civilian sector care. Additional information on current TRICARE benefits
+may be found at www.tricare.mil by contacting your regional TRICARE Managed Care Support Contractor.
+
+                                             Version 4.0 – 2022
+            VA/DoD Clinical Practice Guideline for the Use of Opioids in the Management of Chronic Pain
+
+
+
+
+                                                       Prepared by:
+
+[verbatim lines 346-347]
+Chronic pain is defined as persistent or recurrent pain lasting longer than three months,(28, 29) though
+this definition lacks the nuance and complexity to describe different presentations of chronic pain. In 2015,
+
+[verbatim lines 741-746]
+The patient population of interest for this CPG is adults who are eligible for care in the VA or DoD
+healthcare delivery systems and those who receive care from community-based clinicians with chronic
+pain or acute pain who are on or being considered for prescription opioid therapy. It includes Veterans
+and Service Members as well as their beneficiaries. Recommended interventions in this CPG are
+applicable regardless of care setting, unless otherwise indicated, for any patient in the VA and DoD
+healthcare system.
+
+[verbatim lines 2491-2496]
+Recommendation
+    11. We recommend against prescribing long-acting opioids:
+        · For acute pain
+        · As an as-needed medication
+        · When initiating long-term opioid therapy
+        (Strong against | Reviewed, Amended)
+
+[verbatim lines 2753-2758]
+Recommendation
+    15. For patients with chronic pain, we recommend assessing for behavioral health conditions, history
+        of traumatic brain injury, and psychological factors (e.g., negative affect, pain catastrophizing)
+        when considering long-term opioid therapy, as these conditions are associated with a higher risk
+        of harm.
+        (Strong for | Reviewed, New-added)
+
+[verbatim lines 2958-2962]
+Recommendation
+    16. For patients with acute pain when opioids are being considered, we suggest screening for pain
+        catastrophizing and co-occurring behavioral health conditions to identify those at higher risk for
+        negative outcomes.
+        (Weak for | Reviewed, New-added)
+
+[verbatim lines 4588-4614]
+Appendix C: Diagnostic and Statistical Manual of Mental Disorders for
+            Opioid Use Disorders
+DSM-5 diagnostic criteria for OUD: A problematic pattern of opioid use leading to clinically significant
+impairment or distress, as manifested by at least two of the symptoms in Table C-1, occurring within a
+12-month period.(241)
+
+Table C-1: DSM-5 Diagnostic Criteria for OUD (241)
+         To confirm a diagnosis of OUD, at least two of the following should be observed within a
+                                             12-month period:
+1. Opioids are often taken in larger amounts or over a longer period than was intended.
+2. There is a persistent desire or unsuccessful efforts to cut down or control opioid use.
+3. A great deal of time is spent in activities necessary to obtain the opioid, use the opioid, or recover from its
+   effects.
+4. Craving, or a strong desire or urge to use opioids.
+5. Recurrent opioid use resulting in a failure to fulfill major role obligations at work, school, or home.
+6. Continued opioid use despite having persistent or recurrent social or interpersonal problems caused or
+   exacerbated by the effects of opioids.
+7. Important social, occupational, or recreational activities are given up or reduced because of opioid use.
+8. Recurrent opioid use in situations in which it is physically hazardous.
+9. Continued opioid use despite knowledge of having a persistent or recurrent physical or psychological problem
+   that is likely to have been caused or exacerbated by the substance.
+10. Exhibits tolerance (discussed below).
+11. Exhibits withdrawal (discussed below).
+
+A.     Tolerance and Withdrawal Diagnostic Criteria (241)
+The last two diagnostic criteria, related to tolerance and withdrawal, are not considered to be met for
+individuals taking opioids solely under appropriate medical supervision.

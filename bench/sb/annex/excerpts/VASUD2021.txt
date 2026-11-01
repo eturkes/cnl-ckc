@@ -1,0 +1,69 @@
+Source: https://www.healthquality.va.gov/HEALTHQUALITY/guidelines/MH/sud/VA-DoD-SUD-CPG_Final_for-508_v3.pdf
+source_sha256: 1f6c5e753621d5ef493b52c59d331cf6a7ac6ba68fb4b9d27e693abbc48323cf
+
+[verbatim lines 1-42]
+  VA/DoD CLINICAL PRACTICE GUIDELINE FOR
+    THE MANAGEMENT OF SUBSTANCE USE
+                DISORDERS
+
+                                     Department of Veterans Affairs
+                                        Department of Defense
+
+
+
+                                         QUALIFYING STATEMENTS
+
+The Department of Veterans Affairs and the Department of Defense guidelines are based upon the best
+information available at the time of publication. They are designed to provide information and assist
+decision making. They are not intended to define a standard of care and should not be construed as one.
+Neither should they be interpreted as prescribing an exclusive course of management.
+
+This Clinical Practice Guideline is based on a systematic review of both clinical and epidemiological
+evidence. Developed by a panel of multidisciplinary experts, it provides a clear explanation of the logical
+relationships between various care options and health outcomes while rating both the quality of the
+evidence and the strength of the recommendation.
+
+Variations in practice will inevitably and appropriately occur when clinicians take into account the needs of
+individual patients, available resources, and limitations unique to an institution or type of practice. Every
+healthcare professional making use of these guidelines is responsible for evaluating the appropriateness of
+applying them in the setting of any particular clinical situation.
+
+These guidelines are not intended to represent Department of Veterans Affairs or TRICARE policy. Further,
+inclusion of recommendations for specific testing and/or therapeutic interventions within these guidelines
+does not guarantee coverage of civilian sector care. Additional information on current TRICARE benefits
+may be found at www.tricare.mil by contacting your regional TRICARE Managed Care Support Contractor.
+
+                                             Version 5.0 – 2021
+                               Prepared by:
+
+    The Management of Substance Use Disorders Work Group
+
+                            With support from:
+
+Office of Quality and Patient Safety, Veterans Health Administration
+                                  &
+  Clinical Quality Improvement Program, Defense Health Agency
+
+
+[verbatim lines 663-668]
+
+
+or unintentional overdose on opioids, and opioid overdose education and naloxone should be offered to
+all patients at high risk for opioid overdose, including those with OUD.
+
+J.    Working Toward Successful Treatment of Substance Use Disorders
+
+[verbatim lines 2738-2744]
+Recommendation
+    16. For patients with opioid use disorder, we recommend one of the following strategies:
+        - Buprenorphine/naloxone in any setting; or
+        - Methadone or buprenorphine/naloxone provided through an accredited Opioid Treatment
+        Program
+        (Strong for | Reviewed, Amended)
+
+
+[verbatim lines 2945-2948]
+Recommendation
+    17. For patients with opioid use disorder, we suggest offering extended-release naltrexone (IM).
+        (Weak for | Reviewed, New-replaced)
+

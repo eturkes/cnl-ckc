@@ -1,0 +1,82 @@
+Source: file:scratch capture (not committed)
+source_sha256: 883028b2f73d982e983a029f8c49fd5b7ff12518233b1c03e78d0944075178ee
+
+[verbatim lines 42-44]
+**None-found:** empirical distribution/p90/max of distinct simultaneously active opioids among a strict-LTOT population. Searched PMC/PubMed/OUP primary studies using concurrent/distinct opioid, number of opioid types, different opioids, long-term prescribing and overlapping prescriptions phrasings. Inspected the Optum study, MarketScan ER/LA episodes, GH COT regimen classification, and the public abstract of Krebs et al. *Primary Care Monitoring of Long-Term Opioid Therapy among Veterans with Chronic Pain* (https://academic.oup.com/painmedicine/article/12/5/740/1909775). Krebs's full text was not available in the signed-in Neo session; abstract prescription counts lack the required simultaneous-window definition, so they are not a substitute.
+
+## K2 — overlap rate, co-medication categories and current list
+
+[verbatim lines 76-96]
+**None-found:** strict-LTOT, single-current-window distribution of distinct benzodiazepine/other CNS-depressant drug counts. Searched the preceding cohorts and PMC concurrent-use, co-prescribing and CNS-polypharmacy studies. Annual overlap prevalence and class categories are retained with their actual definitions.
+
+## K3 — intensity ratings are not numeric pain durations
+
+**Primary LTOT EHR source:** *Association Between Pain Intensity and Discontinuing Opioid Therapy or Transitioning to Intermittent Opioid Therapy After Initial Long-Term Opioid Therapy*, https://pmc.ncbi.nlm.nih.gov/articles/PMC10068896/.
+
+> “When collecting vital signs, VHA clinical staff ask patients to rate their pain from 0 (no pain) to 10 (worst possible pain) and record the patient-reported NRS pain score in the medical record.”
+
+> “For this study, pain scores were assessed as 90 day averages (ie, average of all available ambulatory NRS pain scores during each 90 day period).”
+
+> “the results are similar, most likely owing to the fact that on average there were only 2.6–7 pain scores in the 90-day period following the index date.”
+
+Selected cohort: continued LTOT versus transition to intermittent opioid therapy or discontinuation; the study excludes patients with “no pain score in each 90 day period of the 6 month follow-up period”. This selection makes the count unsuitable as an all-LTOT patient monitoring-frequency distribution.
+
+The source supports repeated longitudinal pain **intensity** records. It supplies neither p90/max nor counts of simultaneously applicable duration measurements. “Pain Duration” in the EHR information-model study https://pmc.ncbi.nlm.nih.gov/articles/PMC5851787/ is a separate concept; its aggregate organization/resource counts do not resolve patient/episode degrees.
+
+**None-found:** count distribution for numeric pain-duration observations per current episode or visit, including duplicate policy and whether observations share one duration identity. Places searched: VA LTOT/NRS study; *Measuring pain care quality in the Veterans Health Administration primary care setting*; PainCAS and pain-flowsheet documentation research; PMC/PubMed searches for pain-duration records, assessments per visit, repeated measurements, EHR observations and current episodes. Reports of daily research diaries or inpatient cancer-pain assessments were not treated as outpatient LTOT intake distributions.
+
+**Implication, inference:** the NRS count cannot calibrate S42-15's duration-witness multiplicity. It measures a different variable with a different time key. K7-A's published baseline gives a coherent duration and pain rating, but it does not prove that other records are absent or authorize creating repeated current duration witnesses.
+
+## K4 — refill count, dose state and observation count
+
+[verbatim lines 120-122]
+**None-found:** empirical per-episode distribution/p90/max of MME observation records or discrete taper-step counts with an explicit current-state retention rule. Searched ER/LA episode studies, IQVIA daily-dose trajectories, published taper case series, and dose-change cohort abstracts. The lead *Only modest long-term opioid dose escalation occurs over time in chronic nonmalignant pain management* (https://pubmed.ncbi.nlm.nih.gov/24143927/) could not be retrieved as usable page text; its search-result numbers are **unconfirmed and unused**.
+
+## K5 — annual UDT distribution and a higher-monitoring practice
+
+[verbatim lines 168-200]
+**None-found:** patient-level p90/max annual test count in the foregoing primary sources. Searched median/IQR and annual-frequency studies, GH COT testing, TOPCARE, tertiary-practice monitoring, and primary references cited by the urine-monitoring consensus. One annual median/IQR and a separately named high-monitoring practice are supported; no national tail or joint-current fact count is established.
+
+## K6 — PDMP completion, provider query ratios and targets
+
+**Observed primary completion measure:** Kwon et al., https://pmc.ncbi.nlm.nih.gov/articles/PMC8784064/.
+
+> “Compliance with urine drug screening, prescription drug monitoring program checks, naloxone prescriptions, and medication safety agreements is summarized in Table 5. Each of these compliance rates were derived from the 45 initial patients who were on opioid pain medications.”
+
+Table 5 heading:
+
+> “Urine drug screen, prescription drug monitoring program, Naloxone prescription, and medication safety agreement completion following the initial comprehensive evaluation”.
+
+Relevant table column/row:
+
+> “PDMP check” / “All patients on opioids, completion rate” / “18%”.
+
+This is documentation of completion following an initial assessment. It does not state whether a completed case involved one or several queries, nor does it identify query counts for one fixed current episode. An absent documented check is not proof that no check occurred.
+
+**Primary provider-level ratio:** Deyo et al., https://pmc.ncbi.nlm.nih.gov/articles/PMC5803414/.
+
+> “Our de-identified analytic file included PDMP data from October 1, 2011 through October 31, 2014.”
+
+> “We defined high and low use based on the median ratio, approximately 1 query for every 6 opioid prescriptions.”
+
+This is the median of a **prescriber-level query/prescription ratio**, not the median patient's number of queries or a statement that each sixth prescription was checked. It covers prescribing generally, not a strict-LTOT patient cohort.
+
+**Stewardship measure, not an observed count:** Hersey et al., https://pmc.ncbi.nlm.nih.gov/articles/PMC11631668/, Table 2:
+
+> “The percentage of patients with a new opioid prescription for chronic pain with documentation that a PDMP was checked prior to prescribing”.
+
+> “The percentage of patients on long-term opioid therapy who had documentation that a PDMP was checked at least quarterly”.
+
+**None-found:** patient-level distribution/p90/max of PDMP queries per prescribing episode or visit. Places searched: the family-medicine cohort, Oregon query logs, QI implementation measures, PRINCE protocol leads, and PMC/PubMed queries for PDMP checks per prescription, per patient, per episode, median and quarterly checks. Provider/month totals, registration rates, guideline recommendations and binary completion measures do not supply repeated same-episode query counts.
+
+[verbatim lines 243-252]
+
+Thus Patient 1 supports the same person's baseline opioid, duration, assessment and dose plus admission/discharge monitoring. It does not document a second active opioid, a CNS co-medication list, PDMP counts, number of same-visit duration observations, or a prior opioid-use duration sufficient to verify a strict-LTOT threshold. Those fields stay unreported rather than zero. The serial taper states belong to separate dates.
+
+### K7-B — joint medication-fan-out contrast
+
+Primary source = Sayles et al. at the K1 URL. The single quoted current-prescription sentence explicitly supplies the opioid pair, benzodiazepine and gabapentinoid. The record is a consenting de-identified chronic-pain case, not a hypothetical combination of marginals:
+
+> “The patient provided consent to publish the case report, and information has been de-identified to protect anonymity.”
+
+Use: source-supported pre-interruption home prescription scenario for multiple medication entities. Limits: unusual adverse-event presentation; no quantitative pain-duration/assessment observation count, total MME or PDMP/UDT check count is reported. I did not invent those fields or import Patient 1's values into this profile.

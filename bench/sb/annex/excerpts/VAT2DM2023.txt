@@ -1,0 +1,61 @@
+Source: https://healthquality.va.gov/HEALTHQUALITY/guidelines/CD/diabetes/VADOD-Diabetes-CPG_Final_508.pdf
+source_sha256: 982649aa99415f96bde7b86aeb7b176d74cde40e7476c1f0d74933164c64aaab
+
+[verbatim lines 1-35]
+        VA/DoD CLINICAL PRACTICE
+    GUIDELINE FOR THE MANAGEMENT OF
+        TYPE 2 DIABETES MELLITUS
+                            Department of Veterans Affairs
+                               Department of Defense
+
+
+                              QUALIFYING STATEMENTS
+
+The Department of Veterans Affairs (VA) and the Department of Defense (DoD)
+guidelines are based on the best information available at the time of publication. The
+guidelines are designed to provide information and assist decision making. They are not
+intended to define a standard of care and should not be construed as one. Neither
+should they be interpreted as prescribing an exclusive course of management.
+
+This clinical practice guideline (CPG) is based on a systematic review of both clinical
+and epidemiological evidence. Developed by a panel of multidisciplinary experts, it
+provides a clear explanation of the logical relationships between various care options
+and health outcomes while rating both the quality of the evidence and the strength of
+the recommendation.
+
+Variations in practice will inevitably and appropriately occur when providers consider the
+needs of individual patients, available resources, and limitations unique to an institution
+or type of practice. Therefore, every health care professional using these guidelines is
+responsible for evaluating the appropriateness of applying them in the setting of any
+particular clinical situation with a patient-centered approach.
+
+These guidelines are not intended to represent VA or DoD policies. Further, inclusion of
+recommendations for specific testing, therapeutic interventions, or both within these
+guidelines does not guarantee coverage of civilian sector care.
+
+                                   Version 6.0 – 2023
+           VA/DoD Clinical Practice Guideline for the Management of Type 2 Diabetes Mellitus
+
+
+
+[verbatim lines 406-410]
+The patient population of interest for this CPG is adults (≥18 years) with T2DM who are
+eligible for care in the VA or DoD health care delivery systems and those who receive
+care from community-based clinicians. It is not intended to guide the care of pregnant or
+nursing women or patients with T1DM.
+
+
+[verbatim lines 3045-3049]
+   22. For adults with type 2 diabetes mellitus and chronic kidney disease, we
+       recommend sodium-glucose cotransporter-2 inhibitors with proven renal
+       protection to improve renal outcomes.
+       (Strong for | Reviewed, New-added)
+
+
+[verbatim lines 3159-3164]
+   23. For adults with type 2 diabetes mellitus and chronic kidney disease who are not
+       good candidates for a sodium-glucose cotransporter-2 inhibitor, we recommend
+       a glucagon-like peptide-1 receptor agonist with proven renal protection to
+       improve macroalbuminuria.
+       (Strong for | Reviewed, New-added)
+

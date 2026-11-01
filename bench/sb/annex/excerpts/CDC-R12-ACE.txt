@@ -1,0 +1,9 @@
+Source: https://www.cdc.gov/mmwr/volumes/71/rr/rr7103a1.htm; file:guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec12.ace
+Captured text: guidelines/cdc-2022-opioid/ace/cdc2022-opioid-rec12.ace
+source_sha256: 6b86ab2ab13c2d47dd74dcbc110c91f15b93dd59e46e225d24f5f288636926aa
+
+[verbatim lines 1-4]
+A recommendation is a category-A-recommendation and is an evidence-type-1-recommendation.
+If a patient has an opioid-use-disorder then every clinician should offer an evidence-based-medication-treatment for the opioid-use-disorder to the patient.
+If a patient has an opioid-use-disorder and there is a clinician then it is recommended that the clinician does not use a medication-free-detoxification for the patient.
+Every medication-free-detoxification increases a risk for a drug-use-resumption and increases a risk for an overdose and increases a risk for an overdose-death.

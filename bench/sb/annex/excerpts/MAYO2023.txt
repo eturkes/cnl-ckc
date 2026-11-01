@@ -1,0 +1,56 @@
+Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC10792778/
+source_sha256: 182b1d3aa35252ff356f6195d01e73a96795dc5f1a0ecb3c1138acc63768160d
+
+[verbatim lines 33-43]
+### Patients
+
+The case series is composed of six patients (white 5, Latino 1) admitted to an outpatient interdisciplinary pain rehabilitation program from August 2020 to February 2021. Inclusion criteria included: (1) age ≥ 18 years, (2) daily opioid use ≥ 20 morphine milligram equivalents (MMEs), and (3) chronic noncancer pain of at least 6 months in duration. Exclusion criteria included: (1) nondaily use of opioids and (2) use of tramadol.
+
+### Clinical setting
+
+The clinical setting has been previously described \[11\]. The outpatient interdisciplinary pain rehabilitation program (PRP) spanned a 3-week period during which patients were involved in 8 hours of consecutive treatment daily for 15 consecutive working days. A cognitive behavioral model served as the basis of treatment, and the primary goal was restoration of physical and emotional functioning. The treatment protocol of the PRP included daily educational group sessions related to optimizing self-management of pain intensity, depressive symptoms, pain-related anxiety, and psychosocial stressors. Other components included daily aerobic and strengthening exercises led by a physical therapist, occupational therapy, elimination of pain behaviors, and individualized recommendations for activity moderation.
+
+### Opioid tapering
+
+Prior to admission, all patients self-selected to undergo medically directed opioid tapering. The dose and frequency of daily opioid use were determined by self-report and review of pharmacy records. The admission opioid dose was converted to daily morphine milligram equivalents (MMEs) using an equianalgesic conversion software program. Consistent with the established treatment protocols of the rehabilitation program, the opioid medication the patients were prescribed upon admission was used in the taper schedule \[12, 13\]. Due to the broad range of opioid medications, prescribed dosages, and unique patient clinical characteristics, tapers were individually tailored by the physician staff of the pain rehabilitation program. Predetermined taper schedules were not used, and adjunct medications including benzodiazepines, anticonvulsants (for example, gabapentin and pregabalin), muscle relaxants, or sedative hypnotics were not concomitantly initiated to manage withdrawal symptoms. Patients were assessed daily by medical staff for signs and symptoms of opioid withdrawal. Heart rate and blood pressure were monitored daily and more frequently if clinically indicated.
+
+[verbatim lines 49-61]
+### Urine drug testing
+
+Upon admission and dismissal, definitive urine drug testing (UDT) using liquid chromatography/mass spectroscopy was performed to confirm the status of opioid use and screen for substances of abuse.
+
+### Measurements
+
+#### Patient characteristics
+
+Upon admission, clinical data were collected, including age, sex, marital status, smoking status, years of education, duration of pain, opioid use, and daily substance use (including alcohol and cannabis). Gabapentin and pregabalin use was assessed due to the potential favorable effects of these drugs on opioid withdrawal \[17\].
+
+#### Pain intensity
+
+Pain intensity was assessed using the verbal rating scale (VRS), where 0 indicates no pain and 10 indicates the most intense possible pain. The validity of the VRS has been established. \[18\]
+
+[verbatim lines 79-102]
+Table 1 presents the clinical and demographic information. The results of the admission UDT were consistent with the prescribed opioid for all patients. Five of the six patients were women and the median MME at baseline was 36.9. The median taper duration was 15 days and the median duration of lofexidine administration was 14 days. Successful completion of all opioid tapers were confirmed by UDT at program dismissal, except for patient 6, who completed the taper independent of daily program participation, and patient 3, due to a laboratory ordering error.
+
+#### Table 1.
+
+|  | Patient 1 | Patient 2 | Patient 3 | Patient 4 | Patient 5 | Patient 6 | Data summary | 
+|---|---|---|---|---|---|---|---|
+| Pain diagnosis | Bilateral leg | Sacral spine | Fibromyalgia | Fibromyalgia | CRPS <sup>a</sup> | Thoracic spine |  | 
+| Age | 57 | 66 | 40 | 38 | 48 | 60 | 52.5 (17.3) <sup>b</sup> | 
+| Sex | Male | Female | Female | Female | Female | Female | 83.3% female | 
+| Marital status | Married | Single | Married | Married | Married | Married | 83.3% married | 
+| Smoking status | Never | Former | Former | Current | Former | Current | 33% current smoker | 
+| Education (years) | 15 | 17 | 15 | 14 | 19 | 15 | 15 (1.5) <sup>b</sup> | 
+| Pain duration (years) | 20 | 11 | 9 | 12 | 2 | 6 | 10 (5.0) <sup>b</sup> | 
+| Pain score <sup>c</sup> | 5 | 7 | 7 | 7 | 7 | 8 | 7 (0.0) <sup>b</sup> | 
+| PCS <sup>d</sup> | 34 | 17 | 35 | 12 | 38 | 39 | 34.5 (16.0) <sup>b</sup> | 
+| Baseline MME <sup>e</sup> | 37.5 | 35.0 | 48.0 | 22.5 | 45.0 | 36.3 | 36.9 (7.8) <sup>b</sup> | 
+| Taper duration (days) | 15 | 16 | 19 | 15 | 12 | 15 | 15.0 (0.8) <sup>b</sup> | 
+| Lofexidine duration (days) | 14 | 15 | 18 | 14 | 11 | 13 | 14.0 (1.5) <sup>b</sup> | 
+
+<sup>a</sup>CRPS, complex regional pain syndrome; <sup>b</sup>median (interquartile range); <sup>c</sup>verbal rating scale; PCS, <sup>d</sup>Pain Catastrophizing Scale; <sup>e</sup>MME, morphine milligram equivalent
+
+### Case series
+
+Patient 1 is a 57-year-old male with chronic bilateral anterior thigh pain due to a history of inflammatory myositis (Table 1). Upon admission, he was receiving up to five oxycodone 5 mg tablets daily. He was placed on 0.18 mg of lofexidine every 6 hour,s and the flexible oxycodone taper was completed on day 15 of the PRP. Mild elevation in COWS scores were observed on days 10 and 11, but the COWS scores returned to baseline on day 12 (Fig. 1). No clinically significant changes in heart rate or blood pressure were observed (Fig. 2), and no lofexidine-related adverse effects were reported.

@@ -1,0 +1,6 @@
+Source: file:guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s10-04.ace
+Captured text: guidelines/cdc-2022-opioid/ace/cdc2022-opioid-s10-04.ace
+source_sha256: 04306393f635798e351c586fae19d3dfd986846e124228370846069aca9b56b2
+
+[verbatim lines 1-1]
+If a patient has an age and the age includes less than 18 years then it is false that a recommendation applies to the patient.

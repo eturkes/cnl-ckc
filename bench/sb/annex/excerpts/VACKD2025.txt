@@ -1,0 +1,65 @@
+Source: https://healthquality.va.gov/HEALTHQUALITY/guidelines/CD/ckd/CKD-CPG_2025-Guideline_final_20250509.pdf
+source_sha256: 9756c230e6c50a86caef8b9d9451d56ad3e9a349806031231cfed2c946169c8f
+
+[verbatim lines 1-35]
+   VA/DOD CLINICAL PRACTICE GUIDELINE
+   FOR THE PRIMARY CARE MANAGEMENT
+       OF CHRONIC KIDNEY DISEASE
+
+                                  Department of Veterans Affairs
+
+                                      Department of Defense
+
+
+                                    QUALIFYING STATEMENTS
+
+The Department of Veterans Affairs (VA) and the Department of Defense (DOD) guidelines are
+based on the best information available at the time of publication. The guidelines are designed to
+provide information and assist decision-making. They are not intended to define a standard of
+care and should not be construed as such, nor should the guidelines be interpreted as prescribing
+an exclusive course of management.
+
+This clinical practice guideline is based on a systematic review of both clinical and epidemiological
+evidence. Developed by a panel of multidisciplinary experts, it provides a clear explanation of the
+logical relationships between various care options and health outcomes while rating both the
+quality of the evidence and the strength of the recommendation.
+
+Variations in practice will inevitably and appropriately occur when providers consider the needs of
+individual patients, available resources, and limitations unique to an institution or type of practice.
+Therefore, every health care professional using these guidelines is responsible for evaluating the
+appropriateness of applying them in each unique clinical situation using a patient-centered
+approach.
+
+These guidelines are not intended to represent VA or DOD policies. Further, inclusion of
+recommendations for specific testing, therapeutic interventions, or both, within these guidelines
+does not guarantee coverage of civilian sector care.
+
+                                         Version 5.0 – 2025
+     VA/DOD Clinical Practice Guideline for the Primary Care Management of Chronic Kidney Disease
+
+
+[verbatim lines 208-212]
+Chronic kidney disease (CKD) is defined as abnormalities of kidney structure or function
+characterized by a glomerular filtration rate (GFR) of less than 60 mL/min/1.73m2 or a normal
+GFR with other markers of kidney disease such as proteinuria, hematuria, or abnormal imaging of
+the kidneys, present for greater than three months, with implications for health.(3) In 2002, the
+National Kidney Foundation (NKF) published treatment guidelines that classified five stages of
+
+[verbatim lines 7304-7311]
+ Address co-           •   Treat co-occurring mental health conditions (e.g., PTSD, depression, anxiety)
+ occurring                 that impair patient engagement in a functional recovery plan - pain may improve
+ conditions                as symptoms of depression, anxiety, or insomnia abate (292)
+                       •   Optimize medical conditions that hinder patient participation in functional
+                           activities
+                       •   Identify OUD or physiologic opioid dependence and treat with MOUD (e.g.,
+                           buprenorphine, or referral for methadone)
+                       •   Encourage functional activities that are meaningful to the patient since
+
+[verbatim lines 7530-7536]
+risk of death compared to only opioids in one study of dialysis patients.(326) Thus, gabapentinoids
+should be prescribed only when benefits clearly exceed risks. Additionally, use of lower doses and
+avoidance of concurrent administration with opioids or other sedating medications is suggested in
+patients with CKD or ESKD.
+
+Full-agonist opioids in CKD
+The 2022 VA/DOD CPG for the Use of Opioids in the Management of Chronic Pain noted the

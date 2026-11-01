@@ -1,0 +1,91 @@
+Source: https://bmjopen.bmj.com/content/bmjopen/6/3/e010119/DC1/embed/inline-supplementary-material-1.pdf?download=true
+source_sha256: a9bc80fbf52180d9fd9aea5bdf3dd30dbf0f66d21cdf66f7f65d23af71f0a54b
+
+[verbatim lines 42-128]
+Appendix 1. Description of the moderate severity of each condition
+
+
+Hypertension                  Stage II (systolic BP ≥ 160 mmHg or diastolic BP ≥ 100 mmHg)
+                              Uncomplicated: without damage to target organ (heart, brain,
+                              chronic kidney disease, peripheral arterial disease, retinopathy)
+
+Depression                    Mild (few, if any, symptoms in excess of those required for the
+                              diagnosis and only minor impairment in occupational and/or social
+                              functioning) to moderate (symptoms or functional impairment
+                              between mild and severe) for 3 months, not associated with anxiety
+
+                              Symptomatic osteoarthritis of one knees:
+Osteoarthritis
+                              - without current or past upper gastrointestinal problems, or chronic
+                              kidney disease
+                              - with adequate response to acetaminophen or oral NSAIDswith
+                              topical NSAIDs
+                              - overweight
+                              Stable ischemic heart disease:
+CHD
+                              - benefits from revascularisation longer than 1 year ago
+                              - without angina or symptom complex that remained stable for at
+                              least 60 days
+                              - without change in frequency, duration, precipitating causes or ease
+                              of relief of angina for at least 60 days
+                              - without evidence of recent myocardial damage
+                              - without chronic heart failure
+                              - smoking
+Diabetes                      Stabilized diabetes with antidiabetic medication regimen and oral
+                              treatment (non-insulin dependent).
+                              Uncomplicated diabetes: without damage to target organ (heart,
+                              brain, chronic kidney disease, peripheral arterial disease,
+                              retinopathy)
+
+COPD                          Group C: high risk, few symptoms, defined by GOLD stage 3¥ or 4
+                              (severe or very severe airflow limitation) and/or ≥2 exacerbations
+                              per year and mMRC† grade 0-1 or CAT score < 10. Patient
+                              smoking.
+BP, blood pressure; CHD, coronary heart disease; COPD, chronic obstructive pulmonary disease; CAT, COPD
+assessment test
+¥: GOLD 3 - Severe (classification of severity or airflow limitation, based on post-bronchodilator force
+expiratory volume in 1 sec [FEV1]): in patient with predicted ratio of FEV1 to forced volume capacity <0.70:
+FEV1 30–50%
+†: mMRCgrade 1 (Modified Medical Research Council for Assessing the severity of breathless): “I get short of
+breath when hurrying on level ground or walking up a slight hill”
+
+
+
+
+                                                                                                          2
+Appendix 2. Selected US guidelines for conditions in adults
+
+Guideline        Title                                     Organization                     Year
+focus
+Hypertension     Hypertension diagnosis and treatment      Institute for Clinical Systems   2012
+                                                           Improvement
+Diabetes         Diagnosis and management of type 2        Institute for Clinical Systems   2012
+                 diabetes mellitus in adults               Improvement
+CHD              Management of stable ischemic heart       American College of              2012
+                 disease: summary of a clinical-practice   Physicians/American College
+                 guideline                                 of Cardiology
+                                                           Foundation/American Heart
+                                                           Association/American
+                                                           Association for Thoracic
+                                                           Surgery/Preventive
+                                                           Cardiovascular Nurses
+                                                           Association/Society of
+                                                           Thoracic Surgeons.
+COPD           Global strategy for the diagnosis,          Global Initiative for Chronic    2013
+               management, and prevention of               Obstructive Lung Disease
+               chronic obstructive pulmonary disease
+Depression     Major depression in adults in primary       Institute for Clinical Systems   2012
+               care                                        Improvement
+Osteoarthritis Recommendations for the use of              American College of              2012
+               nonpharmacologic and pharmacologic          Rheumatology
+               therapies for osteoarthritis of the hand,
+               hip, and knee
+Smoking        Tobacco treatment                           University of Michigan Health    2012
+cessation                                                  System
+Overweight       Management of overweight and              Michigan Quality                 2011
+                 obesity in adults                         Improvement Consortium
+Prevention       Summary of recommendations for            American Academy of Family       2013
+                 clinical prevention                       Physicians
+Vaccination      Immunizations                             Institute for Clinical Systems   2012
+                                                           Improvement
+COPD, chronic obstructive pulmonary disease

@@ -1,0 +1,27 @@
+Source: https://www.psychiatrist.com/pcc/malignant-catatonia-induced-by-concurrent-opioid-benzodiazepine-withdrawal/
+source_sha256: 72207f511544c6b1aeb49b5abaa23d5a9aa96ea4ad83c1bb1f7c51a1ba78cc24
+
+[verbatim lines 1-5]
+Prim Care Companion CNS Disord 2023;25(2):22cr03346
+
+**To cite:** Sayles BD, Royer EG, Meyer Karre VM, et al. Malignant catatonia induced by concurrent opioid and benzodiazepine withdrawal. *Prim Care Companion CNS Disord*. 2023;25(2):22cr03346.
+
+**To share:** https://doi.org/10.4088/PCC.22cr03346
+
+[verbatim lines 18-24]
+### Case Report
+
+A 30-year-old man with self-reported history of unspecified anxiety, unspecified depression, and chronic pain secondary to Legg-Calves-Perthes disease on chronic opioid therapy was brought to the hospital due to decreased verbal responsiveness and recurrent emesis. He had reported an unspecified medication problem to his family 3 days earlier, which was later clarified to be an abrupt discontinuation of his anxiolytic and analgesic medications. Family reported that in the 3 days preceding admission, he became increasingly withdrawn and uncommunicative. In the emergency department, he responded to questions with slow, 1-word responses and was noted to follow commands. Laboratory analysis performed in the emergency department was remarkable for leukocytosis, an elevated anion gap with elevated lactate, and proteinuria (Table 1). His medical record showed current prescriptions for alprazolam 1 mg every 4 hours as needed for anxiety, fentanyl 50 µg/hour patch every 72 hours, oxycodone 30 mg 5 times/d, and gabapentin 900 mg 3 times/d.
+
+At admission, the patient’s home medications were initially held. His fentanyl patch was restarted in the evening on the day of admission but was discontinued several hours later at the recommendation of another consulting team. The following day, he became less verbally responsive with new episodic rigidity in his upper extremities. A routine electroencephalogram was performed and was unremarkable. In the afternoon, the addiction psychiatry team was consulted, and on evaluation the patient exhibited stupor, mutism, sustained posturing, and grimacing with eyes tightly closed. He was febrile to 102°F, hypertensive to 164/110 mm Hg, tachycardic to 126 beats/minute, and tachypneic to 38 breaths/minute with a new oxygen requirement of 5 L/minute by nasal cannula. His leukocytosis persisted with normal creatine kinase (Table 1). Due to suspected catatonia, he was given one dose of intravenous lorazepam 2 mg, after which he began speaking nonsensically with eyes closed but maintained rigid posturing. After a second dose 30 minutes later, he relaxed his posturing, opened his eyes, and became more coherent in his verbal responses.
+
+Thereafter, intravenous lorazepam 2 mg was scheduled every 4 hours as the equivalent to his home dose of alprazolam. The addiction psychiatry team also recommended restarting his home fentanyl patch, which was applied to the patient that evening. His autonomic symptoms resolved within hours, and his white blood cell counts normalized within a day. His creatine kinase peaked at 387 units/L 1 day after initiation of lorazepam but remained within normal limits. His thought process became more logical, and his motor control progressively improved. He reached his baseline level of functioning after 4 days of treatment with lorazepam, fentanyl, and electrolyte repletion as needed. His home oxycodone and gabapentin were not restarted during the admission.
+
+[verbatim lines 38-44]
+***Published online:*** March 16, 2023.
+
+***Relevant financial relationships:*** The authors report no conflicts of interest related to the subject of this report.
+
+***Funding/support:*** None.
+
+***Patient consent:*** The patient provided consent to publish the case report, and information has been de-identified to protect anonymity.
