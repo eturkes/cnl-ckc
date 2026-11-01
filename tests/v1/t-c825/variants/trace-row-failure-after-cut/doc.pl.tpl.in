@@ -1,4 +1,4 @@
-@@sha256 90cc8128a51b1b31e7931594886dd9907dd459b57bc9b662492d177b6eba40df
+@@sha256 b9a1f43ab5acbd5684b2ce8fde6f04fb414c86b0e098b63db9c5f88fac39bfe3
 % doc.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
@@ -44,7 +44,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document(doc,ace_sha256(f2cbd2e45cf351ebdc1c338853a7d245488c07c9153399f9bfccfe476b65d5df),ulex(none),vocabulary(none)).
 % S1: Synthetic attributed fixture sentence.
 guideline_entity(actual,'$guideline_id'(product,doc,1,ref(1),[]),patient,countable) :- guideline_entity('$guideline_id'(product,doc,1,ref(1),[]),n1,deep,countable).

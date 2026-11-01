@@ -327,14 +327,18 @@ carries both an approved and a rejected decision reads contested.
 
 ## Compiled Prolog schema
 
-Status: one schema with the identifier `1`. Every document and every
-question compiles under it. Until the first publication the schema
+Status: every document and every question compiles under the schema
+with the identifier `2`. A document states the identifier in its fact
+`guideline_schema_version(2).`, and a question states it in the tag
+`v2` of its question record. The first release line froze the schema
+with the identifier `1`, and the knowledge base of that line keeps
+identifier `1`. Until the next release line freezes it, schema `2`
 evolves in place: each revision recompiles the whole corpus and every
-fixture, and the identifier stays `1`. From the first publication on,
-schema `1` is frozen. A change to the predicate set or to the meaning
-of a predicate makes the next identifier, `2`, for every document and
-question at once, and the release notes name the change. A consumer
-combines documents of one identifier only. The predicate set below is
+fixture, and the identifier stays `2`. After that freeze, a change to
+the predicate set or to the meaning of a predicate makes the next
+identifier, `3`, for every document and question at once, and the
+release notes name the change. A consumer combines documents and
+questions of one identifier only. The predicate set below is
 the public interface. An optional per-guideline table, `vocabulary.tsv`,
 adds the time annotations of the section "Vocabulary table and time
 annotations" and the grade and preference annotations of the section
@@ -350,7 +354,7 @@ domain-neutral:
 
 | Predicate | Meaning |
 | --- | --- |
-| `guideline_schema_version(Version)` | schema identifier of this document (`1`) |
+| `guideline_schema_version(Version)` | schema identifier of this document (`2`; the release line `kb-2026-10-29` keeps `1`) |
 | `guideline_document(DocId, ace_sha256(H), ulex(none \| sha256(U)), vocabulary(none \| sha256(T)))` | document record + source digests |
 | `guideline_entity(Context, Ref, Noun, Class)` | an entity referent and its noun/class |
 | `guideline_cardinality(Context, Ref, Unit, Comparison, Count)` | that referent's quantity payload, verbatim (a formula target: the computed result, section "Formulas in ACE") |
@@ -471,7 +475,7 @@ by ordinary resolution.
 
 Every document opens with the same declaration block: `multifile`
 and `discontiguous` for all 22 indicators, whether or not it
-populates them. After the block come `guideline_schema_version(1).`,
+populates them. After the block come `guideline_schema_version(2).`,
 the document record, and then, per sentence, a
 `% S<n>: <verbatim sentence>` comment with that sentence's contiguous
 clauses in deterministic order. Any set of documents therefore
@@ -617,11 +621,33 @@ Authoring notes:
 
 A consumer loads `guidelines/schema.pl`, every compiled document of the
 guidelines that it combines, and the facts of one patient. Before the
-first document loads, declare every schema predicate as tabled:
+first document loads, declare the schema identifier predicate, so that
+a composition without documents also reaches the identifier check
+below:
+
+```prolog
+:- multifile(guideline_schema_version/1).
+```
+
+Then declare every schema predicate as tabled:
 
 ```prolog
 :- table guideline_schema_version/1, guideline_document/4, guideline_entity/4, guideline_cardinality/5, guideline_event/3, guideline_arg/4, guideline_pp/4, guideline_property/4, guideline_operator/3, guideline_interval/6, guideline_recurrence/4, guideline_frequency/5, guideline_order/4, guideline_recurrence_window/7, guideline_range/3, guideline_grade/5, guideline_preference/4, guideline_qualifier/4, guideline_unit/3, guideline_exclusion/1, guideline_supersession/4, guideline_evaluation_date/1.
 ```
+
+After the last document and the facts of the patient load, and before
+the first question, check that every loaded document carries schema
+identifier `2`:
+
+```prolog
+( aggregate_all(set(V), guideline_schema_version(V), [2]) -> true ; throw(error(schema_identifier(expected(2)), _)) ).
+```
+
+The check stops a composition that mixes identifiers, holds only
+documents of identifier `1` or holds no document. A program that loads
+more documents after the check calls `abolish_all_tables/0` before it
+checks again, because a completed table does not show a clause that a
+later load adds.
 
 Without tabling, a standard engine does not finish a broad question
 when the facts of a patient make the rules apply. For example, plain
@@ -1342,7 +1368,7 @@ swipl -q -f none -F none -s <ape-tree-dir>/prolog/ace_to_pl.pl -g main \
 The input must be exactly one sentence line that parses to one root
 question box. `<qid>` follows the docid grammar. Success emits four
 lines. Line 1 is a generated-file comment. Line 2 is the ground
-`'$guideline_query'(v1, Qid, ace_sha256(H), ulex(none | sha256(U)), vocabulary(none | sha256(T)))`
+`'$guideline_query'(v2, Qid, ace_sha256(H), ulex(none | sha256(U)), vocabulary(none | sha256(T)))`
 record. Line 3 is a `% Q1:` comment with the verbatim sentence. Line 4
 is one `'$guideline_query_projection'(goal(Conj), answers(Manifest))`
 term. `Conj` is an explicit `','/2` conjunction of goals rendered

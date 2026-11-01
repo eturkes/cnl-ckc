@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('fx-doc',ace_sha256(d54c97b07fb92027a2a1dcce731c300e29aad1d74b2092fe505dab9340d2a081),ulex(none),vocabulary(none)).
 % S1: Every patient is a person.
 guideline_entity(actual,'$guideline_id'(product,'fx-doc',1,ref(2),[A]),person,countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1).

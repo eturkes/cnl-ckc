@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s29-11',ace_sha256(cf01266fedadf906a51041103b413414b720d4394a9493d0f4585728eb5b8a9d),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every clinician should discuss an opioid-driving-or-machinery-safety-effect with a patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s29-11',1,box(1),[A]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').

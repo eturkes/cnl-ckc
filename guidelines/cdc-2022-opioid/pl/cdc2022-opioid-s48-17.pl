@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s48-17',ace_sha256('41ee6e43f76d559107e946bb28d8a9ea63a116bdd7c9c457b1c2bbc75c79ce49'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every depression-treatment can improve a pain-symptom and can improve a depression.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s48-17',1,box(1),[A]),can) :- guideline_entity(actual,A,'depression-treatment',countable), guideline_cardinality(actual,A,na,eq,1).

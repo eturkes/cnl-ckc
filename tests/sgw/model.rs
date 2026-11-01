@@ -211,7 +211,7 @@ pub fn document(id: &str, ace: &str, ulex: Option<&str>, clauses: &str) -> Strin
         .collect();
     let lex = ulex.map_or_else(|| "none".into(), |s| format!("sha256({})", atom(&sha(s))));
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{declarations}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({lex}),vocabulary(none)).\n% S1: {}\n{clauses}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{declarations}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex({lex}),vocabulary(none)).\n% S1: {}\n{clauses}",
         atom(id),
         atom(&sha(ace)),
         ace.trim_end()
@@ -224,7 +224,7 @@ pub fn doc(clauses: &str) -> String {
 
 pub fn query(goal: &str) -> String {
     format!(
-        "% sgw-q compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,'sgw-q',ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Synthetic _ A ' query.\n'$guideline_query_projection'(goal({goal}),answers([])).\n",
+        "% sgw-q compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,'sgw-q',ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Synthetic _ A ' query.\n'$guideline_query_projection'(goal({goal}),answers([])).\n",
         "a".repeat(64)
     )
 }

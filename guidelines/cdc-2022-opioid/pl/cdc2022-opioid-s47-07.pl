@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s47-07',ace_sha256(fbd4276a1332db9244326a181e0647ef94f32d69fc564a8cc50ed585d8cf694d),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a patient takes a prescribed-medication then every clinician should review the prescribed-medication during a prepregnancy-care for the patient and should review the prescribed-medication during an interpregnancy-care for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s47-07',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'prescribed-medication',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,take), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').

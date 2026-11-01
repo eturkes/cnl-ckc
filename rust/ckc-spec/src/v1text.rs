@@ -500,9 +500,9 @@ pub open spec fn digest_term(u: Option<Seq<u8>>) -> Term {
     }
 }
 
-// One schema, identifier 1 (contract c1 D1).
+// One schema on main, identifier 2 (contract id2 D1; the release line keeps 1).
 pub open spec fn schema_version_term() -> Term {
-    Term::Comp(ascii("guideline_schema_version"@), seq![Term::Int(1)])
+    Term::Comp(ascii("guideline_schema_version"@), seq![Term::Int(2)])
 }
 
 pub open spec fn vocabulary_term(t: Option<Seq<u8>>) -> Term {
@@ -525,7 +525,7 @@ pub open spec fn query_record_term(q: QueryFile) -> Term {
     Term::Comp(
         ascii("$guideline_query"@),
         seq![
-            Term::Atom(ascii("v1"@)),
+            Term::Atom(ascii("v2"@)),
             Term::Atom(q.qid),
             Term::Comp(ascii("ace_sha256"@), seq![Term::Atom(q.ace)]),
             Term::Comp(ascii("ulex"@), seq![digest_term(q.ulex)]),

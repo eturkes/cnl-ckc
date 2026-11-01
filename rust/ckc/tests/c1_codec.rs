@@ -107,7 +107,7 @@ fn document(
     clauses: &[String],
 ) -> String {
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{}",
         declarations(22, 4),
         atom(id),
         atom(&sha(ace)),
@@ -130,7 +130,7 @@ fn query(
     answers: &str,
 ) -> String {
     format!(
-        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex({}),vocabulary({})).\n% Q1: {}\n'$guideline_query_projection'(goal({goal}),answers({answers})).\n",
+        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({}),ulex({}),vocabulary({})).\n% Q1: {}\n'$guideline_query_projection'(goal({goal}),answers({answers})).\n",
         atom(id),
         atom(&sha(ace)),
         digest(ulex),
@@ -155,7 +155,7 @@ fn legacy_document(version: usize) -> String {
         &declarations([0, 9, 11, 22][version], if version == 1 { 3 } else { 4 }),
     );
     let d = d.replace(
-        "guideline_schema_version(1).",
+        "guideline_schema_version(2).",
         &format!("guideline_schema_version({version})."),
     );
     if version == 1 {
@@ -454,12 +454,12 @@ fn a10_pre_c1_question_envelopes_reject() {
     let h = sha(TABLE);
     let q = plain_query(None, None);
     c.mutation("old v1 /4 record", &q, ",vocabulary(none)", "");
-    for v in ["v2", "v3"] {
+    for v in ["v1", "v3"] {
         let canonical = plain_query(None, Some(&h));
         let text = canonical
-            .replace("'(v1,", &format!("'({v},"))
+            .replace("'(v2,", &format!("'({v},"))
             .replace("vocabulary(", "temporal(");
-        let at = canonical.find("'(v1,").unwrap() + 3;
+        let at = canonical.find("'(v2,").unwrap() + 3;
         c.reject_at(v, &text, at);
     }
     c.finish();
@@ -657,16 +657,16 @@ fn a13_declaration_order_count_arity_and_semantic_arity() {
 }
 
 #[test]
-fn a14_non_one_schema_identifiers_reject_at_first_divergence() {
+fn a14_non_two_schema_identifiers_reject_at_first_divergence() {
     let mut c = Cases::new("A14");
     let text = plain_doc(None, None);
     for v in [
-        "0", "2", "3", "4", "10", "11", "-1", "01", "'1'", "v1", "A", "",
+        "0", "1", "3", "4", "20", "22", "-2", "02", "'2'", "v2", "A", "",
     ] {
         c.mutation(
             v,
             &text,
-            "guideline_schema_version(1).",
+            "guideline_schema_version(2).",
             &format!("guideline_schema_version({v})."),
         );
     }
@@ -677,8 +677,8 @@ fn a14_non_one_schema_identifiers_reject_at_first_divergence() {
 fn a15_query_version_tokens_are_exact() {
     let mut c = Cases::new("A15");
     let q = plain_query(None, None);
-    for v in ["v0", "v2", "v3", "v10", "'v1'", "1", "V1", "v", "w1"] {
-        c.mutation(v, &q, "'(v1,", &format!("'({v},"));
+    for v in ["v0", "v1", "v3", "v20", "'v2'", "2", "V2", "v", "w2"] {
+        c.mutation(v, &q, "'(v2,", &format!("'({v},"));
     }
     c.finish();
 }
@@ -1608,15 +1608,15 @@ fn a30_certification_diagnostics_name_vocabulary_not_schema_version() {
         let mut sample = CertCase::new(mode, true, false);
         sample.pl = if mode == "doc" {
             sample.pl.replace(
-                "guideline_schema_version(1).",
                 "guideline_schema_version(2).",
+                "guideline_schema_version(1).",
             )
         } else {
-            sample.pl.replace("'(v1,", "'(v2,")
+            sample.pl.replace("'(v2,", "'(v1,")
         };
         sample.check(
             &mut c,
-            "non-1 identifier is a codec reject",
+            "non-2 identifier is a codec reject",
             Some("noncanonical"),
         );
     }

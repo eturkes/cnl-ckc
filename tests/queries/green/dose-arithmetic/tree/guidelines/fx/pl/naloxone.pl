@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document(naloxone,ace_sha256('33417cff9c0c9d6afe86451f2309d6832c9a0192ac0df37b5ff12fb2f5fea88d'),ulex(sha256(ea08df2c0364239536194c128dd430bbd88114b5508f5ab45882331c92505c99)),vocabulary(sha256('05eeed04deb22824331a3748ab69daba7285d901ff655fc1df56792e87853e5a'))).
 % S1: If a clinician prescribes an opioid to a patient then the clinician should offer a naloxone-dose to the patient.
 guideline_operator(actual,'$guideline_id'(context,naloxone,1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,clinician,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,opioid,countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,patient,countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,prescribe), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,to,C).

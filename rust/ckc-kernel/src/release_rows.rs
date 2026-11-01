@@ -418,15 +418,15 @@ pub fn label_text(ls: &Vec<(Vec<u8>, Vec<u8>)>) -> (r: Vec<u8>)
     r
 }
 
-// c1 D10: one `meta schema v1` row.
+// id2 D1: one `meta schema v2` row.
 pub fn schema_rows_exec() -> (r: Vec<u8>)
     ensures
         r@ == schema_rows(),
 {
-    let r = copy(b"meta\tschema\tv1\n");
+    let r = copy(b"meta\tschema\tv2\n");
     proof {
-        reveal_byteslit(b"meta\tschema\tv1\n");
-        reveal_strlit("meta\tschema\tv1\n");
+        reveal_byteslit(b"meta\tschema\tv2\n");
+        reveal_strlit("meta\tschema\tv2\n");
         reveal(ascii);
         assert(r@ =~= schema_rows());
     }

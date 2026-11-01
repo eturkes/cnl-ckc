@@ -1,4 +1,6 @@
 // C1 D2–D6/D9–D10 + S1 D1/D10 + S2 D1/P9: contract-derived probes; CKC_C1_TEST_BIN selects red replay.
+#[path = "../../../tests/id2-live/adapter.rs"]
+mod id2_live;
 #[path = "support/nt_projection.rs"]
 mod nt_projection;
 use sha2::{Digest, Sha256};
@@ -1197,13 +1199,13 @@ fn document_header(id: &str, ace: &[u8], ulex: Option<&[u8]>, table: Option<&[u8
             ":- multifile(guideline_{name}/{arity}).\n:- discontiguous(guideline_{name}/{arity}).\n"
         ));
     }
-    out.push_str(&format!("guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n", atom(id), atom(&sha(ace)), digest_term(ulex), digest_term(table)));
+    out.push_str(&format!("guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n", atom(id), atom(&sha(ace)), digest_term(ulex), digest_term(table)));
     out
 }
 
 fn question_record(id: &str, ace: &[u8], ulex: Option<&[u8]>, table: Option<&[u8]>) -> String {
     format!(
-        "'$guideline_query'(v1,{},ace_sha256({}),ulex({}),vocabulary({})).",
+        "'$guideline_query'(v2,{},ace_sha256({}),ulex({}),vocabulary({})).",
         atom(id),
         atom(&sha(ace)),
         digest_term(ulex),
@@ -1720,7 +1722,7 @@ fn b15_document_header_matrix() {
                     "D2 declaration count",
                 );
                 checks.require(
-                    actual.matches("guideline_schema_version(1).\n").count() == 1
+                    actual.matches("guideline_schema_version(2).\n").count() == 1
                         && !actual.contains("temporal("),
                     "D2 single identifier + vocabulary wrapper",
                 );
@@ -2192,7 +2194,20 @@ fn b21_ui_intake_refusals() {
     checks.finish();
 }
 
-const EXPORT_SCHEMA: &str = "## Compiled Prolog schema\n\nOne schema, identifier 1.\n\n### Document ABI\n\n`guideline_schema_version(1).` and `vocabulary(none | sha256(T))`.\n\n### All annotations\n\nThe vocabulary.tsv table supplies every annotation.\n\n#### Nested details\n\nC1_SCHEMA_FINAL_SENTINEL\n\n";
+const EXPORT_SCHEMA: &str = "## Compiled Prolog schema\n\nOne schema, identifier 1.\n\n### Document ABI\n\n`guideline_schema_version(2).` and `vocabulary(none | sha256(T))`.\n\n### All annotations\n\nThe vocabulary.tsv table supplies every annotation.\n\n#### Nested details\n\nC1_SCHEMA_FINAL_SENTINEL\n\n";
+
+// Contract id2 D4: the copied UI tree stays a frozen identifier-1 raw-render carrier; the release
+// fixture built from it is a live positive carrier ⇒ the forward edit, one site per document.
+fn identifier_two(tree: &Path) {
+    let mut documents = 0;
+    for entry in fs::read_dir(tree.join("guidelines/alpha/pl")).unwrap() {
+        let path = entry.unwrap().path();
+        let text = fs::read_to_string(&path).unwrap();
+        write(&path, id2_live::forward(&text, 1));
+        documents += 1;
+    }
+    assert_eq!(documents, 3, "id2 D4 release-carrier documents");
+}
 
 struct ExportRepo {
     scratch: Scratch,
@@ -2203,6 +2218,7 @@ impl ExportRepo {
         let scratch = Scratch::new();
         let tree = scratch.0.join("repo");
         copy_tree(&root().join("tests/ui/green/basic/tree"), &tree);
+        identifier_two(&tree);
         write(
             &tree.join("docs/REFERENCE.md"),
             format!("# Fixture reference\n\n{schema}## Operating\n\nC1_AFTER_SCHEMA_SENTINEL\n"),
@@ -2260,7 +2276,7 @@ fn b22_release_has_one_schema_row() {
                 .filter(|s| s.starts_with("meta\tschema\t"))
                 .collect::<Vec<_>>();
             checks.require(
-                rows == ["meta\tschema\tv1"],
+                rows == ["meta\tschema\tv2"],
                 format!("release tables={tables}: schema rows={rows:?}"),
             );
             for gid in ["alpha", "beta"].iter().take(tables) {

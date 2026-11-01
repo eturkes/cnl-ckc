@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('root-exact--plain',ace_sha256('06b47a381baf7bf4131f4b66d06f25d11378d0ae1ade283163c56a5e1cf00d3b'),ulex(none),vocabulary(none)).
 % S1: A man sees exactly 1 dog.
 guideline_entity(actual,'$guideline_id'(product,'root-exact--plain',1,ref(1),[]),man,countable).

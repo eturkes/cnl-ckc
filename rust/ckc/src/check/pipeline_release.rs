@@ -50,6 +50,42 @@ impl Drop for Scratch {
 fn error(detail: impl AsRef<str>) -> Failure {
     violation("dist", detail)
 }
+// id2 D2: every staged product carries main's identifier before any hash or export — a
+// document the line `guideline_schema_version(2).`, a question the record tag `v2` —
+// since staging copies HEAD's bytes without the codec (schema.pl, answers, traces exempt).
+// Exactly one identifier line per product: a second line (an old one beside the current) is as
+// foreign to a composition as a missing one.
+fn schema_identifiers(staged: &Staged) -> Result {
+    for (path, bytes) in staged {
+        let parts: Vec<&str> = path.split('/').collect();
+        // (identifier lines' prefix, the current form, whether it spans the whole line)
+        let (family, marker, whole): (&[u8], &[u8], bool) = match parts.as_slice() {
+            ["guidelines", _, "pl", f] if f.ends_with(".pl") => (
+                b"guideline_schema_version(",
+                b"guideline_schema_version(2).",
+                true,
+            ),
+            ["guidelines", _, "queries", "pl", f] if f.ends_with(".pl") => {
+                (b"'$guideline_query'(", b"'$guideline_query'(v2,", false)
+            }
+            _ => continue,
+        };
+        let current = |line: &[u8]| {
+            if whole {
+                line == marker
+            } else {
+                line.starts_with(marker)
+            }
+        };
+        let mut lines = bytes
+            .split(|b| *b == b'\n')
+            .filter(|line| line.starts_with(family));
+        if !matches!((lines.next(), lines.next()), (Some(line), None) if current(line)) {
+            return Err(error(format!("schema-identifier {path}")));
+        }
+    }
+    Ok(())
+}
 fn dgit(root: &Path, args: &[&str], detail: &str) -> Result<Vec<u8>> {
     let out = Command::new("git")
         .args(args)
@@ -404,6 +440,7 @@ pub(super) fn derive(root: &Path) -> Result<ReleasePlan> {
             );
         }
     }
+    schema_identifiers(&staged)?;
     let compiler = head_file(root, "vendor/ape/prolog/ace_to_pl.pl")?;
     let lexicon = head_file(root, "vendor/clex/clex_lexicon.pl")?;
     let reference = head_file(root, "docs/REFERENCE.md")?;

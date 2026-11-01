@@ -120,7 +120,7 @@ fn query_text(
     answers: &str,
 ) -> String {
     format!(
-        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex({}),vocabulary({})).\n% Q1: {}\n'$guideline_query_projection'(goal({goal}),answers({answers})).\n",
+        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({}),ulex({}),vocabulary({})).\n% Q1: {}\n'$guideline_query_projection'(goal({goal}),answers({answers})).\n",
         atom(id),
         atom(&sha(ace)),
         digest(ulex),
@@ -139,7 +139,7 @@ fn document_text(
     clauses: &[String],
 ) -> String {
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{}",
         declarations(),
         atom(id),
         atom(&sha(ace)),

@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s23-06',ace_sha256(a47797cb41f54bffb6a9844397c99b8456e40079d03f2254a9a255eec85c940a),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a patient uses a stool-softener and the patient does not provably use an additional-laxative and there is a clinician then it is recommended that the clinician does not use the stool-softener for the patient.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s23-06',1,box(1),[A,B,C,D]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'stool-softener',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,use), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), \+ (guideline_entity(actual,E,'additional-laxative',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,use), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,E)), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').

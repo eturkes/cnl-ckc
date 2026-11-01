@@ -7,6 +7,8 @@ use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, Weak};
 
+#[path = "../../../tests/id2-live/adapter.rs"]
+mod id2_live;
 #[path = "../../../tests/bf/model.rs"]
 mod model;
 #[path = "../../../tests/bf/prolog.rs"]
@@ -33,18 +35,22 @@ fn fixture(id: &str, name: &str) -> PathBuf {
 }
 fn text(id: &str, name: &str) -> String {
     let text = fs::read_to_string(fixture(id, name)).unwrap();
-    if name == "before.pl.in" && id != "question" {
-        // Frozen pre-bf products gain only the sup1 declaration pairs.
-        let anchor = ":- discontiguous(guideline_exclusion/1).\n";
-        assert_eq!(text.matches(anchor).count(), 1);
-        text.replacen(
-            anchor,
-            &format!("{anchor}:- multifile(guideline_supersession/4).\n:- discontiguous(guideline_supersession/4).\n:- multifile(guideline_evaluation_date/1).\n:- discontiguous(guideline_evaluation_date/1).\n"),
-            1,
-        )
-    } else {
-        text
+    if name != "before.pl.in" {
+        return text;
     }
+    // Frozen pre-bf products as live carriers: identifier 2 (contract id2 D4), + the sup1
+    // declaration pairs in documents.
+    let text = id2_live::forward(&text, 1);
+    if id == "question" {
+        return text;
+    }
+    let anchor = ":- discontiguous(guideline_exclusion/1).\n";
+    assert_eq!(text.matches(anchor).count(), 1);
+    text.replacen(
+        anchor,
+        &format!("{anchor}:- multifile(guideline_supersession/4).\n:- discontiguous(guideline_supersession/4).\n:- multifile(guideline_evaluation_date/1).\n:- discontiguous(guideline_evaluation_date/1).\n"),
+        1,
+    )
 }
 fn quote(path: &Path) -> String {
     format!(

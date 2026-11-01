@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-rec09-imp04',ace_sha256(abbc7bf371b9ec73431205dbddc98b1b31f2f176b2d6355fbaab96a0aa394360),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If there is a patient and a PDMP-recommendation is feasible then every clinician should apply the PDMP-recommendation to the patient and should use a universal-application instead-of an assumption-based-differential-application and should minimize a bias.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec09-imp04',1,box(1),[A,B,C,D,E]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'PDMP-recommendation',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,D,be), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_property(actual,C,feasible,pos), guideline_qualifier(actual,D,applicability,feasible), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').

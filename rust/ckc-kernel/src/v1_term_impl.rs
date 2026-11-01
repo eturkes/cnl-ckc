@@ -13537,7 +13537,7 @@ pub open spec fn query_line_stage(qid: Seq<u8>) -> Seq<u8> {
 
 pub open spec fn query_record_head_stage(qid: Seq<u8>) -> Seq<u8> {
     ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)) + seq![0x28u8]
-        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)) + seq![0x2cu8]
+        + ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v2"@)) + seq![0x2cu8]
         + ckc_spec::v1text::atom_bytes(qid) + seq![0x2cu8]
 }
 
@@ -13698,7 +13698,7 @@ pub open spec fn query_record_head_parts(qid: Seq<u8>, ace: Seq<u8>) -> Seq<Seq<
     seq![
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)),
         seq![0x28u8],
-        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v2"@)),
         seq![0x2cu8],
         ckc_spec::v1text::atom_bytes(qid),
         seq![0x2cu8],
@@ -13785,7 +13785,7 @@ proof fn query_record_parts_flat(
     let head = seq![
         ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("$guideline_query"@)),
         seq![0x28u8],
-        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v1"@)),
+        ckc_spec::v1text::atom_bytes(ckc_spec::v1text::ascii("v2"@)),
         seq![0x2cu8],
         ckc_spec::v1text::atom_bytes(qid),
         seq![0x2cu8],
@@ -13929,7 +13929,7 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     ensures
         query_flat(q) == ckc_spec::v1text::print_query(q),
 {
-    let v1_name = ckc_spec::v1text::ascii("v1"@);
+    let v2_name = ckc_spec::v1text::ascii("v2"@);
     let ace_name = ckc_spec::v1text::ascii("ace_sha256"@);
     let ulex_name = ckc_spec::v1text::ascii("ulex"@);
     let sha_name = ckc_spec::v1text::ascii("sha256"@);
@@ -13937,7 +13937,7 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     let answers_name = ckc_spec::v1text::ascii("answers"@);
     let query_name = ckc_spec::v1text::ascii("$guideline_query"@);
     let projection_name = ckc_spec::v1text::ascii("$guideline_query_projection"@);
-    let v1 = Term::Atom(v1_name);
+    let v2 = Term::Atom(v2_name);
     let qid = Term::Atom(q.qid);
     let ace_hash = Term::Atom(q.ace);
     let ace = Term::Comp(ace_name, seq![ace_hash]);
@@ -13945,7 +13945,7 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     let ulex = Term::Comp(ulex_name, seq![ulex_value]);
     let goal = Term::Comp(goal_name, seq![q.goal]);
     let answers = Term::Comp(answers_name, seq![q.answers]);
-    reveal_strlit("v1");
+    reveal_strlit("v2");
     reveal_strlit("sha256");
     reveal_strlit("ace_sha256");
     reveal_strlit("ulex");
@@ -13963,7 +13963,7 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     assert(answers_name != ckc_spec::v1text::curly_name());
     assert(query_name != ckc_spec::v1text::curly_name());
     assert(projection_name != ckc_spec::v1text::curly_name());
-    atom_term_bytes(v1_name);
+    atom_term_bytes(v2_name);
     atom_term_bytes(q.qid);
     atom_term_bytes(q.ace);
     args_one_bytes(ace_hash);
@@ -14010,8 +14010,8 @@ proof fn query_flat_is_print(q: ckc_spec::v1text::QueryFile)
     args_one_bytes(vocab_value);
     regular_comp_bytes(vocab_name, seq![vocab_value]);
     let vt = Term::Comp(vocab_name, seq![vocab_value]);
-    args_five_bytes(v1, qid, ace, ulex, vt);
-    regular_comp_bytes(query_name, seq![v1, qid, ace, ulex, vt]);
+    args_five_bytes(v2, qid, ace, ulex, vt);
+    regular_comp_bytes(query_name, seq![v2, qid, ace, ulex, vt]);
     reveal_with_fuel(Seq::<_>::flatten, 9);
     args_one_bytes(q.goal);
     regular_comp_bytes(goal_name, seq![q.goal]);
@@ -14226,7 +14226,7 @@ fn parse_query_record_prefix(
         return None;
     }
     let ghost version_expected = match expected@ {
-        Some(q) => Some((ckc_spec::v1text::ascii("v1"@), 0x2cu8)),
+        Some(q) => Some((ckc_spec::v1text::ascii("v2"@), 0x2cu8)),
         None => None,
     };
     let version_at = guided.cursor.pos;
@@ -14236,9 +14236,9 @@ fn parse_query_record_prefix(
                 let g = guided.guide@.unwrap();
                 reveal(guided_cursor_ok);
                 parts_part_ready(bytes@, g.parts, g.index, &guided.cursor);
-                version_atom_first(ckc_spec::v1text::ascii("v1"@));
+                version_atom_first(ckc_spec::v1text::ascii("v2"@));
                 assert(g.parts[g.index] == ckc_spec::v1text::atom_bytes(
-                    ckc_spec::v1text::ascii("v1"@),
+                    ckc_spec::v1text::ascii("v2"@),
                 ));
                 assert(bytes@.subrange(
                     version_at as int,
@@ -14253,15 +14253,15 @@ fn parse_query_record_prefix(
         Some(atom) => atom,
         None => return None,
     };
-    let v1_name: &[u8] = b"v1";
+    let v2_name: &[u8] = b"v2";
     proof {
-        reveal_strlit("v1");
-        reveal_byteslit(b"v1");
+        reveal_strlit("v2");
+        reveal_byteslit(b"v2");
         reveal(ckc_spec::v1text::ascii);
-        assert(v1_name@ == ckc_spec::v1text::ascii("v1"@));
+        assert(v2_name@ == ckc_spec::v1text::ascii("v2"@));
     }
-    if !vec_slice_equal(&version.name, v1_name) {
-        raise_at(at, version_reject_at(bytes, version_at, &version.name, 1), bytes.len());
+    if !vec_slice_equal(&version.name, v2_name) {
+        raise_at(at, version_reject_at(bytes, version_at, &version.name, 2), bytes.len());
         return None;
     }
     if !guided_byte(bytes, guided, 0x2c, at) {
@@ -17090,11 +17090,11 @@ fn parse_doc_declarations(
     let ghost old_prefix = guided.cursor.prefix@;
     let block = decls_block();
     let declarations = block.as_slice();
-    let schema: &[u8] = b"guideline_schema_version(1).\n";
+    let schema: &[u8] = b"guideline_schema_version(2).\n";
     proof {
         let name = ckc_spec::v1text::ascii("guideline_schema_version"@);
-        let n = Term::Int(1);
-        reveal_byteslit(b"guideline_schema_version(1).\n");
+        let n = Term::Int(2);
+        reveal_byteslit(b"guideline_schema_version(2).\n");
         reveal_strlit("guideline_schema_version");
         reveal_strlit(".\n");
         reveal(ckc_spec::v1text::ascii);
@@ -22083,9 +22083,9 @@ fn literal_arity(name: &[u8], arity: usize, body: bool) -> (r: Option<usize>) {
 }
 
 // R9 offset of a record version atom that starts at `at` and names no version of
-// its record kind: the canonical names are the unquoted `v1`..`v<max>`, each
-// followed by `,` (queries, answers + traces: max 1).
-fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>, max: u8) -> (r: usize)
+// its record kind: the canonical name is the unquoted `v<expected>` followed by `,`
+// (answers + traces: v1; queries on main: v2, contract id2).
+fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>, expected: u8) -> (r: usize)
     ensures
         r <= bytes@.len(),
 {
@@ -22096,7 +22096,7 @@ fn version_reject_at(bytes: &[u8], at: usize, name: &Vec<u8>, max: u8) -> (r: us
             bytes.len()
         };
     }
-    let k: usize = if name.len() >= 2 && 0x31 <= name[1] && max <= 9 && name[1] <= 0x30 + max {
+    let k: usize = if name.len() >= 2 && expected <= 9 && name[1] == 0x30 + expected {
         2
     } else {
         1

@@ -67,7 +67,8 @@
 % Assurance: every compile (product or proof emission) derives per-group
 % witness worlds + obligations and replays them against the document's own
 % clauses; an underivable obligation rejects the document (class proof).
-% One schema, identifier 1 (contract c1): every document + question; the
+% One schema on main, identifier 2 (contracts c1, id2; the release line keeps 1):
+% documents carry guideline_schema_version(2), questions the tag v2; the
 % projection lives under "schema projection" near the end of this file. It
 % admits copula/ground facts and Horn rules plus modal/classical-negation
 % operator wrappers (reified as guideline_operator/3 edges over context
@@ -4253,7 +4254,7 @@ v1_render_document(DocId, AceDigest, UlexDigest, Lines, Bundles, OutCodes) :-
         ( format('% ~w.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.~n',
               [DocId]),
           v1_render_decls(Indicators),
-          render_term_line(guideline_schema_version(1)),
+          render_term_line(guideline_schema_version(2)),
           render_term_line(Header),
           v1_render_bundles(Bundles, Lines)
         )),
@@ -4631,9 +4632,9 @@ query_goals(Clean, QId, Goals) :-
     v1_expand_items(Items, [], [], Goals).
 
 query_header_term(QId, AceDigest, none,
-    '$guideline_query'(v1, QId, ace_sha256(AceDigest), ulex(none))).
+    '$guideline_query'(v2, QId, ace_sha256(AceDigest), ulex(none))).
 query_header_term(QId, AceDigest, sha256(Digest),
-    '$guideline_query'(v1, QId, ace_sha256(AceDigest),
+    '$guideline_query'(v2, QId, ace_sha256(AceDigest),
         ulex(sha256(Digest)))).
 
 /* Q1 comment = the sentence line bytes minus a trailing CR (comments

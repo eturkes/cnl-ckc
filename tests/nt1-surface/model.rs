@@ -406,7 +406,7 @@ impl Probe {
                 ts.clone()
             };
             return format!(
-                "% {} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({ace}),ulex(sha256({ulex})),vocabulary({table})).\n% Q1: {}\n{}.\n",
+                "% {} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({ace}),ulex(sha256({ulex})),vocabulary({table})).\n% Q1: {}\n{}.\n",
                 self.id,
                 quote(&self.id),
                 self.ace.trim_end(),
@@ -421,7 +421,7 @@ impl Probe {
             );
         }
         format!(
-            "% {}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({ace}),ulex(sha256({ulex})),vocabulary({table})).\n% S1: {}\n{}",
+            "% {}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({ace}),ulex(sha256({ulex})),vocabulary({table})).\n% S1: {}\n{}",
             self.id,
             declarations(nt),
             quote(&self.id),

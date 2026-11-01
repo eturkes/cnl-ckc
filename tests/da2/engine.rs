@@ -15,7 +15,7 @@ fn install(dir: &std::path::Path, docs: &[(&str, &str)]) {
 }
 fn query(goal: &Term) -> String {
     format!(
-        "% arithmetic compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,arithmetic,ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Is there a result?\n{}.\n",
+        "% arithmetic compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,arithmetic,ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Is there a result?\n{}.\n",
         quote(&sha("Is there a result?\n")),
         c(
             "$guideline_query_projection",

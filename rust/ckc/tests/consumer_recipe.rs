@@ -43,16 +43,45 @@ impl Drop for Scratch {
     }
 }
 
-// The first `prolog` block after the heading.
-fn recipe() -> String {
+// The section's `prolog` blocks (contract id2 D5): [0] the identifier predicate's
+// `multifile` declaration, [1] the one `:- table` directive, [2] the post-load identifier check.
+fn recipe_blocks() -> Vec<String> {
     let text = fs::read_to_string(root().join("docs/REFERENCE.md")).unwrap();
-    let at = text.find(HEADING).expect("REFERENCE: no recipe heading") + HEADING.len();
-    let at = at
-        + text[at..]
-            .find("```prolog\n")
-            .expect("REFERENCE: no prolog block")
-        + 10;
-    text[at..at + text[at..].find("```\n").unwrap()].to_owned()
+    let mut at = text.find(HEADING).expect("REFERENCE: no recipe heading") + HEADING.len();
+    let end = at + text[at..].find("\n### ").unwrap_or(text.len() - at);
+    let mut blocks = Vec::new();
+    while let Some(i) = text[at..end].find("```prolog\n") {
+        let from = at + i + 10;
+        let to = from + text[from..].find("```\n").unwrap();
+        blocks.push(text[from..to].to_owned());
+        at = to + 4;
+    }
+    assert_eq!(
+        blocks.len(),
+        3,
+        "REFERENCE recipe = declaration, table, check"
+    );
+    blocks
+}
+
+// A goal run the way a consumer runs a question: after the identifier check.
+fn checked(goal: &str) -> String {
+    format!("{}, {goal}", identifier_check())
+}
+
+// What a consumer loads before the first document: the declaration + the table directive.
+fn recipe() -> String {
+    let b = recipe_blocks();
+    format!("{}{}", b[0], b[1])
+}
+
+// The post-load identifier check as a goal (its trailing `.` dropped).
+fn identifier_check() -> String {
+    recipe_blocks()[2]
+        .trim_end()
+        .strip_suffix('.')
+        .expect("recipe check ends with `.`")
+        .to_owned()
 }
 
 fn sorted(dir: &Path) -> Vec<PathBuf> {
@@ -217,7 +246,7 @@ fn recipe_tables_every_schema_predicate() {
                 .map(str::to_owned)
         })
         .collect();
-    let recipe = recipe();
+    let recipe = recipe_blocks().remove(1);
     let tabled: Vec<String> = recipe
         .trim_end()
         .strip_prefix(":- table ")
@@ -246,7 +275,11 @@ fn committed_questions_keep_their_answers_under_the_recipe() {
         }
     }
     assert!(!calls.is_empty(), "no committed question");
-    let out = swipl(&s, &load(&s, Mode::Recipe, &[]), &calls.join(", "));
+    let out = swipl(
+        &s,
+        &load(&s, Mode::Recipe, &[]),
+        &checked(&calls.join(", ")),
+    );
     let rows: Vec<&str> = out.lines().filter(|l| l.starts_with("answer ")).collect();
     assert_eq!(rows.len(), calls.len(), "{out}");
     assert!(rows.iter().all(|r| r.ends_with(" same")), "{out}");
@@ -269,7 +302,7 @@ fn patient_worlds_finish_and_agree_with_the_well_founded_model() {
                 std::thread::spawn(move || {
                     let s = Scratch::new(&format!("{w}-{}", mode as u8));
                     let files = load(&s, mode, &[world(&s, w)]);
-                    (w, excluded, mode, swipl(&s, &files, "enum"))
+                    (w, excluded, mode, swipl(&s, &files, &checked("enum")))
                 })
             })
         })
@@ -330,7 +363,11 @@ fn superseded_document_blocks_by_default_and_an_earlier_date_restores_it() {
                         ),
                     ));
                 }
-                let out = swipl(&s, &load(&s, Mode::Recipe, &extra), &format!("doc_boxes('{DOC}')"));
+                let out = swipl(
+                    &s,
+                    &load(&s, Mode::Recipe, &extra),
+                    &checked(&format!("doc_boxes('{DOC}')")),
+                );
                 let f: Vec<&str> = out
                     .lines()
                     .find_map(|l| l.strip_prefix("boxes "))
@@ -368,7 +405,7 @@ fn dose_questions_answer_under_the_recipe_and_open_goals_diverge_without_it() {
     let out = swipl(
         &s,
         &load(&s, Mode::Recipe, std::slice::from_ref(&world)),
-        &calls.join(", "),
+        &checked(&calls.join(", ")),
     );
     assert_eq!(out.matches(" same\n").count(), 2, "{out}");
     // Firing: plain left-to-right search answers the targeted questions (binding-first bodies,

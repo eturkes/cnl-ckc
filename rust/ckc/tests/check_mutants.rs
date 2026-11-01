@@ -367,8 +367,8 @@ fn mutate(t: &Path, name: &str) {
         "semantic-undotted-clause" => replace(
             t,
             DOC,
-            b"guideline_schema_version(1).\n",
-            b"guideline_schema_version(1)\n",
+            b"guideline_schema_version(2).\n",
+            b"guideline_schema_version(2)\n",
         ),
         "semantic-undotted-record" => {
             let rows: Vec<Vec<u8>> = lines(&fs::read(t.join(DOC)).unwrap())
@@ -659,6 +659,91 @@ fn colleague_ledger_rows_join_the_line() {
         ),
         "off-line: stdout {stdout}"
     );
+}
+
+// Contract id2 D2 + P2, the `check` frame: an identifier-1 document or `v1` question stops
+// `ckc check` at its release stage (stdout `ckc: dist: schema-identifier <path>`, rc 1), ahead of
+// manifest drift + the per-document stage. The plant re-derives the review manifest (adjudication
+// precedes the release stage) and is committed (the release derivation reads HEAD).
+#[test]
+fn old_identifier_products_stop_check_at_the_release_stage() {
+    let scratch = Scratch(root().join(format!(
+        "rust/target/check-identifier/{}",
+        std::process::id()
+    )));
+    let _ = fs::remove_dir_all(&scratch.0);
+    fs::create_dir_all(&scratch.0).unwrap();
+    let head = String::from_utf8(git(&root(), &["rev-parse", "HEAD"])).unwrap();
+    let swipl = scratch.0.join("swipl");
+    fs::write(
+        &swipl,
+        "#!/bin/sh\n[ \"$1\" = --version ] && { echo 'SWI-Prolog version 10.0.2 for x86_64-linux'; exit 0; }\necho 'fake swipl: stage build' >&2\nexit 3\n",
+    )
+    .unwrap();
+    fs::set_permissions(&swipl, fs::Permissions::from_mode(0o755)).unwrap();
+    let first = |dir: &str| {
+        let mut names: Vec<_> = fs::read_dir(root().join(dir))
+            .unwrap()
+            .map(|e| e.unwrap().file_name().into_string().unwrap())
+            .filter(|n| n.ends_with(".pl"))
+            .collect();
+        names.sort();
+        format!("{dir}/{}", names[0])
+    };
+    for (name, rel, old, new) in [
+        (
+            "document",
+            first("guidelines/cdc-2022-opioid/pl"),
+            "\nguideline_schema_version(2).\n",
+            "\nguideline_schema_version(1).\n",
+        ),
+        (
+            "question",
+            first("guidelines/cdc-2022-opioid/queries/pl"),
+            "\n'$guideline_query'(v2,",
+            "\n'$guideline_query'(v1,",
+        ),
+    ] {
+        let tree = clone_head(&scratch.0, name, &head);
+        replace(&tree, &rel, old.as_bytes(), new.as_bytes());
+        let manifest = Command::new(program())
+            .args(["review-manifest", "cdc-2022-opioid"])
+            .current_dir(&tree)
+            .output()
+            .unwrap();
+        assert!(
+            manifest.status.success(),
+            "{name}: review-manifest: {}",
+            String::from_utf8_lossy(&manifest.stderr)
+        );
+        git(
+            &tree,
+            &[
+                "-c",
+                "user.name=id2",
+                "-c",
+                "user.email=id2@localhost",
+                "commit",
+                "-qam",
+                "identifier-1 plant",
+            ],
+        );
+        let out = check(&program(), &tree, Some(&swipl)).unwrap();
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        assert_eq!(
+            (
+                out.status.code(),
+                out.stderr.is_empty(),
+                stdout.lines().last()
+            ),
+            (
+                Some(1),
+                true,
+                Some(format!("ckc: dist: schema-identifier {rel}").as_str())
+            ),
+            "{name}: stdout {stdout}"
+        );
+    }
 }
 
 #[test]

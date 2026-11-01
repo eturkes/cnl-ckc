@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s25-12',ace_sha256(b8bf04621106ebf17b2c8d49c98f45c7da935f0703ee32534e0d240bc6327b4d),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every diagnosis can help a disease-specific-intervention-identification for a pain-reversal-amelioration-or-worsening-prevention for a function-improvement.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s25-12',1,box(1),[A]),can) :- guideline_entity(actual,A,diagnosis,countable), guideline_cardinality(actual,A,na,eq,1).

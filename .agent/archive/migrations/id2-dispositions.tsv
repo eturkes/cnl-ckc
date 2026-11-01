@@ -1,0 +1,72 @@
+# ID2 disposition map (contract id2 D3): one row per C1-retired item (c1-dispositions.tsv disposition `retired`, 70 rows); re-derived = the identifier-2 law that item's predicate now lives in (representative = a runnable test, `binary::path::name`); obsolete = the law axis is gone (reason). Old-identifier corpus refusals in the `check` frame = check_mutants::old_identifier_products_stop_check_at_the_release_stage; validator = id2_unit::inventory::p3_dispositions_equal_the_seventy_retired_ids_and_name_live_tests.
+family	id	disposition	representative
+tests/v1	q12-k2-mixed-3-2/target	re-derived	id2_unit::readers::p2a_aggregate_identifier_refusal_and_manifest_order
+tests/v1	q12-k2-mixed-3-2/recursion	re-derived	id2_unit::readers::p2a_recursion_identifier_refusal_and_manifest_order
+tests/v1	q12-k2-mixed-1-3/target	re-derived	id2_unit::readers::p2a_aggregate_identifier_refusal_and_manifest_order
+tests/v1	q12-k2-mixed-1-3/recursion	re-derived	id2_unit::readers::p2a_recursion_identifier_refusal_and_manifest_order
+tests/v1	q12-k2-mixed-3-1/target	re-derived	id2_unit::readers::p2a_aggregate_identifier_refusal_and_manifest_order
+tests/v1	q12-k2-mixed-3-1/recursion	re-derived	id2_unit::readers::p2a_recursion_identifier_refusal_and_manifest_order
+tests/v1	q12-k3-matrix-empty-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-empty-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-1-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-1-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-2-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-2-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q1/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q1/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q1/trace-check	re-derived	id2_unit::readers::p2a_trace_check_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q2/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q2/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q2/trace-check	re-derived	id2_unit::readers::p2a_trace_check_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-q3/trace-check	re-derived	id2_unit::readers::p2a_trace_check_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-2-3-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-2-3-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-2-q1/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-2-q1/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-2-q2/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-2-q2/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-2-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-2-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-1-3-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-1-3-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-1-q3/target	re-derived	id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-matrix-3-1-q3/trace	re-derived	id2_unit::readers::p2a_trace_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-frequency-q2/target	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-frequency-q2/trace	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-order-q2/target	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-order-q2/trace	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-window-q2/target	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-window-q2/trace	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-range-q2/target	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+tests/v1	q12-k3-whitelist-range-q2/trace	obsolete	no identifier gates a query feature since c1; frequency, order, window + range run on valid current queries (tests/v1 q12-k3-whitelist-<feature>-q1 + -q3, tag v2); the old-query refusal = id2_unit::readers::p2a_answer_identifier_refusals_and_empty_law
+q18 census	query-v2-none/S1	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	query-v2-none/S4	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	query-v2-none/S5	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	query-v2-none/S8	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	query-v2-sha256/S1	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	query-v2-sha256/S4	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	query-v2-sha256/S5	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	query-v2-sha256/S8	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	document-v2-none/S6	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	document-v2-none/S7	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	document-v2-none/S8	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	document-v2-sha256/S6	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	document-v2-sha256/S7	re-derived	q18_fixed_name_census::q18_fixed_name_census
+q18 census	document-v2-sha256/S8	re-derived	q18_fixed_name_census::q18_fixed_name_census
+tests/red	temporal_load--v2-table-v3-argv	obsolete	the fork argv carries no version since c1; a leading v1|v2|v3 stays a usage error (id2_unit::inventory::p1_emitter_version_arguments_remain_usage_errors) beside the c1 argument-shape probes
+tests/red	temporal_load--v3-table-v2-argv	obsolete	the fork argv carries no version since c1; a leading v1|v2|v3 stays a usage error (id2_unit::inventory::p1_emitter_version_arguments_remain_usage_errors) beside the c1 argument-shape probes
+tests/check-mutants	temporal-v3-header	obsolete	vocabulary.tsv has one header since c1; no table version axis remains
+tests/check-mutants	temporal-v3-no-rows	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-final-newline	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-lemma-space	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-unit-id	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-unit-duplicate	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-role-id	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-relation-duplicate	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-kind	re-derived	check_mutants::check_mutant_battery
+tests/check-mutants	temporal-v3-q13-v2-approximation	obsolete	no kind version gate since c1; approximation + range rows stay legal positives of the one table law
+tests/check-mutants	temporal-v3-q13-v2-range	obsolete	no kind version gate since c1; approximation + range rows stay legal positives of the one table law
+rust/ckc/tests/q13_temporal_properties.rs	v2-approximation-kind-gate	obsolete	no kind version gate since c1; approximation + range rows stay legal positives of the one table law
+rust/ckc/tests/q13_temporal_properties.rs	v2-range-kind-gate	obsolete	no kind version gate since c1; approximation + range rows stay legal positives of the one table law

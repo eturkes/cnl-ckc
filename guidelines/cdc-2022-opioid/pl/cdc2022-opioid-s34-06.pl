@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s34-06',ace_sha256('5b7d0fee3ac82be88f3f98b54e848d3ac88bd353f7026dd6231582d400a5ac31'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a dosage-increase is unnecessary for an opioid-dosage and there is a clinician then it is recommended that the clinician does not generally increase the opioid-dosage.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s34-06',1,box(1),[A,B,C,D,E]),should) :- guideline_entity(actual,A,'dosage-increase',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'opioid-dosage',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,D,be), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,C), guideline_property(actual,C,unnecessary,pos), guideline_pp(actual,D,for,B), guideline_entity(actual,E,clinician,countable), guideline_cardinality(actual,E,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').

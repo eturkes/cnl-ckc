@@ -1,2 +1,2 @@
 % cix answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,cix,query_sha256(f2c3383439f1025d67e45c91f44bbbcb35f026ff9b837993aea8399da81e0312),result(solutions([sol([int_zero]),sol([shared_class_first]),sol([shared_wild_first]),sol([wild_before]),sol([wild_end]),sol([wild_middle])]))).
+'$guideline_answers'(v1,cix,query_sha256('915ccefa0cfa5d01a5718c4d24c1a4a29752c77ceb72fcb07dc7c58bb4c55687'),result(solutions([sol([int_zero]),sol([shared_class_first]),sol([shared_wild_first]),sol([wild_before]),sol([wild_end]),sol([wild_middle])]))).

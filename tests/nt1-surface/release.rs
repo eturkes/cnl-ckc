@@ -177,7 +177,7 @@ fn p5_check_extra_guidelines_root_member() {
 const REVIEW: &str = "# format: docid<TAB>ace_sha256<TAB>coverage_row_sha256<TAB>region_payload_sha256<TAB>semantic_clause_sha256<TAB>review_sha256\n# bundle v2; review_sha256 = sha256 of the labeled component-digest block; regenerate: ckc review-manifest <id>; do not edit.\n";
 fn document() -> String {
     format!(
-        "% d.pl numeric fixture.\n{}guideline_schema_version(1).\nguideline_document(d,ace_sha256('{}'),ulex(none),vocabulary(none)).\n% S1: A patient has exactly 1 week.\nguideline_entity(actual,p,patient,countable).\nguideline_cardinality(actual,q,na,exactly,1).\nguideline_unit(actual,q,week).\nguideline_property(actual,p,eligible,pos) :- guideline_cardinality(actual,q,na,A,B), guideline_unit(actual,q,C), guideline_satisfies(A,B,C,greater,3,day).\n",
+        "% d.pl numeric fixture.\n{}guideline_schema_version(2).\nguideline_document(d,ace_sha256('{}'),ulex(none),vocabulary(none)).\n% S1: A patient has exactly 1 week.\nguideline_entity(actual,p,patient,countable).\nguideline_cardinality(actual,q,na,exactly,1).\nguideline_unit(actual,q,week).\nguideline_property(actual,p,eligible,pos) :- guideline_cardinality(actual,q,na,A,B), guideline_unit(actual,q,C), guideline_satisfies(A,B,C,greater,3,day).\n",
         model::declarations(true),
         "0".repeat(64)
     )

@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-rec03-imp04',ace_sha256('033dee2bc80dc0f20b7dde5d492e16b8cf2f93139045cfcdb5ffa638e6f878fc'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a patient receives an immediate-release-opioid and a clinician initiates an ER-LA-opioid for the patient after the immediate-release-opioid then the clinician should consult a product-labeling and should reduce a total-daily-dosage for an incomplete-cross-tolerance.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec03-imp04',1,box(1),[A,B,C,D,E,F]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'immediate-release-opioid',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,receive), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,clinician,countable), guideline_cardinality(actual,D,na,eq,1), guideline_entity(actual,E,'ER-LA-opioid',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,initiate), guideline_arg(actual,F,1,D), guideline_arg(actual,F,2,E), guideline_pp(actual,F,after,B), guideline_order(actual,F,after,B), guideline_pp(actual,F,for,A), \+ guideline_exclusion('cdc-2022-opioid').

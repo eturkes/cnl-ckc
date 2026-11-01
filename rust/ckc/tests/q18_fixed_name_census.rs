@@ -1,4 +1,4 @@
-// S2 D1/P1 + retained S1/C1/Q18 law: canonical candidates + byte LCP oracle.
+// S2 D1/P1 + retained S1/C1/Q18 law + id2 D3 identifier domains: canonical candidates + byte LCP oracle.
 // Contract-derived seed bytes cover all 16 predicates and optional-digest states.
 // CKC_V1_TEST_BIN selects a prebuilt executable for red replay.
 use std::collections::BTreeSet;
@@ -24,6 +24,16 @@ const PREDICATES: [(&str, usize); 16] = [
     ("guideline_grade", 5),
     ("guideline_preference", 4),
     ("guideline_qualifier", 4),
+];
+
+// Contract id2 D3: the identifier domains. Each value replaces the canonical one (`2` in a
+// document, `v2` in a question) and must reject at its first byte off the canonical continuation.
+const DOC_VERSIONS: [&str; 25] = [
+    "0", "1", "3", "4", "5", "6", "7", "8", "9", "02", "12", "-2", "+2", "20", "21", "22", "29",
+    "200", "2.0", "2e0", "'2'", "v2", "two", "A", "",
+];
+const QUERY_TAGS: [&str; 15] = [
+    "v0", "v1", "v3", "v9", "v02", "v20", "v22", "vv2", "V2", "w2", "v", "2", "'v2'", "v2x", "x",
 ];
 
 fn sha(bytes: &[u8]) -> String {
@@ -91,12 +101,12 @@ fn contract_seeds() -> Vec<(String, Vec<u8>)> {
             let docid = if ulex { "doc-id" } else { "doc" };
             let qid = if ulex { "query-id" } else { "query" };
             let document = format!(
-                "% {docid}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{declarations}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({u}),vocabulary({v})).\n{bundle}",
+                "% {docid}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{declarations}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex({u}),vocabulary({v})).\n{bundle}",
                 atom(docid),
                 atom(&ace_doc)
             );
             let query = format!(
-                "% {qid} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex({u}),vocabulary({v})).\n% Q1: Which person exists?\n'$guideline_query_projection'(goal(guideline_entity(x,A,x,x)),answers([answer(A,noun(person,countable))])).\n",
+                "% {qid} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({}),ulex({u}),vocabulary({v})).\n% Q1: Which person exists?\n'$guideline_query_projection'(goal(guideline_entity(x,A,x,x)),answers([answer(A,noun(person,countable))])).\n",
                 atom(qid),
                 atom(&ace_query)
             );
@@ -543,6 +553,7 @@ fn q18_fixed_name_census() {
     let mut predicate_coverage = BTreeSet::new();
     let mut controls = [0usize; 6];
     let mut property_checks = [0usize; 8];
+    let mut identifiers = 0;
     let seeds = seed_files(&root).unwrap();
     for (seed, bytes) in &seeds {
         runner.check(&format!("{seed}/canonical"), bytes, None);
@@ -589,6 +600,39 @@ fn q18_fixed_name_census() {
                 Some(span.start),
             );
             controls[5] += 2;
+        }
+        let identifier = if seed.starts_with("document-") {
+            Some(("\nguideline_schema_version(", "2", ").", &DOC_VERSIONS[..]))
+        } else if seed.starts_with("query-") {
+            Some(("\n'$guideline_query'(", "v2", ",", &QUERY_TAGS[..]))
+        } else {
+            None
+        };
+        if let Some((opener, value, delimiter, values)) = identifier {
+            let text = std::str::from_utf8(bytes).unwrap();
+            assert_eq!(text.matches(opener).count(), 1, "{seed} identifier site");
+            let start = text.find(opener).unwrap() + opener.len();
+            let span = start..start + value.len();
+            assert_eq!(&text[span.clone()], value);
+            let canonical = format!("{value}{delimiter}");
+            for candidate in values {
+                let mutated = replace(bytes, span.clone(), candidate.as_bytes());
+                let shared = mutated[start..]
+                    .iter()
+                    .zip(canonical.as_bytes())
+                    .take_while(|(a, b)| a == b)
+                    .count();
+                assert!(
+                    shared < canonical.len(),
+                    "{seed}: {candidate:?} is canonical"
+                );
+                runner.check(
+                    &format!("{seed}/identifier/{candidate:?}"),
+                    &mutated,
+                    Some(start + shared),
+                );
+                identifiers += 1;
+            }
         }
         for slot in domain.slots {
             slots[slot.kind] += 1;
@@ -684,9 +728,10 @@ fn q18_fixed_name_census() {
         [10, 1130, 19, 10, 190, 12],
         "canonical/free/digest/id/literal/version controls"
     );
-    assert_eq!(runner.checked, 4935, "complete check census");
+    assert_eq!(identifiers, 4 * 25 + 4 * 15, "identifier domains");
+    assert_eq!(runner.checked, 4935 + identifiers, "complete check census");
     eprintln!(
-        "Q18 census: seeds={} slots={slots:?} mandatory={mandatory:?} property-domains={} property-checks={property_checks:?} controls={controls:?} checked={} deviations={}",
+        "Q18 census: seeds={} slots={slots:?} mandatory={mandatory:?} property-domains={} property-checks={property_checks:?} controls={controls:?} identifiers={identifiers} checked={} deviations={}",
         seeds.len(),
         properties.len(),
         runner.checked,

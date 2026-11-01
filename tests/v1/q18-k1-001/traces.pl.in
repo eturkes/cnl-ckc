@@ -1,2 +1,2 @@
 % query-id traced against the loaded composition by ckc queries; do not edit.
-'$guideline_traces'(v1,'query-id',query_sha256(d9ec9c6d22ea94e1281bcdfd7aa9ae8d80eb504d40331190893b54f3e4be0ca2),answers_sha256(f068b1ab2da85a9de3752723d7dc40e1d713fc861208f61ba3eda70c5347792d),result(solutions([sol([x],proved([clause(sentence('doc-id',1),clause_sha256(b5320f652639b13bc85f28aa2025f65331f9dd4a815d7ae6ce6ef02b43f427ff),[])]))]))).
+'$guideline_traces'(v1,'query-id',query_sha256('2771c5bf164da9ab1188813ffa64764098cc88b920af887ec00a85d8d1baab6a'),answers_sha256('1e8ba61e954cdd1e7570ae1b9abc5ce38d2552814a3621740fb34d1d353af724'),result(solutions([sol([x],proved([clause(sentence('doc-id',1),clause_sha256(b5320f652639b13bc85f28aa2025f65331f9dd4a815d7ae6ce6ef02b43f427ff),[])]))]))).

@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s8-14',ace_sha256(b759e6655f65c46f34d0d319601da6ee4a6390ff79d00c377efec779f923fcb5),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every implementation-consideration provides a greater-specificity.
 guideline_entity(actual,'$guideline_id'(product,'cdc2022-opioid-s8-14',1,ref(2),[A]),'greater-specificity',countable) :- guideline_entity(actual,A,'implementation-consideration',countable), guideline_cardinality(actual,A,na,eq,1).

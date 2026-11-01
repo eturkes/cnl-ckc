@@ -59,7 +59,7 @@ mod harness {
         }
         const ANSWERS: &[u8] = concat!(
             "% q answered against the loaded composition by ckc queries; do not edit.\n",
-            "'$guideline_answers'(v1,q,query_sha256(dd523d5359c8a608a6ac911f7c1734f0fabfd86381bf8a07b6c5a530c6719f0a),result(yes)).\n",
+            "'$guideline_answers'(v1,q,query_sha256(bc16f467601efb8124a99720893f74339233859ba7c706a6dad051c396243a63),result(yes)).\n",
         ).as_bytes();
         let manifest = ESrc::Bytes(b"d\tp\n".to_vec());
         let docs = vec![ESrc::Bytes(DOC.to_vec())];
@@ -75,7 +75,7 @@ mod harness {
             &query,
             QUERY_SHA256[0],
             &answers,
-            b"b7f9bfbc307f93705715cc723da79426c178316eb66a55579901a112a3115c45",
+            b"b6d49488b626b6ef7b0549737cda3dacd479f0ee3db22a8c827376e64ed4ba57",
             &trace,
             &Vec::new(),
         );
@@ -133,7 +133,7 @@ mod harness {
         ":- discontiguous(guideline_supersession/4).\n",
         ":- multifile(guideline_evaluation_date/1).\n",
         ":- discontiguous(guideline_evaluation_date/1).\n",
-        "guideline_schema_version(1).\n",
+        "guideline_schema_version(2).\n",
         "guideline_document(d,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
         "% S1: x\n",
         "guideline_event(a,b,c).\n",
@@ -141,19 +141,19 @@ mod harness {
     ).as_bytes();
     const QUERIES: [&[u8]; 2] = [concat!(
         "% q compiled from ACE question by ace_to_pl question mode; do not edit.\n",
-        "'$guideline_query'(v1,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
+        "'$guideline_query'(v2,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
         "% Q1: x\n",
         "'$guideline_query_projection'(goal(guideline_event(a,b,c)),answers([])).\n",
     ).as_bytes(), concat!(
         "% q compiled from ACE question by ace_to_pl question mode; do not edit.\n",
-        "'$guideline_query'(v1,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
+        "'$guideline_query'(v2,q,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).\n",
         "% Q1: x\n",
         "'$guideline_query_projection'(goal(guideline_event(a,d,c)),answers([])).\n",
     ).as_bytes()];
     // Raw query SHA-256 values: the shell normally supplies these to v1_answer.
     const QUERY_SHA256: [&[u8]; 2] = [
-        b"dd523d5359c8a608a6ac911f7c1734f0fabfd86381bf8a07b6c5a530c6719f0a",
-        b"d900583f8ae07892e279df2a3fc0e25866db9702b277122efa50dd91d5692614",
+        b"bc16f467601efb8124a99720893f74339233859ba7c706a6dad051c396243a63",
+        b"d6486cb95ed1e84996210dda16657e140188a5d9a07dcffffdae43ea51d178fd",
     ];
 
     #[kani::proof]

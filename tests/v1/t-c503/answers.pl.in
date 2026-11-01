@@ -1,2 +1,2 @@
 % q-wh answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-wh',query_sha256('18ff9e18af3ec8140d17c91bacd7db68f68123038824f29755d3071ab1027992'),result(solutions([sol(['$guideline_id'(product,doc,2,ref(1),[])])]))).
+'$guideline_answers'(v1,'q-wh',query_sha256(c5ca35ad463f46f9db705da9380ecc74dd656d020f8b3e5e8fa9c3160affa47c),result(solutions([sol(['$guideline_id'(product,doc,2,ref(1),[])])]))).

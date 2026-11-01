@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s26-01',ace_sha256(efe64f9ef9596489c20c0600fe981969995f5344cbef933cfc95dcdf53547be9),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If an active-nonpharmacologic-approach has a patient-engagement and is possible then every clinician should use the active-nonpharmacologic-approach and should reserve a passive-nonpharmacologic-approach for a supplementary-role.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s26-01',1,box(1),[A,B,C,D,E,F]),should) :- guideline_entity(actual,A,'active-nonpharmacologic-approach',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'patient-engagement',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_event(actual,E,be), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,D), guideline_property(actual,D,possible,pos), guideline_qualifier(actual,E,applicability,possible), guideline_entity(actual,F,clinician,countable), guideline_cardinality(actual,F,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').

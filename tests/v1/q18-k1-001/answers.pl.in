@@ -1,2 +1,2 @@
 % query-id answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'query-id',query_sha256(d9ec9c6d22ea94e1281bcdfd7aa9ae8d80eb504d40331190893b54f3e4be0ca2),result(solutions([sol([x])]))).
+'$guideline_answers'(v1,'query-id',query_sha256('2771c5bf164da9ab1188813ffa64764098cc88b920af887ec00a85d8d1baab6a'),result(solutions([sol([x])]))).

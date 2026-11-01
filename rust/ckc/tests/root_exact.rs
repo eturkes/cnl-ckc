@@ -628,7 +628,7 @@ impl Probe {
             );
         }
         doc += &format!(
-            "guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex(sha256({})),vocabulary({table})).\n",
+            "guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex(sha256({})),vocabulary({table})).\n",
             quote(&self.id),
             quote(&sha(&self.ace)),
             quote(&sha(ULEX))

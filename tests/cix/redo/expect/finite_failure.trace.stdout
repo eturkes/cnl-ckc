@@ -1,2 +1,2 @@
 % cix traced against the loaded composition by ckc queries; do not edit.
-'$guideline_traces'(v1,cix,query_sha256('15840d2ec6e6e9a69a75869600b7b770f00e8a86f75b70570fee25c95b3a967c'),answers_sha256('2af17cd554b9a8b236917743dd4a63f8dd227d91078d308295489d112ac7de5d'),result(no(finite_failure))).
+'$guideline_traces'(v1,cix,query_sha256(dac880449bf71e168963ad94372bc81b87603fed759fd26aaf1b82c8c14fc7c8),answers_sha256('85eee35a1ce5f6892744613239c34e030749a29a18f58596f0ee3719d6e8bbbf'),result(no(finite_failure))).

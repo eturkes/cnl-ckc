@@ -717,7 +717,7 @@ impl Product {
             "none".into()
         };
         format!(
-            "% {}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex(sha256({})),vocabulary({tab})).\n% S1: {}\n{}",
+            "% {}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex(sha256({})),vocabulary({tab})).\n% S1: {}\n{}",
             self.id,
             declarations(),
             quote(&self.id),

@@ -73,7 +73,7 @@ fn seed(repo: &Path) -> Result {
         ),
         (
             "guidelines/g-probe/pl/doc-a.pl",
-            "guideline_document('g-probe','doc-a',[],x).\n",
+            "guideline_schema_version(2).\nguideline_document('g-probe','doc-a',[],x).\n",
         ),
     ] {
         write(repo, path, text)?;
@@ -156,7 +156,7 @@ pub(super) fn check(scratch: &Path) -> Result {
                 write(
                     &repo,
                     "guidelines/g-probe/pl/doc-b.pl",
-                    "guideline_document('g-probe','doc-b',[],x).\n",
+                    "guideline_schema_version(2).\nguideline_document('g-probe','doc-b',[],x).\n",
                 )?;
                 ledger(
                     &repo,

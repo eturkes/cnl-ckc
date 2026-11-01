@@ -230,7 +230,7 @@ fn compiled<'a>(label: &str, out: &'a Output, ace: &str, table: &str) -> &'a str
     let stdout = success(label, out);
     assert_eq!(
         facts(stdout, "guideline_schema_version"),
-        ["guideline_schema_version(1)."]
+        ["guideline_schema_version(2)."]
     );
     assert_eq!(
         facts(stdout, "guideline_document"),

@@ -1,2 +1,2 @@
 % q answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,q,query_sha256('77b6f0b7545c8ac00dd0fa9de6b8834203881c23eedc71ab886fc8fb40a755ad'),result(solutions([sol([witness])]))).
+'$guideline_answers'(v1,q,query_sha256('3de0eabec3b3b9aabd51e43f9fc3c77ae78c8cd0d43cf9f933bd9b78b6c2e6f1'),result(solutions([sol([witness])]))).

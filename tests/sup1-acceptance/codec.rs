@@ -60,8 +60,8 @@ fn p3_declaration_frontier() {
     c.mutation(
         "R9 schema +4 lines",
         &text,
-        "guideline_schema_version(1).",
         "guideline_schema_version(2).",
+        "guideline_schema_version(1).",
     );
     c.mutation(
         "R9 wrapper +4 lines",

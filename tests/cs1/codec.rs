@@ -91,8 +91,8 @@ fn b1_twenty_indicators_replace_nineteen_at_the_exact_frontier() {
     c.mutation(
         "schema offset after inserted two lines",
         &text,
-        "guideline_schema_version(1).",
         "guideline_schema_version(2).",
+        "guideline_schema_version(1).",
     );
     c.mutation(
         "record wrapper offset after inserted two lines",

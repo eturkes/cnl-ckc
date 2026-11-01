@@ -1,2 +1,2 @@
 % empty answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,empty,query_sha256('2260ff5ff7e5af6287188b602d9a369bea888e1c8f81aca175107cd088d39b52'),result(no(finite_failure))).
+'$guideline_answers'(v1,empty,query_sha256(faeaea52231ee2a0b4ab9a177f7dd54c6eb671d8296bb1d145daad0a5d9f83d9),result(no(finite_failure))).

@@ -1,0 +1,43 @@
+# id2 per-path transform manifest (contract id2 D6; read by revise.py --identifier 2). Default: positive = the D1 token edits (document version line, question tag, release meta); a .rs path = code, edited by hand.
+# format: path-or-prefix<TAB>disposition<TAB>reason; frozen = a prefix kept byte-identical; retarget = a C1 negative whose token stays invalid; code = a non-.rs path the unit authors by hand, outside the migration + the churn census (D7).
+tests/s1-compiler/c1/	frozen	C1 baselines: s1_compiler compares current output through a live-expectation adapter (D4)
+tests/s2-compiler/s1/	frozen	S1 baselines: s2_compiler adapter (D4)
+tests/s1-codec/alternative-query/c1.pl.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/bare/c1-proof.txt.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/bare/c1.pl.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/certdoc/c1-proof.txt.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/certdoc/c1.pl.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/combined/c1-proof.txt.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/combined/c1.pl.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/grade-query/c1.pl.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/s1-codec/pref-query/c1.pl.in	frozen	C1 snapshot (generate-c1.py, old toolchain); s1_codec adapter (D4)
+tests/bf/probes/facts/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/facts/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/fallback-days/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/fallback-days/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/formula-time/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/formula-time/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/naf/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/naf/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/neg-box/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/neg-box/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/neg-event/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/neg-event/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/ordered/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/ordered/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/question/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/scope/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/scope/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/time-neg/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/time-neg/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/time/before.pl.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/bf/probes/time/before.proof.in	frozen	pre-bf baseline; bf_emission live-expectation adapter (D4)
+tests/ui/	frozen	UI raw-render fixture: the UI reads raw inputs without schema admission (D2 UI row), so its page pins stay frozen
+tests/ur-ui/	frozen	UI raw-render fixture: the UI reads raw inputs without schema admission (D2 UI row), so its page pins stay frozen
+tests/sup4-ui/	frozen	UI raw-render fixture: the UI reads raw inputs without schema admission (D2 UI row), so its page pins stay frozen
+tests/frozen-pages/	frozen	UI raw-render fixture: the UI reads raw inputs without schema admission (D2 UI row), so its page pins stay frozen
+tests/rd/	frozen	UI raw-render fixture: the UI reads raw inputs without schema admission (D2 UI row), so its page pins stay frozen
+tests/v1/t-c908/doc.pl.in	retarget	C1 negative: identifier 2 was invalid, identifier 1 is invalid now
+tests/v1/q12-k1-header-over-v3/input.pl.in	retarget	C1 negative: identifier 2 was invalid, identifier 1 is invalid now
+tests/v1/q17-k1-003/input.pl.in	retarget	q17 quoted version: the quoted current tag ('v2') rejects at its opening quote
+tests/imp-acceptance/id2/document.pl.in	code	acceptance template (tester-4; `@VERSION@` placeholder, no identifier token): authored by the unit

@@ -2,6 +2,8 @@
 // CKC_UR_TEST_BIN selects the binary for seed/base replay; default = release ckc.
 #[path = "../../../tests/frozen-pages/dq10.rs"]
 mod dq10;
+#[path = "../../../tests/id2-live/adapter.rs"]
+mod id2_live;
 #[path = "../../../tests/ur-ui/legacy.rs"]
 mod legacy;
 #[path = "../../../tests/ur-ui/oracle.rs"]
@@ -16,6 +18,21 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 use support::*;
+
+// Contract id2 D4: `tests/ur-ui/` stays frozen at identifier 1, its canonical header included;
+// every document a fixture writes is a live codec carrier (the scope pairing reads it) ⇒ the
+// forward edit, one site per document.
+fn fixture(label: &str, rows: Option<Vec<Row>>, mut docs: Vec<Doc>) -> Fixture {
+    let table = rows.as_ref().map(|rows| oracle::table(rows));
+    for doc in &mut docs {
+        let pl = doc
+            .pl
+            .take()
+            .unwrap_or_else(|| doc.canonical(table.as_deref()));
+        doc.pl = Some(id2_live::forward(&pl, 1));
+    }
+    Fixture::new(label, rows, docs)
+}
 
 fn section(page: &str, heading: &str) -> String {
     let start = format!("<section>\n<h2>{heading}</h2>\n");
@@ -50,7 +67,7 @@ fn p1_document_sections_remove_every_compiled_table() {
         doc.canonical(Some(&oracle::table(&rows)))
             .replace("guideline_event(actual,e,wait).\n", facts),
     );
-    let fx = Fixture::new("p1", Some(rows), vec![doc]);
+    let fx = fixture("p1", Some(rows), vec![doc]);
     let parsed = native(
         &fx.scratch.0,
         &[
@@ -113,7 +130,7 @@ fn p1_document_sections_remove_every_compiled_table() {
 #[test]
 fn p2_word_meanings_all_rows_exact_copy_and_order() {
     let rows = all_rows();
-    let fx = Fixture::new(
+    let fx = fixture(
         "p2-all",
         Some(rows.clone()),
         vec![Doc::new("words", "usually.\n")],
@@ -185,7 +202,7 @@ fn p2_boundaries_collisions_escaping_and_intake() {
     ));
     let mut c = Checks::default();
     for (label, rows) in cases {
-        let fx = Fixture::new(
+        let fx = fixture(
             &label,
             rows.clone(),
             vec![Doc::new("words", "usually x<&\"'y 漢λ.\n")],
@@ -202,7 +219,7 @@ fn p2_boundaries_collisions_escaping_and_intake() {
             format!("P2 {label}: no time table"),
         );
     }
-    let fx = Fixture::new(
+    let fx = fixture(
         "p2-intake",
         Some(reading_rows()),
         vec![Doc::new("words", "usually.\n")],
@@ -276,7 +293,7 @@ fn p3_every_kind_exact_tokens_time_exclusion_and_priority() {
     let ace = format!(
         "{words}.\nUsually category-A-recommendations first-line-therapy recommendation apply applies applys applyes.\nday before at-spacing during-window per approximate to interval window.\nλusually—ideally. usually--ideally usually- ideally1 1usually.\n"
     );
-    let fx = Fixture::new("p3-kinds", Some(rows), vec![Doc::new("kinds", &ace)]);
+    let fx = fixture("p3-kinds", Some(rows), vec![Doc::new("kinds", &ace)]);
     let mut c = Checks::default();
     let pages = inspect(&fx, "P3 kinds", &mut c);
     c.require(
@@ -309,7 +326,7 @@ fn p3_scope_pair_only_inside_paired_exclusion_sentences() {
         );
         let mut doc = Doc::new("scope", &ace);
         doc.exclusions = vec![4];
-        let fx = Fixture::new("p3-scope", Some(rows), vec![doc]);
+        let fx = fixture("p3-scope", Some(rows), vec![doc]);
         let parsed = native(
             &fx.scratch.0,
             &[
@@ -334,7 +351,7 @@ fn p3_scope_pair_only_inside_paired_exclusion_sentences() {
         "recommendation applies.\nrecommendation applies.\n",
     );
     doc.exclusions = vec![2];
-    let fx = Fixture::new("p3-scope-collision", Some(rows), vec![doc]);
+    let fx = fixture("p3-scope-collision", Some(rows), vec![doc]);
     inspect(&fx, "P3 global row wins over scope", &mut c);
     c.finish("P3 scope forms");
 }
@@ -393,7 +410,7 @@ fn p3_scope_pairing_failures_keep_global_readings() {
     );
     whitespace.exclusions = vec![2];
     docs.push(whitespace);
-    let fx = Fixture::new("p3-pairing", Some(rows), docs);
+    let fx = fixture("p3-pairing", Some(rows), docs);
     let mut c = Checks::default();
     for doc in &fx.docs {
         let input = fx.tree.join(format!("guidelines/alpha/pl/{}.pl", doc.id));
@@ -466,7 +483,7 @@ fn p4_highlight_clipping_boundaries_and_unicode_are_exact() {
         Mark::new(16, 19, 0),
     ];
     docs.push(shared);
-    let fx = Fixture::new("p4", Some(rows), docs);
+    let fx = fixture("p4", Some(rows), docs);
     let mut c = Checks::default();
     inspect(&fx, "P4 clipping", &mut c);
     c.finish("P4 exact HTML");
@@ -501,7 +518,7 @@ fn p5_reserved_line_distinct_first_occurrence_copy_and_no_reading_branch() {
         Doc::new("hostile-only", "x<&\"'y"),
         Doc::new("empty", ""),
     ];
-    let fx = Fixture::new("p5", Some(rows), docs);
+    let fx = fixture("p5", Some(rows), docs);
     let mut c = Checks::default();
     let pages = inspect(&fx, "P5 line", &mut c);
     for id in ["no-readings", "hostile-only", "empty"] {
@@ -542,7 +559,7 @@ fn p6_script_csp_styles_and_page_invariants() {
     combined.marks = vec![Mark::new(0, 5, 0), Mark::new(8, 15, 1)];
     let mut highlight = Doc::new("highlight-only", "domain label.\n");
     highlight.marks = vec![Mark::new(0, 6, 0), Mark::new(7, 12, 1)];
-    let fx = Fixture::new(
+    let fx = fixture(
         "p6",
         Some(reading_rows()),
         vec![
@@ -717,7 +734,7 @@ fn p2_generated_table_permutations_preserve_reading_priority_and_row_order() {
             let k = rng.next(j + 1);
             rows.swap(j, k);
         }
-        let fx = Fixture::new(
+        let fx = fixture(
             "table-permutation",
             Some(rows.clone()),
             vec![Doc::new(
@@ -824,7 +841,7 @@ fn oracle_generated_256_cases_cover_d5_d6_composition() {
         docs.push(doc);
     }
     assert_eq!(modes, BTreeSet::from([0, 1, 2, 3, 4, 5, 6, 7]));
-    let fx = Fixture::new("generated", Some(rows), docs);
+    let fx = fixture("generated", Some(rows), docs);
     let mut c = Checks::default();
     inspect(&fx, "ORACLE seed=6b5a74d2190ef3c1", &mut c);
     c.finish("ORACLE 256 generated cases");

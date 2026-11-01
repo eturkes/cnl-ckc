@@ -1,2 +1,2 @@
 % q-naf-existential answered against the loaded composition by ckc queries; do not edit.
-'$guideline_answers'(v1,'q-naf-existential',query_sha256(acf4f079dcbccc8a32a5ada802a82ec1ccc9aad6096abc846990efd970a2c2aa),result(yes)).
+'$guideline_answers'(v1,'q-naf-existential',query_sha256('0ac2abef4bf481f282577323ff4ca7b5566a72f45483a3e32f75344c405e2b82'),result(yes)).

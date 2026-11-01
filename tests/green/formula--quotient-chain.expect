@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('formula--quotient-chain',ace_sha256('76bc0c39711c82c91cfc720c44ca3cc26daa4e1a933d40329b8fc0c2ad0b6fe9'),ulex(none),vocabulary(none)).
 % S1: If a patient weighs some kilograms X and the patient receives some milligrams Z then the patient receives some doses Y and Y = (Z / X) * 2.
 guideline_entity(actual,'$guideline_id'(product,'formula--quotient-chain',1,ref(6),[A,B,C,D,E]),dose,countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,kilogram,countable), guideline_cardinality(actual,B,na,F,G), guideline_event(actual,C,weigh), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,milligram,countable), guideline_cardinality(actual,D,na,H,I), guideline_event(actual,E,receive), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,D), guideline_quotient(H,I,F,G,J,K), guideline_product(J,K,exactly,2,_,_).

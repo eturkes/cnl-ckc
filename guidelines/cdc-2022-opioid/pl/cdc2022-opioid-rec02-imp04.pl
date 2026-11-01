@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-rec02-imp04',ace_sha256('6c532e029794ff6ed6551e4fec94b173c2c56da2c4449f9912bba545a5536598'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: Every health-insurer can increase a therapy-reimbursement and can increase an evidence-based-noninvasive-nonpharmacologic-therapy-access.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-rec02-imp04',1,box(1),[A]),can) :- guideline_entity(actual,A,'health-insurer',countable), guideline_cardinality(actual,A,na,eq,1).

@@ -1,4 +1,6 @@
 // S2 P2/P3: contract-only oracle + frozen S1 bytes; CKC_S2_TEST_BIN selects red replay.
+#[path = "../../../tests/id2-live/adapter.rs"]
+mod id2_live;
 #[path = "../../../tests/s2-compiler/model.rs"]
 mod model;
 #[path = "support/nt_projection.rs"]
@@ -286,10 +288,14 @@ fn cases() -> Vec<Case> {
 fn frozen(c: &Case, suffix: &str) -> String {
     fs::read_to_string(fixture().join(format!("s1/{}.{suffix}", c.id))).unwrap()
 }
+// The frozen S1 product as a live carrier (contract id2 D4); proof payloads carry no identifier.
+fn live_pl(c: &Case) -> String {
+    id2_live::forward(&frozen(c, "pl.in"), usize::from(c.mode != "proof"))
+}
 // The frozen S1 artifacts predate binding-first bodies (contract bf).
 fn expected(c: &Case, table: Option<&str>) -> String {
     reorder::document(&model::rebind(
-        &model::annotate(&frozen(c, "pl.in"), table, &c.plans),
+        &model::annotate(&live_pl(c), table, &c.plans),
         &c.ace,
         &sha(c.ace.as_bytes()),
         table.map(|t| sha(t.as_bytes())).as_deref(),
@@ -741,7 +747,7 @@ fn t00_reference_baselines_and_oracle_properties() {
         if !c.green() {
             continue;
         }
-        let old = reorder::document(&frozen(c, "pl.in"));
+        let old = reorder::document(&live_pl(c));
         let predicted = expected(c, c.table.as_deref());
         assert_eq!(
             model::erase(&predicted, &old),
@@ -952,7 +958,7 @@ fn t3m_every_green_erases_to_s1_and_naf_obligation_boundary() {
                     ),
                 );
             }
-            let old = reorder::document(&frozen(c, "pl.in"));
+            let old = reorder::document(&live_pl(c));
             let projected = nt_projection::erase(&actual.stdout, &expected(c, c.table.as_deref()));
             let erased = model::erase(&projected, &old);
             checks.require(
@@ -972,7 +978,7 @@ fn t3m_every_green_erases_to_s1_and_naf_obligation_boundary() {
                 format!("{} erased compile: {}", c.id, erased.describe()),
             );
             if erased.ok() {
-                let old = reorder::document(&frozen(c, "pl.in"));
+                let old = reorder::document(&live_pl(c));
                 let projected = nt_projection::erase(&erased.stdout, &old);
                 let normalized = model::erase(&projected, &old);
                 checks.require(

@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s55-13',ace_sha256('981c56c94e0cab95f755b7c8b3c104eb72821a774c8351bb039eeb52b487982d'),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a patient has a concurrent-opioid-and-benzodiazepine-use and has an unpredictable-opioid-or-benzodiazepine-use then the concurrent-opioid-and-benzodiazepine-use can likely have a greater-than-stable-lower-dosage-use-risk.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s55-13',1,box(1),[A,B,C,D,E]),can) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'concurrent-opioid-and-benzodiazepine-use',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), guideline_entity(actual,D,'unpredictable-opioid-or-benzodiazepine-use',countable), guideline_cardinality(actual,D,na,eq,1), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,D).

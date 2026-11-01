@@ -7,6 +7,7 @@ tests/s2-compiler/ --frozen tests/s2-codec/ --label s2`).
 
 Usage: python3 -I <this> <repo-root> <ckc-binary> --add NAME/ARITY [--add …] --after NAME/ARITY
        [--frozen PREFIX …] [--label TEXT] [--dry] [--semantic [--recompile QUERY-CASE …]]
+       python3 -I <this> <repo-root> <ckc-binary> --identifier 2 [--frozen PREFIX …] [--dry]
 Toolchain PATH = the reference swipl (10.0.2); repo-root carries the revised compiler, whose `v1_indicators`
 list = the old block with the added indicators after the anchor (checked). --dry computes
 Phase A without writing. Scope = tracked guidelines/, tests/, the Kani harness, minus each
@@ -32,6 +33,15 @@ command's drift instead of requiring Phase A identity, the --recompile query cas
 `guidelines/schema.pl` may join the output census, and the predictions above give way to the
 unit's churn oracle (nt1: nt1-churn.py; certify mutants then re-anchor via
 nt1-certify-repin.py, since Phase A shifts their operands by the declaration block alone).
+
+--identifier 2 (contract id2): Phase A edits tokens in place of a block — every document line
+`guideline_schema_version(1).` → `(2).`, every question tag `'$guideline_query'(v1,` → `(v2,`,
+every release meta row `meta\tschema\tv1` → `v2` — per path as `id2-transforms.tsv` classifies
+it (positive = those edits; frozen = untouched; retarget = a C1 negative keeps an invalid token;
+code = Rust sources, edited by hand); Kani DOC + QUERIES get the same edits + their digests
+recomputed; digests + fixture commits rebind as above. Same-length tokens move no offset; a
+rebound digest that gains a leading digit gains quotes. Phase B as above (corpus recompile =
+Phase A bytes, checked). The churn oracle (`id2-churn.py`) grades the result independently.
 """
 import argparse
 import hashlib
@@ -73,6 +83,11 @@ LABEL = "revise"
 SEMANTIC = False
 SCHEMA = "guidelines/schema.pl"
 RECOMPILE = ()
+# --identifier (id2): per-path dispositions from the transform manifest.
+IDENTIFIER = None
+TRANSFORMS = {}
+ID_MANIFEST = ".agent/archive/migrations/id2-transforms.tsv"
+VERSION_LINE = re.compile(rb"^guideline_schema_version\(1\)\.$", re.M)
 
 
 def indicator(text):
@@ -96,6 +111,83 @@ def configure(root, added, after, frozen, label):
     CUT = block(old[:k])
     assert NEW_BLOCK == CUT + ADDED + OLD_BLOCK[len(CUT):]
     FROZEN, LABEL = tuple(frozen), label
+
+
+def configure_identifier(root, version, frozen, label):
+    """The compiler emits the new identifier; the manifest classifies every non-default path."""
+    global IDENTIFIER, TRANSFORMS, FROZEN, LABEL, NEW_BLOCK
+    assert version == 2, "only identifier 2 (contract id2)"
+    src = (root / COMPILER).read_text()
+    assert "render_term_line(guideline_schema_version(2))" in src and "'$guideline_query'(v2," in src, \
+        f"{COMPILER}: does not emit identifier 2"
+    prefixes, rows = list(frozen), {}
+    for line in (root / ID_MANIFEST).read_text().splitlines():
+        if not line or line.startswith("#"):
+            continue
+        path, disposition, _reason = line.split("\t")
+        assert disposition in ("frozen", "retarget", "code"), line
+        if disposition == "frozen":
+            prefixes.append(path)
+        else:
+            rows[path] = disposition
+    IDENTIFIER, TRANSFORMS, FROZEN, LABEL = version, rows, tuple(prefixes), label
+    # Phase B's UI-case selector reads NEW_BLOCK as "a compiled document in this blob".
+    NEW_BLOCK = b"guideline_schema_version(2).\n"
+
+
+def id_revise(path, blob):
+    """Token edits by disposition (positive unless the manifest says otherwise)."""
+    disposition = TRANSFORMS.get(path, "code" if path.endswith(".rs") else "positive")
+    if disposition == "code":
+        return blob
+    if disposition == "retarget":
+        # A C1 negative: its token was invalid then (2 / v2 / a quoted v1) and stays invalid now.
+        return (blob.replace(b"guideline_schema_version(2).", b"guideline_schema_version(1).")
+                .replace(b"'$guideline_query'(v2,", b"'$guideline_query'(v1,")
+                .replace(b"'$guideline_query'('v1',", b"'$guideline_query'('v2',"))
+    return (VERSION_LINE.sub(b"guideline_schema_version(2).", blob)
+            .replace(b"'$guideline_query'(v1,", b"'$guideline_query'(v2,")
+            .replace(b"meta\tschema\tv1\n", b"meta\tschema\tv2\n"))
+
+
+def kani_identifier(src):
+    """DOC + QUERIES gain the new tokens; QUERY_SHA256, ANSWERS' citation + its digest follow."""
+    start, end, old, indent = concat_block(src, b"const DOC")
+    src = src[:start] + rust_lines(id_revise("doc", old), indent) + src[end:]
+    at = src.index(b"const QUERIES")
+    olds, news = [], []
+    for k in range(2):
+        start, end, old, indent = concat_block(src[at:], b"concat!")
+        start, end = start + at, end + at
+        new = id_revise("query", old)
+        src = src[:start] + rust_lines(new, indent) + src[end:]
+        olds.append(sha(old)); news.append(sha(new))
+        at = start + len(rust_lines(new, indent))
+    start, end, answers, indent = concat_block(src, b"const ANSWERS")
+    new_answers = answers.replace(b"query_sha256(" + atom(olds[0]) + b")", b"query_sha256(" + atom(news[0]) + b")")
+    src = src[:start] + rust_lines(new_answers, indent) + src[end:]
+    for o, n in zip(olds + [sha(answers)], news + [sha(new_answers)]):
+        src = src.replace(o, n)
+    return src
+
+
+def retained(pl):
+    """check.rs `retained`: the clause lines a review bundle hashes (no comment, directive or record)."""
+    return b"".join(line + b"\n" for line in pl.split(b"\n")[:-1]
+                    if not line.startswith((b"guideline_document(", b"%", b":- ")))
+
+
+def review_revise(blob, docs):
+    """id2: the version line sits in the retained stream ⇒ each row's clause + review digests move."""
+    rows = []
+    for line in blob.split(b"\n"):
+        f = line.split(b"\t")
+        if not line.startswith(b"#") and len(f) == 6 and f[0] in docs:
+            cl = sha(retained(docs[f[0]]))
+            block = b"bundle v2 %s\nace %s\ncoverage %s\npayload %s\nclauses %s\n" % (f[0], f[1], f[2], f[3], cl)
+            f = f[:4] + [cl, sha(block)]
+        rows.append(b"\t".join(f))
+    return b"\n".join(rows)
 
 
 def doc_revise(blob):
@@ -219,14 +311,14 @@ def phase_a(root):
     documents = []
     for p, blob in data.items():
         if p == KANI:
-            new = kani_revise(blob)
+            new = kani_identifier(blob) if IDENTIFIER else kani_revise(blob)
         else:
             template = p.endswith(".tpl.in")
             body = blob.split(b"\n", 1)[1] if template else blob
-            new = doc_revise(body)
+            new = id_revise(p, body) if IDENTIFIER else doc_revise(body)
             if new != body:
                 documents.append(p)
-            elif b":- multifile(guideline_" in body and OLD_BLOCK not in body:
+            elif not IDENTIFIER and b":- multifile(guideline_" in body and OLD_BLOCK not in body:
                 malformed.append(p)
             if template:
                 assert blob == template_pin(blob), f"stale template pin: {p}"
@@ -237,10 +329,19 @@ def phase_a(root):
     def cur(p):
         return out.get(p, data[p])
 
+    if IDENTIFIER:
+        for p in data:
+            if p.endswith("/audit/review-manifest.tsv"):
+                pl = p[: -len("audit/review-manifest.tsv")] + "pl/"
+                docs = {q[len(pl):-3].encode(): cur(q) for q in data if q.startswith(pl) and q.endswith(".pl")}
+                new = review_revise(cur(p), docs)
+                if new != data[p]:
+                    out[p] = new
+
     # A certify mutant's swap-lines operands index lines of its target document: a
     # migrated target gains the added lines after the anchor, so operands past it shift.
     certify = "tests/certify/cases.tsv"
-    if certify in data:
+    if certify in data and not IDENTIFIER:
         rows = cur(certify).split(b"\n")
         for i, row in enumerate(rows):
             f = row.split(b"\t")
@@ -457,8 +558,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("repo_root", type=Path)
     parser.add_argument("ckc_binary", type=Path)
-    parser.add_argument("--add", action="append", required=True, type=indicator, metavar="NAME/ARITY")
-    parser.add_argument("--after", required=True, type=indicator, metavar="NAME/ARITY")
+    parser.add_argument("--add", action="append", type=indicator, metavar="NAME/ARITY")
+    parser.add_argument("--after", type=indicator, metavar="NAME/ARITY")
+    parser.add_argument("--identifier", type=int, metavar="N")
     parser.add_argument("--frozen", action="append", default=[], metavar="PREFIX")
     parser.add_argument("--label", default="revise")
     parser.add_argument("--dry", action="store_true")
@@ -470,7 +572,14 @@ def main():
     if RECOMPILE and not SEMANTIC:
         parser.error("--recompile needs --semantic")
     root, ckc = args.repo_root.resolve(), args.ckc_binary.resolve()
-    configure(root, args.add, args.after, args.frozen, args.label)
+    if args.identifier is not None:
+        if args.add or args.after or SEMANTIC:
+            parser.error("--identifier excludes --add, --after + --semantic")
+        configure_identifier(root, args.identifier, args.frozen, "id2" if args.label == "revise" else args.label)
+    elif not (args.add and args.after):
+        parser.error("--add + --after, or --identifier")
+    else:
+        configure(root, args.add, args.after, args.frozen, args.label)
     if not args.dry and (not ckc.is_file() or not os.access(ckc, os.X_OK)):
         parser.error(f"ckc binary is not executable: {ckc}")
     data, out, malformed, documents, rebind, commits = phase_a(root)
@@ -482,7 +591,8 @@ def main():
         else:
             (root / p).write_bytes(blob)
     label = " (dry)" if args.dry else ""
-    print(f"{LABEL} phase A{label}: {len(data)} files scanned, {len(documents)} declaration blocks extended, "
+    what = "token-edited files" if IDENTIFIER else "declaration blocks extended"
+    print(f"{LABEL} phase A{label}: {len(data)} files scanned, {len(documents)} {what}, "
           f"{len(out)} {'would write' if args.dry else 'written'}, {len(rebind)} digests rebound, "
           f"{len(commits)} fixture commits rebound, {len(malformed)} malformed blocks kept")
     if not args.dry:

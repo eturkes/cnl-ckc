@@ -1,5 +1,5 @@
-@@sha256 dcf2a6470f7be2667a8f861e080c9e26d0c3c9c416a520f1d6c1072e51669df6
+@@sha256 e56572a1bc1d11ae7cc4e449da0c05be6110d9f18704b3dd3e26550f6b423993
 % q compiled from ACE question by ace_to_pl question mode; do not edit.
-'$guideline_query'(v1,q,ace_sha256(e1117b3073db3a8c45de21a042516a72cb293cff33064e59e8a2c7f0ed13229f),ulex(none),vocabulary(none)).
+'$guideline_query'(v2,q,ace_sha256(e1117b3073db3a8c45de21a042516a72cb293cff33064e59e8a2c7f0ed13229f),ulex(none),vocabulary(none)).
 % Q1: Does the selection succeed?
 @@tree 50001	guideline_operator(actual,A,can)	guideline_entity(A,witness,q,countable)	'$guideline_query_projection'(goal(	),answers([])).

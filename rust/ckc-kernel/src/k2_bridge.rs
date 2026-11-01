@@ -277,8 +277,8 @@ fn schema_root(arena: &mut ETermArena) -> (root: usize)
         final(arena)@[root as int] == ckc_spec::v1text::schema_version_term(),
 {
     let name: &[u8] = b"guideline_schema_version";
-    let one = int_root(arena, 1);
-    let root = comp1(arena, name, one);
+    let two = int_root(arena, 2);
+    let root = comp1(arena, name, two);
     proof {
         reveal_byteslit(b"guideline_schema_version");
         reveal_strlit("guideline_schema_version");

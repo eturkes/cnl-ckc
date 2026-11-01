@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 fn query(id: &str, goal: &str) -> String {
     let goal = model::parse(goal).render();
     format!(
-        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Is there a result?\n'$guideline_query_projection'(goal({goal}),answers([])).\n",
+        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Is there a result?\n'$guideline_query_projection'(goal({goal}),answers([])).\n",
         quote(id),
         quote(&sha("Is there a result?\n"))
     )
@@ -20,7 +20,7 @@ fn expected_answer(id: &str, q: &str, result: &str) -> String {
 }
 fn structural_doc(id: &str, clauses: &[String]) -> String {
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary(none)).\n% S1: A composition fixture.\n{}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary(none)).\n% S1: A composition fixture.\n{}",
         model::declarations(),
         quote(id),
         quote(&sha("A composition fixture.\n")),

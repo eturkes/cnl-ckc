@@ -95,7 +95,7 @@ pub fn canonical(s: &str) -> String {
 }
 pub fn document_text(id: &str, ace: &str, table: Option<&str>, clauses: &[String]) -> String {
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary({})).\n% S1: {}\n{}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary({})).\n% S1: {}\n{}",
         declarations(),
         atom(id),
         atom(&sha(ace)),
@@ -113,7 +113,7 @@ pub fn document(id: &str, clauses: &[String]) -> String {
 pub fn query_text(id: &str, ace: &str, table: Option<&str>, goal: &str, answers: &str) -> String {
     let projection = canonical(&format!("goal({goal}),answers({answers})"));
     format!(
-        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex(none),vocabulary({})).\n% Q1: {}\n'$guideline_query_projection'({projection}).\n",
+        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({}),ulex(none),vocabulary({})).\n% Q1: {}\n'$guideline_query_projection'({projection}).\n",
         atom(id),
         atom(&sha(ace)),
         digest(table),

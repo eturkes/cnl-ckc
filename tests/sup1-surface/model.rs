@@ -248,7 +248,7 @@ impl Projection {
             .as_ref()
             .map_or_else(|| "none".into(), |t| format!("sha256({})", atom(&sha(t))));
         let mut out = format!(
-            "% {}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex(sha256({})),vocabulary({tab})).\n",
+            "% {}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex(sha256({})),vocabulary({tab})).\n",
             scene.id,
             declarations(),
             atom(&scene.id),
@@ -331,7 +331,7 @@ impl Projection {
 }
 pub fn query(id: &str, goal: &str) -> String {
     format!(
-        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Is there a result?\n'$guideline_query_projection'(goal({}),answers([])).\n",
+        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: Is there a result?\n'$guideline_query_projection'(goal({}),answers([])).\n",
         atom(id),
         atom(&sha("Is there a result?\n")),
         parse(goal).render()
@@ -347,7 +347,7 @@ pub fn answer(id: &str, query: &str, yes: bool) -> String {
 }
 pub fn structural(id: &str, clauses: &[String]) -> String {
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary(none)).\n% S1: A composition fixture.\n{}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary(none)).\n% S1: A composition fixture.\n{}",
         declarations(),
         atom(id),
         atom(&sha("A composition fixture.\n")),

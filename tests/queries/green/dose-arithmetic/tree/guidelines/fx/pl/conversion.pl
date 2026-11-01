@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document(conversion,ace_sha256(aa034b2f731bf64e678fc3c0ec5f3ef4f4fc8b58eb7a3f319ad0baef3a7b61fe),ulex(sha256(ea08df2c0364239536194c128dd430bbd88114b5508f5ab45882331c92505c99)),vocabulary(sha256('05eeed04deb22824331a3748ab69daba7285d901ff655fc1df56792e87853e5a'))).
 % S1: If some codeine-milligrams-per-day X are contained by an opioid-dosage and the opioid-dosage does not provably serve an opioid-use-disorder-management then the opioid-dosage includes some MME-units-per-day Y and Y = X * 0.15.
 guideline_entity(actual,'$guideline_id'(product,conversion,1,ref(6),[A,B,C]),'MME-unit-per-day',countable) :- guideline_entity(actual,A,'codeine-milligram-per-day',countable), guideline_cardinality(actual,A,na,D,E), guideline_entity(actual,B,'opioid-dosage',countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,contain), guideline_arg(actual,C,1,B), guideline_arg(actual,C,2,A), \+ (guideline_entity(actual,F,'opioid-use-disorder-management',countable), guideline_cardinality(actual,F,na,eq,1), guideline_event(actual,G,serve), guideline_arg(actual,G,1,B), guideline_arg(actual,G,2,F)), guideline_product(D,E,exactly,rational(3,20),_,_).

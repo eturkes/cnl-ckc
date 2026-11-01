@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s47-01',ace_sha256(a748ea4658e1c2a44abc1a648bf5f99a8acc417206423361678ef56d59fd457c),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a pregnant-person has a pain then the pregnant-person should receive a compassionate-evidence-based-care for the pain.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s47-01',1,box(1),[A,B,C]),should) :- guideline_entity(actual,A,'pregnant-person',countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,pain,countable), guideline_cardinality(actual,B,na,eq,1), guideline_event(actual,C,have), guideline_arg(actual,C,1,A), guideline_arg(actual,C,2,B), \+ guideline_exclusion('cdc-2022-opioid').

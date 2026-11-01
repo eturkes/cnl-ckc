@@ -103,9 +103,9 @@ pub open spec fn tab() -> Seq<u8> {
     seq![0x09u8]
 }
 
-// One schema, identifier 1 (contract c1 D10).
+// One schema on main, identifier 2 (contract id2 D1; c1 D10 named 1).
 pub open spec fn schema_rows() -> Seq<u8> {
-    ascii("meta\tschema\tv1\n"@)
+    ascii("meta\tschema\tv2\n"@)
 }
 
 pub open spec fn meta_block(schema: Seq<u8>, compiler: Seq<u8>, lexicon: Seq<u8>) -> Seq<u8> {

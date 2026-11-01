@@ -381,7 +381,7 @@ fn write_guideline(
         )?;
         repo.write(
             format!("guidelines/{gid}/pl/{docid}.pl"),
-            format!("guideline_document('{gid}','{docid}',[],x).\n"),
+            format!("guideline_schema_version(2).\nguideline_document('{gid}','{docid}',[],x).\n"),
         )?;
         let review = values[4].clone();
         match state {
@@ -1311,7 +1311,7 @@ fn validate_bag(
         }
         "runtime_meta" => {
             for (key, expected) in [
-                ("schema", "v1".to_owned()),
+                ("schema", "v2".to_owned()),
                 (
                     "compiler",
                     digest(&repo.show("vendor/ape/prolog/ace_to_pl.pl")?)?,

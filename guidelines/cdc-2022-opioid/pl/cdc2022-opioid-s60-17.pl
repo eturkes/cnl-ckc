@@ -43,7 +43,7 @@
 :- discontiguous(guideline_supersession/4).
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
-guideline_schema_version(1).
+guideline_schema_version(2).
 guideline_document('cdc2022-opioid-s60-17',ace_sha256(bb4af17729dd8d121df86d631b745d6f202dba4d686c368824403188cedc8211),ulex(sha256(fba48e003101de64df33400ab2595fa7589360ac19f4c77ac3d17bd085f5b8c0)),vocabulary(sha256('335c132fd0e3d3163ba40c255e7db41eecc36492d8098263c505b17f44bbef5a'))).
 % S1: If a patient receives a naltrexone-treatment for an opioid-use-disorder and has a severe-acute-pain then every clinician may consider a short-term-higher-potency-nonopioid-analgesic for the patient for a severe-acute-pain-management.
 guideline_operator(actual,'$guideline_id'(context,'cdc2022-opioid-s60-17',1,box(1),[A,B,C,D,E,F,G]),may) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'naltrexone-treatment',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'opioid-use-disorder',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,receive), guideline_arg(actual,D,1,A), guideline_arg(actual,D,2,B), guideline_pp(actual,D,for,C), guideline_entity(actual,E,'severe-acute-pain',countable), guideline_cardinality(actual,E,na,eq,1), guideline_event(actual,F,have), guideline_arg(actual,F,1,A), guideline_arg(actual,F,2,E), guideline_entity(actual,G,clinician,countable), guideline_cardinality(actual,G,na,eq,1), \+ guideline_exclusion('cdc-2022-opioid').

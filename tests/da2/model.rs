@@ -45,7 +45,7 @@ pub fn document(
         s.map_or_else(|| "none".into(), |s| format!("sha256({})", quote(&sha(s))))
     };
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{clauses}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex({}),vocabulary({})).\n% S1: {}\n{clauses}",
         declarations(),
         quote(id),
         quote(&sha(ace)),

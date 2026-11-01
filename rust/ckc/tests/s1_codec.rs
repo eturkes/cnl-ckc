@@ -1,6 +1,8 @@
 // S1 D1/D3–D7/P1/P4/P5 + S2 D1/P9; oracle = the contracts.
 // C1 fixture bytes + explicit D3/D4 insertions are the oracle, never S1 output.
 // CKC_S1_TEST_BIN selects a prebuilt executable; compiler = this tree's fork.
+#[path = "../../../tests/id2-live/adapter.rs"]
+mod id2_live;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -94,7 +96,7 @@ fn conjunction(goals: &[String]) -> String {
 fn query(id: &str, goal: &str, answers: &str) -> String {
     let ace = "Which result exists?\n";
     format!(
-        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v1,{},ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: {}\n'$guideline_query_projection'(goal({goal}),answers({answers})).\n",
+        "% {id} compiled from ACE question by ace_to_pl question mode; do not edit.\n'$guideline_query'(v2,{},ace_sha256({}),ulex(none),vocabulary(none)).\n% Q1: {}\n'$guideline_query_projection'(goal({goal}),answers({answers})).\n",
         atom(id),
         atom(&sha(ace)),
         ace.trim_end()
@@ -102,7 +104,7 @@ fn query(id: &str, goal: &str, answers: &str) -> String {
 }
 fn document(id: &str, clauses: &[String]) -> String {
     format!(
-        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(1).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary(none)).\n% S1: A structural clause.\n{}",
+        "% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}guideline_schema_version(2).\nguideline_document({},ace_sha256({}),ulex(none),vocabulary(none)).\n% S1: A structural clause.\n{}",
         declarations(),
         atom(id),
         atom(&sha("A structural clause.\n")),
@@ -886,7 +888,7 @@ fn expected_pl(id: &str) -> String {
             "C1 proof oracle"
         );
     }
-    out
+    id2_live::forward(&out, 1)
 }
 #[test]
 fn a08_comparator_free_ace_question_matches_bare_and_combined() {

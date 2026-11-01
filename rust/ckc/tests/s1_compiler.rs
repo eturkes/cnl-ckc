@@ -1,4 +1,6 @@
 // S1 D1–D7/P2–P3 + S2 D1/P9: diff-blind compiler + vocabulary probes; CKC_S1_TEST_BIN selects red replay.
+#[path = "../../../tests/id2-live/adapter.rs"]
+mod id2_live;
 #[path = "../../../tests/s1-compiler/model.rs"]
 mod model;
 #[path = "support/nt_projection.rs"]
@@ -763,9 +765,13 @@ fn difference(expected: &str, actual: &str) -> String {
 fn baseline(c: &Case) -> String {
     fs::read_to_string(fixture().join(format!("c1/{}.pl.in", c.id))).unwrap()
 }
+// The frozen C1 bytes as a live carrier (contract id2 D4); proof payloads carry no identifier.
+fn live_baseline(c: &Case) -> String {
+    id2_live::forward(&baseline(c), usize::from(c.mode != "proof"))
+}
 
 fn expected(c: &Case) -> String {
-    let old = baseline(c);
+    let old = live_baseline(c);
     let text = if c.mode == "query" {
         old
     } else {
@@ -908,6 +914,7 @@ fn e00_reference_baselines_and_oracle_properties() {
             "{} C1 bytes",
             c.id
         );
+        let old = live_baseline(c);
         let predicted = expected(c);
         let ordered = reorder::document(&old);
         assert_eq!(
@@ -1028,7 +1035,7 @@ fn e19_every_green_projection_erases_to_c1() {
             format!("{} projection compile: {}", c.id, actual.describe()),
         );
         if actual.ok() {
-            let old = reorder::document(&baseline(c));
+            let old = reorder::document(&live_baseline(c));
             let projected = nt_projection::erase(&actual.stdout, &expected(c));
             let erased = model::erase(&projected.replacen(QUALIFIER_DECLARATIONS, "", 1), &old);
             checks.require(
