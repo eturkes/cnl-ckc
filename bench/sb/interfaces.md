@@ -6,7 +6,7 @@ All text UTF-8, LF; ground terms in the canonical v1 writer's spelling (`ckc_ker
 - `<dir>/composition.tsv`: one path per line = load order (documents, then the patient world); a relative path resolves against the repository root every tool takes as an explicit argument (`--root`), never the working directory. `guidelines/schema.pl` is not listed (built-ins load engine-side) but is pinned by the identity below. Comment lines `#`.
 - Composition identity = sha256 over the framed records `schema\0<len>\0<sha256(guidelines/schema.pl)>\n`, then per listed file in order `file\0<path as listed>\0<len>\0<sha256(bytes)>\n` (len = decimal byte count).
 - `<dir>/manifest.tsv`: `key\tvalue` rows — family, scale point, G, k, transform version, generator commit, input sha256 per source document, seed, patient profile id, expected-output sha256 (q-all), annex param ids.
-- `<dir>/queries/q-all.pl`, `q-one.pl`, `q-patient.pl`: frozen query files (q-all = the enumeration of `tests/consumer/driver.pl.in`; q-one + q-patient = committed `ckc v1` question files).
+- `<dir>/queries/q-all.txt` = the one line `sb1-q-all 0`; its answer = one line per should/must/may context `box(C,O,[P1,…,Pn]).` (Pi = every model literal whose first argument is C, standard order; a nested box = its own line), lines in standard order of terms, canonical spelling. `q-one.pl` + `q-patient.pl` = `ckc v1` question files (canonical query wrapper; answers in the answers-file format).
 
 ## Producer (`prototype/sb1/producer.pl`, SWI 10.0.2)
 - `swipl -q -f none -F none -s prototype/sb1/producer.pl -g sb1_main -t 'halt(9)' -- --root <repo> <composition.tsv> <out-dir>` (`--root` required, as for every tool).
