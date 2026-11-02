@@ -37,6 +37,30 @@ data: families, calibration annex, generator, oracles, harness — committed + r
 - P6 Census + spike: D8's plants + positive expectations met on every graded composition; D9's lemmas checked — asserted, not merely reported.
 - P7 Decision: D11's conditions asserted with their evidence + the `mc`/`ta` representation.
 
+## Census + spike freeze (MAIN, before the D8 + D9 work)
+
+D8 census (prototype `prototype/sb1/ta/`, Rust, timed inside the checker's admission phase):
+- Analysis = Decisions Deontic conditions: nodes = admitted clauses (no variant grouping in the census); call patterns typed by the closed may-feature fixpoint (features: entity nouns, event lemmas, argument links, box operators + context payload predicates; any admitted rule gives an origin features, variable-headed producers included; patient-document constants carry every feature; missing precision = may match), propagated left to right across the whole body (a NAF conjunction's goals extend the outer bindings); edges signed (+ positive goal; − a goal inside a NAF: authored or the scope guard); refusal = an SCC holding a − edge (negative) or a growth edge (a head Skolem identity whose Deps take a body referent of the same SCC; an arithmetic output feeding the same SCC); each refusal keeps one minimal cycle witness (clauses, edge signs, the features that matched).
+- Input shape = the DC whole-statement guard (census transform, no corpus edit): in a scoped document, every clause of a statement that holds a should/must/may box anywhere ends with `\+ guideline_exclusion(Key)` (appended where absent); a statement = same document + sentence, the census's approximation of the emitted DRS variant group.
+- Plants (each must refuse with its expected kind; fixtures under `prototype/sb1/ta/plants/`, CDC + plant):
+  - L1 negative: a guarded should box → a rule reading that box produces actual content → the exclusion reads the content.
+  - L2 negative: the exclusion reads a should box directly.
+  - L3 negative: the exclusion reads a classical-negation (`-`) box whose content goal follows the box goal.
+  - L4 negative: a variable-headed producer gives an origin the noun a correlated NAF exclusion reads; a guarded statement defeats it.
+  - L5 negative, cross-guideline: guideline A's exclusion reads B's guarded actual content and B's reads A's.
+  - G1 growth: an entity-minting rule whose head identity's Deps take the body referent it re-derives.
+  - G2 growth: a quantity rule whose `guideline_product` output feeds its own input.
+- Positive expectations (each must admit): P1 CDC in DC shape alone + with each `tests/consumer` world; P2 every frozen ×100 endpoint + the MX instance; P3 a deontic condition (a rule reading a should box) with no path to an exclusion; P4 a should box under a classical negation in a consequent with no cycle; P5 two guidelines whose exclusions read patient facts alone; P6 a superseded root deontic behind its date guard. An unresolved CDC negative cycle = a user ruling (Decisions Deontic conditions) before admission.
+- Admission runs on every graded endpoint, the MX instance + each query slice (q-all, q-one, q-patient: the slice's own admitted clauses).
+- Recorded: per composition + slice the verdict, witnesses, feature insertions, candidate pairs, edges, SCC count + size, worklist steps, wall + RSS; at ×100 the cost joins the scored admission phase; one ×100 endpoint (F1a) also runs the thin path on its DC-shaped composition, charging the added guard goals' evaluation (the graded corpus precedes unit DC).
+
+D9 spike (scratch Verus crate, the pinned `rust/verus.lock` verifier, `--no-cheating`; abstract finite domains, no parser):
+- (a) Support + closure ⇒ least model: ground instances = (head, positive body atoms, NAF items = finite candidate-witness atom sets, built-in truth as given booleans); M + levels with every fact supported by an instance whose positive body atoms have strictly lower levels, every NAF item without a witness ⊆ M + true built-ins, and every enabled instance's head ∈ M ⇒ M = lfp(T_{P^M}).
+- (b) Rank ⇒ local stratification ⇒ unique stable model: a finite signed abstract graph without a cycle through a − edge has a rank where − edges strictly descend + + edges never ascend; a ground program whose every dependency maps to an abstract edge (coverage) is locally stratified ⇒ its stable model is unique (stated against (a)'s fixpoint).
+- (c) Relevant-slice preservation: a slice closed under the coverage map's predecessors (every clause a slice goal can call, transitively, NAF included) has the same least model of the reduct restricted to the slice's atoms, for an enumeration query (q-all shape) + a goal-list query (q-one shape).
+- (d) Finite grounding: without growth edges, the set of ground instances over the may-ground universe derived from the program alone is finite and closed under the Deps substitutions the clauses perform (nested `'$guideline_id'` identities, Deps = variable lists).
+- Recorded per lemma: verified | failed | partial, verifier time + rlimit, assumptions used; production obligations left unspiked (parser, codec, real term grammar, the may-feature fixpoint's own soundness) listed apart.
+
 ## Grading authorization
 
 The graded campaign (pilot + confirmation blocks of D6) starts only once: the tooling + preflight controls (P1–P4) pass; the frozen instances exist with the annex run manifest complete (development + holdout ids, query hashes, oracle bytes, per-shard sizes, run settings); F5's enabled join + large-record coverage (or the user's narrower ruling) and MX's coherence assessment are closed; scientist-3 has passed those closures. Construction (generator, harness, oracle, thin path, small fixtures) proceeds before it.
