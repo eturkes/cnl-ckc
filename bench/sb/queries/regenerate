@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Freeze the marker, committed CDC question + fork-compiled patient question.
+# Usage: bash bench/sb/queries/regenerate <repo-root> [--check]
+set -euo pipefail
+root=$(readlink -f "$1")
+mode=${2:---write}
+case "$mode" in --write|--check) ;; *) exit 2 ;; esac
+bin=${CKC_BIN:-$root/rust/target/release/ckc}
+[ -x "$bin" ] || { printf 'query-freeze: build ckc or set CKC_BIN\n' >&2; exit 2; }
+export LC_ALL=C.UTF-8
+mkdir -p "$root/rust/target/bench"
+work=$(mktemp -d "$root/rust/target/bench/query-freeze.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+stage=$work/ape
+cp -a "$root/vendor/ape" "$stage"
+cp "$root/vendor/clex/clex_lexicon.pl" "$stage/prolog/lexicon/clex_lexicon.pl"
+if ! (cd "$stage/prolog/parser" && swipl -O -f none -F none \
+    -g "working_directory(_, '$stage/prolog/parser'), [fit_to_plp], halt." -t halt) > "$work/stage.log" 2>&1; then
+    tail -n 30 "$work/stage.log" >&2
+    exit 1
+fi
+swipl -q -f none -F none -g \
+    "style_check(-discontiguous),qcompile('$stage/prolog/lexicon/clex_lexicon.pl',[encoding(utf8)]),halt" \
+    -t 'halt(9)' > "$work/qlf.log" 2>&1
+if [ -s "$work/qlf.log" ]; then cat "$work/qlf.log" >&2; exit 1; fi
+queries=$root/bench/sb/queries
+printf 'sb1-q-all 0\n' > "$work/q-all.txt"
+cp "$root/guidelines/cdc-2022-opioid/queries/pl/category-a-recommendations.pl" "$work/q-one.pl"
+swipl -q -f none -F none -s "$stage/prolog/ace_to_pl.pl" -g main -t 'halt(9)' \
+    -- question "$stage" q-patient "$root/guidelines/cdc-2022-opioid/vocabulary.tsv" \
+    "$root/guidelines/cdc-2022-opioid/lexicon.ulex" < "$queries/q-patient.ace" > "$work/q-patient.pl"
+"$bin" v1 check "$work/q-one.pl"
+"$bin" v1 check "$work/q-patient.pl"
+for file in q-all.txt q-one.pl q-patient.pl; do
+    destination=$file
+    case "$file" in *.pl) destination=$file.in ;; esac
+    if [ "$mode" = --check ]; then cmp "$work/$file" "$queries/$destination"; else cp "$work/$file" "$queries/$destination"; fi
+done

@@ -1,4 +1,4 @@
-% patientworld.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+% sb-p-adult.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
 :- multifile(guideline_schema_version/1).
 :- discontiguous(guideline_schema_version/1).
 :- multifile(guideline_document/4).
@@ -44,11 +44,11 @@
 :- multifile(guideline_evaluation_date/1).
 :- discontiguous(guideline_evaluation_date/1).
 guideline_schema_version(2).
-guideline_document(patientworld,ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).
+guideline_document('sb-p-adult',ace_sha256(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),ulex(none),vocabulary(none)).
 % S1: A clinician and a patient have shared read-only identities.
-guideline_entity(actual,'$guideline_id'(product,patientworld,1,ref(1),[]),clinician,countable).
-guideline_cardinality(actual,'$guideline_id'(product,patientworld,1,ref(1),[]),na,eq,1).
-guideline_entity(actual,'$guideline_id'(product,patientworld,1,ref(2),[]),patient,countable).
-guideline_cardinality(actual,'$guideline_id'(product,patientworld,1,ref(2),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-adult',1,ref(1),[]),clinician,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-adult',1,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-adult',1,ref(2),[]),patient,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-adult',1,ref(2),[]),na,eq,1).
 % S2: A read-only lexical activation is projected without changing identity.
-guideline_entity(actual,'$guideline_id'(product,patientworld,2,ref(1),[]),'private-state',countable).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-adult',2,ref(1),[]),'private-state',countable).

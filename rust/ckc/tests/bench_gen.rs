@@ -61,6 +61,14 @@ impl Scratch {
         Self(p)
     }
     fn generate(&self, family: &str, count: usize, name: &str, extra: &[String]) -> Output {
+        let mut patient = root().join("tests/bench-gen/patient.pl.in");
+        if family == "F2" {
+            let bytes = fs::read_to_string(&patient)
+                .unwrap()
+                .replace("sb-p-adult", "sb-p-f2");
+            patient = self.0.join("p-f2.pl.in");
+            fs::write(&patient, bytes).unwrap();
+        }
         let mut args = vec![
             "bench".into(),
             "gen".into(),
@@ -74,10 +82,7 @@ impl Scratch {
                 .display()
                 .to_string(),
             "--patient".into(),
-            root()
-                .join("tests/bench-gen/patient.pl.in")
-                .display()
-                .to_string(),
+            patient.display().to_string(),
             "--queries".into(),
             root().join("tests/bench-gen/queries").display().to_string(),
             "--out".into(),
@@ -117,12 +122,342 @@ fn files(dir: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     out
 }
 fn shard(s: &Scratch, name: &str, index: usize) -> PathBuf {
-    s.0.join(name).join(format!("copies/{index:04}.pl"))
+    s.0.join(name).join(format!("copies/{index:04}"))
+}
+fn shard_text(s: &Scratch, name: &str, index: usize) -> String {
+    String::from_utf8(
+        files(&shard(s, name, index))
+            .into_values()
+            .flatten()
+            .collect(),
+    )
+    .unwrap()
+}
+fn assembled_input_count(family: &str, count: usize) -> usize {
+    let shared = matches!(family, "F3" | "MX");
+    let base = count * if family == "F4" { 1 } else { 3 };
+    let attached = if shared {
+        5 + usize::from(count >= 2) * 2 + usize::from(count >= 3)
+    } else if family == "F4" {
+        2
+    } else {
+        0
+    };
+    let projections = if shared { count.min(6) - 1 } else { 0 };
+    base + attached + projections + 1
 }
 fn replace(p: &Path, old: &str, new: &str) {
     let bytes = fs::read_to_string(p).unwrap();
     assert!(bytes.contains(old), "plant anchor {old}");
     fs::write(p, bytes.replacen(old, new, 1)).unwrap();
+}
+
+#[test]
+fn frozen_queries_are_canonical_reproducible_and_patient_facing() {
+    let queries = root().join("bench/sb/queries");
+    assert_eq!(
+        fs::read(queries.join("q-all.txt")).unwrap(),
+        b"sb1-q-all 0\n"
+    );
+    assert_eq!(
+        fs::read(queries.join("q-one.pl.in")).unwrap(),
+        fs::read(
+            root().join("guidelines/cdc-2022-opioid/queries/pl/category-a-recommendations.pl")
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        fs::read(queries.join("q-patient.ace")).unwrap(),
+        b"Which opioid does a clinician prescribe to a patient?\n"
+    );
+    quiet(&run(&[
+        "v1".into(),
+        "check".into(),
+        queries.join("q-patient.pl.in").display().to_string(),
+    ]));
+    let query = fs::read_to_string(queries.join("q-patient.pl.in")).unwrap();
+    assert!(!query.contains("recommendation"));
+    for noun in ["opioid", "clinician", "patient"] {
+        assert!(query.contains(&format!(",{noun},countable)")));
+    }
+    let out = Command::new("bash")
+        .arg(queries.join("regenerate"))
+        .arg(root())
+        .arg("--check")
+        .env("CKC_BIN", program())
+        .output()
+        .unwrap();
+    quiet(&out);
+}
+
+#[test]
+fn q_all_marker_is_checked_before_writing_a_composition() {
+    let s = Scratch::new("q-marker");
+    let queries = s.0.join("queries");
+    fs::create_dir(&queries).unwrap();
+    for name in ["q-one.pl.in", "q-patient.pl.in"] {
+        fs::copy(
+            root().join("tests/bench-gen/queries").join(name),
+            queries.join(name),
+        )
+        .unwrap();
+    }
+    fs::write(queries.join("q-all.txt.in"), b"sb1-q-all 1\n").unwrap();
+    refuses(
+        &s.generate(
+            "F1a",
+            1,
+            "bad-marker",
+            &["--queries".into(), queries.display().to_string()],
+        ),
+        "query q-all marker",
+    );
+    assert!(!s.0.join("bad-marker").exists());
+}
+
+#[test]
+fn each_listed_source_is_one_canonical_document() {
+    let s = Scratch::new("canonical-files");
+    quiet(&s.generate("F3", 2, "f3", &assembly_args("F3")));
+    let composition = fs::read_to_string(s.0.join("f3/composition.tsv")).unwrap();
+    for path in composition.lines() {
+        quiet(&run(&[
+            "v1".into(),
+            "check".into(),
+            root().join(path).display().to_string(),
+        ]));
+    }
+}
+
+fn assembly_patient(family: &str) -> PathBuf {
+    root()
+        .join("bench/sb/fixtures/patients")
+        .join(format!("p-{}.pl.in", family.to_ascii_lowercase()))
+}
+fn assembly_args(family: &str) -> Vec<String> {
+    let mut args = vec![
+        "--patient".into(),
+        assembly_patient(family).display().to_string(),
+        "--queries".into(),
+        root().join("bench/sb/queries").display().to_string(),
+    ];
+    if family == "F4" {
+        args.extend([
+            "--documents".into(),
+            root()
+                .join("bench/sb/fixtures/bridges/f4-l3.pl.in")
+                .display()
+                .to_string(),
+        ]);
+    }
+    args
+}
+fn manifest_values(dir: &Path) -> BTreeMap<String, String> {
+    fs::read_to_string(dir.join("manifest.tsv"))
+        .unwrap()
+        .lines()
+        .map(|l| {
+            let (k, v) = l.split_once('\t').unwrap();
+            (k.to_owned(), v.to_owned())
+        })
+        .collect()
+}
+fn assembled_family(family: &str) {
+    let s = Scratch::new(&format!("assembly-{family}"));
+    let declared = if matches!(family, "F3" | "MX") {
+        6
+    } else if family == "F4" {
+        3
+    } else {
+        1
+    };
+    for count in [1, 2] {
+        let name = format!("g{count}");
+        quiet(&s.generate(family, count, &name, &assembly_args(family)));
+        quiet(&s.check(&name));
+        let dir = s.0.join(&name);
+        let m = manifest_values(&dir);
+        assert_eq!(m["declared_k"], declared.to_string());
+        assert_eq!(m["smoke_only"], (count < declared).to_string());
+        assert_eq!(
+            m["active_shards"],
+            if matches!(family, "F3" | "MX") {
+                count
+            } else {
+                1
+            }
+            .to_string()
+        );
+        assert_eq!(
+            fs::read_to_string(dir.join("composition.tsv"))
+                .unwrap()
+                .lines()
+                .count(),
+            assembled_input_count(family, count)
+        );
+        let roles = fs::read_to_string(dir.join("shards.tsv")).unwrap();
+        assert_eq!(roles.lines().count(), count + 1);
+        assert!(
+            roles
+                .lines()
+                .nth(1)
+                .unwrap()
+                .starts_with("1\tactive-source\tCDC\t")
+        );
+        let first = shard_text(&s, &name, 1);
+        if matches!(family, "F3" | "MX") {
+            for id in [
+                "sb-f3-b1-classifier",
+                "sb-f3-b2-classifier",
+                "sb-f3-b3-classifier",
+                "sb-f3-b4-classifier",
+                "sb-f3-b3-reader",
+            ] {
+                assert!(first.contains(id), "{family}: {id}");
+            }
+            assert!(m["active_transform_notice"].contains("not compilations"));
+            assert_eq!(
+                m["shared_bridge_nouns"],
+                "acute-pain,chronic-pain,opioid-use-disorder"
+            );
+            if count == 2 {
+                let second = shard_text(&s, &name, 2);
+                for id in ["sb-f3-b1-reader", "sb-f3-b2-reader"] {
+                    assert!(second.contains(id));
+                }
+                assert!(second.contains("sb0002-alpha"));
+                assert!(
+                    roles
+                        .lines()
+                        .nth(2)
+                        .unwrap()
+                        .starts_with("2\tactive-transform\tVA-opioids\t")
+                );
+            }
+        } else if family == "F4" {
+            for id in ["sb-f4-l1", "sb-f4-l2", "sb-f4-l3"] {
+                assert!(first.contains(id));
+            }
+            assert_eq!(m["k"], "3");
+        }
+        if !matches!(family, "F3" | "MX") {
+            assert_eq!(
+                fs::read(dir.join("patient.pl")).unwrap(),
+                fs::read(assembly_patient(family)).unwrap()
+            );
+            if count == 2 {
+                assert!(roles.lines().nth(2).unwrap().starts_with("2\tpadding\t"));
+            }
+        }
+    }
+}
+#[test]
+fn assembled_f3() {
+    assembled_family("F3");
+}
+#[test]
+fn assembled_f4() {
+    assembled_family("F4");
+}
+#[test]
+fn assembled_f5a() {
+    assembled_family("F5a");
+}
+#[test]
+fn assembled_f5b() {
+    assembled_family("F5b");
+}
+#[test]
+fn assembled_f5c() {
+    assembled_family("F5c");
+}
+#[test]
+fn assembled_mixed() {
+    assembled_family("MX");
+}
+#[test]
+fn every_nested_point_keeps_declared_sources_and_padding_counts() {
+    let s = Scratch::new("nested");
+    for family in ["F3", "F4", "F5a", "F5b", "F5c", "MX"] {
+        let declared = if matches!(family, "F3" | "MX") {
+            6
+        } else if family == "F4" {
+            3
+        } else {
+            1
+        };
+        for count in [4, 10, 100] {
+            let name = format!("{family}-{count}");
+            quiet(&s.generate(family, count, &name, &assembly_args(family)));
+            quiet(&s.check(&name));
+            let dir = s.0.join(&name);
+            let m = manifest_values(&dir);
+            assert_eq!(m["declared_k"], declared.to_string());
+            assert_eq!(m["smoke_only"], (count < declared).to_string());
+            assert_eq!(
+                fs::read_to_string(dir.join("composition.tsv"))
+                    .unwrap()
+                    .lines()
+                    .count(),
+                assembled_input_count(family, count)
+            );
+            let roles = fs::read_to_string(dir.join("shards.tsv")).unwrap();
+            let active = if matches!(family, "F3" | "MX") {
+                count.min(6)
+            } else {
+                1
+            };
+            assert_eq!(
+                roles
+                    .lines()
+                    .skip(1)
+                    .filter(|l| l.split('\t').nth(1) == Some("padding"))
+                    .count(),
+                count - active
+            );
+            if matches!(family, "F3" | "MX") && count >= 10 {
+                for (index, source) in [(3, "VA-SUD"), (4, "TIP63"), (5, "CKD"), (6, "T2DM")] {
+                    assert!(
+                        roles
+                            .lines()
+                            .nth(index)
+                            .unwrap()
+                            .starts_with(&format!("{index}\tactive-transform\t{source}\t"))
+                    );
+                }
+                assert!(shard_text(&s, &name, 3).contains("sb-f3-b4-reader"));
+            }
+            fs::remove_dir_all(dir).unwrap();
+        }
+    }
+}
+#[test]
+fn a_patient_profile_mismatch_is_refused() {
+    let s = Scratch::new("wrong-profile");
+    for (family, patient) in [
+        ("F1a", "p-f2.pl.in"),
+        ("F2", "p-adult.pl.in"),
+        ("F3", "p-adult.pl.in"),
+        ("F5c", "p-f5b.pl.in"),
+    ] {
+        refuses(
+            &s.generate(
+                family,
+                1,
+                family,
+                &[
+                    "--patient".into(),
+                    root()
+                        .join("bench/sb/fixtures/patients")
+                        .join(patient)
+                        .display()
+                        .to_string(),
+                ],
+            ),
+            "patient profile",
+        );
+        assert!(!s.0.join(family).exists());
+    }
 }
 
 #[test]
@@ -134,10 +469,17 @@ fn family_composition_is_canonical_and_keeps_schema_values() {
         let out = s.0.join(family);
         let lines = fs::read_to_string(out.join("composition.tsv")).unwrap();
         let paths: Vec<_> = lines.lines().filter(|l| !l.starts_with('#')).collect();
-        assert_eq!(paths.len(), 3);
+        assert_eq!(paths.len(), if family == "F2" { 9 } else { 7 });
         assert!(paths.iter().all(|p| !Path::new(p).is_absolute()));
-        assert!(root().join(paths[2]).is_file());
-        let copy = fs::read_to_string(shard(&s, family, 2)).unwrap();
+        assert!(root().join(paths.last().unwrap()).is_file());
+        for path in &paths {
+            quiet(&run(&[
+                "v1".into(),
+                "check".into(),
+                root().join(path).display().to_string(),
+            ]));
+        }
+        let copy = shard_text(&s, family, 2);
         for kept in [
             "guideline_schema_version(2).",
             "na,exactly,45",
@@ -154,7 +496,7 @@ fn family_composition_is_canonical_and_keeps_schema_values() {
         ] {
             assert!(copy.contains(kept), "{family}: {kept}");
         }
-        for name in ["q-all.pl", "q-one.pl", "q-patient.pl"] {
+        for name in ["q-all.txt", "q-one.pl", "q-patient.pl"] {
             assert!(out.join("queries").join(name).is_file());
         }
         let manifest = fs::read_to_string(out.join("manifest.tsv")).unwrap();
@@ -180,8 +522,8 @@ fn namespace_is_injective_and_family_shared_sets_differ() {
     for f in ["F1a", "F1b"] {
         quiet(&s.generate(f, 2, f, &[]));
     }
-    let shared = fs::read_to_string(shard(&s, "F1a", 2)).unwrap();
-    let private = fs::read_to_string(shard(&s, "F1b", 2)).unwrap();
+    let shared = shard_text(&s, "F1a", 2);
+    let private = shard_text(&s, "F1b", 2);
     assert!(shared.contains(",patient,countable)"));
     assert!(shared.contains(",clinician,countable)"));
     assert!(!private.contains(",patient,countable)"));
@@ -201,15 +543,19 @@ fn namespace_is_injective_and_family_shared_sets_differ() {
 fn f2_intake_keeps_shared_ground_identities_and_private_spelling() {
     let s = Scratch::new("intake");
     quiet(&s.generate("F2", 2, "two", &[]));
-    let patient = fs::read_to_string(s.0.join("two/patient.pl")).unwrap();
+    let mut patient = fs::read_to_string(s.0.join("two/patient.pl")).unwrap();
+    for bytes in files(&s.0.join("two/intakes")).into_values() {
+        patient.push_str(std::str::from_utf8(&bytes).unwrap());
+    }
+    assert_eq!(manifest_values(&s.0.join("two"))["patient_documents"], "3");
     for noun in [
         "private-state",
         "sb0001__private-state",
         "sb0002__private-state",
     ] {
-        assert!(patient.contains(&format!("guideline_entity(actual,'$guideline_id'(product,patientworld,2,ref(1),[]),'{noun}',countable).")));
+        assert!(patient.contains(&format!("guideline_entity(actual,'$guideline_id'(product,'sb-p-f2',2,ref(1),[]),'{noun}',countable).")));
     }
-    assert!(!patient.contains("sb0001-patientworld"));
+    assert!(!patient.contains("sb0001-sb-p-f2"));
     let q = fs::read_to_string(s.0.join("two/queries/q-one.pl")).unwrap();
     assert!(q.contains("sb0001__recommendation"));
     assert_eq!(
@@ -290,15 +636,19 @@ fn semantic_transform_plants_are_rejected() {
         quiet(&s.generate("F1a", 2, name, &[]));
     }
     replace(
-        &shard(&s, "collision", 2),
+        &shard(&s, "collision", 2).join("sb0002-alpha.pl"),
         "sb0002__private-state",
         "sb0002__recommendation",
     );
     refuses(&s.check("collision"), "transform");
-    replace(&shard(&s, "number", 2), "na,exactly,45", "na,exactly,46");
+    replace(
+        &shard(&s, "number", 2).join("sb0002-alpha.pl"),
+        "na,exactly,45",
+        "na,exactly,46",
+    );
     refuses(&s.check("number"), "transform");
     replace(
-        &shard(&s, "condition", 2),
+        &shard(&s, "condition", 2).join("sb0002-alpha.pl"),
         ", \\+ guideline_exclusion('sb0002-scopekey')",
         "",
     );
@@ -341,8 +691,10 @@ fn f2_cross_copy_bridge_and_naf_read_are_refused() {
         let mut extra = vec!["--documents".into(), docs.display().to_string()];
         if name == "head-range" {
             let patient = s.0.join("patient-range.pl.in");
-            let source = fs::read_to_string(root().join("tests/bench-gen/patient.pl.in")).unwrap();
-            fs::write(&patient, source + "% S3: A read-only word enters a lexical-variable head.\nguideline_qualifier(actual,'$guideline_id'(product,patientworld,3,ref(1),[]),manner,carefully).\n").unwrap();
+            let source = fs::read_to_string(root().join("tests/bench-gen/patient.pl.in"))
+                .unwrap()
+                .replace("sb-p-adult", "sb-p-f2");
+            fs::write(&patient, source + "% S3: A read-only word enters a lexical-variable head.\nguideline_qualifier(actual,'$guideline_id'(product,'sb-p-f2',3,ref(1),[]),manner,carefully).\n").unwrap();
             quiet(&run(&[
                 "v1".into(),
                 "check".into(),

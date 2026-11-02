@@ -1,17 +1,19 @@
 // Contract sb D4/P1: position-aware family generation + replayable transform audit.
+mod assembly;
 mod isolation;
 mod text;
 mod transform;
 
-use self::text::Document;
+use self::assembly::{Shard, Template};
+use self::text::{Document, Goal, Term};
 use self::transform::Rename;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
 
-const VERSION: &str = "sb1-rename-1";
-const QUERY_NAMES: [&str; 3] = ["q-all.pl", "q-one.pl", "q-patient.pl"];
+const VERSION: &str = "sb1-assembly-2";
+const QUERY_NAMES: [&str; 3] = ["q-all.txt", "q-one.pl", "q-patient.pl"];
 
 #[derive(Clone)]
 struct Options {
@@ -148,7 +150,7 @@ fn options(args: &[String]) -> Result<Options, String> {
 }
 struct Calibration {
     profile: String,
-    active: usize,
+    declared_k: usize,
     rows: Vec<(String, String)>,
     inputs: Vec<PathBuf>,
 }
@@ -168,11 +170,8 @@ fn table(path: &Path, columns: usize) -> Result<Vec<Vec<String>>, String> {
     Ok(rows)
 }
 fn calibration(o: &Options) -> Result<Calibration, String> {
-    if !matches!(o.family.as_str(), "F1a" | "F1b" | "F2") {
-        return Err(
-            "family requires a frozen fixture composition; supported core families: F1a F1b F2"
-                .into(),
-        );
+    if !assembly::supported(&o.family) {
+        return Err("unsupported benchmark family".into());
     }
     if ![1, 2, 4, 10, 100].contains(&o.scale) {
         return Err("scale is not a calibrated nested subset (1,2,4,10,100)".into());
@@ -246,8 +245,13 @@ fn calibration(o: &Options) -> Result<Calibration, String> {
         return Err("annex G/k range".into());
     }
     Ok(Calibration {
-        profile: family[5].split(';').next().unwrap_or(&family[5]).to_owned(),
-        active: active.min(o.scale),
+        profile: family[5]
+            .split(';')
+            .next()
+            .unwrap_or(&family[5])
+            .trim()
+            .to_owned(),
+        declared_k: active,
         rows,
         inputs: inputs.into_iter().collect(),
     })
@@ -295,14 +299,80 @@ fn query_path(o: &Options, name: &str) -> Result<PathBuf, String> {
     };
     resolve_input(&o.root, &relative(&o.root, &p)?).map_err(|e| format!("query {name}: {e}"))
 }
-fn renamer(o: &Options, index: usize, produced: &BTreeSet<String>, k: usize) -> Rename {
-    if o.family == "F2" && index <= k {
-        Rename::active(index, produced)
-    } else if index == 1 && o.family != "F2" {
-        Rename::identity()
-    } else {
-        Rename::dormant(index, o.family != "F1b")
+fn renamer(
+    o: &Options,
+    shard: &Shard,
+    produced: &BTreeSet<String>,
+    shared: &BTreeSet<String>,
+) -> Rename {
+    match shard.template {
+        Template::Original => Rename::identity(),
+        Template::Independent => Rename::active(shard.index, produced),
+        Template::Shared => {
+            let mut rename = Rename::active(shard.index, produced);
+            rename.shared_nouns = shared
+                .iter()
+                .cloned()
+                .chain(["patient".into(), "clinician".into()])
+                .collect();
+            rename
+        }
+        Template::Padding => Rename::dormant(shard.index, o.family != "F1b"),
     }
+}
+fn document_id(document: &Document) -> Result<&str, String> {
+    document
+        .clauses()
+        .filter_map(|c| c.head.call())
+        .find(|(name, _)| *name == "guideline_document")
+        .and_then(|(_, args)| args.first().and_then(Term::atom))
+        .ok_or_else(|| "input is not a document".into())
+}
+fn noun(term: &Term) -> Option<&str> {
+    term.call()
+        .filter(|(name, _)| *name == "guideline_entity")
+        .and_then(|(_, args)| args.get(2).and_then(Term::atom))
+}
+fn shared_bridge_nouns(
+    o: &Options,
+    fixtures: &BTreeMap<PathBuf, Document>,
+) -> Result<BTreeSet<String>, String> {
+    if !assembly::shared_family(&o.family) {
+        return Ok(BTreeSet::new());
+    }
+    let mut produced = BTreeSet::new();
+    let mut read = BTreeSet::new();
+    for name in assembly::CLASSIFIERS {
+        let path = assembly::fixture(o, name)?;
+        let document = fixtures
+            .get(&path)
+            .ok_or("classifier missing from assembly inputs")?;
+        produced.extend(
+            document
+                .clauses()
+                .filter_map(|c| noun(&c.head))
+                .map(str::to_owned),
+        );
+    }
+    for name in assembly::READERS {
+        let path = assembly::fixture(o, name)?;
+        let document = fixtures
+            .get(&path)
+            .ok_or("reader missing from assembly inputs")?;
+        for clause in document.clauses() {
+            for goal in &clause.body {
+                for term in match goal {
+                    Goal::Positive(term) => std::slice::from_ref(term),
+                    Goal::Naf(terms) => terms,
+                } {
+                    if let Some(n) = noun(term) {
+                        read.insert(n.to_owned());
+                    }
+                }
+            }
+        }
+    }
+    Ok(produced.intersection(&read).cloned().collect())
 }
 fn git_commit(o: &Options) -> Result<String, String> {
     if let Some(commit) = &o.commit {
@@ -328,6 +398,13 @@ struct Product {
 }
 fn build(o: &Options) -> Result<Product, String> {
     let calibration = calibration(o)?;
+    let layout = assembly::layout(o, calibration.declared_k)?;
+    let fixtures: BTreeMap<PathBuf, Document> = layout
+        .fixture_inputs
+        .iter()
+        .map(|path| Ok((path.clone(), load(path)?)))
+        .collect::<Result<_, String>>()?;
+    let shared = shared_bridge_nouns(o, &fixtures)?;
     let paths = document_paths(o)?;
     let documents = paths
         .iter()
@@ -342,20 +419,34 @@ fn build(o: &Options) -> Result<Product, String> {
         return Err("patient must contain ground read-only facts, not rules".into());
     }
     let mut docids = BTreeSet::new();
-    for doc in documents.iter().chain(std::iter::once(&patient)) {
-        let id = doc
-            .clauses()
-            .filter_map(|c| c.head.call())
-            .find(|(n, _)| *n == "guideline_document")
-            .and_then(|(_, a)| a.first().and_then(text::Term::atom))
-            .ok_or("input is not a document")?;
+    for doc in documents
+        .iter()
+        .chain(fixtures.values())
+        .chain(std::iter::once(&patient))
+    {
+        let id = document_id(doc)?;
         if !docids.insert(id) {
             return Err(format!("transform duplicate document identity {id}"));
         }
     }
+    let expected_profile = format!("sb-{}", calibration.profile.to_ascii_lowercase());
+    if document_id(&patient)? != expected_profile {
+        return Err(format!(
+            "patient profile {} does not match {}",
+            document_id(&patient)?,
+            calibration.profile
+        ));
+    }
     transform::reject_namespace_collision(&documents, &patient)?;
+    transform::reject_namespace_collision(
+        &fixtures.values().cloned().collect::<Vec<_>>(),
+        &patient,
+    )?;
     let produced = transform::head_produced(&documents);
-    if o.family == "F2"
+    if layout
+        .shards
+        .iter()
+        .any(|s| s.template != Template::Original)
         && documents
             .iter()
             .flat_map(Document::clauses)
@@ -377,7 +468,36 @@ fn build(o: &Options) -> Result<Product, String> {
         ("family".into(), o.family.clone()),
         ("scale".into(), o.scale.to_string()),
         ("G".into(), o.scale.to_string()),
-        ("k".into(), calibration.active.to_string()),
+        ("k".into(), layout.current_k.to_string()),
+        ("declared_k".into(), calibration.declared_k.to_string()),
+        ("declared_sources".into(), layout.declared_sources.join(",")),
+        (
+            "active_shards".into(),
+            layout
+                .shards
+                .iter()
+                .filter(|s| s.template != Template::Padding)
+                .count()
+                .to_string(),
+        ),
+        ("smoke_only".into(), layout.smoke_only.to_string()),
+        (
+            "smoke_reason".into(),
+            if layout.smoke_only {
+                "G_below_declared_source_count"
+            } else {
+                "none"
+            }
+            .into(),
+        ),
+        (
+            "shared_bridge_nouns".into(),
+            if shared.is_empty() {
+                "none".into()
+            } else {
+                shared.iter().cloned().collect::<Vec<_>>().join(",")
+            },
+        ),
         ("transform_version".into(), VERSION.into()),
         ("generator_commit".into(), git_commit(o)?),
         ("seed".into(), o.seed.to_string()),
@@ -400,7 +520,11 @@ fn build(o: &Options) -> Result<Product, String> {
     ] {
         manifest.push((key.into(), relative(&o.root, path)?));
     }
+    if o.family == "F2" || assembly::shared_family(&o.family) {
+        manifest.push(("active_transform_notice".into(), "Private CDC-shaped mechanism-isolation transforms; not compilations of the named guidelines.".into()));
+    }
     let mut inputs = calibration.inputs;
+    inputs.extend(layout.fixture_inputs.iter().cloned());
     inputs.extend(paths.clone());
     inputs.push(o.patient.clone());
     if o.documents.is_file() {
@@ -417,67 +541,150 @@ fn build(o: &Options) -> Result<Product, String> {
     manifest.push(("expected_output_sha256:q-all".into(), expected_hash));
     manifest.extend(calibration.rows);
     let mut patient_documents = vec![patient.clone()];
+    let mut projection_shards = Vec::new();
     let mut representatives = Vec::new();
-    let mut roles = BTreeMap::<String, usize>::new();
+    let mut grouped_documents = Vec::new();
+    let mut sampled_shards = Vec::new();
+    let mut roles = BTreeMap::<&str, usize>::new();
     let mut composition = String::new();
-    for index in 1..=o.scale {
-        let rename = renamer(o, index, &produced, calibration.active);
-        let shard = documents
+    let mut shard_table = String::from("shard\trole\tsource\tattached_documents\n");
+    for slot in &layout.shards {
+        let index = slot.index;
+        let rename = renamer(o, slot, &produced, &shared);
+        let mut shard_documents = documents
             .iter()
             .map(|d| rename.apply(d))
             .collect::<Result<Vec<_>, _>>()?;
-        let bytes: Vec<u8> = shard.iter().flat_map(Document::render).collect();
-        let path = PathBuf::from(format!("copies/{index:04}.pl"));
-        composition.push_str(&relative(&o.root, &o.out.join(&path))?);
-        composition.push('\n');
-        manifest.push((format!("copy:{index:04}:sha256"), digest(&bytes)));
+        for path in &slot.attached {
+            shard_documents.push(
+                fixtures
+                    .get(path)
+                    .ok_or("attached document missing from assembly inputs")?
+                    .clone(),
+            );
+        }
+        let mut content = Vec::new();
+        for document in &shard_documents {
+            let id = document_id(document)?;
+            let bytes = document.render();
+            let path = PathBuf::from(format!("copies/{index:04}/{id}.pl"));
+            composition.push_str(&relative(&o.root, &o.out.join(&path))?);
+            composition.push('\n');
+            content.extend_from_slice(&bytes);
+            files.insert(path, bytes);
+        }
+        manifest.push((format!("copy:{index:04}:sha256"), digest(&content)));
         manifest.push((
             format!("copy:{index:04}:documents"),
-            documents.len().to_string(),
+            shard_documents.len().to_string(),
         ));
-        files.insert(path, bytes);
-        let role = if o.family == "F2" && index <= calibration.active {
-            "active"
-        } else if rename.index == 0 {
-            "original"
+        let attached = if slot.attached.is_empty() {
+            "none".into()
         } else {
-            "dormant"
+            slot.attached
+                .iter()
+                .map(|p| relative(&o.root, p))
+                .collect::<Result<Vec<_>, _>>()?
+                .join(",")
         };
-        let count = roles.entry(role.into()).or_default();
-        // All copies of a role differ only by the checked injective namespace.
-        // Two representatives per role cover same-role cross-copy paths.
-        if *count < 2 {
-            representatives.push((index, shard));
+        manifest.push((
+            format!("shard:{index:04}:role"),
+            slot.template.role().into(),
+        ));
+        manifest.push((format!("shard:{index:04}:source"), slot.source.clone()));
+        manifest.push((
+            format!("shard:{index:04}:attached_documents"),
+            attached.clone(),
+        ));
+        shard_table.push_str(&format!(
+            "{index}\t{}\t{}\t{attached}\n",
+            slot.template.role(),
+            slot.source
+        ));
+        let count = roles.entry(slot.template.sample_key()).or_default();
+        // Namespace-equivalent capacity templates need two representatives;
+        // every attached source fragment remains in the active-cluster check.
+        if *count < 2 || !slot.attached.is_empty() {
+            sampled_shards.push(index);
+            if layout.grouped_active && slot.template != Template::Padding {
+                grouped_documents.extend(shard_documents);
+            } else {
+                representatives.push((index, shard_documents));
+            }
             *count += 1;
         }
-        if o.family == "F2" && index <= calibration.active {
+        if matches!(slot.template, Template::Independent | Template::Shared) {
             let mut intake = rename;
             intake.preserve_ids = true;
+            projection_shards.push(index);
             patient_documents.push(intake.apply(&patient)?);
         }
     }
-    isolation::check(&representatives, &patient_documents)?;
+    if !grouped_documents.is_empty() {
+        representatives.insert(0, (1, grouped_documents));
+    }
+    // One owner has no foreign producer; the cross-owner property is vacuous.
+    let isolation_mode = if representatives.len() <= 1 {
+        "single-owner"
+    } else {
+        isolation::check(&representatives, &patient_documents)?;
+        "may-fixpoint"
+    };
     manifest.push(("isolation".into(), "may-model-owner-provenance-1".into()));
+    manifest.push(("isolation_mode".into(), isolation_mode.into()));
+    manifest.push((
+        "isolation_owner_scope".into(),
+        if layout.grouped_active {
+            "active-cluster_vs_padding"
+        } else {
+            "per-shard"
+        }
+        .into(),
+    ));
     manifest.push((
         "isolation_representatives".into(),
-        representatives
+        sampled_shards
             .iter()
-            .map(|(i, _)| i.to_string())
+            .map(usize::to_string)
             .collect::<Vec<_>>()
             .join(","),
     ));
-    let patient_bytes: Vec<u8> = patient_documents
+    files.insert("shards.tsv".into(), shard_table.into_bytes());
+    manifest.push((
+        "patient_documents".into(),
+        patient_documents.len().to_string(),
+    ));
+    for (index, projection) in projection_shards
         .iter()
-        .flat_map(Document::render)
-        .collect();
+        .zip(patient_documents.iter().skip(1))
+    {
+        let path = PathBuf::from(format!(
+            "intakes/{index:04}/{}.pl",
+            document_id(projection)?
+        ));
+        let listed = relative(&o.root, &o.out.join(&path))?;
+        composition.push_str(&listed);
+        composition.push('\n');
+        manifest.push((format!("patient_projection:{index:04}"), listed));
+        files.insert(path, projection.render());
+    }
+    // Keep the supplied patient world last; projections retain its ground identities.
     composition.push_str(&relative(&o.root, &o.out.join("patient.pl"))?);
     composition.push('\n');
-    files.insert("patient.pl".into(), patient_bytes);
+    files.insert("patient.pl".into(), patient.render());
+    manifest.push((
+        "document_layout".into(),
+        "one-canonical-document-per-file".into(),
+    ));
     for (i, name) in QUERY_NAMES.iter().enumerate() {
         let source = query_path(o, name)?;
         inputs.push(source.clone());
         let bytes = if i == 0 {
-            read(&source)?
+            let bytes = read(&source)?;
+            if bytes != b"sb1-q-all 0\n" {
+                return Err("query q-all marker must be sb1-q-all 0".into());
+            }
+            bytes
         } else {
             let q = load(&source)?;
             if q.singleton
@@ -488,9 +695,14 @@ fn build(o: &Options) -> Result<Product, String> {
                 return Err(format!("query {name} is not a question"));
             }
             if i == 1 {
-                renamer(o, 1, &produced, calibration.active)
-                    .apply(&q)?
-                    .render()
+                renamer(
+                    o,
+                    layout.shards.first().ok_or("empty shard plan")?,
+                    &produced,
+                    &shared,
+                )
+                .apply(&q)?
+                .render()
             } else {
                 q.render()
             }
@@ -655,7 +867,7 @@ pub fn run(args: &[String]) -> ExitCode {
         Err(e) => {
             if e == "usage" {
                 eprintln!(
-                    "ckc: bench gen: usage: ckc bench gen <F1a|F1b|F2> <1|2|4|10|100> --root <repo> --patient <compiled.pl> --queries <dir> --out <rust/target/bench/dir> [--documents <dir|manifest.tsv>] [--annex <dir>] [--expected <q-all-output>] [--seed <u64>]; ckc bench gen check <dir> --root <repo>"
+                    "ckc: bench gen: usage: ckc bench gen <F1a|F1b|F2|F3|F4|F5a|F5b|F5c|MX> <1|2|4|10|100> --root <repo> --patient <compiled.pl> --out <rust/target/bench/dir> [--queries <dir>] [--documents <dir|file|manifest.tsv>] [--annex <dir>] [--expected <q-all-output>] [--seed <u64>]; ckc bench gen check <dir> --root <repo>"
                 );
                 ExitCode::from(2)
             } else {

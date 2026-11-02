@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Full CDC × G1/G2 producer/checker acceptance, without performance grading.
+# Usage: bash tests/bench-gen/full-smoke <repo-root> [<ckc> [<checker> [<family>...]]]
+set -euo pipefail
+root=$(readlink -f "$1")
+ckc=${2:-$root/rust/target/release/ckc}
+checker=${3:-$root/prototype/sb1/checker/target/release/checker}
+[ -x "$ckc" ] && [ -x "$checker" ] || { printf 'assembly-smoke: build ckc + the prototype checker\n' >&2; exit 2; }
+export LC_ALL=C.UTF-8
+families=(F1a F1b F2 F3 F4 F5a F5b F5c MX)
+if [ "$#" -gt 3 ]; then families=("${@:4}"); fi
+for family in "${families[@]}"; do
+    case "$family" in F1a|F1b|F2|F3|F4|F5a|F5b|F5c|MX) ;; *) printf 'assembly-smoke: unsupported family %s\n' "$family" >&2; exit 2 ;; esac
+done
+mkdir -p "$root/rust/target/bench"
+owned=$(mktemp -d "$root/rust/target/bench/assembly-smoke.XXXXXX")
+trap 'rm -rf "$owned"' EXIT
+stage() {
+    local name=$1 rc
+    shift
+    if timeout --kill-after=10 900 "$@" > "$case_dir/$name.stdout" 2> "$case_dir/$name.stderr"; then rc=0; else rc=$?; fi
+    if [ "$rc" -ne 0 ] || [ -s "$case_dir/$name.stderr" ]; then
+        printf 'assembly-smoke: %s G%s %s rc=%s\n' "$family" "$g" "$name" "$rc" >&2
+        head -n 30 "$case_dir/$name.stderr" >&2
+        head -n 5 "$case_dir/$name.stdout" >&2
+        exit 1
+    fi
+}
+printf 'family\tG\tproducer_rc\tchecker_rc\taccepted_facts\tmodel_sha256\n'
+for family in "${families[@]}"; do
+    for g in 1 2; do
+        case_dir=$owned/$family-$g
+        mkdir -p "$case_dir"
+        profile=p-${family,,}
+        case "$family" in F1a|F1b) profile=p-adult ;; esac
+        stage gen "$ckc" bench gen "$family" "$g" --root "$root" \
+            --patient "bench/sb/fixtures/patients/$profile.pl.in" \
+            --out "$case_dir/composition"
+        stage producer swipl -q -f none -F none -s "$root/prototype/sb1/producer.prolog" \
+            -g sb1_main -t 'halt(9)' -- --root "$root" \
+            "$case_dir/composition/composition.tsv" "$case_dir/model"
+        [ ! -s "$case_dir/producer.stdout" ] || { printf 'assembly-smoke: producer stdout is not empty\n' >&2; exit 1; }
+        stage checker "$checker" --root "$root" "$case_dir/composition/composition.tsv" \
+            "$case_dir/model/model.txt" "$case_dir/model/certificate.txt"
+        read -r tag facts label surplus < "$case_dir/checker.stdout"
+        if [ "$tag" != accepted ] || [[ ! "$facts" =~ ^[0-9]+$ ]] || [ "$label" != facts ] || [ -n "$surplus" ] || [ "$(wc -l < "$case_dir/checker.stdout")" -ne 1 ]; then
+            printf 'assembly-smoke: checker did not report acceptance\n' >&2
+            exit 1
+        fi
+        model_sha=$(sha256sum "$case_dir/model/model.txt")
+        printf '%s\t%s\t0\t0\t%s\t%s\n' "$family" "$g" "$facts" "${model_sha%% *}"
+        rm -rf "$case_dir"
+    done
+done

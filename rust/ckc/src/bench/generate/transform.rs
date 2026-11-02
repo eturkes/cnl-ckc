@@ -3,13 +3,15 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Slot {
+    Noun,
     Lexical,
     Identity,
     Fixed,
 }
 fn slot(name: &str, index: usize) -> Slot {
     match (name, index) {
-        ("guideline_entity" | "guideline_event" | "guideline_property", 2) => Slot::Lexical,
+        ("guideline_entity", 2) => Slot::Noun,
+        ("guideline_event" | "guideline_property", 2) => Slot::Lexical,
         ("$guideline_id", 1)
         | ("guideline_document" | "guideline_supersession" | "guideline_exclusion", 0) => {
             Slot::Identity
@@ -21,6 +23,7 @@ fn slot(name: &str, index: usize) -> Slot {
 pub struct Rename {
     pub index: usize,
     pub shared: BTreeSet<String>,
+    pub shared_nouns: BTreeSet<String>,
     pub private: Option<BTreeSet<String>>,
     pub preserve_ids: bool,
 }
@@ -29,6 +32,7 @@ impl Rename {
         Self {
             index: 0,
             shared: BTreeSet::new(),
+            shared_nouns: BTreeSet::new(),
             private: None,
             preserve_ids: false,
         }
@@ -41,6 +45,7 @@ impl Rename {
             } else {
                 BTreeSet::new()
             },
+            shared_nouns: BTreeSet::new(),
             private: None,
             preserve_ids: false,
         }
@@ -49,13 +54,15 @@ impl Rename {
         Self {
             index,
             shared: BTreeSet::new(),
+            shared_nouns: BTreeSet::new(),
             private: Some(produced.clone()),
             preserve_ids: false,
         }
     }
     fn target(&self, name: &str, kind: Slot) -> String {
-        let lexical = kind == Slot::Lexical
+        let lexical = matches!(kind, Slot::Noun | Slot::Lexical)
             && !self.shared.contains(name)
+            && !(kind == Slot::Noun && self.shared_nouns.contains(name))
             && self.private.as_ref().is_none_or(|p| p.contains(name));
         if self.index == 0 {
             name.to_owned()
@@ -174,7 +181,7 @@ fn audit_term(
             }
             if kind != Slot::Fixed {
                 let key = (
-                    if kind == Slot::Lexical {
+                    if matches!(kind, Slot::Noun | Slot::Lexical) {
                         SlotKey::Lexical
                     } else {
                         SlotKey::Identity
