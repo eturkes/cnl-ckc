@@ -1,0 +1,169 @@
+:- use_module(library(assoc)).
+:- use_module(library(heaps)).
+:- use_module(library(lists)).
+
+sb1_scaling_tests :-
+    current_prolog_flag(argv, [Root]),
+    directory_file_path(Root, 'guidelines/schema.pl', Schema),
+    load_files(sb1_world:Schema, [silent(true)]),
+    key_controls(KeyCount),
+    findall(C-M, queue_case(C, M), Cases),
+    maplist(queue_control, Cases), length(Cases, QueueCount), fifo_bad_order,
+    format('scaling: ~d keyed query pairs; ~d FIFO/heap cases passed~n', [KeyCount, QueueCount]), halt.
+
+fifo_bad_order :-
+    State = agenda([], [], -1), A = node(unset, none, []), B = node(unset, none, []),
+    sb1_producer:sb1_enqueue(State, 2, A, test), sb1_producer:sb1_enqueue(State, 1, B, test),
+    catch(sb1_producer:sb1_agenda(State), Error, true),
+    nonvar(Error), Error == fifo_level_order(2, 1).
+
+key_controls(Count) :-
+    sb1_producer:sb1_reset,
+    I = '$guideline_id'(product, d, 1, ref(1), [a]),
+    J = '$guideline_id'(product, d, 1, ref(1), [b]),
+    Nested = '$guideline_id'(product, d, 1, ref(1),
+        ['$guideline_id'(product, inner, 2, ref(3), [])]),
+    Other = '$guideline_id'(product, other, 1, ref(1), [a]),
+    sb1_producer:sb1_key(I, Key), sb1_producer:sb1_key(J, Key),
+    sb1_producer:sb1_key(Nested, Key), sb1_producer:sb1_key(Key, Key),
+    sb1_producer:sb1_key(Other, OtherKey), Key \== OtherKey,
+    Partial = '$guideline_id'(product, Doc, 1, ref(1), [Dep]),
+    sb1_producer:sb1_key(Partial, Wild), var(Wild), var(Doc), var(Dep),
+    sb1_producer:sb1_key(Unknown, UnknownKey), var(Unknown), var(UnknownKey),
+    Source = [
+        guideline_arg(actual, I, 1, a)-true,
+        guideline_arg(actual, J, 1, b)-true,
+        guideline_arg(actual, Nested, 2, nested)-true,
+        guideline_arg(actual, Other, 2, other)-true,
+        guideline_arg(actual, Key, 1, atom_collision)-true,
+        guideline_cardinality(actual, I, na, exactly, 1)-true,
+        guideline_cardinality(actual, J, na, exactly, 2)-true,
+        guideline_cardinality(actual, Nested, na, exactly, rational(1,2))-true,
+        guideline_cardinality(actual, Key, na, exactly, 4)-true,
+        guideline_entity(actual, Nested, source, countable)-true,
+        guideline_entity(actual, atom_source, source, countable)-true,
+        guideline_arg(actual, X, 3, variable_head)-guideline_entity(actual, X, source, countable),
+        guideline_cardinality(actual, Y, na, exactly, 5)-guideline_entity(actual, Y, source, countable)
+    ],
+    forall(sb1_producer:sb1_indicator(Name/Arity),
+        ( functor(G, Name, Arity),
+          dynamic(sb1_plain_world:Name/Arity), retractall(sb1_plain_world:G),
+          dynamic(sb1_plain_model:Name/Arity), retractall(sb1_plain_model:G) )),
+    forall(member(H-B, Source),
+        ( sb1_producer:sb1_assert(sb1_world, H, B), assertz(sb1_plain_world:(H :- B)) )),
+    sb1_producer:sb1_evaluate(Model),
+    forall(member(F, Model),
+        ( sb1_producer:sb1_assert(sb1_model, F, true), assertz(sb1_plain_model:F) )),
+    Queries = [
+        guideline_arg(_, _, _, _), guideline_arg(actual, _, 1, _),
+        guideline_arg(actual, I, _, _), guideline_arg(actual, J, _, _),
+        guideline_arg(actual, Nested, _, _), guideline_arg(actual, Key, _, _),
+        guideline_arg(actual, Other, _, _), guideline_arg(actual, Partial, _, _),
+        guideline_arg(actual, '$guideline_id'(_, d, _, _, _), _, _),
+        guideline_arg(actual, '$guideline_id'(product, d, 1, ref(1), [_]), 3, _),
+        guideline_cardinality(_, _, _, _, _), guideline_cardinality(actual, _, na, exactly, _),
+        guideline_cardinality(actual, I, _, _, _), guideline_cardinality(actual, J, _, _, _),
+        guideline_cardinality(actual, Nested, _, _, _), guideline_cardinality(actual, Key, _, _, _),
+        guideline_cardinality(actual, Partial, _, _, _),
+        guideline_cardinality(actual, '$guideline_id'(_, _, _, _, _), _, _, rational(1,2))
+    ],
+    forall(member(Pattern, Queries),
+        ( query_equal(sb1_world, sb1_plain_world, Pattern),
+          query_equal(sb1_model, sb1_plain_model, Pattern) )),
+    length(Queries, N), Count is N * 2,
+    forall((member(Module, [sb1_world, sb1_model]), sb1_producer:sb1_keyed(Name, Arity, _)),
+        ( functor(G, Name, Arity), findall(B, clause(Module:G, B), [_]) )).
+
+query_equal(Keyed, Plain, Pattern) :-
+    copy_term(Pattern, A), findall(A, call(Keyed:A), Got0), sort(Got0, Got),
+    copy_term(Pattern, B), findall(B, call(Plain:B), Want0), sort(Want0, Want),
+    ( Got == Want -> true ; throw(keyed_lookup_differs(Keyed, Pattern, Got, Want)) ).
+
+node(N, guideline_property(actual, N, node, pos)).
+numbered([], _, []).
+numbered([H-B|Rest], N, [clause(1-N, H, B, [])|Clauses]) :-
+    Next is N + 1, numbered(Rest, Next, Clauses).
+
+queue_case(Clauses, Model) :-
+    member(Depth, [1, 8, 64, 256]),
+    node(0, Base),
+    findall(H-B, (between(1, Depth, N), P is N - 1, node(N, H), node(P, B)), Links),
+    append([Base-true], Links, Source), numbered(Source, 1, Clauses),
+    findall(F, (between(0, Depth, N), node(N, F)), Model).
+queue_case(Clauses, Model) :-
+    member(Width, [1, 16, 128]), node(target, Target),
+    findall(F-true, (between(1, Width, N), node(N, F)), Facts),
+    findall(Target-(F,F), (between(1, Width, N), node(N, F)), Rules),
+    append(Rules, Facts, Source), numbered(Source, 1, Clauses),
+    findall(F, member(F-true, Facts), Seeds), Model = [Target|Seeds].
+queue_case(Clauses, Model) :-
+    between(0, 127, Seed),
+    findall(F-true,
+        (between(0, 7, N), 0 is (N + Seed) mod 3, node(N, F)), Facts),
+    findall(H-B,
+        ( between(0, 7, N), between(0, 7, P),
+          (N * 17 + P * 31 + Seed * 13) mod 11 < 2,
+          node(N, H), node(P, B) ), Edges),
+    node(7, Zero), Empty = Zero-guideline_satisfies(exactly, 1, exactly, 1),
+    ( 0 is Seed mod 2 -> append([Edges, [Empty], Facts], Source)
+    ; append([Facts, [Empty], Edges], Source) ),
+    numbered(Source, 1, Clauses),
+    findall(F, member(F-true, Facts), Initial),
+    sort([Zero|Initial], Start), graph_model(Edges, Start, Model).
+queue_case([clause(1-1, P, Q, []), clause(1-2, Q, P, [])], [P, Q]) :-
+    node(p, P), node(q, Q).
+
+graph_model(Edges, Before, Model) :-
+    findall(H, (member(H-B, Edges), memberchk(B, Before)), Added),
+    append(Before, Added, All), sort(All, After),
+    ( Before == After -> Model = After ; graph_model(Edges, After, Model) ).
+
+queue_control(Clauses-Model0) :-
+    sort(Model0, Model),
+    sb1_producer:sb1_reset,
+    catch(sb1_producer:sb1_certify(Clauses, Model, FIFO), E1, true),
+    sb1_producer:sb1_reset,
+    catch(heap_certify(Clauses, Model, Heap), E2, true),
+    ( var(E1), var(E2), FIFO == Heap -> true
+    ; nonvar(E1), nonvar(E2), E1 == E2 -> true
+    ; throw(fifo_heap_differs(Clauses, FIFO-E1, Heap-E2)) ).
+
+% Frozen heap algorithm; its queue/release code is independent of the FIFO.
+heap_certify(Clauses, Model, Claims) :-
+    forall(member(F, Model), sb1_producer:sb1_assert(sb1_model, F, true)),
+    maplist(sb1_producer:sb1_node, Model, Pairs), list_to_assoc(Pairs, Nodes),
+    empty_heap(Heap), State = heap(Heap, 0),
+    include(sb1_producer:sb1_fact_clause, Clauses, Facts), maplist(heap_seed(Nodes, State), Facts),
+    findall(instance(H, support(Id, Val), Unique),
+        ( member(clause(Id, H, B, Vars), Clauses), B \== true,
+          sb1_producer:sb1_body(B, Positive), sb1_producer:sb1_valuation(Vars, 1, Val),
+          sort(Positive, Unique) ), Instances),
+    maplist(heap_register(Nodes, State), Instances), heap_run(State),
+    maplist(sb1_producer:sb1_claim(Nodes), Model, Claims).
+heap_seed(Nodes, State, clause(Id, H, true, [])) :-
+    get_assoc(H, Nodes, Node), heap_push(State, 0, Node, support(Id, [])).
+heap_register(Nodes, State, instance(H, Support, Positive)) :-
+    get_assoc(H, Nodes, Head), length(Positive, Count), Pending = pending(Head, Support, Count, 0),
+    ( Count =:= 0 -> heap_push(State, 1, Head, Support)
+    ; heap_wait(Positive, Nodes, Pending) ).
+heap_wait([], _, _).
+heap_wait([F|Rest], Nodes, Pending) :-
+    get_assoc(F, Nodes, Node), arg(3, Node, Waiting),
+    nb_linkarg(3, Node, [Pending|Waiting]), heap_wait(Rest, Nodes, Pending).
+heap_push(State, Level, Node, Support) :-
+    arg(1, State, Before), arg(2, State, Sequence), Next is Sequence + 1,
+    add_to_heap(Before, Level-Sequence, ready(Node, Support), After),
+    nb_linkarg(1, State, After), nb_setarg(2, State, Next).
+heap_run(State) :-
+    arg(1, State, Before),
+    ( get_from_heap(Before, Level-_, ready(Node, Support), After)
+    -> nb_linkarg(1, State, After),
+       ( arg(1, Node, unset)
+       -> nb_setarg(1, Node, Level), nb_setarg(2, Node, Support), arg(3, Node, Waiting),
+          maplist(heap_release(State, Level), Waiting), nb_setarg(3, Node, [])
+       ; true ), heap_run(State)
+    ; true ).
+heap_release(State, Level, Pending) :-
+    Pending = pending(Node, Support, Count0, Max0), Count is Count0 - 1, Max is max(Max0, Level),
+    nb_setarg(3, Pending, Count), nb_setarg(4, Pending, Max),
+    ( Count =:= 0 -> Next is Max + 1, heap_push(State, Next, Node, Support) ; true ).

@@ -2,7 +2,6 @@
 :- use_module(library(assoc)).
 :- use_module(library(crypto)).
 :- use_module(library(filesex)).
-:- use_module(library(heaps)).
 :- use_module(library(lists)).
 :- use_module(library(readutil)).
 :- use_module(library(wfs)).
@@ -81,7 +80,7 @@ sb1_load(Root, Composition, Clauses, Identity) :-
     sb1_identity(Schema, Files, Identity),
     load_files(sb1_world:Schema, [silent(true), if(true)]),
     sb1_read_files(Files, 1, Clauses),
-    forall(member(clause(_, H, B, _), Clauses), assertz(sb1_world:(H :- B))),
+    forall(member(clause(_, H, B, _), Clauses), sb1_assert(sb1_world, H, B)),
     ( setof(V, sb1_world:guideline_schema_version(V), [2]) -> true
     ; throw(schema_identifier(expected(2))) ).
 
@@ -93,7 +92,31 @@ sb1_reset :-
     forall(sb1_indicator(Name/Arity),
         ( functor(G, Name, Arity),
           dynamic(sb1_world:Name/Arity), retractall(sb1_world:G), table(sb1_world:Name/Arity),
-          dynamic(sb1_model:Name/Arity), retractall(sb1_model:G) )).
+          dynamic(sb1_model:Name/Arity), retractall(sb1_model:G) )),
+    forall((member(Module, [sb1_world, sb1_model]), sb1_keyed(Name, Arity, Fast)),
+        sb1_keyed_reset(Module, Name, Arity, Fast)).
+
+% SWI's role/count indexes scan every shard. A flat identity prefix routes
+% these joins; the original arguments still decide every match, Deps included.
+sb1_keyed(guideline_arg, 4, guideline_arg_keyed).
+sb1_keyed(guideline_cardinality, 5, guideline_cardinality_keyed).
+sb1_keyed_reset(Module, Name, Arity, Fast) :-
+    FastArity is Arity + 1, functor(Stored, Fast, FastArity),
+    dynamic(Module:Fast/FastArity), retractall(Module:Stored),
+    functor(H, Name, Arity), arg(2, H, Id), H =.. [Name|Args],
+    Target =.. [Fast, Key|Args],
+    assertz(Module:(H :- sb1_producer:sb1_key(Id, Key), Target)).
+sb1_assert(Module, H, B) :-
+    functor(H, Name, Arity),
+    ( sb1_keyed(Name, Arity, Fast)
+    -> arg(2, H, Id), sb1_key(Id, Key), H =.. [Name|Args],
+       Stored =.. [Fast, Key|Args], assertz(Module:(Stored :- B))
+    ; assertz(Module:(H :- B)) ).
+sb1_key(Id, Key) :-
+    ( nonvar(Id), Id = '$guideline_id'(Kind, Doc, S, Slot, _), ground(Kind-Doc-S-Slot)
+    -> term_to_atom(k(Kind, Doc, S, Slot), Key)
+    ; atomic(Id) -> Key = Id
+    ; true ).
 
 sb1_identity(Schema, Files, Identity) :-
     sb1_file_digest(Schema, Size, Hash),
@@ -189,11 +212,11 @@ sb1_evaluate(Model) :-
     sort(Facts, Model).
 
 sb1_certify(Clauses, Model, Claims) :-
-    forall(member(Fact, Model), assertz(sb1_model:Fact)),
+    forall(member(Fact, Model), sb1_assert(sb1_model, Fact, true)),
     maplist(sb1_node, Model, Pairs), list_to_assoc(Pairs, Nodes),
     % Backtracking would undo bindings inside the nb_linkarg graph: build it
     % only through deterministic traversals of the ground candidate list.
-    empty_heap(Heap), State = agenda(Heap, 0),
+    State = agenda([], [], -1),
     include(sb1_fact_clause, Clauses, Facts), maplist(sb1_seed(Nodes, State), Facts),
     findall(instance(H, support(Id, Valuation), Unique),
         ( member(clause(Id, H, B, Vars), Clauses), B \== true,
@@ -221,8 +244,9 @@ sb1_valuation([], _, []).
 sb1_valuation([Value|Vars], N, [=(Key, Value)|Values]) :-
     atom_concat(v, N, Key), Next is N + 1, sb1_valuation(Vars, Next, Values).
 
-% Each positive fact owns its waiting incidences. A min-heap settles each fact
-% once, so a cyclic alternative never masks a later founded support.
+% Each positive fact owns its waiting incidences. Seeds precede level-1
+% instances; settling level L adds only L+1, so FIFO preserves the heap's
+% lowest-level/insertion-order choice. Duplicate heads release nothing twice.
 sb1_register(Positive, Nodes, State, H, Support) :-
     sb1_lookup(H, Nodes, HeadNode), length(Positive, Count),
     Pending = pending(HeadNode, Support, Count, 0),
@@ -237,13 +261,17 @@ sb1_lookup(Fact, Nodes, Node) :-
 sb1_ready(Nodes, State, H, Support, Level) :-
     sb1_lookup(H, Nodes, Node), sb1_enqueue(State, Level, Node, Support).
 sb1_enqueue(State, Level, Node, Support) :-
-    arg(1, State, H0), arg(2, State, Sequence), Next is Sequence + 1,
-    add_to_heap(H0, Level-Sequence, ready(Node, Support), H),
-    nb_linkarg(1, State, H), nb_setarg(2, State, Next).
+    arg(2, State, Back), nb_linkarg(2, State, [ready(Level, Node, Support)|Back]).
 sb1_agenda(State) :-
-    arg(1, State, H0),
-    ( get_from_heap(H0, Level-_, ready(Node, Support), H)
-    -> nb_linkarg(1, State, H),
+    arg(1, State, Front0),
+    ( Front0 == []
+    -> arg(2, State, Back), reverse(Back, Front),
+       nb_linkarg(1, State, Front), nb_setarg(2, State, [])
+    ; Front = Front0 ),
+    ( Front = [ready(Level, Node, Support)|Rest]
+    -> nb_linkarg(1, State, Rest), arg(3, State, Previous),
+       ( Level >= Previous -> true ; throw(fifo_level_order(Previous, Level)) ),
+       nb_setarg(3, State, Level),
        ( arg(1, Node, unset)
        -> nb_setarg(1, Node, Level), nb_setarg(2, Node, Support),
           arg(3, Node, Waiting),

@@ -136,6 +136,13 @@ def main():
             "-g", "sb1_agenda_tests", "-t", "halt(9)",
         ])
         assert agenda.stdout == "agenda: founded base + unfounded residual passed\n" and not agenda.stderr, agenda
+        scaling = invoke([
+            "swipl", "-q", "-f", "none", "-F", "none", "-s", str(root / "prototype/sb1/producer.prolog"),
+            "-s", str(root / "prototype/sb1/producer-tests/scaling.pl.in"),
+            "-g", "sb1_scaling_tests", "-t", "halt(9)", "--", str(root),
+        ])
+        assert scaling.stdout == "scaling: 36 keyed query pairs; 136 FIFO/heap cases passed\n" and not scaling.stderr, scaling
+        print(scaling.stdout.strip())
         for stage, fault in [("eval", "sb1_test_eval_fault"),
                              ("resource", "error(resource_error(table_space),context(sb1_control,allocation))")]:
             goal = f"catch(sb1_producer:sb1_stage(eval,throw({fault}),_),E,sb1_producer:sb1_failure(E))"
