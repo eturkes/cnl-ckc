@@ -1,0 +1,39 @@
+Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC9225568/ (Muhn et al. 2022, Table 1)
+
+Primary = [Muhn et al., *Pharmacogenomics and Drug-Induced Phenoconversion Informed Medication Safety Review in the Management of Pain Control and Quality of Life: A Case Report*](https://pmc.ncbi.nlm.nih.gov/articles/PMC9225568/), Table1. Metadata: “2022 Jun 15;12(6):974.” Abstract: “This case describes a 69-year-old female who was referred for PGx testing for uncontrolled chronic pain caused by osteoarthritis and neuropathy.” Presentation: “The clinical pharmacist reviewed the patient’s medical history and assessed the appropriateness of her current medication regimen”.
+
+The following cells transcribe Table1 verbatim; blank indication cells stay blank. Row numbers are this report's enumeration, not source patient identifiers. One source row = one distinct **product/regimen entity**, not one pill, ingredient, recommendation or historical prescription. The source specifies no observation date beyond the clinical review sequence. This enumerates every published table row; it does not prove the patient had no additional unreported products. Multivitamin or other entries are not all assumed prescription-only.
+
+| row | Condition | Medication | Dose | Directions |
+| --- | --- | --- | --- | --- |
+| 1 | Anxiety | Hydroxyzine | 50 mg | 1 tablet at bedtime |
+| 2 |  | Alprazolam | 0.5 mg | 1 tablet as needed |
+| 3 | Atrial fibrillation | Diltiazem | 120 mg | 1 tablet in the morning |
+| 4 | Circulation | Aspirin | 81 mg | 1 tablet in the morning |
+| 5 |  | Apixaban | 5 mg | 1 tablet in the morning and evening |
+| 6 | COPD | Albuterol | 90 mcg | 2 puffs every 6 h as needed |
+| 7 |  | Ipratropium/albuterol | 0.5 mg–3 mg | 1 vial via nebulizer four times daily |
+| 8 |  | Tiotropium | 1.25 mcg | 2 puffs once daily |
+| 9 | Epilepsy | Phenytoin | 100 mg | 1 tablet in the morning and bedtime |
+| 10 | GERD | Omeprazole | 40 mg | 1 tablet in the morning |
+| 11 | Hyperlipidemia | Atorvastatin | 40 mg | 1 tablet in the morning |
+| 12 | Hypertension | Carvedilol | 6.25 mg | 1 tablet in the morning and bedtime |
+| 13 | Hypokalemia | Potassium chloride | 20 mEq | 1 tablet in the morning |
+| 14 | Hypothyroidism | Levothyroxine | 25 mcg | 1 tablet in the morning |
+| 15 | Ischemic cardiomyopathy | Furosemide | 80 mg | 1 tablet once daily |
+| 16 |  | Nitroglycerin | 0.4 mg | 1 tablet every 5 min as needed |
+| 17 |  | Sotalol | 120 mg | 1 tablet in the morning and evening |
+| 18 | Neuropathy | Gabapentin | 100 mg | 1 capsule in the morning, evening and bedtime |
+| 19 |  | Pregabalin | 150 mg | 1 capsule in the morning and evening |
+| 20 |  | Duloxetine | 60 mg | 1 capsule in the morning |
+| 21 |  | Amitriptyline | 75 mg | 1 tablet at bedtime |
+| 22 | Nutrient deficiency | Multivitamin | N/A | 1 tablet in the morning |
+| 23 | Osteoarthritis | Tramadol | 50 mg | 1 tablet in the morning, evening, and bedtime |
+| 24 | Osteoporosis | Alendronate | 70 mg | 1 tablet once a week |
+
+Derived directly from this table:
+- Product/regimen degree **24**, including PRN products and the weekly product. **Not24 drugs administered on the same day.** The source calls this the current regimen rather than a lifetime medication list.
+- Analgesic opioid degree **1** (tramadol), BZD degree **1** (alprazolam), GABA degree **2** (gabapentin and pregabalin). Use source/regulatory vocabulary to justify type mappings when building; this report's enumeration is not permission to add unsourced medical class rules to the KB.
+- **15** nonempty condition/indication labels; “Circulation” and “Nutrient deficiency” remain source headings, not newly diagnosed conditions. The source does not publish a reconciled active-problem-list total. Its Discussion refers to renal comorbidities but Table1 supplies no CKD type, stage or duration; no CKD diagnosis is inferred for this case.
+- Albuterol occurs in both an inhaler and the combination nebulizer product. Preserve the two product identities; an ingredient-only view must deduplicate albuterol across them rather than silently claim24 unique drug ingredients. Multivitamin ingredients are unspecified and must not expand into invented components.
+- Keep one qualitative pain episode per disclosed pain diagnosis; no numeric pain-duration or continuous-opioid-use-duration witness is present. The presentation's “average = 8, worst = 10” NRS values are different assessment summaries, not repeated numeric durations or a high-degree duration key.
