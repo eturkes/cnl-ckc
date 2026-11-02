@@ -89,7 +89,13 @@ impl Fixture {
         Self { directory, request }
     }
     fn check(&self) -> Outcome {
-        check(&self.request)
+        let parsed = check(&self.request);
+        let kernel = check_with_codec(&self.request, SourceCodec::Kernel);
+        assert_eq!(
+            (parsed.rc, &parsed.stdout, &parsed.stderr),
+            (kernel.rc, &kernel.stdout, &kernel.stderr)
+        );
+        parsed
     }
     fn query(&mut self, text: &str) {
         let path = self.directory.join("query.pl");

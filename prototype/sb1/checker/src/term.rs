@@ -321,6 +321,7 @@ pub struct Parser<'a> {
     text: &'a str,
     pub at: usize,
     pub vars: Vec<String>,
+    pub anonymous: Vec<(usize, usize)>,
     var_map: HashMap<String, usize>,
 }
 
@@ -330,6 +331,7 @@ impl<'a> Parser<'a> {
             text,
             at: 0,
             vars: Vec::new(),
+            anonymous: Vec::new(),
             var_map: HashMap::new(),
         }
     }
@@ -411,6 +413,7 @@ impl<'a> Parser<'a> {
             return Ok(arena.compound("{}", vec![arg]));
         }
         if first.is_ascii_uppercase() || first == b'_' {
+            let start = self.at;
             let name = self.identifier();
             let v = if name == "_" {
                 self.vars.len()
@@ -422,6 +425,8 @@ impl<'a> Parser<'a> {
             }
             if name != "_" {
                 self.var_map.insert(name, v);
+            } else {
+                self.anonymous.push((start, v));
             }
             return Ok(arena.put(Node::Var(v)));
         }

@@ -55,6 +55,8 @@ pub struct Clause {
     pub head: Id,
     pub body: Vec<Goal>,
     pub names: Vec<String>,
+    pub anonymous: Vec<(usize, usize)>,
+    pub line: usize,
     pub nonlocals: Vec<usize>,
 }
 
@@ -161,6 +163,8 @@ pub fn parse_clauses(
             head,
             body,
             names: p.vars,
+            anonymous: p.anonymous,
+            line: line_no,
             nonlocals: nonlocals.into_iter().collect(),
         });
     }

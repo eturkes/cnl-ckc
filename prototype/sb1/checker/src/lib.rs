@@ -1,3 +1,4 @@
+mod codec;
 mod digest;
 mod engine;
 mod number;
@@ -140,6 +141,29 @@ impl Counters {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum SourceCodec {
+    Kernel,
+    #[default]
+    Parsed,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct SourceProfile {
+    normalization: f64,
+    decoder: f64,
+    canonical: f64,
+    shape_safety: f64,
+}
+impl SourceProfile {
+    pub fn render(&self) -> String {
+        format!(
+            "step\tseconds\nnormalization\t{:.9}\ndecoder\t{:.9}\ncanonical\t{:.9}\nshape_safety\t{:.9}\n",
+            self.normalization, self.decoder, self.canonical, self.shape_safety
+        )
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Request {
     pub root: PathBuf,
@@ -162,6 +186,7 @@ pub struct Outcome {
     pub stderr: String,
     pub phases: Vec<Phase>,
     pub counters: Counters,
+    pub source_profile: SourceProfile,
 }
 impl Outcome {
     pub fn phase_tsv(&self) -> String {
@@ -175,6 +200,7 @@ impl Outcome {
         for (name, bytes) in [
             ("checker-phases.tsv", self.phase_tsv()),
             ("checker-counters.tsv", self.counters.render()),
+            ("checker-source-profile.tsv", self.source_profile.render()),
         ] {
             let path = directory.join(name);
             fs::write(&path, bytes).map_err(|e| Failure::io(&path, e))?;
@@ -221,14 +247,24 @@ fn utf8<'a>(bytes: &'a [u8], kind: &str) -> Result<&'a str, Failure> {
 struct Document {
     path: String,
     bytes: Vec<u8>,
+    clauses: std::ops::Range<usize>,
 }
 struct Loaded {
     arena: Arena,
     clauses: Vec<Clause>,
     documents: Vec<Document>,
     schema: Vec<u8>,
+    source_profile: SourceProfile,
 }
+#[cfg(test)]
 fn load(request: &Request, counters: &mut Counters) -> Result<Loaded, Failure> {
+    load_with_codec(request, counters, SourceCodec::Parsed)
+}
+fn load_with_codec(
+    request: &Request,
+    counters: &mut Counters,
+    mode: SourceCodec,
+) -> Result<Loaded, Failure> {
     let composition = read(&request.composition)?;
     let text = utf8(&composition, "composition")?;
     if !text.ends_with('\n') {
@@ -238,6 +274,7 @@ fn load(request: &Request, counters: &mut Counters) -> Result<Loaded, Failure> {
     let mut arena = Arena::default();
     let mut clauses = Vec::new();
     let mut documents = Vec::new();
+    let mut source_profile = SourceProfile::default();
     for line in text.lines() {
         if line.starts_with('#') || line.is_empty() {
             continue;
@@ -247,25 +284,41 @@ fn load(request: &Request, counters: &mut Counters) -> Result<Loaded, Failure> {
         }
         let path = request.root.join(line);
         let bytes = read(&path)?;
-        utf8(&bytes, "source")?;
-        let read = ckc_kernel::contract::v1_read(&bytes);
-        let mut next = parse_clauses(&mut arena, utf8(&read, "read source")?, documents.len() + 1)
+        let raw_text = utf8(&bytes, "source")?;
+        let clock = Instant::now();
+        let normalized = if mode == SourceCodec::Kernel {
+            Some(ckc_kernel::contract::v1_read(&bytes))
+        } else {
+            None
+        };
+        source_profile.normalization += clock.elapsed().as_secs_f64();
+        let source = normalized
+            .as_deref()
+            .map(|b| utf8(b, "read source"))
+            .transpose()?
+            .unwrap_or(raw_text);
+        let clock = Instant::now();
+        let mut next = parse_clauses(&mut arena, source, documents.len() + 1)
             .map_err(|e| Failure::parse(format!("{line} {e}")))?;
+        source_profile.decoder += clock.elapsed().as_secs_f64();
         counters.logical("source_bytes", bytes.len() as u64);
-        counters.logical(
-            "clause_term_bytes",
-            utf8(&read, "read source")?
-                .lines()
-                .filter(|line| {
-                    !line.is_empty() && !line.starts_with('%') && !line.starts_with(":-")
-                })
-                .map(|line| (line.len() + 1) as u64)
-                .sum(),
-        );
+        let raw_bytes = source
+            .lines()
+            .filter(|line| !line.is_empty() && !line.starts_with('%') && !line.starts_with(":-"))
+            .map(|line| (line.len() + 1) as u64)
+            .sum::<u64>();
+        let extra = next
+            .iter()
+            .flat_map(|c| &c.anonymous)
+            .map(|(_, v)| (term::variable_name(*v).len() - 1) as u64)
+            .sum::<u64>();
+        counters.logical("clause_term_bytes", raw_bytes + extra);
+        let start = clauses.len();
         clauses.append(&mut next);
         documents.push(Document {
             path: line.into(),
             bytes,
+            clauses: start..clauses.len(),
         });
     }
     if documents.is_empty() {
@@ -285,6 +338,7 @@ fn load(request: &Request, counters: &mut Counters) -> Result<Loaded, Failure> {
         clauses,
         documents,
         schema,
+        source_profile,
     })
 }
 fn identity(loaded: &Loaded) -> String {
@@ -512,7 +566,81 @@ fn arena_counters(arena: &Arena, model: &Model, clauses: &[Clause], counters: &m
     counters.logical("number_decimal_digits_max", max_width as u64);
 }
 
+fn admit_loaded(
+    loaded: &mut Loaded,
+    counters: &mut Counters,
+    mode: SourceCodec,
+) -> Result<(), Failure> {
+    let clock = Instant::now();
+    let result = (|| {
+        for doc in &loaded.documents {
+            let clauses = &loaded.clauses[doc.clauses.clone()];
+            let text = utf8(&doc.bytes, "source")?;
+            let docid = clauses
+                .iter()
+                .find_map(|c| loaded.arena.named(c.head, "guideline_document", 4))
+                .and_then(|a| loaded.arena.atom_name(a[0]));
+            match mode {
+                SourceCodec::Kernel => {
+                    if canonical(&doc.bytes) {
+                        continue;
+                    }
+                    let code_at = text
+                        .lines()
+                        .take_while(|line| line.starts_with('%'))
+                        .map(|line| line.len() + 1)
+                        .sum::<usize>();
+                    let adapted=docid.map(|id| format!("% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}",&text[code_at..]));
+                    if !adapted.is_some_and(|bytes| canonical(bytes.as_bytes())) {
+                        return Err(Failure::parse(format!("noncanonical source {}", doc.path)));
+                    }
+                    counters.logical("source_header_adapters", 1);
+                }
+                SourceCodec::Parsed => {
+                    if !codec::document(&loaded.arena, clauses, text) {
+                        return Err(Failure::parse(format!("noncanonical source {}", doc.path)));
+                    }
+                    let header=docid.map(|id| format!("% {id}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n:-"));
+                    if !header.is_some_and(|h| text.starts_with(&h)) {
+                        counters.logical("source_header_adapters", 1);
+                    }
+                }
+            }
+        }
+        Ok(())
+    })();
+    loaded.source_profile.canonical += clock.elapsed().as_secs_f64();
+    result?;
+    let clock = Instant::now();
+    let result = program::admit(&loaded.arena, &loaded.clauses)
+        .map_err(|e| Failure::refused("claim", format!("admission {e}")));
+    loaded.source_profile.shape_safety += clock.elapsed().as_secs_f64();
+    result
+}
+
+pub fn profile_sources(
+    root: &Path,
+    composition: &Path,
+    mode: SourceCodec,
+) -> Result<String, Failure> {
+    let request = Request {
+        root: root.into(),
+        composition: composition.into(),
+        model: PathBuf::new(),
+        certificate: PathBuf::new(),
+        query: None,
+    };
+    let mut counters = Counters::default();
+    let mut loaded = load_with_codec(&request, &mut counters, mode)?;
+    admit_loaded(&mut loaded, &mut counters, mode)?;
+    Ok(loaded.source_profile.render())
+}
+
 pub fn check(request: &Request) -> Outcome {
+    check_with_codec(request, SourceCodec::Parsed)
+}
+
+pub fn check_with_codec(request: &Request, mode: SourceCodec) -> Outcome {
     let mut phases = [
         "load",
         "decode",
@@ -540,7 +668,7 @@ pub fn check(request: &Request) -> Outcome {
     let mut loaded = None;
     let result: Result<String, Failure> = (|| {
         run_phase("load", &mut |c| {
-            loaded = Some(load(request, c)?);
+            loaded = Some(load_with_codec(request, c, mode)?);
             Ok(())
         })?;
         let loaded = loaded.as_mut().unwrap();
@@ -551,30 +679,7 @@ pub fn check(request: &Request) -> Outcome {
         })?;
         let (mut model, claims, query) = decoded.unwrap();
         run_phase("admission", &mut |counters| {
-            for (i, doc) in loaded.documents.iter().enumerate() {
-                if canonical(&doc.bytes) {
-                    continue;
-                }
-                let docid = loaded
-                    .clauses
-                    .iter()
-                    .filter(|c| c.document == i + 1)
-                    .find_map(|c| loaded.arena.named(c.head, "guideline_document", 4))
-                    .and_then(|args| loaded.arena.atom_name(args[0]));
-                let text = utf8(&doc.bytes, "source")?;
-                let code_at = text
-                    .lines()
-                    .take_while(|line| line.starts_with('%'))
-                    .map(|line| line.len() + 1)
-                    .sum::<usize>();
-                let adapted = docid.map(|docid| format!("% {docid}.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.\n{}",&text[code_at..]));
-                if !adapted.is_some_and(|bytes| canonical(bytes.as_bytes())) {
-                    return Err(Failure::parse(format!("noncanonical source {}", doc.path)));
-                }
-                counters.logical("source_header_adapters", 1);
-            }
-            program::admit(&loaded.arena, &loaded.clauses)
-                .map_err(|e| Failure::refused("claim", format!("admission {e}")))
+            admit_loaded(loaded, counters, mode)
         })?;
         run_phase("index", &mut |c| {
             model.build_indices(&loaded.arena, &loaded.clauses, query.goals(), c);
@@ -595,6 +700,7 @@ pub fn check(request: &Request) -> Outcome {
         })?;
         Ok(output)
     })();
+    let source_profile = loaded.map(|l| l.source_profile).unwrap_or_default();
     match result {
         Ok(stdout) => Outcome {
             rc: 0,
@@ -602,6 +708,7 @@ pub fn check(request: &Request) -> Outcome {
             stderr: String::new(),
             phases,
             counters,
+            source_profile,
         },
         Err(failure) => Outcome {
             rc: failure.rc,
@@ -609,6 +716,7 @@ pub fn check(request: &Request) -> Outcome {
             stderr: format!("{}\n", failure.message),
             phases,
             counters,
+            source_profile,
         },
     }
 }
@@ -617,3 +725,6 @@ pub fn check(request: &Request) -> Outcome {
 mod schema_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod codec_tests;
