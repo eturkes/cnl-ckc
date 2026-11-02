@@ -1,0 +1,109 @@
+:- use_module(library(wfs)).
+:- use_module(library(aggregate)).
+:- use_module(library(ordsets)).
+:- dynamic sb_created/1.
+
+sb_schema(guideline_schema_version/1).
+sb_schema(guideline_document/4).
+sb_schema(guideline_entity/4).
+sb_schema(guideline_cardinality/5).
+sb_schema(guideline_event/3).
+sb_schema(guideline_arg/4).
+sb_schema(guideline_pp/4).
+sb_schema(guideline_property/4).
+sb_schema(guideline_operator/3).
+sb_schema(guideline_interval/6).
+sb_schema(guideline_recurrence/4).
+sb_schema(guideline_frequency/5).
+sb_schema(guideline_order/4).
+sb_schema(guideline_recurrence_window/7).
+sb_schema(guideline_range/3).
+sb_schema(guideline_grade/5).
+sb_schema(guideline_preference/4).
+sb_schema(guideline_qualifier/4).
+sb_schema(guideline_unit/3).
+sb_schema(guideline_exclusion/1).
+sb_schema(guideline_supersession/4).
+sb_schema(guideline_evaluation_date/1).
+
+main :-
+    current_prolog_flag(argv, [Schema, Input]),
+    forall(sb_schema(PI), (dynamic(PI), multifile(PI), table(PI))),
+    consult(Schema),
+    setup_call_cleanup(open(Input, read, Stream, [encoding(utf8)]), sb_read(Stream), close(Stream)).
+
+sb_read(Stream) :-
+    read_term(Stream, Case, []),
+    ( Case == end_of_file -> true
+    ; Case = case(Id, Admission, Clauses),
+      ( Admission == accepted -> sb_run(Id, plain, Clauses) ; true ),
+      sb_run(Id, wfs, Clauses),
+      sb_read(Stream)
+    ).
+
+sb_clear :-
+    abolish_all_tables,
+    forall(sb_schema(Name/Arity), (functor(Goal, Name, Arity), retractall(Goal))),
+    forall(retract(sb_created(PI)), (untable(PI), abolish(PI))),
+    flag(sb_helper, _, 0).
+
+sb_run(Id, Mode, Clauses) :-
+    sb_clear,
+    maplist(sb_assert(Mode), Clauses),
+    ( aggregate_all(set(V), guideline_schema_version(V), [2]) -> true
+    ; throw(error(schema_identifier(expected(2)), _))
+    ),
+    findall(Fact, (sb_answer(Fact, Delays), Delays == true), True0),
+    findall(Fact, (sb_answer(Fact, Delays), Delays \== true), Undefined0),
+    sort(True0, True), sort(Undefined0, Undefined1),
+    ord_subtract(Undefined1, True, Undefined),
+    format('B\t~w\t~w~n', [Id, Mode]),
+    maplist(sb_print('T'), True),
+    maplist(sb_print('U'), Undefined),
+    format('E\t~w\t~w~n', [Id, Mode]).
+
+sb_answer(Fact, Delays) :-
+    sb_schema(Name/Arity),
+    functor(Fact, Name, Arity),
+    call_delays(Fact, Delays),
+    ( ground(Fact) -> true ; throw(error(nonground_model_fact(Fact), _)) ).
+
+sb_print(Status, Fact) :-
+    format('~w\t', [Status]),
+    write_term(Fact, [quoted(true), ignore_ops(true), numbervars(true)]), nl.
+
+sb_assert(plain, Clause) :- assertz(Clause).
+sb_assert(wfs, Clause) :-
+    ( Clause = (Head :- Body) ->
+        sb_conjuncts(Body, Goals),
+        sb_rewrite(Goals, Head, [], Rewritten),
+        sb_body(Rewritten, NewBody),
+        assertz((Head :- NewBody))
+    ; assertz(Clause)
+    ).
+
+sb_conjuncts((A,B), Goals) :- !,
+    sb_conjuncts(A, Left), sb_conjuncts(B, Right), append(Left, Right, Goals).
+sb_conjuncts(Goal, [Goal]).
+
+sb_body([Goal], Goal) :- !.
+sb_body([Goal|Rest], (Goal,Body)) :- sb_body(Rest, Body).
+
+sb_rewrite([], _, _, []).
+sb_rewrite([Goal|Rest], Head, Before, [New|Rewritten]) :-
+    ( Goal = (\+ Inner) ->
+        term_variables(Inner, Inside),
+        term_variables([Head,Before,Rest], Outside),
+        include(sb_shared(Outside), Inside, Outer),
+        flag(sb_helper, I, I+1),
+        atom_concat(sb_naf_, I, Name),
+        Helper =.. [Name|Outer], length(Outer, Arity),
+        dynamic(Name/Arity), table(Name/Arity), assertz(sb_created(Name/Arity)),
+        assertz((Helper :- Inner)),
+        New = tnot(Helper)
+    ; New = Goal
+    ),
+    sb_rewrite(Rest, Head, [Goal|Before], Rewritten).
+
+sb_shared([Other|_], Var) :- Var == Other, !.
+sb_shared([_|Rest], Var) :- sb_shared(Rest, Var).

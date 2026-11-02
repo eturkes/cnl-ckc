@@ -1,0 +1,2 @@
+% Frozen fixture enumeration; generated compositions copy these bytes.
+q_all(C, O) :- guideline_operator(actual, C, O), member(O, [should, must, may]).
