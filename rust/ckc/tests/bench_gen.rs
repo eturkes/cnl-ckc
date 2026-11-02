@@ -679,6 +679,16 @@ fn f2_cross_copy_bridge_and_naf_read_are_refused() {
             "positive",
             "guideline_event(actual,A,B) :- guideline_qualifier(actual,A,manner,B).\n",
         ),
+        (
+            "builtin-wildcard",
+            "positive",
+            "guideline_cardinality(actual,A,na,B,C) :- guideline_entity(actual,A,patient,countable), guideline_product(exactly,1,exactly,2,B,C).\nguideline_operator(actual,'$guideline_id'(context,plant,1,box(1),[A]),should) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,exactly,2).\n",
+        ),
+        (
+            "naf-wildcard",
+            "NAF",
+            "guideline_cardinality(actual,A,na,B,C) :- guideline_entity(actual,A,patient,countable), guideline_product(exactly,1,exactly,2,B,C).\nguideline_operator(actual,'$guideline_id'(context,plant,1,box(1),[A]),should) :- guideline_entity(actual,A,patient,countable), \\+ guideline_cardinality(actual,A,na,exactly,2).\n",
+        ),
     ] {
         let docs = s.0.join(name);
         fs::create_dir(&docs).unwrap();

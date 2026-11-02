@@ -15,7 +15,57 @@ enum Value {
 type Env = BTreeMap<String, Value>;
 type Provenance = BTreeSet<usize>;
 type Rows = BTreeMap<Env, Provenance>;
-type Relation = BTreeMap<Vec<Value>, Provenance>;
+type Fact = (Vec<Value>, Provenance);
+#[derive(Default)]
+struct Relation {
+    rows: Vec<Fact>,
+    positions: BTreeMap<Vec<Value>, usize>,
+    columns: Vec<BTreeMap<Value, Vec<usize>>>,
+}
+impl Relation {
+    fn insert(&mut self, tuple: Vec<Value>, owner: Option<usize>) -> bool {
+        if let Some(&index) = self.positions.get(&tuple) {
+            return owner.is_some_and(|o| self.rows[index].1.insert(o));
+        }
+        let index = self.rows.len();
+        self.positions.insert(tuple.clone(), index);
+        self.columns
+            .resize_with(tuple.len().max(self.columns.len()), BTreeMap::new);
+        for (column, value) in self.columns.iter_mut().zip(&tuple) {
+            column.entry(value.clone()).or_default().push(index);
+        }
+        self.rows.push((tuple, owner.into_iter().collect()));
+        true
+    }
+    // A bound argument matches its exact bucket plus Any; all other tests stay
+    // in Abstraction::matches. Choosing the smallest bucket avoids full scans.
+    fn candidates(
+        &self,
+        args: &[Term],
+        env: &Env,
+        abs: &Abstraction,
+    ) -> (&[Fact], &[usize], &[usize]) {
+        let mut best: Option<(&[usize], &[usize])> = None;
+        for (arg, column) in args.iter().zip(&self.columns) {
+            let value = abs.instantiate(arg, env);
+            if value == Value::Any {
+                continue;
+            }
+            let exact = column.get(&value).map(Vec::as_slice).unwrap_or_default();
+            let any = column
+                .get(&Value::Any)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            if best.is_none_or(|(a, b)| exact.len() + any.len() < a.len() + b.len()) {
+                best = Some((exact, any));
+            }
+        }
+        match best {
+            Some((exact, any)) => (&[], exact, any),
+            None => (&self.rows, &[], &[]),
+        }
+    }
+}
 type Model = BTreeMap<String, Relation>;
 struct Abstraction {
     patient_docids: BTreeSet<String>,
@@ -91,7 +141,11 @@ fn join(term: &Term, rows: Rows, model: &Model, abs: &Abstraction) -> Rows {
         return out;
     };
     for (env, provenance) in rows {
-        for (tuple, writers) in relation {
+        let (all, exact, any) = relation.candidates(args, &env, abs);
+        let candidates = all
+            .iter()
+            .chain(exact.iter().chain(any).map(|&index| &relation.rows[index]));
+        for (tuple, writers) in candidates {
             if tuple.len() != args.len() {
                 continue;
             }
@@ -133,10 +187,10 @@ fn insert(
 ) -> Result<bool, String> {
     let (name, args) = head.call().ok_or("isolation non-predicate head")?;
     let tuple = args.iter().map(|t| abs.instantiate(t, env)).collect();
-    let relation = model.entry(name.to_owned()).or_default();
-    let new = !relation.contains_key(&tuple);
-    let writers = relation.entry(tuple).or_default();
-    Ok(owner.is_some_and(|o| writers.insert(o)) || new)
+    Ok(model
+        .entry(name.to_owned())
+        .or_default()
+        .insert(tuple, owner))
 }
 fn nested_body_variables(term: &Term) -> bool {
     let Some((_, args)) = term.call() else {
@@ -232,4 +286,114 @@ pub fn check(shards: &[(usize, Vec<Document>)], patient: &[Document]) -> Result<
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn atom(value: &str) -> Term {
+        Term::Atom(value.into(), value.into())
+    }
+    fn identity(doc: &str) -> Term {
+        Term::Compound(
+            "'$guideline_id'".into(),
+            "$guideline_id".into(),
+            vec![
+                atom("product"),
+                atom(doc),
+                Term::Number("1".into()),
+                Term::Compound("ref".into(), "ref".into(), vec![Term::Number("1".into())]),
+                Term::List(vec![], None),
+            ],
+        )
+    }
+    // Full-scan oracle keeps candidate selection independent of the postings.
+    fn linear_join(args: &[Term], rows: &Rows, relation: &Relation, abs: &Abstraction) -> Rows {
+        let mut out = Rows::new();
+        for (env, provenance) in rows {
+            for (tuple, writers) in &relation.rows {
+                if tuple.len() != args.len() {
+                    continue;
+                }
+                let mut next = env.clone();
+                if args
+                    .iter()
+                    .zip(tuple)
+                    .all(|(a, v)| abs.matches(a, v, &mut next))
+                {
+                    let p = out.entry(next).or_default();
+                    p.extend(provenance);
+                    p.extend(writers);
+                }
+            }
+        }
+        out
+    }
+    #[test]
+    fn indexed_join_matches_full_scan_with_wildcards_and_repeated_variables() {
+        let abs = Abstraction {
+            patient_docids: BTreeSet::from(["patient-doc".into()]),
+        };
+        let terms = [
+            Term::Var("A".into()),
+            Term::Var("B".into()),
+            atom("a"),
+            atom("b"),
+            Term::Number("1".into()),
+            identity("base-doc"),
+            identity("sb0002-doc"),
+            identity("patient-doc"),
+            Term::Compound("opaque".into(), "opaque".into(), vec![atom("a")]),
+            Term::List(vec![], None),
+        ];
+        let values: Vec<_> = terms
+            .iter()
+            .skip(2)
+            .map(|t| abs.value(t))
+            .chain([Value::Any])
+            .collect();
+        let mut relation = Relation::default();
+        for (i, a) in values.iter().enumerate() {
+            for (j, b) in values.iter().enumerate() {
+                let tuple = vec![a.clone(), b.clone()];
+                let owner = (i + j) % 3;
+                assert!(relation.insert(tuple.clone(), Some(owner)));
+                assert!(!relation.insert(tuple.clone(), Some(owner)));
+                assert!(relation.insert(tuple, Some((owner + 1) % 3)));
+            }
+        }
+        assert!(relation.insert(vec![Value::Any], None));
+        assert!(!relation.insert(vec![Value::Any], None));
+        assert!(relation.insert(vec![Value::Any, Value::Any, Value::Any], None));
+        let mut rows = Rows::new();
+        let bindings: Vec<_> = std::iter::once(None)
+            .chain(values.iter().map(Some))
+            .collect();
+        for a in &bindings {
+            for b in &bindings {
+                let mut env = Env::new();
+                if let Some(value) = a {
+                    env.insert("A".into(), (*value).clone());
+                }
+                if let Some(value) = b {
+                    env.insert("B".into(), (*value).clone());
+                }
+                rows.insert(env, Provenance::from([9]));
+            }
+        }
+        let model = Model::from([("p".into(), relation)]);
+        for a in &terms {
+            for b in &terms {
+                let args = vec![a.clone(), b.clone()];
+                let expected = linear_join(&args, &rows, &model["p"], &abs);
+                let term = Term::Compound("p".into(), "p".into(), args);
+                assert_eq!(
+                    join(&term, rows.clone(), &model, &abs),
+                    expected,
+                    "{term:?}"
+                );
+            }
+        }
+    }
 }
