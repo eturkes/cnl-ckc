@@ -1,0 +1,16 @@
+# format: kind	lemma	value
+unit	minute	minute
+unit	hour	hour
+unit	day	day
+unit	week	week
+unit	month	month
+unit	year	year
+relation	for	duration
+relation	during	duration
+relation	within	within
+relation	after	after
+relation	before	before
+spacing	at	interval
+frequency	per	period
+qualifier	particularly	focus
+qualifier	cautiously	manner

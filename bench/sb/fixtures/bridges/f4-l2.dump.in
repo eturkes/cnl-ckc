@@ -1,0 +1,3 @@
+sentences([[^,'If',a,patient,has,an,'opioid-use-disorder',then,the,patient,has,a,'substance-use-disorder','.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,patient,countable,na,eq,1),/(1,3)),-(object(B,'opioid-use-disorder',countable,na,eq,1),/(1,6)),-(predicate(C,have,A,B),/(1,4))]),drs([D,E],[-(object(D,'substance-use-disorder',countable,na,eq,1),/(1,12)),-(predicate(E,have,A,D),/(1,10))]))])).
+messages([]).

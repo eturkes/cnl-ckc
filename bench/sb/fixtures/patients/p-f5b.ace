@@ -1,0 +1,15 @@
+There is a clinician.
+A male patient has an age.
+The age includes exactly 30 years.
+The patient has a chronic-pain that is caused by a Legg-Calves-Perthes-disease.
+The patient has a pre-interruption-home-prescription-snapshot.
+The clinician prescribes an alprazolam benzodiazepine to the patient at an interval of exactly 4 hours for an as-needed-anxiety-treatment in the pre-interruption-home-prescription-snapshot.
+The benzodiazepine has a prescribed-dose that contains exactly 1 milligram.
+The clinician prescribes a fentanyl opioid-pain-medication X with the benzodiazepine to the patient at an interval of exactly 72 hours in the pre-interruption-home-prescription-snapshot.
+X has a transdermal-prescribed-dose that contains exactly 50 micrograms per 1 hour.
+The clinician prescribes an oxycodone opioid-pain-medication Y with the benzodiazepine to the patient in the pre-interruption-home-prescription-snapshot.
+Y has an oxycodone-prescribed-dose that contains exactly 30 milligrams.
+The oxycodone-prescribed-dose specifies exactly 5 administrations per 1 day.
+The clinician prescribes a gabapentin-labelled gabapentinoid to the patient in the pre-interruption-home-prescription-snapshot.
+The gabapentinoid has a gabapentin-prescribed-dose that contains exactly 900 milligrams.
+The gabapentin-prescribed-dose specifies exactly 3 administrations per 1 day.

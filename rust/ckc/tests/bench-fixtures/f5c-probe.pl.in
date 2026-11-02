@@ -1,0 +1,55 @@
+% Benchmark oracle only: loaded under the REFERENCE tabling recipe.
+:- use_module(library(readutil)).
+
+sb_f5c_clinical(T) :-
+    ground(T),
+    compound(T),
+    functor(T, Name, _),
+    atom_concat(guideline_, _, Name),
+    Name \= guideline_schema_version,
+    Name \= guideline_document.
+
+sb_f5c_used_products(Products, Context, Used) :-
+    findall(P, (member(P, Products), sub_term(T, Context), T == P), Raw),
+    sort(Raw, Used).
+
+sb_f5c_join(Products, join(Context, Operator, Used)) :-
+    guideline_operator(actual, Context, Operator),
+    memberchk(Operator, [should,must,may]),
+    Context = '$guideline_id'(context, Doc, _, _, _),
+    atom_concat('cdc2022-opioid-', _, Doc),
+    sb_f5c_used_products(Products, Context, Used),
+    length(Used, N),
+    N >= 2.
+
+sb_f5c_probe(Patient, Docs) :-
+    read_file_to_terms(Patient, PatientTerms, [encoding(utf8)]),
+    include(sb_f5c_clinical, PatientTerms, RawFacts),
+    sort(RawFacts, Facts),
+    findall(M,
+        ( guideline_event(actual, E, include),
+          guideline_arg(actual, E, 1, '$guideline_id'(product,'sb-p-f5c',4,ref(1),[])),
+          guideline_arg(actual, E, 2, M) ), RawProducts),
+    sort(RawProducts, Products),
+    findall(Row, sb_f5c_join(Products, Row), RawRows),
+    sort(RawRows, Rows),
+    findall(Terms,
+        (member(Doc, Docs), read_file_to_terms(Doc, Terms, [encoding(utf8)])), Files),
+    append(Files, Clauses),
+    findall(F,
+        ( member(join(C, O, _), Rows),
+          member((guideline_operator(actual,C,O) :- Body), Clauses),
+          call(Body),
+          sub_term(G, Body),
+          member(F, Facts),
+          F == G ), RawUsed),
+    sort(RawUsed, Used),
+    length(Products, NP),
+    length(Facts, NF),
+    length(Used, NU),
+    Unused is NF - NU,
+    length(Rows, NJ),
+    forall(member(Count, [products(NP),clinical_facts(NF),used_clinical_facts(NU),unused_clinical_facts(Unused),joins(NJ)]),
+        (write_term(Count,[quoted(true),ignore_ops(true),numbervars(true)]),writeln('.'))),
+    forall(member(Row, Rows),
+        (write_term(Row,[quoted(true),ignore_ops(true),numbervars(true)]),writeln('.'))).

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# ACE + the staged fork → products, DRS dumps, certification payloads.
+# Usage: bash bench/sb/fixtures/regenerate <repo-root> <ckc> [--check]
+set -euo pipefail
+root=$(readlink -f "$1")
+bin=$(readlink -f "$2")
+mode=${3:---write}
+case "$mode" in --write|--check) ;; *) exit 2 ;; esac
+export LC_ALL=C.UTF-8
+fixtures=${CKC_SB_FIXTURE_DIR:-$root/bench/sb/fixtures}
+python3 -I "$fixtures/f5c-inputs" "$root" "$fixtures" "$mode"
+mkdir -p "$root/.scratch"
+work=$(mktemp -d "$root/.scratch/sb-fixtures.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+stage=$work/ape-stage
+cp -a "$root/vendor/ape" "$stage"
+cp "$root/vendor/clex/clex_lexicon.pl" "$stage/prolog/lexicon/clex_lexicon.pl"
+(cd "$stage/prolog/parser" && swipl -O -f none -F none \
+    -g "working_directory(_, '$stage/prolog/parser'), [fit_to_plp], halt." -t halt) > "$work/stage.log" 2>&1
+swipl -q -f none -F none -g \
+    "style_check(-discontiguous), qcompile('$stage/prolog/lexicon/clex_lexicon.pl',[encoding(utf8)]),halt" \
+    -t 'halt(9)' > "$work/qlf.log" 2>&1
+if [ -s "$work/qlf.log" ]; then cat "$work/qlf.log" >&2; exit 1; fi
+cat "$root/guidelines/cdc-2022-opioid/lexicon.ulex" "$fixtures/lexicon.ulex" > "$work/lexicon.ulex"
+while IFS=$'\t' read -r kind id relative vocabulary status; do
+    if [ "$kind" = kind ]; then continue; fi
+    stem=$fixtures/$relative
+    table=$fixtures/vocabulary.tsv
+    if [ "$vocabulary" = cdc ]; then table=$root/guidelines/cdc-2022-opioid/vocabulary.tsv; fi
+    swipl -q -f none -F none -s "$stage/prolog/ace_to_pl.pl" -g main -t 'halt(9)' \
+        -- "$stage" "$id" "$table" "$work/lexicon.ulex" < "$stem.ace" > "$work/product"
+    swipl -q -f none -F none -s "$root/rust/ckc/prolog/drs_dump.pl" -g main -t 'halt(9)' \
+        -- "$stage" "$work/lexicon.ulex" < "$stem.ace" > "$work/dump"
+    "$bin" certify-one doc "$id" "$stem.ace" "$work/lexicon.ulex" "$work/dump" "$work/product" "$table" > "$work/certified"
+    pairs=(product:pl.in dump:dump.in certified:certified.in)
+    if [ -f "$stem.intake.tsv" ]; then
+        cp "$work/product" "$work/emitted"
+        pairs+=(emitted:emitted.pl.in)
+        while IFS=$'\t' read -r operation old new parameter; do
+            case "$operation" in
+                operation) continue ;;
+                append) printf '%s\n' "$new" >> "$work/product" ;;
+                replace)
+                    count=$(command grep -Fxc "$old" "$work/product")
+                    [ "$count" = 1 ] || { printf 'intake anchor: %s %s\n' "$id" "$parameter" >&2; exit 1; }
+                    text=$(< "$work/product")
+                    printf '%s\n' "${text/"$old"/"$new"}" > "$work/product" ;;
+                *) printf 'intake operation: %s %s\n' "$id" "$operation" >&2; exit 1 ;;
+            esac
+        done < "$stem.intake.tsv"
+    fi
+    for pair in "${pairs[@]}"; do
+        from=${pair%%:*}; suffix=${pair#*:}
+        if [ "$mode" = --check ]; then cmp "$work/$from" "$stem.$suffix"; else cp "$work/$from" "$stem.$suffix"; fi
+    done
+    printf 'fixture: %s %s\n' "$id" "$status"
+done < "$fixtures/cases.tsv"

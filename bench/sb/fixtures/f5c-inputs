@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+# Table1 rows + explicit intake choices → ACE, ground rational facts, identity map, ulex delta.
+import csv
+import io
+from fractions import Fraction
+from pathlib import Path
+import re
+import sys
+
+root = Path(sys.argv[1]).resolve()
+fixtures = Path(sys.argv[2]).resolve()
+mode = sys.argv[3]
+assert mode in {'--write', '--check'}
+with (fixtures / 'patients/p-f5c-products.tsv').open() as stream:
+    rows = [{key: value or '' for key, value in row.items()} for row in csv.DictReader(stream, delimiter='\t')]
+assert [int(row['row']) for row in rows] == list(range(1, 25))
+
+marker = '% F5c record vocabulary.\n'
+lexicon = (fixtures / 'lexicon.ulex').read_text().split(marker, 1)[0]
+base = lexicon + (root / 'guidelines/cdc-2022-opioid/lexicon.ulex').read_text() + (root / 'vendor/clex/clex_lexicon.pl').read_text()
+base_surfaces = set()
+for line in base.splitlines():
+    match = re.match(r"\w+\(\s*('(?:[^'\\]|\\.)*'|[^,]+),", line)
+    if match:
+        base_surfaces.add(match.group(1).strip().strip("'"))
+extra = {}
+def q(atom):
+    if re.fullmatch('[a-z][A-Za-z0-9_]*', atom):
+        return atom
+    return "'" + atom.replace('\\', '\\\\').replace("'", "\\'") + "'"
+def word(category, surface, lemma=None):
+    lemma = lemma or surface
+    if surface in base_surfaces:
+        return
+    suffix = ',neutr' if category.startswith('noun_') else ''
+    text = f'{category}({q(surface)},{q(lemma)}{suffix}).\n'
+    assert surface not in extra or extra[surface] == text
+    extra[surface] = text
+
+def noun(noun):
+    word('noun_sg', noun)
+    return noun
+
+def plural(noun, count):
+    if count == 1:
+        return noun
+    surface = noun + 's'
+    word('noun_pl', surface, noun)
+    return surface
+
+def slug(text):
+    return re.sub('[^a-z0-9]+', '-', text.lower()).strip('-')
+
+def article(word):
+    return 'an' if word[0].lower() in 'aeiou' else 'a'
+
+def uid(sentence, slot):
+    return f"'$guideline_id'(product,'sb-p-f5c',{sentence},ref({slot}),[])"
+
+def tsv(header, records):
+    out = io.StringIO(newline='')
+    writer = csv.writer(out, delimiter='\t', lineterminator='\n')
+    writer.writerow(header)
+    writer.writerows(records)
+    return out.getvalue()
+
+def validate(row):
+    units = {'mg': 'milligram', 'mcg': 'microgram', 'mEq': 'milliequivalent'}
+    source = [(Fraction(n), units[u]) for n, u in re.findall(r'(\d+(?:\.\d+)?) (mg|mcg|mEq)', row['dose'])]
+    parts = [part.split(':') for part in row['components'].split(';')] if row['components'] else []
+    assert [(Fraction(n), u) for _, n, u in parts] == source, ('strength', row['row'])
+    ingredients = row['medication'].lower().split('/') if len(source) > 1 else ([''] if source else [])
+    assert [ingredient for ingredient, _, _ in parts] == ingredients, ('components', row['row'])
+    directions = row['directions']
+    count, unit = re.match(r'(\d+) (tablets?|puffs?|vials?|capsules?)\b', directions).groups()
+    assert (int(row['count']), row['unit']) == (int(count), unit.rstrip('s')), ('dose count', row['row'])
+    period = 'day' if 'once daily' in directions else ('week' if 'once a week' in directions else '')
+    assert row['per'] == period, ('period', row['row'])
+    interval = re.search(r'every (\d+) (h|min)\b', directions)
+    expected_interval = f"{interval[1]}:{'hour' if interval[2] == 'h' else 'minute'}" if interval else ''
+    assert row['interval'] == expected_interval, ('interval', row['row'])
+    assert row['administrations'] == ('4:day' if 'four times daily' in directions else ''), ('frequency', row['row'])
+    for word in ['morning', 'evening', 'bedtime', 'nebulizer']:
+        assert (word in directions) == (word in row['direction']), ('direction', row['row'], word)
+    assert ('as needed' in directions) == ('as-needed' in row['direction']), ('PRN', row['row'])
+    assert row['direction'].endswith(row['unit'] + '-direction'), ('direction unit', row['row'])
+
+regimen = noun('pre-review-current-medication-regimen')
+noun('medication-product')
+noun('osteoarthritis')
+noun('neuropathy')
+lines = [
+    'There is a clinician.',
+    'A female patient has an age.',
+    'The age includes exactly 69 years.',
+    f'The patient has a {regimen}.',
+    'The patient has a chronic-pain.',
+    'The chronic-pain is caused by an osteoarthritis.',
+    'The chronic-pain is caused by a neuropathy.',
+]
+intake = []
+mapping = []
+for row in rows:
+    validate(row)
+    number = int(row['row'])
+    symbol = f'M{number}'
+    chemical = slug(row['medication'])
+    surface = chemical + '-labelled'
+    word('adj_itr', surface, row['medication'].lower().replace(' ', '-'))
+    kind = noun(row['class'])
+    sentence = len(lines) + 1
+    lines.append(f'The {regimen} includes {article(surface)} {surface} {kind} {symbol}.')
+    mapping.append([number, sentence, 1, uid(sentence, 1), kind, surface])
+    if row['condition']:
+        label = noun(slug(row['condition']) + '-indication-label')
+        lines.append(f'{symbol} has {article(label)} {label}.')
+    if row['components']:
+        for component in row['components'].split(';'):
+            ingredient, numeral, unit = component.split(':')
+            strength = noun((ingredient + '-component' if ingredient else chemical + '-product') + '-strength')
+            value = Fraction(numeral)
+            noun(unit)
+            if value.denominator == 1:
+                count = value.numerator
+                lines.append(f'{symbol} has {article(strength)} {strength} that contains exactly {count} {plural(unit, count)}.')
+            else:
+                sentence = len(lines) + 1
+                lines.append(f'{symbol} has {article(strength)} {strength}.')
+                quantity = uid(sentence, 3)
+                event = uid(sentence, 4)
+                facts = [
+                    f'guideline_entity(actual,{quantity},{q(unit)},countable).',
+                    f'guideline_cardinality(actual,{quantity},na,exactly,rational({value.numerator},{value.denominator})).',
+                    f'guideline_event(actual,{event},contain).',
+                    f'guideline_arg(actual,{event},1,{uid(sentence, 1)}).',
+                    f'guideline_arg(actual,{event},2,{quantity}).',
+                ]
+                intake.extend(['append', '-', fact, f'P-F5C-R{number:02}'] for fact in facts)
+    direction = noun(chemical + '-' + row['direction'])
+    count = int(row['count'])
+    unit = row['unit']
+    noun(unit)
+    clause = f'{symbol} has {article(direction)} {direction} that specifies exactly {count} {plural(unit, count)}'
+    if row['per']:
+        clause += f" per 1 {row['per']}"
+    if row['interval']:
+        interval, interval_unit = row['interval'].split(':')
+        clause += f' at an interval of exactly {interval} {plural(interval_unit, int(interval))}'
+    lines.append(clause + '.')
+    if row['administrations']:
+        number_of_administrations, period = row['administrations'].split(':')
+        lines.append(f'The {direction} schedules exactly {number_of_administrations} administrations per 1 {period}.')
+
+lines.extend([
+    f'The clinician prescribes M2 to the patient in the {regimen}.',
+    f'The clinician prescribes M23 with M2 to the patient in the {regimen}.',
+])
+products = {
+    fixtures / 'patients/p-f5c.ace': '\n'.join(lines) + '\n',
+    fixtures / 'patients/p-f5c.intake.tsv': tsv(['operation', 'old', 'new', 'param_id'], intake),
+    fixtures / 'patients/p-f5c-map.tsv': tsv(['row', 'sentence', 'slot', 'identity', 'class', 'chemical_surface'], mapping),
+    fixtures / 'lexicon.ulex': lexicon + marker + ''.join(extra[key] for key in sorted(extra)),
+}
+for path, expected in products.items():
+    if mode == '--check':
+        assert path.read_bytes() == expected.encode(), f'F5c input drift: {path}'
+    else:
+        path.write_text(expected)

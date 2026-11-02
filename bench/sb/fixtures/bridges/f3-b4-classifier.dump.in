@@ -1,0 +1,3 @@
+sentences([[^,'If',a,patient,meets,at,least,2,'opioid-use-disorder-criteria',during,at,most,1,year,then,the,patient,has,an,'opioid-use-disorder','.']]).
+drs(drs([],[=>(drs([A,B,C,D],[-(object(A,patient,countable,na,eq,1),/(1,3)),-(object(B,'opioid-use-disorder-criterion',countable,na,geq,2),/(1,8)),[-(modifier_pp(D,during,C),/(1,9)),-(predicate(D,meet,A,B),/(1,4)),-(object(C,year,countable,na,leq,1),/(1,13))]]),drs([E,F],[-(object(E,'opioid-use-disorder',countable,na,eq,1),/(1,19)),-(predicate(F,have,A,E),/(1,17))]))])).
+messages([]).

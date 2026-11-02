@@ -1,0 +1,53 @@
+% sb-f4-l1.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
+guideline_schema_version(2).
+guideline_document('sb-f4-l1',ace_sha256('26e023e8e8b1822373d8c5999b460ef42ae1f6657ad44920dbfdbc6a5fe871c2'),ulex(sha256(b6d1d5f808f9591ffddefa000bf76330674017163d128278ccda6ce6e4e086c0)),vocabulary(sha256('32464b42418e812427ef20fa3301c3b00f6c7c4cbbcfbf46807d45f7f409cb64'))).
+% S1: If a patient has a problematic-opioid-use-pattern that causes a clinically-significant-impairment-or-distress and the patient meets at least 2 opioid-use-disorder-criteria during at most 12 months then the patient has an opioid-use-disorder.
+guideline_entity(actual,'$guideline_id'(product,'sb-f4-l1',1,ref(9),[A,B,C,D,E,F,G,H]),'opioid-use-disorder',countable) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'problematic-opioid-use-pattern',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'clinically-significant-impairment-or-distress',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,cause), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,B), guideline_entity(actual,F,'opioid-use-disorder-criterion',countable), guideline_cardinality(actual,F,na,I,J), guideline_satisfies(I,J,geq,2), guideline_event(actual,H,meet), guideline_pp(actual,H,during,G), guideline_interval(actual,H,duration,G,K,none), guideline_arg(actual,H,1,A), guideline_arg(actual,H,2,F), guideline_cardinality(actual,G,na,L,M), guideline_unit(actual,G,K), guideline_satisfies(L,M,K,leq,12,month).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-f4-l1',1,ref(9),[A,B,C,D,E,F,G,H]),na,eq,1) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'problematic-opioid-use-pattern',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'clinically-significant-impairment-or-distress',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,cause), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,B), guideline_entity(actual,F,'opioid-use-disorder-criterion',countable), guideline_cardinality(actual,F,na,I,J), guideline_satisfies(I,J,geq,2), guideline_event(actual,H,meet), guideline_pp(actual,H,during,G), guideline_interval(actual,H,duration,G,K,none), guideline_arg(actual,H,1,A), guideline_arg(actual,H,2,F), guideline_cardinality(actual,G,na,L,M), guideline_unit(actual,G,K), guideline_satisfies(L,M,K,leq,12,month).
+guideline_event(actual,'$guideline_id'(product,'sb-f4-l1',1,ref(10),[A,B,C,D,E,F,G,H]),have) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'problematic-opioid-use-pattern',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'clinically-significant-impairment-or-distress',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,cause), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,B), guideline_entity(actual,F,'opioid-use-disorder-criterion',countable), guideline_cardinality(actual,F,na,I,J), guideline_satisfies(I,J,geq,2), guideline_event(actual,H,meet), guideline_pp(actual,H,during,G), guideline_interval(actual,H,duration,G,K,none), guideline_arg(actual,H,1,A), guideline_arg(actual,H,2,F), guideline_cardinality(actual,G,na,L,M), guideline_unit(actual,G,K), guideline_satisfies(L,M,K,leq,12,month).
+guideline_arg(actual,'$guideline_id'(product,'sb-f4-l1',1,ref(10),[A,B,C,D,E,F,G,H]),1,A) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'problematic-opioid-use-pattern',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'clinically-significant-impairment-or-distress',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,cause), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,B), guideline_entity(actual,F,'opioid-use-disorder-criterion',countable), guideline_cardinality(actual,F,na,I,J), guideline_satisfies(I,J,geq,2), guideline_event(actual,H,meet), guideline_pp(actual,H,during,G), guideline_interval(actual,H,duration,G,K,none), guideline_arg(actual,H,1,A), guideline_arg(actual,H,2,F), guideline_cardinality(actual,G,na,L,M), guideline_unit(actual,G,K), guideline_satisfies(L,M,K,leq,12,month).
+guideline_arg(actual,'$guideline_id'(product,'sb-f4-l1',1,ref(10),[A,B,C,D,E,F,G,H]),2,'$guideline_id'(product,'sb-f4-l1',1,ref(9),[A,B,C,D,E,F,G,H])) :- guideline_entity(actual,A,patient,countable), guideline_cardinality(actual,A,na,eq,1), guideline_entity(actual,B,'problematic-opioid-use-pattern',countable), guideline_cardinality(actual,B,na,eq,1), guideline_entity(actual,C,'clinically-significant-impairment-or-distress',countable), guideline_cardinality(actual,C,na,eq,1), guideline_event(actual,D,cause), guideline_arg(actual,D,1,B), guideline_arg(actual,D,2,C), guideline_event(actual,E,have), guideline_arg(actual,E,1,A), guideline_arg(actual,E,2,B), guideline_entity(actual,F,'opioid-use-disorder-criterion',countable), guideline_cardinality(actual,F,na,I,J), guideline_satisfies(I,J,geq,2), guideline_event(actual,H,meet), guideline_pp(actual,H,during,G), guideline_interval(actual,H,duration,G,K,none), guideline_arg(actual,H,1,A), guideline_arg(actual,H,2,F), guideline_cardinality(actual,G,na,L,M), guideline_unit(actual,G,K), guideline_satisfies(L,M,K,leq,12,month).

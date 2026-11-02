@@ -1,0 +1,3 @@
+sentences([[^,'If',a,patient,has,a,pain,that,lasts,for,more,than,3,months,then,the,patient,has,a,'chronic-pain','.']]).
+drs(drs([],[=>(drs([A,B,C,D,E],[-(object(A,patient,countable,na,eq,1),/(1,3)),-(object(B,pain,countable,na,eq,1),/(1,6)),-(object(C,month,countable,na,greater,3),/(1,13)),-(predicate(D,last,B),/(1,8)),-(modifier_pp(D,for,C),/(1,9)),-(predicate(E,have,A,B),/(1,4))]),drs([F,G],[-(object(F,'chronic-pain',countable,na,eq,1),/(1,19)),-(predicate(G,have,A,F),/(1,17))]))])).
+messages([]).

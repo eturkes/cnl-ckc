@@ -1,0 +1,18 @@
+There is a clinician.
+A male patient has an age.
+The age includes exactly 57 years.
+The patient receives an outpatient-pain-rehabilitation.
+The patient has a chronic-pain that lasts for exactly 20 years.
+The chronic-pain has a bilateral-anterior-thigh-location.
+The chronic-pain is caused by an inflammatory-myositis-history.
+The patient has a baseline-verbal-pain-rating that includes exactly 5 VRS-units.
+The clinician prescribes an oxycodone opioid-pain-medication to the patient.
+The opioid-pain-medication has a tablet-strength that contains exactly 5 milligrams.
+The patient receives exactly 5 oxycodone tablets per 1 day.
+An admission-visit includes a urine-drug-test.
+A dismissal-visit includes a urine-drug-test.
+The patient attends the admission-visit and attends the dismissal-visit.
+The admission-visit precedes the dismissal-visit.
+The patient completes an opioid-taper on a program-day that includes exactly 15 days.
+The patient has an opioid-dosage.
+The opioid-dosage includes some MME-units-per-day.

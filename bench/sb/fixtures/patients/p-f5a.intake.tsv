@@ -1,0 +1,2 @@
+operation	old	new	param_id
+replace	guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5a',18,ref(1),[]),na,geq,2).	guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5a',18,ref(1),[]),na,exactly,rational(75,2)).	P-F5A-MME

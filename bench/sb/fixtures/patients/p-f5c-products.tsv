@@ -1,0 +1,25 @@
+row	condition	medication	dose	directions	class	components	direction	count	unit	per	interval	administrations
+1	Anxiety	Hydroxyzine	50 mg	1 tablet at bedtime	medication-product	:50:milligram	bedtime-tablet-direction	1	tablet
+2		Alprazolam	0.5 mg	1 tablet as needed	benzodiazepine	:0.5:milligram	as-needed-tablet-direction	1	tablet
+3	Atrial fibrillation	Diltiazem	120 mg	1 tablet in the morning	medication-product	:120:milligram	morning-tablet-direction	1	tablet
+4	Circulation	Aspirin	81 mg	1 tablet in the morning	medication-product	:81:milligram	morning-tablet-direction	1	tablet
+5		Apixaban	5 mg	1 tablet in the morning and evening	medication-product	:5:milligram	morning-and-evening-tablet-direction	1	tablet
+6	COPD	Albuterol	90 mcg	2 puffs every 6 h as needed	medication-product	:90:microgram	as-needed-puff-direction	2	puff		6:hour
+7		Ipratropium/albuterol	0.5 mg–3 mg	1 vial via nebulizer four times daily	medication-product	ipratropium:0.5:milligram;albuterol:3:milligram	nebulizer-vial-direction	1	vial			4:day
+8		Tiotropium	1.25 mcg	2 puffs once daily	medication-product	:1.25:microgram	once-daily-puff-direction	2	puff	day
+9	Epilepsy	Phenytoin	100 mg	1 tablet in the morning and bedtime	medication-product	:100:milligram	morning-and-bedtime-tablet-direction	1	tablet
+10	GERD	Omeprazole	40 mg	1 tablet in the morning	medication-product	:40:milligram	morning-tablet-direction	1	tablet
+11	Hyperlipidemia	Atorvastatin	40 mg	1 tablet in the morning	medication-product	:40:milligram	morning-tablet-direction	1	tablet
+12	Hypertension	Carvedilol	6.25 mg	1 tablet in the morning and bedtime	medication-product	:6.25:milligram	morning-and-bedtime-tablet-direction	1	tablet
+13	Hypokalemia	Potassium chloride	20 mEq	1 tablet in the morning	medication-product	:20:milliequivalent	morning-tablet-direction	1	tablet
+14	Hypothyroidism	Levothyroxine	25 mcg	1 tablet in the morning	medication-product	:25:microgram	morning-tablet-direction	1	tablet
+15	Ischemic cardiomyopathy	Furosemide	80 mg	1 tablet once daily	medication-product	:80:milligram	once-daily-tablet-direction	1	tablet	day
+16		Nitroglycerin	0.4 mg	1 tablet every 5 min as needed	medication-product	:0.4:milligram	as-needed-tablet-direction	1	tablet		5:minute
+17		Sotalol	120 mg	1 tablet in the morning and evening	medication-product	:120:milligram	morning-and-evening-tablet-direction	1	tablet
+18	Neuropathy	Gabapentin	100 mg	1 capsule in the morning, evening and bedtime	gabapentinoid	:100:milligram	morning-evening-and-bedtime-capsule-direction	1	capsule
+19		Pregabalin	150 mg	1 capsule in the morning and evening	gabapentinoid	:150:milligram	morning-and-evening-capsule-direction	1	capsule
+20		Duloxetine	60 mg	1 capsule in the morning	medication-product	:60:milligram	morning-capsule-direction	1	capsule
+21		Amitriptyline	75 mg	1 tablet at bedtime	medication-product	:75:milligram	bedtime-tablet-direction	1	tablet
+22	Nutrient deficiency	Multivitamin	N/A	1 tablet in the morning	medication-product		morning-tablet-direction	1	tablet
+23	Osteoarthritis	Tramadol	50 mg	1 tablet in the morning, evening, and bedtime	opioid-pain-medication	:50:milligram	morning-evening-and-bedtime-tablet-direction	1	tablet
+24	Osteoporosis	Alendronate	70 mg	1 tablet once a week	medication-product	:70:milligram	weekly-tablet-direction	1	tablet	week

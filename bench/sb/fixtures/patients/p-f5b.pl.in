@@ -1,0 +1,209 @@
+% sb-p-f5b.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
+guideline_schema_version(2).
+guideline_document('sb-p-f5b',ace_sha256('50691ae1696630d158709d77c0a8e5c6a8f187823d7d3b1ca0355492b8d06d36'),ulex(sha256(b6d1d5f808f9591ffddefa000bf76330674017163d128278ccda6ce6e4e086c0)),vocabulary(sha256('32464b42418e812427ef20fa3301c3b00f6c7c4cbbcfbf46807d45f7f409cb64'))).
+% S1: There is a clinician.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',1,ref(1),[]),clinician,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',1,ref(1),[]),na,eq,1).
+% S2: A male patient has an age.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[]),patient,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[]),male,pos).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(2),[]),age,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(3),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(3),[]),1,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',2,ref(3),[]),2,'$guideline_id'(product,'sb-p-f5b',2,ref(2),[])).
+% S3: The age includes exactly 30 years.
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',3,ref(1),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',3,ref(1),[]),1,'$guideline_id'(product,'sb-p-f5b',2,ref(2),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',3,ref(1),[]),2,'$guideline_id'(product,'sb-p-f5b',3,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',3,ref(3),[]),year,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',3,ref(3),[]),na,exactly,30).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5b',3,ref(3),[]),year).
+% S4: The patient has a chronic-pain that is caused by a Legg-Calves-Perthes-disease.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(1),[]),'chronic-pain',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(2),[]),'Legg-Calves-Perthes-disease',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(3),[]),cause).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(3),[]),1,'$guideline_id'(product,'sb-p-f5b',4,ref(2),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(3),[]),2,'$guideline_id'(product,'sb-p-f5b',4,ref(1),[])).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',4,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5b',4,ref(1),[])).
+% S5: The patient has a pre-interruption-home-prescription-snapshot.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',5,ref(1),[]),'pre-interruption-home-prescription-snapshot',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',5,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',5,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',5,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',5,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5b',5,ref(1),[])).
+% S6: The clinician prescribes an alprazolam benzodiazepine to the patient at an interval of exactly 4 hours for an as-needed-anxiety-treatment in the pre-interruption-home-prescription-snapshot.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(1),[]),benzodiazepine,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(1),[]),alprazolam,pos).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(2),[]),interval,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(2),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(3),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(3),[]),na,exactly,4).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(3),[]),hour).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(4),[]),'as-needed-anxiety-treatment',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(4),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),prescribe).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),1,'$guideline_id'(product,'sb-p-f5b',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),2,'$guideline_id'(product,'sb-p-f5b',6,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),in,'$guideline_id'(product,'sb-p-f5b',5,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),for,'$guideline_id'(product,'sb-p-f5b',6,ref(4),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),at,'$guideline_id'(product,'sb-p-f5b',6,ref(2),[])).
+guideline_recurrence(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),'$guideline_id'(product,'sb-p-f5b',6,ref(3),[]),hour).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',6,ref(5),[]),to,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[])).
+% S7: The benzodiazepine has a prescribed-dose that contains exactly 1 milligram.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(1),[]),'prescribed-dose',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5b',7,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5b',7,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5b',6,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',7,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5b',7,ref(1),[])).
+% S8: The clinician prescribes a fentanyl opioid-pain-medication X with the benzodiazepine to the patient at an interval of exactly 72 hours in the pre-interruption-home-prescription-snapshot.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(1),[]),'opioid-pain-medication',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(1),[]),fentanyl,pos).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(2),[]),interval,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(2),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(3),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(3),[]),na,exactly,72).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(3),[]),hour).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),prescribe).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5b',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5b',8,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),in,'$guideline_id'(product,'sb-p-f5b',5,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),at,'$guideline_id'(product,'sb-p-f5b',8,ref(2),[])).
+guideline_recurrence(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),'$guideline_id'(product,'sb-p-f5b',8,ref(3),[]),hour).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),to,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',8,ref(4),[]),with,'$guideline_id'(product,'sb-p-f5b',6,ref(1),[])).
+% S9: X has a transdermal-prescribed-dose that contains exactly 50 micrograms per 1 hour.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(1),[]),'transdermal-prescribed-dose',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(2),[]),per,'$guideline_id'(product,'sb-p-f5b',9,ref(3),[])).
+guideline_frequency(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(2),[]),'$guideline_id'(product,'sb-p-f5b',9,ref(4),[]),'$guideline_id'(product,'sb-p-f5b',9,ref(3),[]),hour).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5b',9,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5b',9,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(3),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(3),[]),na,eq,1).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(3),[]),hour).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(4),[]),microgram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(4),[]),na,exactly,50).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(5),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(5),[]),1,'$guideline_id'(product,'sb-p-f5b',8,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',9,ref(5),[]),2,'$guideline_id'(product,'sb-p-f5b',9,ref(1),[])).
+% S10: The clinician prescribes an oxycodone opioid-pain-medication Y with the benzodiazepine to the patient in the pre-interruption-home-prescription-snapshot.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(1),[]),'opioid-pain-medication',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(1),[]),oxycodone,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(2),[]),prescribe).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5b',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5b',10,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(2),[]),in,'$guideline_id'(product,'sb-p-f5b',5,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(2),[]),to,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',10,ref(2),[]),with,'$guideline_id'(product,'sb-p-f5b',6,ref(1),[])).
+% S11: Y has an oxycodone-prescribed-dose that contains exactly 30 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(1),[]),'oxycodone-prescribed-dose',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5b',11,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5b',11,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(3),[]),na,exactly,30).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5b',10,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',11,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5b',11,ref(1),[])).
+% S12: The oxycodone-prescribed-dose specifies exactly 5 administrations per 1 day.
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(1),[]),per,'$guideline_id'(product,'sb-p-f5b',12,ref(2),[])).
+guideline_frequency(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(1),[]),'$guideline_id'(product,'sb-p-f5b',12,ref(4),[]),'$guideline_id'(product,'sb-p-f5b',12,ref(2),[]),day).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(1),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(1),[]),1,'$guideline_id'(product,'sb-p-f5b',11,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(1),[]),2,'$guideline_id'(product,'sb-p-f5b',12,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(2),[]),day,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(2),[]),na,eq,1).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(2),[]),day).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(4),[]),administration,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',12,ref(4),[]),na,exactly,5).
+% S13: The clinician prescribes a gabapentin-labelled gabapentinoid to the patient in the pre-interruption-home-prescription-snapshot.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(1),[]),gabapentinoid,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(1),[]),gabapentin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(2),[]),prescribe).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5b',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5b',13,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(2),[]),in,'$guideline_id'(product,'sb-p-f5b',5,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',13,ref(2),[]),to,'$guideline_id'(product,'sb-p-f5b',2,ref(1),[])).
+% S14: The gabapentinoid has a gabapentin-prescribed-dose that contains exactly 900 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(1),[]),'gabapentin-prescribed-dose',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5b',14,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5b',14,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(3),[]),na,exactly,900).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5b',13,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',14,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5b',14,ref(1),[])).
+% S15: The gabapentin-prescribed-dose specifies exactly 3 administrations per 1 day.
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(1),[]),per,'$guideline_id'(product,'sb-p-f5b',15,ref(2),[])).
+guideline_frequency(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(1),[]),'$guideline_id'(product,'sb-p-f5b',15,ref(4),[]),'$guideline_id'(product,'sb-p-f5b',15,ref(2),[]),day).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(1),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(1),[]),1,'$guideline_id'(product,'sb-p-f5b',14,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(1),[]),2,'$guideline_id'(product,'sb-p-f5b',15,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(2),[]),day,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(2),[]),na,eq,1).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(2),[]),day).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(4),[]),administration,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5b',15,ref(4),[]),na,exactly,3).

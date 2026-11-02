@@ -1,0 +1,3 @@
+sentences([[^,'If',a,patient,has,an,'opioid-use-disorder',then,every,clinician,should,offer,an,'extended-release-intramuscular-naltrexone-treatment',to,the,patient,'.']]).
+drs(drs([],[=>(drs([A,B,C],[-(object(A,patient,countable,na,eq,1),/(1,3)),-(object(B,'opioid-use-disorder',countable,na,eq,1),/(1,6)),-(predicate(C,have,A,B),/(1,4))]),drs([],[=>(drs([D],[-(object(D,clinician,countable,na,eq,1),/(1,9))]),drs([],[should(drs([E,F],[-(object(E,'extended-release-intramuscular-naltrexone-treatment',countable,na,eq,1),/(1,13)),-(predicate(F,offer,D,E,A),/(1,11))]))]))]))])).
+messages([]).

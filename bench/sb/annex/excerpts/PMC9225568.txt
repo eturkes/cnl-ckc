@@ -37,3 +37,7 @@ Derived directly from this table:
 - **15** nonempty condition/indication labels; “Circulation” and “Nutrient deficiency” remain source headings, not newly diagnosed conditions. The source does not publish a reconciled active-problem-list total. Its Discussion refers to renal comorbidities but Table1 supplies no CKD type, stage or duration; no CKD diagnosis is inferred for this case.
 - Albuterol occurs in both an inhaler and the combination nebulizer product. Preserve the two product identities; an ingredient-only view must deduplicate albuterol across them rather than silently claim24 unique drug ingredients. Multivitamin ingredients are unspecified and must not expand into invented components.
 - Keep one qualitative pain episode per disclosed pain diagnosis; no numeric pain-duration or continuous-opioid-use-duration witness is present. The presentation's “average = 8, worst = 10” NRS values are different assessment summaries, not repeated numeric durations or a high-degree duration key.
+
+[Case medication status; later changes remain outside the baseline snapshot]
+“During a telephonic consultation, the provider accepted the clinical pharmacist’s recommendations to discontinue the tramadol and initiate the non-CYP2D6 opioid transdermal, buprenorphine.”
+“Buprenorphine is still associated with sedation; older adults should be carefully monitored, especially if they are concomitantly prescribed a benzodiazepine, as in this case”

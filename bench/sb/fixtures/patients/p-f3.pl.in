@@ -1,0 +1,156 @@
+% sb-p-f3.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
+guideline_schema_version(2).
+guideline_document('sb-p-f3',ace_sha256('9be67b157dd3f9b632ea08ae88bb8e9e44d6d2300c1ad51f76b0c5f9646f9842'),ulex(sha256(b6d1d5f808f9591ffddefa000bf76330674017163d128278ccda6ce6e4e086c0)),vocabulary(sha256('32464b42418e812427ef20fa3301c3b00f6c7c4cbbcfbf46807d45f7f409cb64'))).
+% S1: There is a clinician.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',1,ref(1),[]),clinician,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',1,ref(1),[]),na,eq,1).
+% S2: A VA-or-DoD-eligible patient has an age.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',2,ref(1),[]),patient,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',2,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f3',2,ref(1),[]),'VA-or-DoD-eligible',pos).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',2,ref(2),[]),age,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',2,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',2,ref(3),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',2,ref(3),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',2,ref(3),[]),2,'$guideline_id'(product,'sb-p-f3',2,ref(2),[])).
+% S3: The age includes exactly 18 years.
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',3,ref(1),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',3,ref(1),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(2),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',3,ref(1),[]),2,'$guideline_id'(product,'sb-p-f3',3,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',3,ref(3),[]),year,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',3,ref(3),[]),na,exactly,18).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f3',3,ref(3),[]),year).
+% S4: The patient receives an outpatient-care.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',4,ref(1),[]),'outpatient-care',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',4,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',4,ref(2),[]),receive).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',4,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',4,ref(2),[]),2,'$guideline_id'(product,'sb-p-f3',4,ref(1),[])).
+% S5: The patient has a pain that lasts for exactly 4 months.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',5,ref(1),[]),pain,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',5,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f3',5,ref(2),[]),for,'$guideline_id'(product,'sb-p-f3',5,ref(3),[])).
+guideline_interval(actual,'$guideline_id'(product,'sb-p-f3',5,ref(2),[]),duration,'$guideline_id'(product,'sb-p-f3',5,ref(3),[]),month,none).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',5,ref(2),[]),last).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',5,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',5,ref(1),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',5,ref(3),[]),month,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',5,ref(3),[]),na,exactly,4).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f3',5,ref(3),[]),month).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',5,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',5,ref(4),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',5,ref(4),[]),2,'$guideline_id'(product,'sb-p-f3',5,ref(1),[])).
+% S6: The pain is persistent.
+guideline_property(actual,'$guideline_id'(product,'sb-p-f3',6,ref(1),[]),persistent,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',6,ref(2),[]),be).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',6,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',5,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',6,ref(2),[]),2,'$guideline_id'(product,'sb-p-f3',6,ref(1),[])).
+% S7: The clinician considers a long-term-opioid-therapy for the patient.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',7,ref(1),[]),'long-term-opioid-therapy',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',7,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',7,ref(2),[]),consider).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',7,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',7,ref(2),[]),2,'$guideline_id'(product,'sb-p-f3',7,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f3',7,ref(2),[]),for,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+% S8: The clinician considers an opioid for the patient.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',8,ref(1),[]),opioid,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',8,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',8,ref(2),[]),consider).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',8,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',8,ref(2),[]),2,'$guideline_id'(product,'sb-p-f3',8,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f3',8,ref(2),[]),for,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+% S9: The patient has a problematic-opioid-use-pattern that causes a clinically-significant-impairment-or-distress.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',9,ref(1),[]),'problematic-opioid-use-pattern',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',9,ref(1),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',9,ref(2),[]),'clinically-significant-impairment-or-distress',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',9,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',9,ref(3),[]),cause).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',9,ref(3),[]),1,'$guideline_id'(product,'sb-p-f3',9,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',9,ref(3),[]),2,'$guideline_id'(product,'sb-p-f3',9,ref(2),[])).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',9,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',9,ref(4),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',9,ref(4),[]),2,'$guideline_id'(product,'sb-p-f3',9,ref(1),[])).
+% S10: The patient meets exactly 2 opioid-use-disorder-criteria during exactly 12 months.
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f3',10,ref(1),[]),during,'$guideline_id'(product,'sb-p-f3',10,ref(2),[])).
+guideline_interval(actual,'$guideline_id'(product,'sb-p-f3',10,ref(1),[]),duration,'$guideline_id'(product,'sb-p-f3',10,ref(2),[]),month,none).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',10,ref(1),[]),meet).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',10,ref(1),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',10,ref(1),[]),2,'$guideline_id'(product,'sb-p-f3',10,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',10,ref(2),[]),month,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',10,ref(2),[]),na,exactly,12).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f3',10,ref(2),[]),month).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',10,ref(4),[]),'opioid-use-disorder-criterion',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',10,ref(4),[]),na,exactly,2).
+% S11: The patient has a type-2-diabetes.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',11,ref(1),[]),'type-2-diabetes',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',11,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',11,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',11,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',11,ref(2),[]),2,'$guideline_id'(product,'sb-p-f3',11,ref(1),[])).
+% S12: The patient has a chronic-kidney-disease.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',12,ref(1),[]),'chronic-kidney-disease',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',12,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',12,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',12,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',12,ref(2),[]),2,'$guideline_id'(product,'sb-p-f3',12,ref(1),[])).
+% S13: The patient has a kidney-abnormality that lasts for exactly 4 months and has a health-implication.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',13,ref(1),[]),'kidney-abnormality',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',13,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f3',13,ref(2),[]),for,'$guideline_id'(product,'sb-p-f3',13,ref(3),[])).
+guideline_interval(actual,'$guideline_id'(product,'sb-p-f3',13,ref(2),[]),duration,'$guideline_id'(product,'sb-p-f3',13,ref(3),[]),month,none).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',13,ref(2),[]),last).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',13,ref(2),[]),1,'$guideline_id'(product,'sb-p-f3',13,ref(1),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',13,ref(3),[]),month,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',13,ref(3),[]),na,exactly,4).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f3',13,ref(3),[]),month).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',13,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',13,ref(4),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',13,ref(4),[]),2,'$guideline_id'(product,'sb-p-f3',13,ref(1),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f3',13,ref(6),[]),'health-implication',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f3',13,ref(6),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f3',13,ref(7),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',13,ref(7),[]),1,'$guideline_id'(product,'sb-p-f3',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f3',13,ref(7),[]),2,'$guideline_id'(product,'sb-p-f3',13,ref(6),[])).

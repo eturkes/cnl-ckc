@@ -1,0 +1,929 @@
+% sb-p-f5c.pl compiled from ACE by ace_to_pl; regenerate via ckc compile; do not edit.
+:- multifile(guideline_schema_version/1).
+:- discontiguous(guideline_schema_version/1).
+:- multifile(guideline_document/4).
+:- discontiguous(guideline_document/4).
+:- multifile(guideline_entity/4).
+:- discontiguous(guideline_entity/4).
+:- multifile(guideline_cardinality/5).
+:- discontiguous(guideline_cardinality/5).
+:- multifile(guideline_event/3).
+:- discontiguous(guideline_event/3).
+:- multifile(guideline_arg/4).
+:- discontiguous(guideline_arg/4).
+:- multifile(guideline_pp/4).
+:- discontiguous(guideline_pp/4).
+:- multifile(guideline_property/4).
+:- discontiguous(guideline_property/4).
+:- multifile(guideline_operator/3).
+:- discontiguous(guideline_operator/3).
+:- multifile(guideline_interval/6).
+:- discontiguous(guideline_interval/6).
+:- multifile(guideline_recurrence/4).
+:- discontiguous(guideline_recurrence/4).
+:- multifile(guideline_frequency/5).
+:- discontiguous(guideline_frequency/5).
+:- multifile(guideline_order/4).
+:- discontiguous(guideline_order/4).
+:- multifile(guideline_recurrence_window/7).
+:- discontiguous(guideline_recurrence_window/7).
+:- multifile(guideline_range/3).
+:- discontiguous(guideline_range/3).
+:- multifile(guideline_grade/5).
+:- discontiguous(guideline_grade/5).
+:- multifile(guideline_preference/4).
+:- discontiguous(guideline_preference/4).
+:- multifile(guideline_qualifier/4).
+:- discontiguous(guideline_qualifier/4).
+:- multifile(guideline_unit/3).
+:- discontiguous(guideline_unit/3).
+:- multifile(guideline_exclusion/1).
+:- discontiguous(guideline_exclusion/1).
+:- multifile(guideline_supersession/4).
+:- discontiguous(guideline_supersession/4).
+:- multifile(guideline_evaluation_date/1).
+:- discontiguous(guideline_evaluation_date/1).
+guideline_schema_version(2).
+guideline_document('sb-p-f5c',ace_sha256(b9d781b4f489db6ae964651be09de890f9a88742e0e900fde64d0bcca17816af),ulex(sha256(b6d1d5f808f9591ffddefa000bf76330674017163d128278ccda6ce6e4e086c0)),vocabulary(sha256('32464b42418e812427ef20fa3301c3b00f6c7c4cbbcfbf46807d45f7f409cb64'))).
+% S1: There is a clinician.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',1,ref(1),[]),clinician,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',1,ref(1),[]),na,eq,1).
+% S2: A female patient has an age.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[]),patient,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[]),female,pos).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(2),[]),age,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(2),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(3),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(3),[]),1,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',2,ref(3),[]),2,'$guideline_id'(product,'sb-p-f5c',2,ref(2),[])).
+% S3: The age includes exactly 69 years.
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',3,ref(1),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',3,ref(1),[]),1,'$guideline_id'(product,'sb-p-f5c',2,ref(2),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',3,ref(1),[]),2,'$guideline_id'(product,'sb-p-f5c',3,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',3,ref(3),[]),year,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',3,ref(3),[]),na,exactly,69).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5c',3,ref(3),[]),year).
+% S4: The patient has a pre-review-current-medication-regimen.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[]),'pre-review-current-medication-regimen',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',4,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',4,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',4,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+% S5: The patient has a chronic-pain.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',5,ref(1),[]),'chronic-pain',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',5,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',5,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',5,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',5,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',5,ref(1),[])).
+% S6: The chronic-pain is caused by an osteoarthritis.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',6,ref(1),[]),osteoarthritis,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',6,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',6,ref(2),[]),cause).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',6,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',6,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',6,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',5,ref(1),[])).
+% S7: The chronic-pain is caused by a neuropathy.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',7,ref(1),[]),neuropathy,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',7,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',7,ref(2),[]),cause).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',7,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',7,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',7,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',5,ref(1),[])).
+% S8: The pre-review-current-medication-regimen includes a hydroxyzine-labelled medication-product M1.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',8,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',8,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',8,ref(1),[]),hydroxyzine,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',8,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',8,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',8,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',8,ref(1),[])).
+% S9: M1 has an anxiety-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',9,ref(1),[]),'anxiety-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',9,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',9,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',9,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',8,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',9,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',9,ref(1),[])).
+% S10: M1 has a hydroxyzine-product-strength that contains exactly 50 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(1),[]),'hydroxyzine-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',10,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',10,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(3),[]),na,exactly,50).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',8,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',10,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',10,ref(1),[])).
+% S11: M1 has a hydroxyzine-bedtime-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(1),[]),'hydroxyzine-bedtime-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',11,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',11,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',8,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',11,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',11,ref(1),[])).
+% S12: The pre-review-current-medication-regimen includes an alprazolam-labelled benzodiazepine M2.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[]),benzodiazepine,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[]),alprazolam,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',12,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',12,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',12,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[])).
+% S13: M2 has an alprazolam-product-strength.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(1),[]),'alprazolam-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',13,ref(1),[])).
+% S14: M2 has an alprazolam-as-needed-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(1),[]),'alprazolam-as-needed-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',14,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',14,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',14,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',14,ref(1),[])).
+% S15: The pre-review-current-medication-regimen includes a diltiazem-labelled medication-product M3.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',15,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',15,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',15,ref(1),[]),diltiazem,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',15,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',15,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',15,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',15,ref(1),[])).
+% S16: M3 has an atrial-fibrillation-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',16,ref(1),[]),'atrial-fibrillation-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',16,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',16,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',16,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',15,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',16,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',16,ref(1),[])).
+% S17: M3 has a diltiazem-product-strength that contains exactly 120 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(1),[]),'diltiazem-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',17,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',17,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(3),[]),na,exactly,120).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',15,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',17,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',17,ref(1),[])).
+% S18: M3 has a diltiazem-morning-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(1),[]),'diltiazem-morning-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',18,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',18,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',15,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',18,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',18,ref(1),[])).
+% S19: The pre-review-current-medication-regimen includes an aspirin-labelled medication-product M4.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',19,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',19,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',19,ref(1),[]),aspirin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',19,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',19,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',19,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',19,ref(1),[])).
+% S20: M4 has a circulation-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',20,ref(1),[]),'circulation-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',20,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',20,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',20,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',19,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',20,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',20,ref(1),[])).
+% S21: M4 has an aspirin-product-strength that contains exactly 81 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(1),[]),'aspirin-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',21,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',21,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(3),[]),na,exactly,81).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',19,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',21,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',21,ref(1),[])).
+% S22: M4 has an aspirin-morning-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(1),[]),'aspirin-morning-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',22,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',22,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',19,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',22,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',22,ref(1),[])).
+% S23: The pre-review-current-medication-regimen includes an apixaban-labelled medication-product M5.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',23,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',23,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',23,ref(1),[]),apixaban,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',23,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',23,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',23,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',23,ref(1),[])).
+% S24: M5 has an apixaban-product-strength that contains exactly 5 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(1),[]),'apixaban-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',24,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',24,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(3),[]),na,exactly,5).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',23,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',24,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',24,ref(1),[])).
+% S25: M5 has an apixaban-morning-and-evening-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(1),[]),'apixaban-morning-and-evening-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',25,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',25,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',23,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',25,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',25,ref(1),[])).
+% S26: The pre-review-current-medication-regimen includes an albuterol-labelled medication-product M6.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',26,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',26,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',26,ref(1),[]),albuterol,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',26,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',26,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',26,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',26,ref(1),[])).
+% S27: M6 has a copd-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',27,ref(1),[]),'copd-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',27,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',27,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',27,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',26,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',27,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',27,ref(1),[])).
+% S28: M6 has an albuterol-product-strength that contains exactly 90 micrograms.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(1),[]),'albuterol-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',28,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',28,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(3),[]),microgram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(3),[]),na,exactly,90).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',26,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',28,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',28,ref(1),[])).
+% S29: M6 has an albuterol-as-needed-puff-direction that specifies exactly 2 puffs at an interval of exactly 6 hours.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(1),[]),'albuterol-as-needed-puff-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(2),[]),at,'$guideline_id'(product,'sb-p-f5c',29,ref(3),[])).
+guideline_recurrence(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(2),[]),'$guideline_id'(product,'sb-p-f5c',29,ref(5),[]),hour).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',29,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',29,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(5),[]),hour,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(5),[]),na,exactly,6).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(5),[]),hour).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(3),[]),interval,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(3),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(4),[]),puff,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(4),[]),na,exactly,2).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(6),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(6),[]),1,'$guideline_id'(product,'sb-p-f5c',26,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',29,ref(6),[]),2,'$guideline_id'(product,'sb-p-f5c',29,ref(1),[])).
+% S30: The pre-review-current-medication-regimen includes an ipratropium-albuterol-labelled medication-product M7.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',30,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',30,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',30,ref(1),[]),'ipratropium/albuterol',pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',30,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',30,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',30,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',30,ref(1),[])).
+% S31: M7 has an ipratropium-component-strength.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(1),[]),'ipratropium-component-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',30,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',31,ref(1),[])).
+% S32: M7 has an albuterol-component-strength that contains exactly 3 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(1),[]),'albuterol-component-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',32,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',32,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(3),[]),na,exactly,3).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',30,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',32,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',32,ref(1),[])).
+% S33: M7 has an ipratropium-albuterol-nebulizer-vial-direction that specifies exactly 1 vial.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(1),[]),'ipratropium-albuterol-nebulizer-vial-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',33,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',33,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(3),[]),vial,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',30,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',33,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',33,ref(1),[])).
+% S34: The ipratropium-albuterol-nebulizer-vial-direction schedules exactly 4 administrations per 1 day.
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(1),[]),per,'$guideline_id'(product,'sb-p-f5c',34,ref(2),[])).
+guideline_frequency(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(1),[]),'$guideline_id'(product,'sb-p-f5c',34,ref(4),[]),'$guideline_id'(product,'sb-p-f5c',34,ref(2),[]),day).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(1),[]),schedule).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(1),[]),1,'$guideline_id'(product,'sb-p-f5c',33,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(1),[]),2,'$guideline_id'(product,'sb-p-f5c',34,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(2),[]),day,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(2),[]),na,eq,1).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(2),[]),day).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(4),[]),administration,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',34,ref(4),[]),na,exactly,4).
+% S35: The pre-review-current-medication-regimen includes a tiotropium-labelled medication-product M8.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',35,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',35,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',35,ref(1),[]),tiotropium,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',35,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',35,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',35,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',35,ref(1),[])).
+% S36: M8 has a tiotropium-product-strength.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(1),[]),'tiotropium-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',35,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',36,ref(1),[])).
+% S37: M8 has a tiotropium-once-daily-puff-direction that specifies exactly 2 puffs per 1 day.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(1),[]),'tiotropium-once-daily-puff-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(2),[]),per,'$guideline_id'(product,'sb-p-f5c',37,ref(3),[])).
+guideline_frequency(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(2),[]),'$guideline_id'(product,'sb-p-f5c',37,ref(4),[]),'$guideline_id'(product,'sb-p-f5c',37,ref(3),[]),day).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',37,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',37,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(3),[]),day,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(3),[]),na,eq,1).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(3),[]),day).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(4),[]),puff,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(4),[]),na,exactly,2).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(5),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(5),[]),1,'$guideline_id'(product,'sb-p-f5c',35,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',37,ref(5),[]),2,'$guideline_id'(product,'sb-p-f5c',37,ref(1),[])).
+% S38: The pre-review-current-medication-regimen includes a phenytoin-labelled medication-product M9.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',38,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',38,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',38,ref(1),[]),phenytoin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',38,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',38,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',38,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',38,ref(1),[])).
+% S39: M9 has an epilepsy-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',39,ref(1),[]),'epilepsy-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',39,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',39,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',39,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',38,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',39,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',39,ref(1),[])).
+% S40: M9 has a phenytoin-product-strength that contains exactly 100 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(1),[]),'phenytoin-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',40,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',40,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(3),[]),na,exactly,100).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',38,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',40,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',40,ref(1),[])).
+% S41: M9 has a phenytoin-morning-and-bedtime-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(1),[]),'phenytoin-morning-and-bedtime-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',41,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',41,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',38,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',41,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',41,ref(1),[])).
+% S42: The pre-review-current-medication-regimen includes an omeprazole-labelled medication-product M10.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',42,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',42,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',42,ref(1),[]),omeprazole,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',42,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',42,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',42,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',42,ref(1),[])).
+% S43: M10 has a gerd-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',43,ref(1),[]),'gerd-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',43,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',43,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',43,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',42,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',43,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',43,ref(1),[])).
+% S44: M10 has an omeprazole-product-strength that contains exactly 40 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(1),[]),'omeprazole-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',44,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',44,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(3),[]),na,exactly,40).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',42,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',44,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',44,ref(1),[])).
+% S45: M10 has an omeprazole-morning-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(1),[]),'omeprazole-morning-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',45,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',45,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',42,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',45,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',45,ref(1),[])).
+% S46: The pre-review-current-medication-regimen includes an atorvastatin-labelled medication-product M11.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',46,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',46,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',46,ref(1),[]),atorvastatin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',46,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',46,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',46,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',46,ref(1),[])).
+% S47: M11 has a hyperlipidemia-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',47,ref(1),[]),'hyperlipidemia-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',47,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',47,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',47,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',46,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',47,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',47,ref(1),[])).
+% S48: M11 has an atorvastatin-product-strength that contains exactly 40 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(1),[]),'atorvastatin-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',48,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',48,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(3),[]),na,exactly,40).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',46,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',48,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',48,ref(1),[])).
+% S49: M11 has an atorvastatin-morning-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(1),[]),'atorvastatin-morning-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',49,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',49,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',46,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',49,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',49,ref(1),[])).
+% S50: The pre-review-current-medication-regimen includes a carvedilol-labelled medication-product M12.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',50,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',50,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',50,ref(1),[]),carvedilol,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',50,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',50,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',50,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',50,ref(1),[])).
+% S51: M12 has a hypertension-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',51,ref(1),[]),'hypertension-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',51,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',51,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',51,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',50,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',51,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',51,ref(1),[])).
+% S52: M12 has a carvedilol-product-strength.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(1),[]),'carvedilol-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',50,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',52,ref(1),[])).
+% S53: M12 has a carvedilol-morning-and-bedtime-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(1),[]),'carvedilol-morning-and-bedtime-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',53,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',53,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',50,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',53,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',53,ref(1),[])).
+% S54: The pre-review-current-medication-regimen includes a potassium-chloride-labelled medication-product M13.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',54,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',54,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',54,ref(1),[]),'potassium-chloride',pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',54,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',54,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',54,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',54,ref(1),[])).
+% S55: M13 has a hypokalemia-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',55,ref(1),[]),'hypokalemia-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',55,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',55,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',55,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',54,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',55,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',55,ref(1),[])).
+% S56: M13 has a potassium-chloride-product-strength that contains exactly 20 milliequivalents.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(1),[]),'potassium-chloride-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',56,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',56,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(3),[]),milliequivalent,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(3),[]),na,exactly,20).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',54,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',56,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',56,ref(1),[])).
+% S57: M13 has a potassium-chloride-morning-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(1),[]),'potassium-chloride-morning-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',57,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',57,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',54,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',57,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',57,ref(1),[])).
+% S58: The pre-review-current-medication-regimen includes a levothyroxine-labelled medication-product M14.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',58,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',58,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',58,ref(1),[]),levothyroxine,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',58,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',58,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',58,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',58,ref(1),[])).
+% S59: M14 has a hypothyroidism-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',59,ref(1),[]),'hypothyroidism-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',59,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',59,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',59,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',58,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',59,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',59,ref(1),[])).
+% S60: M14 has a levothyroxine-product-strength that contains exactly 25 micrograms.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(1),[]),'levothyroxine-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',60,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',60,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(3),[]),microgram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(3),[]),na,exactly,25).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',58,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',60,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',60,ref(1),[])).
+% S61: M14 has a levothyroxine-morning-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(1),[]),'levothyroxine-morning-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',61,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',61,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',58,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',61,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',61,ref(1),[])).
+% S62: The pre-review-current-medication-regimen includes a furosemide-labelled medication-product M15.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',62,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',62,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',62,ref(1),[]),furosemide,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',62,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',62,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',62,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',62,ref(1),[])).
+% S63: M15 has an ischemic-cardiomyopathy-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',63,ref(1),[]),'ischemic-cardiomyopathy-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',63,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',63,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',63,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',62,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',63,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',63,ref(1),[])).
+% S64: M15 has a furosemide-product-strength that contains exactly 80 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(1),[]),'furosemide-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',64,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',64,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(3),[]),na,exactly,80).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',62,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',64,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',64,ref(1),[])).
+% S65: M15 has a furosemide-once-daily-tablet-direction that specifies exactly 1 tablet per 1 day.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(1),[]),'furosemide-once-daily-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(2),[]),per,'$guideline_id'(product,'sb-p-f5c',65,ref(3),[])).
+guideline_frequency(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(2),[]),'$guideline_id'(product,'sb-p-f5c',65,ref(4),[]),'$guideline_id'(product,'sb-p-f5c',65,ref(3),[]),day).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',65,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',65,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(3),[]),day,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(3),[]),na,eq,1).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(3),[]),day).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(4),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(4),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(5),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(5),[]),1,'$guideline_id'(product,'sb-p-f5c',62,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',65,ref(5),[]),2,'$guideline_id'(product,'sb-p-f5c',65,ref(1),[])).
+% S66: The pre-review-current-medication-regimen includes a nitroglycerin-labelled medication-product M16.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',66,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',66,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',66,ref(1),[]),nitroglycerin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',66,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',66,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',66,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',66,ref(1),[])).
+% S67: M16 has a nitroglycerin-product-strength.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(1),[]),'nitroglycerin-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',66,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',67,ref(1),[])).
+% S68: M16 has a nitroglycerin-as-needed-tablet-direction that specifies exactly 1 tablet at an interval of exactly 5 minutes.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(1),[]),'nitroglycerin-as-needed-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(2),[]),at,'$guideline_id'(product,'sb-p-f5c',68,ref(3),[])).
+guideline_recurrence(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(2),[]),'$guideline_id'(product,'sb-p-f5c',68,ref(5),[]),minute).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',68,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',68,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(5),[]),minute,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(5),[]),na,exactly,5).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(5),[]),minute).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(3),[]),interval,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(3),[]),na,eq,1).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(4),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(4),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(6),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(6),[]),1,'$guideline_id'(product,'sb-p-f5c',66,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',68,ref(6),[]),2,'$guideline_id'(product,'sb-p-f5c',68,ref(1),[])).
+% S69: The pre-review-current-medication-regimen includes a sotalol-labelled medication-product M17.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',69,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',69,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',69,ref(1),[]),sotalol,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',69,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',69,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',69,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',69,ref(1),[])).
+% S70: M17 has a sotalol-product-strength that contains exactly 120 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(1),[]),'sotalol-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',70,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',70,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(3),[]),na,exactly,120).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',69,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',70,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',70,ref(1),[])).
+% S71: M17 has a sotalol-morning-and-evening-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(1),[]),'sotalol-morning-and-evening-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',71,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',71,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',69,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',71,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',71,ref(1),[])).
+% S72: The pre-review-current-medication-regimen includes a gabapentin-labelled gabapentinoid M18.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',72,ref(1),[]),gabapentinoid,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',72,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',72,ref(1),[]),gabapentin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',72,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',72,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',72,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',72,ref(1),[])).
+% S73: M18 has a neuropathy-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',73,ref(1),[]),'neuropathy-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',73,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',73,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',73,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',72,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',73,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',73,ref(1),[])).
+% S74: M18 has a gabapentin-product-strength that contains exactly 100 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(1),[]),'gabapentin-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',74,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',74,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(3),[]),na,exactly,100).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',72,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',74,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',74,ref(1),[])).
+% S75: M18 has a gabapentin-morning-evening-and-bedtime-capsule-direction that specifies exactly 1 capsule.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(1),[]),'gabapentin-morning-evening-and-bedtime-capsule-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',75,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',75,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(3),[]),capsule,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',72,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',75,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',75,ref(1),[])).
+% S76: The pre-review-current-medication-regimen includes a pregabalin-labelled gabapentinoid M19.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',76,ref(1),[]),gabapentinoid,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',76,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',76,ref(1),[]),pregabalin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',76,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',76,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',76,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',76,ref(1),[])).
+% S77: M19 has a pregabalin-product-strength that contains exactly 150 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(1),[]),'pregabalin-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',77,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',77,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(3),[]),na,exactly,150).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',76,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',77,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',77,ref(1),[])).
+% S78: M19 has a pregabalin-morning-and-evening-capsule-direction that specifies exactly 1 capsule.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(1),[]),'pregabalin-morning-and-evening-capsule-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',78,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',78,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(3),[]),capsule,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',76,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',78,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',78,ref(1),[])).
+% S79: The pre-review-current-medication-regimen includes a duloxetine-labelled medication-product M20.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',79,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',79,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',79,ref(1),[]),duloxetine,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',79,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',79,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',79,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',79,ref(1),[])).
+% S80: M20 has a duloxetine-product-strength that contains exactly 60 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(1),[]),'duloxetine-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',80,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',80,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(3),[]),na,exactly,60).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',79,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',80,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',80,ref(1),[])).
+% S81: M20 has a duloxetine-morning-capsule-direction that specifies exactly 1 capsule.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(1),[]),'duloxetine-morning-capsule-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',81,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',81,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(3),[]),capsule,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',79,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',81,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',81,ref(1),[])).
+% S82: The pre-review-current-medication-regimen includes an amitriptyline-labelled medication-product M21.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',82,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',82,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',82,ref(1),[]),amitriptyline,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',82,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',82,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',82,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',82,ref(1),[])).
+% S83: M21 has an amitriptyline-product-strength that contains exactly 75 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(1),[]),'amitriptyline-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',83,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',83,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(3),[]),na,exactly,75).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',82,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',83,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',83,ref(1),[])).
+% S84: M21 has an amitriptyline-bedtime-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(1),[]),'amitriptyline-bedtime-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',84,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',84,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',82,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',84,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',84,ref(1),[])).
+% S85: The pre-review-current-medication-regimen includes a multivitamin-labelled medication-product M22.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',85,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',85,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',85,ref(1),[]),multivitamin,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',85,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',85,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',85,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',85,ref(1),[])).
+% S86: M22 has a nutrient-deficiency-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',86,ref(1),[]),'nutrient-deficiency-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',86,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',86,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',86,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',85,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',86,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',86,ref(1),[])).
+% S87: M22 has a multivitamin-morning-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(1),[]),'multivitamin-morning-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',87,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',87,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',85,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',87,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',87,ref(1),[])).
+% S88: The pre-review-current-medication-regimen includes a tramadol-labelled opioid-pain-medication M23.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[]),'opioid-pain-medication',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[]),tramadol,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',88,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',88,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',88,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[])).
+% S89: M23 has an osteoarthritis-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',89,ref(1),[]),'osteoarthritis-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',89,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',89,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',89,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',89,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',89,ref(1),[])).
+% S90: M23 has a tramadol-product-strength that contains exactly 50 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(1),[]),'tramadol-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',90,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',90,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(3),[]),na,exactly,50).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',90,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',90,ref(1),[])).
+% S91: M23 has a tramadol-morning-evening-and-bedtime-tablet-direction that specifies exactly 1 tablet.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(1),[]),'tramadol-morning-evening-and-bedtime-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',91,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',91,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(3),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(3),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',91,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',91,ref(1),[])).
+% S92: The pre-review-current-medication-regimen includes an alendronate-labelled medication-product M24.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',92,ref(1),[]),'medication-product',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',92,ref(1),[]),na,eq,1).
+guideline_property(actual,'$guideline_id'(product,'sb-p-f5c',92,ref(1),[]),alendronate,pos).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',92,ref(2),[]),include).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',92,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',92,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',92,ref(1),[])).
+% S93: M24 has an osteoporosis-indication-label.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',93,ref(1),[]),'osteoporosis-indication-label',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',93,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',93,ref(2),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',93,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',92,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',93,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',93,ref(1),[])).
+% S94: M24 has an alendronate-product-strength that contains exactly 70 milligrams.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(1),[]),'alendronate-product-strength',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(1),[]),na,eq,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(2),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',94,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',94,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(3),[]),na,exactly,70).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(4),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',92,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',94,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',94,ref(1),[])).
+% S95: M24 has an alendronate-weekly-tablet-direction that specifies exactly 1 tablet per 1 week.
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(1),[]),'alendronate-weekly-tablet-direction',countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(1),[]),na,eq,1).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(2),[]),per,'$guideline_id'(product,'sb-p-f5c',95,ref(3),[])).
+guideline_frequency(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(2),[]),'$guideline_id'(product,'sb-p-f5c',95,ref(4),[]),'$guideline_id'(product,'sb-p-f5c',95,ref(3),[]),week).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(2),[]),specify).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(2),[]),1,'$guideline_id'(product,'sb-p-f5c',95,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(2),[]),2,'$guideline_id'(product,'sb-p-f5c',95,ref(4),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(3),[]),week,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(3),[]),na,eq,1).
+guideline_unit(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(3),[]),week).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(4),[]),tablet,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(4),[]),na,exactly,1).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(5),[]),have).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(5),[]),1,'$guideline_id'(product,'sb-p-f5c',92,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',95,ref(5),[]),2,'$guideline_id'(product,'sb-p-f5c',95,ref(1),[])).
+% S96: The clinician prescribes M2 to the patient in the pre-review-current-medication-regimen.
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',96,ref(1),[]),prescribe).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',96,ref(1),[]),1,'$guideline_id'(product,'sb-p-f5c',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',96,ref(1),[]),2,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',96,ref(1),[]),in,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',96,ref(1),[]),to,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[])).
+% S97: The clinician prescribes M23 with M2 to the patient in the pre-review-current-medication-regimen.
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',97,ref(1),[]),prescribe).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',97,ref(1),[]),1,'$guideline_id'(product,'sb-p-f5c',1,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',97,ref(1),[]),2,'$guideline_id'(product,'sb-p-f5c',88,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',97,ref(1),[]),in,'$guideline_id'(product,'sb-p-f5c',4,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',97,ref(1),[]),to,'$guideline_id'(product,'sb-p-f5c',2,ref(1),[])).
+guideline_pp(actual,'$guideline_id'(product,'sb-p-f5c',97,ref(1),[]),with,'$guideline_id'(product,'sb-p-f5c',12,ref(1),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(3),[]),na,exactly,rational(1,2)).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(4),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',13,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',13,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',13,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(3),[]),na,exactly,rational(1,2)).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(4),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',31,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',31,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',31,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(3),[]),microgram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(3),[]),na,exactly,rational(5,4)).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(4),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',36,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',36,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',36,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(3),[]),na,exactly,rational(25,4)).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(4),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',52,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',52,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',52,ref(3),[])).
+guideline_entity(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(3),[]),milligram,countable).
+guideline_cardinality(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(3),[]),na,exactly,rational(2,5)).
+guideline_event(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(4),[]),contain).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(4),[]),1,'$guideline_id'(product,'sb-p-f5c',67,ref(1),[])).
+guideline_arg(actual,'$guideline_id'(product,'sb-p-f5c',67,ref(4),[]),2,'$guideline_id'(product,'sb-p-f5c',67,ref(3),[])).

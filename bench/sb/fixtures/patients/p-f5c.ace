@@ -1,0 +1,97 @@
+There is a clinician.
+A female patient has an age.
+The age includes exactly 69 years.
+The patient has a pre-review-current-medication-regimen.
+The patient has a chronic-pain.
+The chronic-pain is caused by an osteoarthritis.
+The chronic-pain is caused by a neuropathy.
+The pre-review-current-medication-regimen includes a hydroxyzine-labelled medication-product M1.
+M1 has an anxiety-indication-label.
+M1 has a hydroxyzine-product-strength that contains exactly 50 milligrams.
+M1 has a hydroxyzine-bedtime-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes an alprazolam-labelled benzodiazepine M2.
+M2 has an alprazolam-product-strength.
+M2 has an alprazolam-as-needed-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a diltiazem-labelled medication-product M3.
+M3 has an atrial-fibrillation-indication-label.
+M3 has a diltiazem-product-strength that contains exactly 120 milligrams.
+M3 has a diltiazem-morning-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes an aspirin-labelled medication-product M4.
+M4 has a circulation-indication-label.
+M4 has an aspirin-product-strength that contains exactly 81 milligrams.
+M4 has an aspirin-morning-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes an apixaban-labelled medication-product M5.
+M5 has an apixaban-product-strength that contains exactly 5 milligrams.
+M5 has an apixaban-morning-and-evening-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes an albuterol-labelled medication-product M6.
+M6 has a copd-indication-label.
+M6 has an albuterol-product-strength that contains exactly 90 micrograms.
+M6 has an albuterol-as-needed-puff-direction that specifies exactly 2 puffs at an interval of exactly 6 hours.
+The pre-review-current-medication-regimen includes an ipratropium-albuterol-labelled medication-product M7.
+M7 has an ipratropium-component-strength.
+M7 has an albuterol-component-strength that contains exactly 3 milligrams.
+M7 has an ipratropium-albuterol-nebulizer-vial-direction that specifies exactly 1 vial.
+The ipratropium-albuterol-nebulizer-vial-direction schedules exactly 4 administrations per 1 day.
+The pre-review-current-medication-regimen includes a tiotropium-labelled medication-product M8.
+M8 has a tiotropium-product-strength.
+M8 has a tiotropium-once-daily-puff-direction that specifies exactly 2 puffs per 1 day.
+The pre-review-current-medication-regimen includes a phenytoin-labelled medication-product M9.
+M9 has an epilepsy-indication-label.
+M9 has a phenytoin-product-strength that contains exactly 100 milligrams.
+M9 has a phenytoin-morning-and-bedtime-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes an omeprazole-labelled medication-product M10.
+M10 has a gerd-indication-label.
+M10 has an omeprazole-product-strength that contains exactly 40 milligrams.
+M10 has an omeprazole-morning-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes an atorvastatin-labelled medication-product M11.
+M11 has a hyperlipidemia-indication-label.
+M11 has an atorvastatin-product-strength that contains exactly 40 milligrams.
+M11 has an atorvastatin-morning-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a carvedilol-labelled medication-product M12.
+M12 has a hypertension-indication-label.
+M12 has a carvedilol-product-strength.
+M12 has a carvedilol-morning-and-bedtime-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a potassium-chloride-labelled medication-product M13.
+M13 has a hypokalemia-indication-label.
+M13 has a potassium-chloride-product-strength that contains exactly 20 milliequivalents.
+M13 has a potassium-chloride-morning-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a levothyroxine-labelled medication-product M14.
+M14 has a hypothyroidism-indication-label.
+M14 has a levothyroxine-product-strength that contains exactly 25 micrograms.
+M14 has a levothyroxine-morning-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a furosemide-labelled medication-product M15.
+M15 has an ischemic-cardiomyopathy-indication-label.
+M15 has a furosemide-product-strength that contains exactly 80 milligrams.
+M15 has a furosemide-once-daily-tablet-direction that specifies exactly 1 tablet per 1 day.
+The pre-review-current-medication-regimen includes a nitroglycerin-labelled medication-product M16.
+M16 has a nitroglycerin-product-strength.
+M16 has a nitroglycerin-as-needed-tablet-direction that specifies exactly 1 tablet at an interval of exactly 5 minutes.
+The pre-review-current-medication-regimen includes a sotalol-labelled medication-product M17.
+M17 has a sotalol-product-strength that contains exactly 120 milligrams.
+M17 has a sotalol-morning-and-evening-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a gabapentin-labelled gabapentinoid M18.
+M18 has a neuropathy-indication-label.
+M18 has a gabapentin-product-strength that contains exactly 100 milligrams.
+M18 has a gabapentin-morning-evening-and-bedtime-capsule-direction that specifies exactly 1 capsule.
+The pre-review-current-medication-regimen includes a pregabalin-labelled gabapentinoid M19.
+M19 has a pregabalin-product-strength that contains exactly 150 milligrams.
+M19 has a pregabalin-morning-and-evening-capsule-direction that specifies exactly 1 capsule.
+The pre-review-current-medication-regimen includes a duloxetine-labelled medication-product M20.
+M20 has a duloxetine-product-strength that contains exactly 60 milligrams.
+M20 has a duloxetine-morning-capsule-direction that specifies exactly 1 capsule.
+The pre-review-current-medication-regimen includes an amitriptyline-labelled medication-product M21.
+M21 has an amitriptyline-product-strength that contains exactly 75 milligrams.
+M21 has an amitriptyline-bedtime-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a multivitamin-labelled medication-product M22.
+M22 has a nutrient-deficiency-indication-label.
+M22 has a multivitamin-morning-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes a tramadol-labelled opioid-pain-medication M23.
+M23 has an osteoarthritis-indication-label.
+M23 has a tramadol-product-strength that contains exactly 50 milligrams.
+M23 has a tramadol-morning-evening-and-bedtime-tablet-direction that specifies exactly 1 tablet.
+The pre-review-current-medication-regimen includes an alendronate-labelled medication-product M24.
+M24 has an osteoporosis-indication-label.
+M24 has an alendronate-product-strength that contains exactly 70 milligrams.
+M24 has an alendronate-weekly-tablet-direction that specifies exactly 1 tablet per 1 week.
+The clinician prescribes M2 to the patient in the pre-review-current-medication-regimen.
+The clinician prescribes M23 with M2 to the patient in the pre-review-current-medication-regimen.
