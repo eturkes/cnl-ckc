@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
+use std::fmt::{self, Write};
 use std::rc::Rc;
 
 pub type Id = usize;
@@ -19,6 +20,7 @@ pub enum Node {
 pub struct Arena {
     pub nodes: Vec<Rc<Node>>,
     names: Vec<String>,
+    spellings: Vec<String>,
     symbols: HashMap<String, Symbol>,
     intern: HashMap<Rc<Node>, Id>,
     pub lookups: u64,
@@ -31,6 +33,7 @@ impl Arena {
         }
         let id = self.names.len();
         self.names.push(name.into());
+        self.spellings.push(quote_atom(name));
         self.symbols.insert(name.into(), id);
         id
     }
@@ -176,46 +179,52 @@ impl Arena {
     }
 
     pub fn render(&self, id: Id) -> String {
+        let mut out = String::new();
+        self.write_term(&mut out, id).expect("string writer");
+        out
+    }
+
+    pub fn write_term(&self, out: &mut impl Write, id: Id) -> fmt::Result {
         match self.node(id) {
-            Node::Atom(name) => quote_atom(self.name(*name)),
-            Node::Integer(n) => n.clone(),
-            Node::Nil => "[]".into(),
-            Node::Var(v) => variable_name(*v),
+            Node::Atom(name) => out.write_str(&self.spellings[*name]),
+            Node::Integer(n) => out.write_str(n),
+            Node::Nil => out.write_str("[]"),
+            Node::Var(v) => out.write_str(&variable_name(*v)),
             Node::Compound(name, args) if self.name(*name) == "[|]" && args.len() == 2 => {
-                let mut out = String::from("[");
+                out.write_str("[")?;
                 let mut next = id;
                 loop {
                     let (_, args) = self.call(next).expect("list cell");
-                    out.push_str(&self.render(args[0]));
+                    self.write_term(out, args[0])?;
                     match self.node(args[1]) {
-                        Node::Nil => {
-                            out.push(']');
-                            break;
-                        }
+                        Node::Nil => return out.write_str("]"),
                         Node::Compound(n, a) if self.name(*n) == "[|]" && a.len() == 2 => {
-                            out.push(',');
+                            out.write_str(",")?;
                             next = args[1];
                         }
                         _ => {
-                            out.push('|');
-                            out.push_str(&self.render(args[1]));
-                            out.push(']');
-                            break;
+                            out.write_str("|")?;
+                            self.write_term(out, args[1])?;
+                            return out.write_str("]");
                         }
                     }
                 }
-                out
             }
             Node::Compound(name, args) if self.name(*name) == "{}" && args.len() == 1 => {
-                format!("{{{}}}", self.render(args[0]))
+                out.write_str("{")?;
+                self.write_term(out, args[0])?;
+                out.write_str("}")
             }
             Node::Compound(name, args) => {
-                let args = args
-                    .iter()
-                    .map(|id| self.render(*id))
-                    .collect::<Vec<_>>()
-                    .join(",");
-                format!("{}({args})", quote_atom(self.name(*name)))
+                out.write_str(&self.spellings[*name])?;
+                out.write_str("(")?;
+                for (i, &arg) in args.iter().enumerate() {
+                    if i != 0 {
+                        out.write_str(",")?;
+                    }
+                    self.write_term(out, arg)?;
+                }
+                out.write_str(")")
             }
         }
     }
@@ -322,6 +331,8 @@ pub struct Parser<'a> {
     pub at: usize,
     pub vars: Vec<String>,
     pub anonymous: Vec<(usize, usize)>,
+    checked: bool,
+    canonical: bool,
     var_map: HashMap<String, usize>,
 }
 
@@ -332,6 +343,8 @@ impl<'a> Parser<'a> {
             at: 0,
             vars: Vec::new(),
             anonymous: Vec::new(),
+            checked: false,
+            canonical: true,
             var_map: HashMap::new(),
         }
     }
@@ -340,6 +353,7 @@ impl<'a> Parser<'a> {
         format!("byte {}: {message}", self.at)
     }
     pub fn skip(&mut self) {
+        let start = self.at;
         while self
             .text
             .as_bytes()
@@ -348,6 +362,7 @@ impl<'a> Parser<'a> {
         {
             self.at += 1;
         }
+        self.canonical &= start == self.at;
     }
     pub fn eat(&mut self, token: &str) -> bool {
         self.skip();
@@ -393,7 +408,10 @@ impl<'a> Parser<'a> {
                 items.push(self.term(arena)?);
             }
             let mut tail = if self.eat("|") {
-                self.term(arena)?
+                let tail = self.term(arena)?;
+                self.canonical &=
+                    !matches!(arena.node(tail), Node::Nil) && arena.named(tail, "[|]", 2).is_none();
+                tail
             } else {
                 arena.put(Node::Nil)
             };
@@ -423,6 +441,7 @@ impl<'a> Parser<'a> {
             if v == self.vars.len() {
                 self.vars.push(name.clone());
             }
+            self.canonical &= !self.checked || name == variable_name(v);
             if name != "_" {
                 self.var_map.insert(name, v);
             } else {
@@ -457,6 +476,7 @@ impl<'a> Parser<'a> {
             }
             return Ok(arena.put(Node::Integer(n.into())));
         }
+        let start = self.at;
         let name = if first == b'\'' {
             self.quoted()?
         } else if first.is_ascii_lowercase() {
@@ -476,15 +496,19 @@ impl<'a> Parser<'a> {
             }
             self.text[start..self.at].to_string()
         };
+        let symbol = arena.symbol(&name);
+        self.canonical &= !self.checked || arena.spellings[symbol] == self.text[start..self.at];
         if self.eat("(") {
             let mut args = vec![self.term(arena)?];
             while self.eat(",") {
                 args.push(self.term(arena)?);
             }
             self.require(")")?;
-            Ok(arena.compound(&name, args))
+            self.canonical &=
+                !(name == "[|]" && args.len() == 2 || name == "{}" && args.len() == 1);
+            Ok(arena.put(Node::Compound(symbol, args)))
         } else {
-            Ok(arena.atom(&name))
+            Ok(arena.put(Node::Atom(symbol)))
         }
     }
 
@@ -545,9 +569,23 @@ impl<'a> Parser<'a> {
     }
 }
 
+#[cfg(test)]
 pub fn parse_term(arena: &mut Arena, text: &str) -> Result<Id, String> {
     let mut parser = Parser::new(text);
     let term = parser.term(arena)?;
     parser.finish()?;
     Ok(term)
+}
+
+// Token spelling, whitespace and list sugar are checked while decoding; symbol
+// interning caches the writer's atom spelling, so repeated atoms need no render.
+pub fn parse_checked(arena: &mut Arena, text: &str, period: bool) -> Result<(Id, bool), String> {
+    let mut parser = Parser::new(text);
+    parser.checked = true;
+    let term = parser.term(arena)?;
+    let has_period = parser.eat(".");
+    if !parser.done() {
+        return Err(parser.error("trailing bytes"));
+    }
+    Ok((term, parser.canonical && has_period == period))
 }

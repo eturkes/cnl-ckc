@@ -1,3 +1,4 @@
+use crate::level::Level;
 use crate::number::{arithmetic, satisfies};
 use crate::program::{Clause, Goal};
 use crate::term::{Arena, Env, Id, Symbol};
@@ -11,7 +12,7 @@ type Buckets = HashMap<Vec<Id>, Vec<usize>>;
 pub struct Model {
     pub facts: Vec<Id>,
     pub positions: HashMap<Id, usize>,
-    pub levels: Vec<String>,
+    pub levels: Vec<Level>,
     predicates: HashMap<Predicate, Vec<usize>>,
     patterns: HashMap<Pattern, Buckets>,
 }
@@ -20,7 +21,7 @@ pub struct Claim {
     pub clause: usize,
     pub fact: usize,
     pub env: Env,
-    pub level: String,
+    pub level: Level,
 }
 
 fn mask(arena: &Arena, args: &[Id], bound: &BTreeSet<usize>) -> u16 {
@@ -59,7 +60,7 @@ fn patterns(
 }
 
 impl Model {
-    pub fn new(arena: &Arena, facts: Vec<Id>, levels: Vec<String>) -> Result<Self, Failure> {
+    pub fn new(arena: &Arena, facts: Vec<Id>, levels: Vec<Level>) -> Result<Self, Failure> {
         let mut positions = HashMap::new();
         let mut predicates: HashMap<Predicate, Vec<usize>> = HashMap::new();
         for (i, &term) in facts.iter().enumerate() {
@@ -302,7 +303,7 @@ pub fn support(
             ));
         }
         if c.body.is_empty() {
-            if crate::term::natural_compare(&claim.level, "0") != std::cmp::Ordering::Equal {
+            if !claim.level.is_zero() {
                 return Err(Failure::refused(
                     "claim",
                     format!("{} fact level is not 0", detail()),
@@ -310,7 +311,7 @@ pub fn support(
             }
             continue;
         }
-        if crate::term::natural_compare(&claim.level, "0") == std::cmp::Ordering::Equal {
+        if claim.level.is_zero() {
             return Err(Failure::refused(
                 "claim",
                 format!("{} rule level is 0", detail()),
@@ -332,9 +333,7 @@ pub fn support(
                             format!("{} absent positive body", detail()),
                         ));
                     };
-                    if crate::term::natural_compare(&model.levels[row], &claim.level)
-                        != std::cmp::Ordering::Less
-                    {
+                    if model.levels[row] >= claim.level {
                         return Err(Failure::refused(
                             "claim",
                             format!("{} nondecreasing support level", detail()),

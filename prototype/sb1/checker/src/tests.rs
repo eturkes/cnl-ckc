@@ -1,4 +1,5 @@
 use super::*;
+use crate::term::parse_term;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -95,7 +96,48 @@ impl Fixture {
             (parsed.rc, &parsed.stdout, &parsed.stderr),
             (kernel.rc, &kernel.stdout, &kernel.stderr)
         );
+        let original = fs::read_to_string(&self.request.certificate).unwrap();
+        if let Some(indexed) = self.indexed_certificate(&original) {
+            fs::write(&self.request.certificate, indexed).unwrap();
+            for mode in [SourceCodec::Parsed, SourceCodec::Kernel] {
+                let next = check_with_codec(&self.request, mode);
+                assert_eq!(
+                    (parsed.rc, &parsed.stdout, &parsed.stderr),
+                    (next.rc, &next.stdout, &next.stderr)
+                );
+            }
+            fs::write(&self.request.certificate, original).unwrap();
+        }
         parsed
+    }
+    fn indexed_certificate(&self, certificate: &str) -> Option<String> {
+        let mut lines = certificate.lines();
+        if lines.next()? != "sb1-certificate 0" {
+            return None;
+        }
+        let mut out = format!("sb1-certificate 1\n{}\n", lines.next()?);
+        let model = fs::read_to_string(&self.request.model).unwrap();
+        let positions = model
+            .lines()
+            .enumerate()
+            .map(|(i, f)| (f.strip_suffix('.').unwrap(), i + 1))
+            .collect::<HashMap<_, _>>();
+        for line in lines {
+            let (fact, rest) = line.split_once('\t')?;
+            out.push_str(&format!("{}\t{rest}\n", positions.get(fact)?));
+        }
+        if !certificate.ends_with('\n') {
+            out.pop();
+        }
+        Some(out)
+    }
+    fn use_indices(&self) {
+        let certificate = fs::read_to_string(&self.request.certificate).unwrap();
+        fs::write(
+            &self.request.certificate,
+            self.indexed_certificate(&certificate).unwrap(),
+        )
+        .unwrap();
     }
     fn query(&mut self, text: &str) {
         let path = self.directory.join("query.pl");
@@ -448,4 +490,69 @@ fn closure_enumerates_valuations_absent_from_the_certificate() {
             .stderr
             .contains("guideline_property(actual,b,p,true)")
     );
+}
+
+#[test]
+fn indexed_claims_keep_content_and_reject_bad_ranges_duplicates_and_gaps() {
+    let good = Fixture::new(&[SEED], &[]);
+    good.use_indices();
+    accepted(&good);
+    for index in ["0", "4", "18446744073709551616000000000000000"] {
+        let bad = Fixture::new(&[SEED], &[]);
+        bad.use_indices();
+        bad.edit_certificate(|s| {
+            let mut lines = s.lines().map(str::to_string).collect::<Vec<_>>();
+            let (_, rest) = lines[2].split_once('\t').unwrap();
+            lines[2] = format!("{index}\t{rest}");
+            lines.join("\n") + "\n"
+        });
+        refused(&bad, "claim");
+        assert!(bad.check().stderr.contains("out of range"));
+    }
+    let duplicate = Fixture::new(&[SEED], &[]);
+    duplicate.use_indices();
+    duplicate.edit_certificate(|s| format!("{s}{}\n", s.lines().last().unwrap()));
+    refused(&duplicate, "claim");
+    let missing = Fixture::new(&[SEED], &[]);
+    missing.use_indices();
+    missing.edit_certificate(|s| {
+        s.lines()
+            .take(s.lines().count() - 1)
+            .map(|l| format!("{l}\n"))
+            .collect()
+    });
+    refused(&missing, "claim");
+}
+
+#[test]
+fn noncanonical_model_and_valuation_keep_their_failure_stages() {
+    let f = Fixture::new(&[SEED], &[]);
+    f.use_indices();
+    let model = fs::read_to_string(&f.request.model).unwrap();
+    fs::write(&f.request.model, model.replace("actual,", "actual, ")).unwrap();
+    let out = f.check();
+    assert_eq!(out.rc, 2);
+    assert!(out.stderr.starts_with("parse noncanonical model line "));
+    let f = Fixture::new(
+        &[
+            SEED,
+            "guideline_property(actual,A,p,true) :- guideline_property(actual,A,seed,true).",
+        ],
+        &[(P, 4, &["a"], "1")],
+    );
+    f.use_indices();
+    f.edit_certificate(|s| s.replace("[=(v1,a)]", "[=('v1',a)]"));
+    refused(&f, "claim");
+    assert!(f.check().stderr.contains("noncanonical valuation"));
+}
+
+#[test]
+fn model_cr_bytes_refuse_before_line_normalization() {
+    let f = Fixture::new(&[SEED], &[]);
+    let model = fs::read_to_string(&f.request.model).unwrap();
+    fs::write(&f.request.model, model.replace('\n', "\r\n")).unwrap();
+    let out = f.check();
+    assert_eq!(out.rc, 2);
+    assert!(out.stdout.is_empty());
+    assert_eq!(out.stderr, "parse non-LF model\n");
 }

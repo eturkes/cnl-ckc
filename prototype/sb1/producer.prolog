@@ -62,9 +62,11 @@ sb1_indicator(guideline_supersession/4).
 sb1_indicator(guideline_evaluation_date/1).
 
 sb1_literal(G) :- nonvar(G), functor(G, Name, Arity), sb1_indicator(Name/Arity).
-sb1_builtin(G) :- nonvar(G), functor(G, Name, Arity),
-    memberchk(Name/Arity, [guideline_satisfies/4, guideline_satisfies/6,
-                          guideline_product/6, guideline_quotient/6]).
+sb1_builtin(G) :- nonvar(G), functor(G, Name, Arity), sb1_builtin_indicator(Name, Arity).
+sb1_builtin_indicator(guideline_satisfies, 4).
+sb1_builtin_indicator(guideline_satisfies, 6).
+sb1_builtin_indicator(guideline_product, 6).
+sb1_builtin_indicator(guideline_quotient, 6).
 
 sb1_load(Root, Composition, Clauses, Identity) :-
     ( current_prolog_flag(version_data, swi(10, 0, 2, _)) -> true
@@ -89,6 +91,7 @@ sb1_path(Root, Listed, Path) :-
 
 sb1_reset :-
     abolish_all_tables,
+    retractall(sb1_ascii_atom(_)), retractall(sb1_unicode_atom(_)),
     forall(sb1_indicator(Name/Arity),
         ( functor(G, Name, Arity),
           dynamic(sb1_world:Name/Arity), retractall(sb1_world:G), table(sb1_world:Name/Arity),
@@ -114,7 +117,7 @@ sb1_assert(Module, H, B) :-
     ; assertz(Module:(H :- B)) ).
 sb1_key(Id, Key) :-
     ( nonvar(Id), Id = '$guideline_id'(Kind, Doc, S, Slot, _), ground(Kind-Doc-S-Slot)
-    -> term_to_atom(k(Kind, Doc, S, Slot), Key)
+    -> term_hash(k(Kind, Doc, S, Slot), Key)
     ; atomic(Id) -> Key = Id
     ; true ).
 
@@ -214,17 +217,19 @@ sb1_evaluate(Model) :-
 sb1_certify(Clauses, Model, Claims) :-
     forall(member(Fact, Model), sb1_assert(sb1_model, Fact, true)),
     maplist(sb1_node, Model, Pairs), list_to_assoc(Pairs, Nodes),
-    % Backtracking would undo bindings inside the nb_linkarg graph: build it
-    % only through deterministic traversals of the ground candidate list.
+    % Backtracking would undo nb_linkarg bindings. Each clause's ground batch
+    % is traversed deterministically; no composition-wide instance copy stays live.
     State = agenda([], [], -1),
     include(sb1_fact_clause, Clauses, Facts), maplist(sb1_seed(Nodes, State), Facts),
-    findall(instance(H, support(Id, Valuation), Unique),
-        ( member(clause(Id, H, B, Vars), Clauses), B \== true,
-          sb1_body(B, Positive), sb1_valuation(Vars, 1, Valuation),
-          ( ground(H-Valuation-Positive) -> true ; throw(nonground_instance(Id)) ),
-          sort(Positive, Unique) ), Instances),
-    maplist(sb1_register_instance(Nodes, State), Instances),
+    maplist(sb1_clause_instances(Nodes, State), Clauses),
     sb1_agenda(State), maplist(sb1_claim(Nodes), Model, Claims).
+sb1_clause_instances(Nodes, State, clause(Id, H, B, Vars)) :-
+    ( B == true -> true
+    ; findall(instance(H, support(Id, Valuation), Unique),
+          ( sb1_body(B, Positive), sb1_valuation(Vars, 1, Valuation),
+            ( ground(H-Valuation-Positive) -> true ; throw(nonground_instance(Id)) ),
+            sort(Positive, Unique) ), Instances),
+      maplist(sb1_register_instance(Nodes, State), Instances) ).
 sb1_fact_clause(clause(_, _, B, _)) :- B == true.
 sb1_seed(Nodes, State, clause(Id, H, true, [])) :-
     sb1_ready(Nodes, State, H, support(Id, []), 0).
@@ -306,19 +311,34 @@ sb1_output(Out, Name, Goal) :-
 sb1_write_model(Model) :-
     forall(member(Fact, Model), (sb1_write_term(Fact), write('.'), nl)).
 sb1_write_certificate(Identity, Claims) :-
-    format('sb1-certificate 0~ncomposition ~w~n', [Identity]),
-    forall(member(claim(Fact, Doc-Ordinal, Valuation, Level), Claims),
-        ( sb1_write_term(Fact), format('\t~d:~d\t', [Doc, Ordinal]),
-          sb1_write_term(Valuation), format('\t~d~n', [Level]) )).
+    format('sb1-certificate 1~ncomposition ~w~n', [Identity]),
+    sb1_write_claims(Claims, 1).
+sb1_write_claims([], _).
+sb1_write_claims([claim(_, Doc-Ordinal, Valuation, Level)|Claims], Index) :-
+    format('~d\t~d:~d\t', [Index, Doc, Ordinal]),
+    sb1_write_term(Valuation), format('\t~d~n', [Level]),
+    Next is Index + 1, sb1_write_claims(Claims, Next).
 sb1_write_phases(Out, Phases) :-
     sb1_output(Out, 'producer-phases.tsv', sb1_phase_rows(Phases)).
 sb1_phase_rows(Phases) :-
     format('phase\tseconds\tcpu~n'),
     forall(member(Name-timing(Wall, CPU), Phases), format('~w\t~9f\t~9f~n', [Name, Wall, CPU])).
 
+:- dynamic sb1_ascii_atom/1, sb1_unicode_atom/1.
 sb1_write_term(Term) :-
-    write_term(Term, [quoted(true), numbervars(true), character_escapes(true),
-        ignore_ops(true), portray_goal(sb1_producer:sb1_portray)]).
+    ( sb1_term_unicode(Term)
+    -> write_term(Term, [quoted(true), numbervars(true), character_escapes(true),
+           ignore_ops(true), portray_goal(sb1_producer:sb1_portray)])
+    ; write_term(Term, [quoted(true), numbervars(true), character_escapes(true), ignore_ops(true)]) ).
+sb1_term_unicode(Term) :-
+    sub_term(Atom, Term), atom(Atom), sb1_atom_unicode(Atom), !.
+sb1_atom_unicode(Atom) :-
+    ( sb1_ascii_atom(Atom) -> fail
+    ; sb1_unicode_atom(Atom) -> true
+    ; atom_codes(Atom, Codes),
+      ( member(C, Codes), C >= 128
+      -> assertz(sb1_unicode_atom(Atom))
+      ; assertz(sb1_ascii_atom(Atom)), fail ) ).
 % v1 quotes non-ASCII atoms and keeps their Unicode scalars literal (R22).
 sb1_portray(Atom, _) :-
     atom(Atom), atom_codes(Atom, Codes), member(C, Codes), C >= 128, !,

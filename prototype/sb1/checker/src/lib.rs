@@ -1,6 +1,7 @@
 mod codec;
 mod digest;
 mod engine;
+mod level;
 mod number;
 mod program;
 mod query;
@@ -8,13 +9,14 @@ mod term;
 
 use digest::sha256;
 use engine::{Claim, Model};
+use level::Level;
 use program::{Clause, parse_clauses};
 use query::Query;
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
-use term::{Arena, Env, parse_term};
+use term::{Arena, Env, parse_checked};
 
 fn canonical(bytes: &[u8]) -> bool {
     matches!(
@@ -59,7 +61,7 @@ fn one_line(text: &str) -> String {
 pub struct Counters {
     logical: BTreeMap<&'static str, u64>,
     runtime: BTreeMap<&'static str, u64>,
-    level_max: String,
+    level_max: Level,
 }
 impl Default for Counters {
     fn default() -> Self {
@@ -110,7 +112,7 @@ impl Default for Counters {
         Self {
             logical,
             runtime,
-            level_max: String::new(),
+            level_max: Level::default(),
         }
     }
 }
@@ -126,14 +128,7 @@ impl Counters {
         for (&name, n) in &self.logical {
             out.push_str(&format!("logical\t{name}\t{n}\n"));
         }
-        out.push_str(&format!(
-            "logical\tsupport_level_max\t{}\n",
-            if self.level_max.is_empty() {
-                "0"
-            } else {
-                &self.level_max
-            }
-        ));
+        out.push_str(&format!("logical\tsupport_level_max\t{}\n", self.level_max));
         for (&name, n) in &self.runtime {
             out.push_str(&format!("runtime\t{name}\t{n}\n"));
         }
@@ -359,8 +354,8 @@ fn identity(loaded: &Loaded) -> String {
 }
 
 fn valuation(arena: &mut Arena, text: &str, clause: &Clause) -> Result<Env, String> {
-    let term = parse_term(arena, text)?;
-    if arena.render(term) != text {
+    let (term, canonical) = parse_checked(arena, text, false)?;
+    if !canonical {
         return Err("noncanonical valuation".into());
     }
     let values = arena.list(term).ok_or("valuation list")?;
@@ -397,9 +392,11 @@ fn decode(
         ));
     }
     let mut lines = certificate.lines();
-    if lines.next() != Some("sb1-certificate 0") {
-        return Err(Failure::refused("envelope", "certificate version"));
-    }
+    let indexed = match lines.next() {
+        Some("sb1-certificate 0") => false,
+        Some("sb1-certificate 1") => true,
+        _ => return Err(Failure::refused("envelope", "certificate version")),
+    };
     let Some(got) = lines.next().and_then(|l| l.strip_prefix("composition ")) else {
         return Err(Failure::refused("envelope", "composition record"));
     };
@@ -425,13 +422,16 @@ fn decode(
     let bytes = read(&request.model)?;
     counters.logical("model_bytes", bytes.len() as u64);
     let model_text = utf8(&bytes, "model")?;
+    if bytes.contains(&b'\r') {
+        return Err(Failure::parse("non-LF model"));
+    }
     if !bytes.is_empty() && !model_text.ends_with('\n') {
         return Err(Failure::parse("model missing LF"));
     }
     let mut facts = Vec::new();
     let mut positions = HashMap::new();
     for (i, line) in model_text.lines().enumerate() {
-        let fact = parse_term(&mut loaded.arena, line)
+        let (fact, canonical) = parse_checked(&mut loaded.arena, line, true)
             .map_err(|e| Failure::parse(format!("model line {} {e}", i + 1)))?;
         if !program::model_fact(&loaded.arena, fact) {
             return Err(Failure::refused(
@@ -439,7 +439,7 @@ fn decode(
                 format!("model line {} term domain", i + 1),
             ));
         }
-        if format!("{}.", loaded.arena.render(fact)) != line {
+        if !canonical {
             return Err(Failure::parse(format!("noncanonical model line {}", i + 1)));
         }
         if positions.insert(fact, facts.len()).is_some() {
@@ -457,26 +457,40 @@ fn decode(
         .map(|(i, c)| ((c.document, c.ordinal), i))
         .collect::<HashMap<_, _>>();
     let mut claims = Vec::new();
-    let mut levels: Vec<Option<String>> = vec![None; facts.len()];
+    let mut levels: Vec<Option<Level>> = vec![None; facts.len()];
     for (i, line) in lines.enumerate() {
         let row = i + 3;
         let fields = line.split('\t').collect::<Vec<_>>();
         if fields.len() != 4 {
             return Err(Failure::refused("envelope", format!("record {row} fields")));
         }
-        let fact = parse_term(&mut loaded.arena, fields[0])
-            .map_err(|e| Failure::refused("envelope", format!("record {row} {e}")))?;
-        if loaded.arena.render(fact) != fields[0] {
-            return Err(Failure::refused(
-                "envelope",
-                format!("record {row} noncanonical fact"),
-            ));
-        }
-        let Some(&fact) = positions.get(&fact) else {
-            return Err(Failure::refused(
-                "claim",
-                format!("record {row} fact not in model"),
-            ));
+        let fact = if indexed {
+            if fields[0].is_empty() || !fields[0].bytes().all(|b| b.is_ascii_digit()) {
+                return Err(Failure::refused(
+                    "envelope",
+                    format!("record {row} model index"),
+                ));
+            }
+            fields[0]
+                .parse::<usize>()
+                .ok()
+                .and_then(|n| n.checked_sub(1))
+                .filter(|&n| n < facts.len())
+                .ok_or_else(|| {
+                    Failure::refused("claim", format!("record {row} model index out of range"))
+                })?
+        } else {
+            let (fact, canonical) = parse_checked(&mut loaded.arena, fields[0], false)
+                .map_err(|e| Failure::refused("envelope", format!("record {row} {e}")))?;
+            if !canonical {
+                return Err(Failure::refused(
+                    "envelope",
+                    format!("record {row} noncanonical fact"),
+                ));
+            }
+            *positions.get(&fact).ok_or_else(|| {
+                Failure::refused("claim", format!("record {row} fact not in model"))
+            })?
         };
         if levels[fact].is_some() {
             return Err(Failure::refused(
@@ -491,12 +505,9 @@ fn decode(
             .ok_or_else(|| Failure::refused("claim", format!("record {row} clause id")))?;
         let env = valuation(&mut loaded.arena, fields[2], &loaded.clauses[clause])
             .map_err(|e| Failure::refused("claim", format!("record {row} {e}")))?;
-        if fields[3].is_empty() || !fields[3].bytes().all(|b| b.is_ascii_digit()) {
-            return Err(Failure::refused("envelope", format!("record {row} level")));
-        }
-        let level = fields[3].trim_start_matches('0');
-        let level = if level.is_empty() { "0" } else { level }.to_string();
-        if term::natural_compare(&level, &counters.level_max) == std::cmp::Ordering::Greater {
+        let level = Level::parse(fields[3])
+            .ok_or_else(|| Failure::refused("envelope", format!("record {row} level")))?;
+        if level > counters.level_max {
             counters.level_max = level.clone();
         }
         levels[fact] = Some(level.clone());
@@ -728,3 +739,5 @@ mod tests;
 
 #[cfg(test)]
 mod codec_tests;
+#[cfg(test)]
+mod transport_tests;

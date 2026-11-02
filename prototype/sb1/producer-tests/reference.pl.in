@@ -33,9 +33,9 @@ sb1_test_main :-
     ( Model == Reference -> true ; throw(error(model_differs, _)) ),
     forall(member(Fact, Model), assertz(sb1_test_model:Fact)),
     read_file_to_string(CertFile, Cert, []), split_string(Cert, "\n", "", CertLines),
-    CertLines = ["sb1-certificate 0", Identity|Rows0],
+    CertLines = ["sb1-certificate 1", Identity|Rows0],
     sub_string(Identity, 0, 12, _, "composition "),
-    append(Rows, [""], Rows0), maplist(read_claim, Rows, Claims),
+    append(Rows, [""], Rows0), maplist(read_claim(Model), Rows, Claims),
     findall(F, member(claim(F, _, _, _), Claims), Claimed),
     ( Claimed == Model -> true ; throw(error(claimed_model_differs, _)) ),
     forall(member(Claim, Claims), check_claim(Claim, Programs, Claims)),
@@ -69,12 +69,12 @@ read_fact_line(Line, Fact) :-
     read_term_from_atom(Line, Fact, [syntax_errors(error)]), ground(Fact),
     with_output_to(string(Canonical), ace_to_pl:render_term_line(Fact)),
     string_concat(Line, "\n", Canonical).
-read_claim(Line, claim(Fact, Doc-Clause, Valuation, Level)) :-
-    split_string(Line, "\t", "", [FactText, Id, ValText, LevelText]),
+read_claim(Model, Line, claim(Fact, Doc-Clause, Valuation, Level)) :-
+    split_string(Line, "\t", "", [IndexText, Id, ValText, LevelText]),
+    number_string(Index, IndexText), integer(Index), nth1(Index, Model, Fact),
     split_string(Id, ":", "", [DocText, ClauseText]),
     number_string(Doc, DocText), number_string(Clause, ClauseText),
     number_string(Level, LevelText), integer(Level), Level >= 0,
-    read_term_from_atom(FactText, Fact, [syntax_errors(error)]),
     read_term_from_atom(ValText, Valuation, [syntax_errors(error)]),
     ground(Fact-Valuation).
 

@@ -50,7 +50,7 @@ def reference(root, composition, recipe, out):
 
 def check_outputs(root, composition, out):
     cert = (out / "certificate.txt").read_text().splitlines()
-    assert cert[:2] == ["sb1-certificate 0", f"composition {identity(root, composition)}"]
+    assert cert[:2] == ["sb1-certificate 1", f"composition {identity(root, composition)}"]
     phases = (out / "producer-phases.tsv").read_text().splitlines()
     assert phases[0] == "phase\tseconds\tcpu"
     assert [row.split("\t")[0] for row in phases[1:]] == ["load", "eval", "certificate", "write"]
@@ -68,7 +68,7 @@ def main():
     parser.add_argument("--consumer", action="store_true")
     args = parser.parse_args()
     root = args.root.resolve()
-    scratch = root / ".scratch/sb1-producer-tests"
+    scratch = root / "prototype/sb1/checker/target/producer-tests"
     scratch.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=scratch) as temp:
         temp = Path(temp)
@@ -85,6 +85,8 @@ def main():
         cert, model = check_outputs(root, tiny, out)
         print("tiny:", reference(root, tiny, recipe, out))
         rows = [row.split("\t") for row in cert[2:]]
+        assert [int(row[0]) for row in rows] == list(range(1, len(model) + 1))
+        rows = [[model[int(row[0]) - 1][:-1], *row[1:]] for row in rows]
         levels = {row[0]: int(row[3]) for row in rows}
         assert levels["guideline_property(actual,a,p,pos)"] == 1
         assert levels["guideline_property(actual,a,q,pos)"] == 2

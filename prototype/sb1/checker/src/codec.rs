@@ -1,6 +1,7 @@
 use crate::program::{Clause, Goal, PREDICATES, builtin};
 use crate::term::{Arena, Id, Node, natural_compare, variable_name};
 use std::cmp::Ordering;
+use std::fmt::{self, Write};
 
 fn name_ok(name: &str) -> bool {
     !name.is_empty()
@@ -50,67 +51,85 @@ fn literal(arena: &Arena, id: Id, body: bool) -> bool {
             && args.iter().all(|arg| term_ok(arena, *arg))
     })
 }
-fn render_goal(arena: &Arena, goal: &Goal) -> Option<String> {
+fn write_goal(arena: &Arena, goal: &Goal, out: &mut impl Write) -> fmt::Result {
     match goal {
         Goal::Positive(term) | Goal::Builtin(term) => {
-            literal(arena, *term, true).then(|| arena.render(*term))
+            if !literal(arena, *term, true) {
+                return Err(fmt::Error);
+            }
+            arena.write_term(out, *term)
         }
         Goal::Not(inner) => {
             if inner.is_empty() || inner.iter().any(|g| matches!(g, Goal::Not(_))) {
-                return None;
+                return Err(fmt::Error);
             }
-            let text = inner
-                .iter()
-                .map(|g| render_goal(arena, g))
-                .collect::<Option<Vec<_>>>()?
-                .join(", ");
-            Some(if inner.len() == 1 {
-                format!("\\+ {text}")
-            } else {
-                format!("\\+ ({text})")
-            })
+            out.write_str(if inner.len() == 1 { "\\+ " } else { "\\+ (" })?;
+            write_goals(arena, inner, out)?;
+            if inner.len() > 1 {
+                out.write_str(")")?;
+            }
+            Ok(())
         }
     }
 }
-pub fn clause_image(arena: &Arena, clause: &Clause) -> Option<String> {
-    let mut out = arena.render(clause.head);
-    if !clause.body.is_empty() {
-        let goals = clause
-            .body
-            .iter()
-            .map(|g| render_goal(arena, g))
-            .collect::<Option<Vec<_>>>()?;
-        out.push_str(" :- ");
-        out.push_str(&goals.join(", "));
+fn write_goals(arena: &Arena, goals: &[Goal], out: &mut impl Write) -> fmt::Result {
+    for (i, goal) in goals.iter().enumerate() {
+        if i != 0 {
+            out.write_str(", ")?;
+        }
+        write_goal(arena, goal, out)?;
     }
-    out.push('.');
-    Some(out)
+    Ok(())
 }
-pub fn read_line(raw: &str, clause: &Clause) -> Option<String> {
-    if raw.trim() != raw
+struct Image<'a> {
+    raw: &'a str,
+    at: usize,
+    anonymous: &'a [(usize, usize)],
+}
+impl Write for Image<'_> {
+    fn write_str(&mut self, text: &str) -> fmt::Result {
+        if let Some(&(at, var)) = self.anonymous.first()
+            && at == self.at
+        {
+            // The term writer emits a variable name in one chunk. Reading `_`
+            // replaces that one source byte, without materializing a second line.
+            if text != variable_name(var) {
+                return Err(fmt::Error);
+            }
+            self.at += 1;
+            self.anonymous = &self.anonymous[1..];
+        } else if self.raw[self.at..].starts_with(text) {
+            self.at += text.len();
+        } else {
+            return Err(fmt::Error);
+        }
+        Ok(())
+    }
+}
+fn line_matches(arena: &Arena, clause: &Clause, line: &str) -> bool {
+    if line.trim() != line
         || !clause
             .names
             .iter()
             .enumerate()
             .all(|(i, n)| n == "_" || *n == variable_name(i))
     {
-        return None;
+        return false;
     }
-    let mut out = String::with_capacity(raw.len());
-    let mut start = 0;
-    for &(at, var) in &clause.anonymous {
-        out.push_str(raw.get(start..at)?);
-        out.push_str(&variable_name(var));
-        start = at + 1;
-    }
-    out.push_str(raw.get(start..)?);
-    Some(out)
-}
-
-fn line_matches(arena: &Arena, clause: &Clause, line: &str) -> bool {
-    read_line(line, clause)
-        .zip(clause_image(arena, clause))
-        .is_some_and(|(read, image)| read == image)
+    let mut image = Image {
+        raw: line,
+        at: 0,
+        anonymous: &clause.anonymous,
+    };
+    let result: fmt::Result = (|| {
+        arena.write_term(&mut image, clause.head)?;
+        if !clause.body.is_empty() {
+            image.write_str(" :- ")?;
+            write_goals(arena, &clause.body, &mut image)?;
+        }
+        image.write_str(".")
+    })();
+    result.is_ok() && image.at == line.len() && image.anonymous.is_empty()
 }
 
 // The image is checked afresh in admission. The source parser supplies the same arena used
