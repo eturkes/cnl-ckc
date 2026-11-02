@@ -102,7 +102,7 @@ Controls from `researcher-9:C6`: remove the vetted diagnostic seed; remove actua
 
 `F4-SHORTCUT`: CDC s57-02 independently reads OUD and concludes the same clinical kind of ongoing pain management. Therefore a broken-ASAM-link oracle must address the exact s60-11 context/payload identities, not a deduplicated action name. Fact → subtype → MUST ends at a modal statement; it establishes neither pain care delivered nor medication received. The source keeps a 12-month diagnostic window; the report's year-based ACE sketch is an authoring sketch, not permission to rewrite source units silently.
 
-G=1/2 prefixes are smoke-only; G≥4 retains all three chain shards. Padding = 97 F1a-kind common-role-residue copies by main ruling; their unrelated contributions stay in the oracle.
+Every scale carries the complete three-fragment chain on its one CDC-sized active shard (G counts capacity shards: main ruling, builder-1 R6). Padding = G-1 F1a-kind common-role-residue copies (99 at G=100) by main ruling; their unrelated contributions stay in the oracle.
 
 ## P-F5a
 
