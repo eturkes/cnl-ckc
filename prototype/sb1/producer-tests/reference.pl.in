@@ -1,0 +1,112 @@
+:- use_module(library(readutil)).
+:- use_module(library(lists)).
+:- use_module(library(aggregate)).
+:- use_module(library(wfs)).
+
+sb1_test_main :-
+    current_prolog_flag(argv, [Root, Composition, Recipe, ModelFile, CertFile]),
+    directory_file_path(Root, 'vendor/ape/prolog/ace_to_pl.pl', Writer),
+    load_files(Writer, [imports([]), silent(true)]),
+    load_files(sb1_reference:Recipe, [silent(true)]),
+    recipe_indicators(Recipe, Indicators),
+    forall(member(I, Indicators),
+        ( multifile(sb1_reference:I), discontiguous(sb1_reference:I), dynamic(sb1_test_model:I) )),
+    directory_file_path(Root, 'guidelines/schema.pl', Schema),
+    load_files(sb1_reference:Schema, [silent(true)]),
+    read_file_to_string(Composition, Text, []), split_string(Text, "\n", "\r", Lines),
+    findall(Path,
+        ( member(Line, Lines), Line \== "", \+ sub_string(Line, 0, 1, _, "#"),
+          atom_string(Listed, Line),
+          ( is_absolute_file_name(Listed) -> Path = Listed ; directory_file_path(Root, Listed, Path) ) ),
+        Paths),
+    maplist(read_program, Paths, Programs),
+    forall(member(Path, Paths), load_files(sb1_reference:Path, [silent(true)])),
+    ( aggregate_all(set(V), sb1_reference:guideline_schema_version(V), [2])
+    -> true ; throw(error(reference_identifier, _)) ),
+    findall(G,
+        ( member(Name/Arity, Indicators), functor(G, Name, Arity),
+          call_delays(sb1_reference:G, Delay),
+          ( Delay == true -> true ; throw(error(reference_undefined(G, Delay), _)) ),
+          ground(G) ), Facts),
+    sort(Facts, Reference),
+    read_model(ModelFile, Model),
+    ( Model == Reference -> true ; throw(error(model_differs, _)) ),
+    forall(member(Fact, Model), assertz(sb1_test_model:Fact)),
+    read_file_to_string(CertFile, Cert, []), split_string(Cert, "\n", "", CertLines),
+    CertLines = ["sb1-certificate 0", Identity|Rows0],
+    sub_string(Identity, 0, 12, _, "composition "),
+    append(Rows, [""], Rows0), maplist(read_claim, Rows, Claims),
+    findall(F, member(claim(F, _, _, _), Claims), Claimed),
+    ( Claimed == Model -> true ; throw(error(claimed_model_differs, _)) ),
+    forall(member(Claim, Claims), check_claim(Claim, Programs, Claims)),
+    length(Model, Count), format('reference accepted ~d facts~n', [Count]), halt.
+
+recipe_indicators(Path, Indicators) :-
+    setup_call_cleanup(open(Path, read, S), recipe_table(S, Term), close(S)),
+    conjunction_list(Term, Indicators).
+recipe_table(S, Term) :-
+    read_term(S, T, []),
+    ( T = (:- table(Term)) -> true
+    ; T \== end_of_file, recipe_table(S, Term) ).
+conjunction_list((A, B), List) :- !,
+    conjunction_list(A, X), conjunction_list(B, Y), append(X, Y, List).
+conjunction_list(T, [T]).
+
+read_program(Path, Clauses) :-
+    setup_call_cleanup(open(Path, read, S, [encoding(utf8)]), read_clauses(S, Clauses), close(S)).
+read_clauses(S, Clauses) :-
+    read_term(S, T, [syntax_errors(error)]),
+    ( T == end_of_file -> Clauses = []
+    ; T = (:- _) -> read_clauses(S, Clauses)
+    ; ( T = (H :- B) -> true ; H = T, B = true ),
+      Clauses = [H-B|Rest], read_clauses(S, Rest) ).
+
+read_model(Path, Model) :-
+    read_file_to_string(Path, Text, []), split_string(Text, "\n", "", Lines),
+    append(FactLines, [""], Lines), maplist(read_fact_line, FactLines, Model),
+    sort(Model, Model).
+read_fact_line(Line, Fact) :-
+    read_term_from_atom(Line, Fact, [syntax_errors(error)]), ground(Fact),
+    with_output_to(string(Canonical), ace_to_pl:render_term_line(Fact)),
+    string_concat(Line, "\n", Canonical).
+read_claim(Line, claim(Fact, Doc-Clause, Valuation, Level)) :-
+    split_string(Line, "\t", "", [FactText, Id, ValText, LevelText]),
+    split_string(Id, ":", "", [DocText, ClauseText]),
+    number_string(Doc, DocText), number_string(Clause, ClauseText),
+    number_string(Level, LevelText), integer(Level), Level >= 0,
+    read_term_from_atom(FactText, Fact, [syntax_errors(error)]),
+    read_term_from_atom(ValText, Valuation, [syntax_errors(error)]),
+    ground(Fact-Valuation).
+
+check_claim(claim(Fact, Doc-Clause, Valuation, Level), Programs, Claims) :-
+    nth1(Doc, Programs, Program), nth1(Clause, Program, Source),
+    copy_term(Source, Head-Body), term_variables(Head-Body, All),
+    positive_vars(Body, Positive), term_variables(Head-Positive, Outside),
+    include(same_variable(Outside), All, Variables),
+    apply_valuation(Variables, Valuation, 1),
+    Head == Fact,
+    ( Body == true -> Level =:= 0
+    ; Level >= 1, support_truth(Body, Claims, Level) ).
+same_variable(Vars, V) :- member(W, Vars), V == W, !.
+positive_vars(\+ _, []) :- !.
+positive_vars((A, B), [X, Y]) :- !, positive_vars(A, X), positive_vars(B, Y).
+positive_vars(G, G).
+apply_valuation([], [], _).
+apply_valuation([V|Vs], [=(Key, Value)|Rest], N) :-
+    atom_concat(v, N, Key), V = Value, N1 is N + 1, apply_valuation(Vs, Rest, N1).
+
+support_truth(true, _, _) :- !.
+support_truth((A, B), Claims, Level) :- !,
+    support_truth(A, Claims, Level), support_truth(B, Claims, Level).
+support_truth(\+ G, _, _) :- !, \+ model_truth(G).
+support_truth(G, _, _) :- builtin(G), !, call(sb1_reference:G).
+support_truth(G, Claims, Level) :-
+    ground(G), memberchk(claim(G, _, _, Lower), Claims), Lower < Level.
+model_truth(true) :- !.
+model_truth((A, B)) :- !, model_truth(A), model_truth(B).
+model_truth(G) :- builtin(G), !, call(sb1_reference:G).
+model_truth(G) :- call(sb1_test_model:G).
+builtin(guideline_satisfies(_, _, _, _)).
+builtin(guideline_satisfies(_, _, _, _, _, _)).
+builtin(guideline_product(_, _, _, _, _, _)).
+builtin(guideline_quotient(_, _, _, _, _, _)).

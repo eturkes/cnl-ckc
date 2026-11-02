@@ -1,0 +1,16 @@
+sb1_agenda_tests :-
+    P = guideline_property(actual,a,p,pos), Q = guideline_property(actual,a,q,pos),
+    sb1_producer:sb1_reset,
+    sb1_producer:sb1_certify(
+        [clause(1-1, P, Q, []), clause(1-2, Q, P, []), clause(1-3, P, true, [])],
+        [P, Q], Claims),
+    Claims = [claim(P, 1-3, [], 0), claim(Q, 1-2, [], 1)],
+    sb1_producer:sb1_reset,
+    catch(sb1_producer:sb1_certify(
+        [clause(1-1, P, Q, []), clause(1-2, Q, P, [])], [P, Q], _), Error, true),
+    nonvar(Error), Error = unfounded_residual(P),
+    sb1_producer:sb1_reset,
+    catch(sb1_producer:sb1_stage(certificate,
+        sb1_producer:sb1_certify([clause(1-1, P, P, [])], [P], _), _), Wrapped, true),
+    nonvar(Wrapped), Wrapped = sb1_error(certificate, unfounded_residual(P)),
+    writeln('agenda: founded base + unfounded residual passed'), halt.

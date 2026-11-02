@@ -1,0 +1,27 @@
+:- multifile(guideline_schema_version/1).
+guideline_schema_version(2).
+guideline_document(tiny,ace_sha256('0000000000000000000000000000000000000000000000000000000000000000'),ulex(none),vocabulary(none)).
+guideline_supersession(tiny,1,source('Cité quote\' slash\\ line\n','https://example.invalid/'),20221229).
+guideline_entity(actual,a,seed,countable).
+guideline_entity(actual,c,seed,countable).
+guideline_entity(actual,b,blocked,countable).
+guideline_cardinality(actual,a,na,exactly,3).
+guideline_event(actual,e,link).
+guideline_arg(actual,e,1,a).
+guideline_arg(actual,e,2,c).
+guideline_event(actual,f,link).
+guideline_arg(actual,f,1,c).
+guideline_arg(actual,f,2,b).
+guideline_property(actual,A,p,pos) :- guideline_property(actual,A,q,pos).
+guideline_property(actual,A,q,pos) :- guideline_property(actual,A,p,pos).
+guideline_property(actual,A,p,pos) :- guideline_entity(actual,A,seed,countable).
+guideline_property(actual,A,clear,pos) :- guideline_entity(actual,A,seed,countable), \+ (guideline_arg(actual,B,1,A), guideline_arg(actual,B,2,C), guideline_entity(actual,C,blocked,countable)).
+guideline_property(actual,A,low,pos) :- guideline_cardinality(actual,A,na,B,C), guideline_satisfies(B,C,geq,2).
+guideline_cardinality(actual,z,na,A,B) :- guideline_product(exactly,3,exactly,rational(1,2),A,B).
+guideline_arg(actual,A,3,B) :- guideline_entity(actual,B,seed,countable), guideline_event(actual,A,link).
+guideline_entity(actual,'$guideline_id'(product,tiny,2,ref(1),[A]),derived,countable) :- guideline_entity(actual,A,seed,countable).
+guideline_exclusion(tiny) :- \+ guideline_entity(actual,_,missing,countable).
+guideline_entity(actual,a,seed,countable).
+guideline_property(actual,A,r,pos) :- guideline_property(actual,A,p,pos), guideline_property(actual,A,q,pos), guideline_property(actual,A,p,pos).
+guideline_property(actual,z,ratio,pos) :- guideline_cardinality(actual,z,na,A,B), guideline_quotient(A,B,exactly,3,C,D), guideline_satisfies(C,D,exactly,rational(1,2)).
+guideline_property(actual,a,time,pos) :- guideline_satisfies(exactly,24,hour,geq,1,day).

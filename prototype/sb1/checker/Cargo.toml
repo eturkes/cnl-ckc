@@ -1,0 +1,19 @@
+[package]
+name = "sb1-checker"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0 WITH LLVM-exception"
+publish = false
+
+[workspace]
+
+[dependencies]
+ckc-kernel = { path = "../../../rust/ckc-kernel" }
+ckc-spec = { path = "../../../rust/ckc-spec" }
+
+[[bin]]
+name = "checker"
+path = "src/main.rs"
+
+[profile.dev.package.ckc-kernel]
+opt-level = 3
