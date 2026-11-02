@@ -1,6 +1,6 @@
 # SB1 D9 proof spike
 
-Standalone Verus source crate; entry = `lib.rs`. Scope = contract `sb` § Census + spike freeze, D9(a)–(d). Abstract finite domains; no production parser, checker or producer code imported.
+Standalone Verus source crate; entry = `lib.rs`. Scope = contract `sb` § Census + spike freeze, D9(a)–(f). Abstract finite domains; no production parser, checker or producer code imported.
 
 ## Run
 
@@ -23,6 +23,8 @@ bash prototype/sb1/spike/verify.sh
 | (b) signed graph → rank → local stratification → exactly one stable model | `rank::signed_graph_rank`, `origins::clause_covered_unique_model` | Finite well-formed graph; no negative edge with a return path; each ground rule has an abstract clause origin; every positive/NAF dependency reaches **every** possible producer. |
 | (c) coverage-closed slice → reduct/model + query preservation | `origins::clause_coverage_slice`, `slice::reduct_projection`, `slice::query_preservation` | Abstract predecessor closure; query roots include all producers; selected operator atoms + every ground query's positive/NAF atoms lie in the induced slice. |
 | (d) no growth cycle → finite substitution-closed ground instances | `grounding::substitution_closed`, `finite_grounding`, `nested_identity_substitution` | Finite base + operation templates + type graph; every constructor/arithmetic input is a growth dependency; positive copy edges; no growth cycle; well-typed clause templates whose Deps are variable lists. |
+| (e) unique stable model = two-valued alternating-fixpoint WFM | `afp::stratified_wfm`, `covered_wfm`, `certified_is_wfm` | Well-formed finite ground program; (b)'s local stratification. AFP definition + finite iteration are proved independently of rank. |
+| (f) actual clause selection → atom-slice reduct + query equivalence | `selection::clause_selection_reduct`, `selected_reduct_queries`, `selected_wfm_queries` | Forward-closed selected clause nodes + all-producer coverage; query roots + positive/NAF reads inside the induced slice. WFM query equivalence additionally uses (b)'s no-negative-cycle rank. |
 
 ### (a) Semantics
 
@@ -36,7 +38,7 @@ Edges run head/reader → dependency/producer. Reachability = least forward-clos
 
 `stratified::perfect` constructs the model by a positive least fixed point at each stratum. `perfect_stable` proves existence; rank induction + reduct minimality prove uniqueness. The stable predicate is exactly (a)'s reduct fixed-point predicate. A single atom→node coverage specialization also verifies in `rank.rs`.
 
-The frozen (b) conclusion is **unique stable model**. An independent three-valued / alternating-fixpoint definition of WFM and its equivalence to this model are outside this spike; no WFM-equivalence theorem is claimed here.
+The frozen (b) conclusion is **unique stable model**. Lemma (e) independently defines alternating-fixpoint WFM and proves its equality to this model.
 
 ### (c) Queries
 
@@ -52,9 +54,23 @@ The may-universe is a finite base repeatedly unioned with finite operation image
 
 `finite_grounding` proves the full semantic comprehension of typed ground clause instances equal to a constructed finite set, plus closure of every instantiated term. `nested_identity_substitution` specializes the operation image to actual nested identity constructors.
 
+### (e) Alternating-fixpoint WFM
+
+`Γ(M) = lfp(P, M)` uses exactly (a)'s reduct. `afp::lower` independently defines `lfp(Γ²)` as the intersection of all pre-fixed points; `upper = Γ(lower)`. True, false + undefined sets = lower, `Atoms − upper`, `upper − lower`. Rank, perfect model + certificate are absent from this definition.
+
+`gamma_antitone` + `double_monotone` justify the alternating operator. `lower_fixed` + `lower_least` prove its least fixed point. `finite_alternation` proves equality to iteration from the empty set after at most `|Atoms|` double steps. Local stratification excludes distinct alternating pairs, which is stronger than stable-model uniqueness alone. `stratified_wfm` concludes lower = upper = (b)'s perfect model + no undefined atoms. `certified_is_wfm` composes (a) with that theorem.
+
+### (f) Actual clause selection
+
+`selection::select` filters source clause indices by their chosen abstract origins; it returns an actual clause subsequence, with duplicates + source order preserved. `selected_source_index` constructs a source-index witness for any selected output clause; `selection_exact` proves inclusion of every chosen source clause.
+
+The forward-closed selection induces `origins::atom_slice`: all producers of each retained atom are chosen. This slice satisfies (c)'s predecessor-closure premise in both the original + selected programs. Their atom-induced masks have identical effective rules. `clause_selection_reduct` concludes that the selected program's reduct lfp, restricted to the slice, equals (c)'s original-program mask for arbitrary reduct reference M. Extra selected heads outside the slice may still derive; global equality with the mask is not claimed.
+
+`selected_reduct_queries` proves both enumeration + goal-list answer equalities. `selected_stable_agrees` composes the bridge with (b)'s local-stratification uniqueness; `selected_wfm_queries` composes it with (e), so the full + actual selected programs return identical query answers over their independently defined WFM.
+
 ## Controls
 
-`controls.rs` verifies: correlated NAF with incompatible witnesses; empty witness/list meanings; independently necessary support + closure; a rejected one-node growth loop; an inhabited two-constructor chain that generates a nested identity and a legal ground clause instance.
+`controls.rs` verifies: correlated NAF with incompatible witnesses; empty witness/list meanings; independently necessary support + closure; a rejected one-node growth loop; an inhabited two-constructor chain that generates a nested identity and a legal ground clause instance; total WFM for stratified NAF; genuinely undefined WFM for an odd negative self-loop; nonempty enumeration + NAF goal-list answers under proper clause selection, despite an extra selected fact outside the atom slice making global mask/model equality false.
 
 ## Production obligations outside the spike
 
@@ -65,6 +81,6 @@ The may-universe is a finite base repeatedly unioned with finite operation image
 - Concrete reachable/support/reduct facts mapped into the program-derived universe; executable indices, joins/anti-joins, levels, canonicalization + resource limits refining these abstract predicates.
 - Query grounding + valuation completeness, root seeding + slice extraction, payload traversal, projection/sort/dedup, digests + output serialization.
 - Ground built-in truth → the verified schema's exact arithmetic/comparison relations; partial/undefined operation handling.
-- WFM equivalence against an independently defined well-founded semantics; certificate/custody/public-surface composition.
+- Certificate/custody/public-surface composition.
 
 All remain obligations of MC/TA/MP. This spike supplies no public verified-answer claim and changes no production gate.
