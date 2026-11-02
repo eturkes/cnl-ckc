@@ -270,6 +270,23 @@ fn subperiod_spike_retains_the_sampling_uncertainty() {
     let run = &rows(&text)[0];
     assert_eq!(run["memory_uncertainty"], "possibly-missed-subperiod-spike");
     assert_eq!(number(run, "sample_period_ns"), 200_000_000);
+    let controls = s.result("run-000001/controls.tsv");
+    let mut allocated = BTreeMap::new();
+    let mut completed = 0;
+    for line in controls.lines() {
+        let values: Vec<_> = line.split('\t').collect();
+        let timestamp = values[2].parse::<u64>().unwrap();
+        if values[0] == "allocated" {
+            allocated.insert(values[1], timestamp);
+        } else if values[0] == "freed" {
+            assert!(
+                timestamp - allocated[values[1]] < 200_000_000,
+                "the control's actual allocation lifetime must be shorter than the sampling period"
+            );
+            completed += 1;
+        }
+    }
+    assert_eq!(completed, 2);
     assert!(!s.result("run-000001/rss.tsv").is_empty());
 }
 
