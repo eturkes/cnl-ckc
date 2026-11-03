@@ -103,6 +103,45 @@ fn identity_record(path: &str, bytes: &[u8]) -> String {
     format!("file\0{path}\0{}\0{}\n", bytes.len(), sha256(bytes))
 }
 
+fn patient_count(composition: &Path, documents: usize) -> Result<usize, Failure> {
+    let path = composition
+        .parent()
+        .unwrap_or(Path::new("."))
+        .join("manifest.tsv");
+    let bytes = match fs::read(&path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(1),
+        Err(error) => return Err(Failure::io(&path, error)),
+    };
+    let mut count = None;
+    for line in utf8(&bytes, "composition manifest")?.lines() {
+        let mut fields = line.split('\t');
+        if fields.next() != Some("patient_documents") {
+            continue;
+        }
+        let value = fields
+            .next()
+            .ok_or_else(|| Failure::parse("patient_documents count missing"))?;
+        if count.is_some()
+            || fields.next().is_some()
+            || value.is_empty()
+            || !value.bytes().all(|byte| byte.is_ascii_digit())
+        {
+            return Err(Failure::parse("patient_documents count shape/duplicate"));
+        }
+        let value = value
+            .parse::<usize>()
+            .map_err(|_| Failure::parse("patient_documents count overflow"))?;
+        if value == 0 || value > documents {
+            return Err(Failure::parse(
+                "patient_documents count outside composition",
+            ));
+        }
+        count = Some(value);
+    }
+    Ok(count.unwrap_or(1))
+}
+
 fn mark(origin: Instant, directory: &Path, event: &str) -> Result<(), Failure> {
     if std::env::var_os("SB1_STAGE_TRACE").as_deref() != Some(std::ffi::OsStr::new("1")) {
         return Ok(());
@@ -128,7 +167,7 @@ pub struct PreparedProgram {
     sources: Vec<ClauseSource>,
     ids: HashMap<ClauseId, usize>,
     identity: Sha256,
-    patient: String,
+    patients: Vec<String>,
     root: PathBuf,
     codec: SourceCodec,
     origin: Instant,
@@ -145,12 +184,14 @@ impl PreparedProgram {
         let origin = Instant::now();
         let mut phases = Vec::new();
         let mut counters = Counters::default();
-        let (mut loaded, patient) = phase(&mut phases, origin, "load_parse", "load", || {
+        let (mut loaded, patients) = phase(&mut phases, origin, "load_parse", "load", || {
             let bytes = read(composition)?;
             let mut paths = composition_paths(utf8(&bytes, "composition")?)?;
-            let patient = paths
-                .pop()
-                .ok_or_else(|| Failure::parse("empty composition"))?;
+            if paths.is_empty() {
+                return Err(Failure::parse("empty composition"));
+            }
+            let count = patient_count(composition, paths.len())?;
+            let patients = paths.split_off(paths.len() - count);
             let mut loaded = Loaded {
                 arena: Arena::default(),
                 clauses: Vec::new(),
@@ -163,7 +204,7 @@ impl PreparedProgram {
             }
             counters.logical("documents", loaded.documents.len() as u64);
             counters.logical("clauses", loaded.clauses.len() as u64);
-            Ok((loaded, patient))
+            Ok((loaded, patients))
         })?;
         phase(&mut phases, origin, "load_admission", "load", || {
             admit_loaded(&mut loaded, &mut counters, codec)
@@ -207,7 +248,7 @@ impl PreparedProgram {
             sources,
             ids,
             identity,
-            patient,
+            patients,
             root: root.into(),
             codec,
             origin,
@@ -291,41 +332,52 @@ impl PreparedProgram {
         let base_count = self.loaded.clauses.len();
         let identity = phase(&mut self.phases, self.origin, "patient", "scored", || {
             mark(self.origin, &request.output, "patient_decode_begin")?;
-            append_source(
-                &mut self.loaded,
-                &self.root,
-                &self.patient,
-                &mut self.counters,
-                self.codec,
-            )?;
+            for patient in &self.patients {
+                append_source(
+                    &mut self.loaded,
+                    &self.root,
+                    patient,
+                    &mut self.counters,
+                    self.codec,
+                )?;
+            }
             mark(self.origin, &request.output, "patient_decode_end")?;
-            let document = self.loaded.documents.last().expect("patient document");
-            if self.loaded.clauses[document.clauses.clone()]
+            if let Some(clause) = self.loaded.clauses[base_count..]
                 .iter()
-                .any(|c| !c.body.is_empty())
+                .find(|clause| !clause.body.is_empty())
             {
-                return Err(Failure::refused("claim", "patient contains a rule"));
+                let document = &self.loaded.documents[clause.document - 1];
+                return Err(Failure::refused(
+                    "claim",
+                    format!(
+                        "patient contains a rule {} {}:{}",
+                        document.path, clause.document, clause.ordinal
+                    ),
+                ));
             }
             let clause_count = self.loaded.clauses.len();
+            let document_end = self.loaded.documents.len();
             mark(self.origin, &request.output, "patient_admission_begin")?;
             admit_range(
                 &mut self.loaded,
                 &mut self.counters,
                 self.codec,
-                document_count..document_count + 1,
+                document_count..document_end,
                 base_count..clause_count,
             )?;
             mark(self.origin, &request.output, "patient_admission_end")?;
             let patient_clauses = (clause_count - base_count) as u64;
-            self.counters.logical("documents", 1);
+            self.counters
+                .logical("documents", self.patients.len() as u64);
             self.counters.logical("clauses", patient_clauses);
             self.counters.logical("patient_facts", patient_clauses);
             mark(self.origin, &request.output, "identity_begin")?;
             let mut identity = self.identity.clone();
-            let document = self.loaded.documents.last().expect("patient document");
-            identity.update(identity_record(&document.path, &document.bytes).as_bytes());
-            self.counters
-                .logical("identity_bytes", document.bytes.len() as u64);
+            for document in &self.loaded.documents[document_count..] {
+                identity.update(identity_record(&document.path, &document.bytes).as_bytes());
+                self.counters
+                    .logical("identity_bytes", document.bytes.len() as u64);
+            }
             let identity = identity.finish();
             mark(self.origin, &request.output, "identity_end")?;
             Ok(identity)
@@ -341,7 +393,7 @@ impl PreparedProgram {
                     .map(|c| source(&self.loaded.arena, c))
                     .collect::<Vec<_>>();
                 mark(self.origin, &request.output, "slice_select_begin")?;
-                let selected = if let Some(provider) = external {
+                let mut selected = if let Some(provider) = external {
                     let ids = provider.select(&patient_sources, &bytes)?;
                     Self::resolve_ids(&self.ids, self.sources.len(), &ids, &patient_sources)?
                 } else {
@@ -388,6 +440,9 @@ impl PreparedProgram {
                         }
                     }
                 };
+                selected.extend(base_count..self.loaded.clauses.len());
+                selected.sort_unstable();
+                selected.dedup();
                 mark(self.origin, &request.output, "slice_select_end")?;
                 self.counters
                     .logical("selected_clauses", selected.len() as u64);

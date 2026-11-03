@@ -136,15 +136,12 @@ fn all_reproduces_standalone_and_static_keeps_original_sparse_ids() {
         if name == "static" {
             assert_eq!(
                 fs::read_to_string(request.output.join("selected-clauses.tsv")).unwrap(),
-                "1:3\n1:4\n1:5\n"
+                "1:3\n1:4\n1:5\n2:1\n2:2\n2:3\n"
             );
             let certificate = fs::read_to_string(request.output.join("certificate.txt")).unwrap();
-            assert!(
-                certificate
-                    .lines()
-                    .skip(2)
-                    .all(|l| ["1:3", "1:4", "1:5"].contains(&l.split('\t').nth(1).unwrap()))
-            );
+            assert!(certificate.lines().skip(2).all(|l| {
+                ["1:3", "1:4", "1:5", "2:1", "2:2", "2:3"].contains(&l.split('\t').nth(1).unwrap())
+            }));
         } else {
             assert_eq!(
                 fs::read(request.output.join("model.txt")).unwrap(),
@@ -329,6 +326,160 @@ fn external_provider_prepares_once_and_returns_only_original_ids() {
             .render()
             .contains("logical\ttyped_analysis_hook\t1\n")
     );
+}
+
+#[derive(Default)]
+struct KnowledgeOnly {
+    knowledge: Vec<ClauseId>,
+    patient_documents: Vec<usize>,
+}
+impl SliceProvider for KnowledgeOnly {
+    fn prepare(&mut self, knowledge: &[ClauseSource]) -> Result<(), Failure> {
+        self.knowledge = knowledge.iter().map(|source| source.id).collect();
+        Ok(())
+    }
+    fn select(&mut self, patient: &[ClauseSource], _: &[u8]) -> Result<Vec<ClauseId>, Failure> {
+        self.patient_documents = patient.iter().map(|source| source.id.document).collect();
+        self.patient_documents.sort_unstable();
+        self.patient_documents.dedup();
+        Ok(self.knowledge.clone())
+    }
+}
+
+#[test]
+fn declared_patient_suffix_is_fresh_and_absent_from_preparation() {
+    let f = Fixture::new();
+    fs::write(
+        f.0.join("knowledge.pl"),
+        document(
+            "knowledge",
+            "guideline_property(actual,A,good,true) :- guideline_property(actual,A,seed,true).\n",
+        ),
+    )
+    .unwrap();
+    fs::write(
+        f.0.join("composition.tsv"),
+        "knowledge.pl\nprojection.pl\npatient.pl\n",
+    )
+    .unwrap();
+    fs::write(
+        f.0.join("manifest.tsv"),
+        "family\tfixture\npatient_documents\t2\n",
+    )
+    .unwrap();
+    fs::remove_file(f.0.join("patient.pl")).unwrap();
+    let mut provider = KnowledgeOnly::default();
+    let mut prepared = PreparedProgram::prepare(
+        &f.0,
+        &f.0.join("composition.tsv"),
+        SourceCodec::Parsed,
+        Some(&mut provider),
+    )
+    .unwrap();
+    assert!(provider.knowledge.iter().all(|id| id.document == 1));
+    assert_eq!(provider.knowledge.len(), 3);
+    for (name, value) in [("first", "a"), ("second", "b")] {
+        fs::write(
+            f.0.join("projection.pl"),
+            document(
+                "projection",
+                &format!("guideline_property(actual,{value},seed,true).\n"),
+            ),
+        )
+        .unwrap();
+        fs::write(
+            f.0.join("patient.pl"),
+            document(
+                "patient",
+                "guideline_property(actual,patient,intake,true).\n",
+            ),
+        )
+        .unwrap();
+        let request = f.request(name, Provider::Static);
+        let answer = prepared.call(&request, Some(&mut provider)).unwrap();
+        assert!(answer.contains(&format!("sol([{value}])")), "{answer}");
+        assert_eq!(provider.patient_documents, [2, 3]);
+        let selected = fs::read_to_string(request.output.join("selected-clauses.tsv")).unwrap();
+        for id in ["2:1", "2:2", "2:3", "3:1", "3:2", "3:3"] {
+            assert!(
+                selected.lines().any(|line| line == id),
+                "patient fact {id} missing"
+            );
+        }
+        let baseline = f.0.join(format!("baseline-{name}"));
+        let out = Command::new("swipl")
+            .args(["-q", "-f", "none", "-F", "none", "-s"])
+            .arg(&request.producer)
+            .args(["-g", "sb1_main", "-t", "halt(9)", "--", "--root"])
+            .arg(&f.0)
+            .arg(&request.composition)
+            .arg(&baseline)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success() && out.stderr.is_empty(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let actual = fs::read_to_string(request.output.join("certificate.txt")).unwrap();
+        let expected = fs::read_to_string(baseline.join("certificate.txt")).unwrap();
+        assert_eq!(
+            actual.lines().nth(1),
+            expected.lines().nth(1),
+            "identity frames every patient document in order"
+        );
+    }
+}
+
+#[test]
+fn any_patient_suffix_document_with_a_rule_refuses_per_call() {
+    let f = Fixture::new();
+    fs::write(
+        f.0.join("composition.tsv"),
+        "knowledge.pl\nprojection.pl\npatient.pl\n",
+    )
+    .unwrap();
+    fs::write(f.0.join("manifest.tsv"), "patient_documents\t2\n").unwrap();
+    fs::write(f.0.join("projection.pl"), document("projection", CLAUSES)).unwrap();
+    let mut prepared = PreparedProgram::prepare(
+        &f.0,
+        &f.0.join("composition.tsv"),
+        SourceCodec::Parsed,
+        None,
+    )
+    .unwrap();
+    let error = prepared
+        .call(&f.request("rule-in-projection", Provider::All), None)
+        .unwrap_err();
+    assert_eq!(error.rc, 1);
+    assert!(
+        error.message.contains("patient contains a rule"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn invalid_or_duplicate_patient_counts_refuse_instead_of_loading_intakes() {
+    let f = Fixture::new();
+    for text in [
+        "patient_documents\t0\n",
+        "patient_documents\t-1\n",
+        "patient_documents\tx\n",
+        "patient_documents\t3\n",
+        "patient_documents\t1\npatient_documents\t1\n",
+    ] {
+        fs::write(f.0.join("manifest.tsv"), text).unwrap();
+        let error = PreparedProgram::prepare(
+            &f.0,
+            &f.0.join("composition.tsv"),
+            SourceCodec::Parsed,
+            None,
+        )
+        .err()
+        .expect("bad count must refuse");
+        assert_eq!(error.rc, 2, "{}", error.message);
+    }
 }
 
 #[test]
