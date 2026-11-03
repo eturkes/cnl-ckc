@@ -1,6 +1,6 @@
 # SB1 certificate checker
 
-Prototype for contract `sb` D5/D7. `accepted` means that this prototype passed its support and closure checks. It is not the verified patient-answer command or a WFM claim. Typed negative/growth-cycle analysis and relevant-slice selection are separate work. This checker examines the whole composition.
+Prototype for contract `sb` D5/D7. `accepted` means that this prototype passed its support and closure checks. It is not the verified patient-answer command or a WFM claim. The standalone mode examines the whole composition. The prepared orchestrator supports conservative slices and a typed-analysis/provider hook. Built-in providers do not yet enforce typed negative/growth-cycle admission.
 
 ## Build and run
 
@@ -19,6 +19,62 @@ The standalone workspace uses vendored dependencies. Its toolchain link follows 
 
 The files and return codes follow `bench/sb/interfaces.md`. Relative paths listed in the composition resolve against `--root`. The optional query is a canonical `ckc v1` question or the exact `sb1-q-all 0` marker. Answers are emitted only after every check passes. A complete empty q-all result has no stdout bytes and returns 0.
 
+## Prepared calls
+
+```sh
+prototype/sb1/checker/target/release/checker orchestrate --provider static \
+  --root "$PWD" <composition.tsv> <empty-output-dir> <query>
+```
+
+The last composition member is the patient's fact document. `PreparedProgram` parses and admits the preceding knowledge-base documents once. It retains their head indices, serialized clauses and incremental composition-identity prefix. Each call reads and admits the patient afresh, parses the question, selects clauses, writes the slice, owns the SWI child and checks the returned slice model. Model terms and patient state leave the arena after each call. SWI receives only the selected program. Its certificate keeps original clause ids.
+
+`all` reproduces the whole-model path. `static` follows predicate and constant-constrained calls, including correlated NAF. Conjunctive head-pattern constraints narrow the calls conservatively; selecting a rule closes its whole body, not only a query-bound instance. q-all uses all clauses because its payloads range beyond the operator edges. These are prototype providers, not a verified relevance analysis. `SliceProvider::prepare` supplies the load-time analysis hook; `select` receives the patient's source clauses and question bytes and returns original clause ids alone. The typed provider owns its conservative-selection obligation. `--slice-ids` injects a selection for diagnostics; arbitrary selections carry no answer-preservation claim.
+
+In harness mode, `CKC_BENCH_SINK=closed-file-v1` selects a regular `answers.txt` sink. The owner writes, flushes and closes it, then publishes an atomic `sink-complete.tsv` marker with the close time, bytes, digest and CPU ticks. The harness verifies that marker, maps its shared-clock time to its monotonic ledger with reported calibration uncertainty and rejects clock steps. Score ends at close; `teardown_ns` covers the remaining invocation. Direct CLI output stays on stdout.
+
+The CLI retains the prepared knowledge base through process exit. The OS reclaims that process-lifetime heap; the CLI does not walk every dormant allocation after each call. Loaded RSS stays visible to the sampler until exit. Library callers own the prepared value and use its normal lifetime.
+
+The orchestrator writes `orchestrator-phases.tsv` with explicit load/scored kinds and exclusive offsets. The producer's entire child interval is scored once; its own subphases remain diagnostic. Loaded RSS remains charged. The outer harness charges every gap through the complete answer sink. It reports later process teardown as a load-side lifecycle phase, keeps RSS sampling and the operational deadline/caps active through teardown, and reaps the owned process tree. Usage, metrics and outcome details are in `bench/sb/interfaces.md`.
+
+### Gap trace
+
+`SB1_STAGE_TRACE=1` enables diagnostic TSVs without changing load/scored kinds, deadlines or RSS sampling. `orchestrator-trace.tsv` records owner-relative monotonic wall time and absolute thread CPU nanoseconds: patient decode/admission, identity, query/slice, materialization, SWI spawn/wait, model/certificate decode, checks, answer computation, call-state rollback, metrics, stdout write/flush and pre-exit. `harness-stage-trace.tsv` records controller-relative events through owner exit, wait/reap, answer-sink handling, sampler finish and publication. Its child CPU ticks + the pinned `CLK_TCK` can be compared with the owner's pre-exit CPU, up to tick quantization. The two wall origins are separate; startup and post-exit deltas must be identified before comparing them. The stdout guard drop is not an explicit close of file descriptor 1.
+
+`python3 -I prototype/sb1/checker/tests/stage-trace-controls.py` checks the analysis on distinct synthetic wall origins and exact absolute CPU remainders; identity-mismatch and incomplete-campaign plants must refuse. Trace writes stay charged. A trace-on run is diagnostic, not interchangeable with an untraced confirmation campaign. Default runs create neither trace file. `python3 -I prototype/sb1/checker/tests/analyze-stage-trace.py <paired-campaign>` validates six complete F1b runs and writes per-run/median stage deltas. `startup_plus_post_pre_exit` contains both the unknown startup offset and post-pre-exit wall; the owner's final CPU remainder uses separate absolute counters and retains its tick uncertainty.
+
+### Development R rerun
+
+Use F1b/F1a compositions at G1 and G100 made from the same root. Build release binaries first. Set `SB1_COMPOSITIONS` to their parent directory, `SB1_R_OUT` to a new output directory and `SB1_TIMING_LOCK` to the shared timing lock. This runs three paired development blocks, not the authorized pilot/confirmation campaign.
+
+```sh
+export ROOT="$PWD" CKC="$PWD/rust/target/release/ckc"
+export SB1_COMPOSITIONS SB1_R_OUT SB1_TIMING_LOCK
+export CHECKER="$PWD/prototype/sb1/checker/target/release/checker"
+export PRODUCER="$PWD/prototype/sb1/producer.prolog"
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 RAYON_NUM_THREADS=1 CKC_JOBS=1
+mkdir "$SB1_R_OUT"
+# shellcheck disable=SC2016 # Exported paths expand in the child shell.
+flock "$SB1_TIMING_LOCK" heavy bash -c '
+  exclusive() {
+    python3 -I -c "import runpy; runpy.run_path(\"prototype/sb1/producer-tests/timings.py\")[\"exclusive\"]()"
+  }
+  exclusive || exit
+  for family in F1b F1a; do
+    exclusive || exit
+    "$CKC" bench run "$SB1_COMPOSITIONS/$family-100/composition" \
+      --paired "$SB1_COMPOSITIONS/$family-1/composition" --root "$ROOT" \
+      --orchestrator "$CHECKER orchestrate --provider static --producer $PRODUCER" \
+      --query "$ROOT/bench/sb/queries/q-one.pl.in" --blocks 3 --seed 12051 \
+      --deadline-ms 3600000 --memory-bytes 32000000000 --sample-ms 50 \
+      --identity-file "$CHECKER" --identity-file "$PRODUCER" --out "$SB1_R_OUT/$family" || exit
+    exclusive || exit
+  done
+'
+python3 -I prototype/sb1/checker/tests/summarize-r.py "$SB1_R_OUT"
+```
+
+The summary validates complete paired samples and writes `phase-summary.tsv` (each phase's median/max, plus scored gaps) and `cardinalities.tsv`. It preserves every raw sample. A family with any non-accepted run has no latency summary.
+
 ## Representation and checks
 
 - Interned symbols and terms form a DAG. Exact term ids decide equality. Terms retain arbitrary-width canonical integers and rationals.
@@ -30,7 +86,7 @@ The files and return codes follow `bench/sb/interfaces.md`. Relative paths liste
 - Closure enumerates each clause's enabled valuations over the proposed model. A missing head refuses even when no certificate row mentions that valuation.
 - Question projection and q-all payloads use Prolog standard term order, then deduplicate and serialize canonically.
 
-The default source codec parses each raw document once into the term arena. The parser records each anonymous variable's position and first-occurrence id. Fresh admission streams the canonical image against the raw source without allocating a rendered string per subterm or a normalized source copy: declarations, metadata, bundle markers, literals, NAF, cached atom spelling and anonymous-variable reading. It then runs the unchanged term-shape and left-to-right safety checks. Canonical-image checking stays in the charged admission phase; no verdict is cached across patients.
+The default source codec parses each raw document once into the term arena. The parser records each anonymous variable's position and first-occurrence id. Fresh admission streams the canonical image against the raw source without allocating a rendered string per subterm or a normalized source copy: declarations, metadata, bundle markers, literals, NAF, cached atom spelling and anonymous-variable reading. It then runs the unchanged term-shape and left-to-right safety checks. Standalone mode charges canonical-image checking to its admission phase. Prepared mode performs knowledge-base admission once at load and charges fresh patient admission to each call.
 
 `SB1_SOURCE_CODEC=kernel` selects the previous source path: `contract::v1_read`, the prototype decoder, then `contract::v1_check` during admission. It remains a differential oracle. The public kernel API returns a verdict or normalized bytes, not its parsed arena. The single-arena codec is prototype code, not a verified replacement for that kernel API. Its tests establish equivalence on their explicit inputs; full-domain equivalence and a verified parsed-program boundary remain proof work. Questions still use the kernel codec.
 
@@ -38,11 +94,11 @@ Both modes retain the consumer-fixture header adapter. A noncanonical leading co
 
 ## Measurements
 
-`checker-phases.tsv` records wall and CPU seconds for load, decode, admission, index, support, closure and answers. Load includes source I/O, reading, parsing and source-term interning. Decode includes model/certificate/query I/O, identity hashing and model-term interning. Admission includes the codec, term grammar and left-to-right safety. Answers includes sorting, serialization and the term-counter pass. Metric-file writes and the final stdout write sit outside these phase rows; the harness must charge those gaps.
+Standalone `checker-phases.tsv` records wall and CPU seconds for load, decode, admission, index, support, closure and answers. Load includes source I/O, reading, parsing and source-term interning. Decode includes model/certificate/query I/O, identity hashing and model-term interning. Admission includes the codec, term grammar and left-to-right safety. Answers includes sorting, serialization and the term-counter pass. Metric-file writes and the final stdout write sit outside these phase rows; the harness must charge those gaps.
 
 `checker-source-profile.tsv` splits source normalization, arena decoding, canonical checking and shape/safety. Normalization and decoding belong to load; canonical checking and shape/safety belong to admission. `checker source-profile --root <repo> <composition.tsv>` runs those source steps without a model or certificate and prints the same split. This diagnostic does not change the seven main phase rows.
 
-`checker-counters.tsv` separates logical input/output cardinalities from runtime work. `enabled_instances` counts every complete closure valuation; `support_incidences` counts the positive prerequisites of selected supports. Successful intermediate joins are runtime work, not a model cardinality. Term depth excludes certificate/output list wrappers. The last composition member supplies the `patient_facts` count, including its metadata facts. Zero-valued counters remain present. On a refused run, later phases have zero rows because they did not execute.
+`checker-counters.tsv` separates logical input/output cardinalities from runtime work. `enabled_instances` counts every complete closure valuation; `support_incidences` counts the positive prerequisites of selected supports. Successful intermediate joins are runtime work, not a model cardinality. Term depth excludes certificate/output list wrappers. In prepared mode, term-depth and number-width meters visit the selected clauses and slice model; `interned_terms` also counts the retained knowledge-base arena. Source-byte/clause counters describe admitted inputs, while `selected_clauses` names the checked slice. The last composition member supplies the `patient_facts` count, including its metadata facts. Zero-valued counters remain present. On a refused run, later phases have zero rows because they did not execute.
 
 The prototype has no in-process deadline or memory limiter. The harness owns resource limits and abnormal-exit classification. These counters and phase rows do not constitute a scale or latency result.
 
@@ -60,6 +116,15 @@ Format only this workspace's files. Cargo's `fmt --all` follows the kernel's wor
 ```bash
 (cd prototype/sb1/checker && rustfmt --edition 2024 --config skip_children=true src/*.rs tests/*.rs)
 ```
+
+The finite-oracle preflight uses the frozen 93,369-case domain in `rust/ckc/tests/sb-oracle/`. Batches call the actual producer's evaluation, support-level agenda and envelope writer. The checker applies its source-shape/safety admission, model/envelope decoder, indices, support and closure checks. Source files are supplied as semantic clause terms: public canonical-file envelopes are outside this oracle's declared domain. The eight NC cases remain refusal controls, separate from the 93,361 admitted exact-model cases. Every case and disagreement is recorded; the command fails on any mismatch.
+
+```sh
+(cd prototype/sb1/checker && SB1_PREFLIGHT_OUT="$PWD/target/oracle-preflight" \
+  cargo test --locked --offline --lib frozen_finite_oracle_matches_prototype_producer_and_checker -- --nocapture)
+```
+
+Run the CPU-heavy preflight on the pool. `SB1_PREFLIGHT_FAMILY` selects one family for failure diagnosis; only a run without it covers the whole domain. `tests/orchestrated-corpus.py` compares all/static answers for q-all, q-one and q-patient with the frozen whole-program producer plus independent model queries on the four consumer worlds and every G1/G2/G4 family. It retains exact-comparison rows and identities and removes bulky files only after successful comparison.
 
 Producer integration, with an existing producer and checker binary:
 

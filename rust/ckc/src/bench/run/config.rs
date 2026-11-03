@@ -10,6 +10,7 @@ pub(super) struct Config {
     pub paired: Option<PathBuf>,
     pub producer: String,
     pub checker: String,
+    pub orchestrator: Option<String>,
     pub query: String,
     pub blocks: u64,
     pub seed: u64,
@@ -20,7 +21,7 @@ pub(super) struct Config {
     pub size_bytes: u64,
     pub identities: Vec<PathBuf>,
 }
-pub(super) const HELP: &str = "usage: ckc bench run <composition-dir> --producer <cmd> --checker <cmd> --query <q> --blocks <n> --out <dir> [--root <repo>] [--paired <composition-dir>] [--seed <n>] [--deadline-ms <n>] [--sample-ms <n>] [--memory-bytes <n>] [--size-bytes <n>] [--identity-file <file>]";
+pub(super) const HELP: &str = "usage: ckc bench run <composition-dir> (--producer <cmd> --checker <cmd> | --orchestrator <cmd>) --query <q> --blocks <n> --out <dir> [--root <repo>] [--paired <composition-dir>] [--seed <n>] [--deadline-ms <n>] [--sample-ms <n>] [--memory-bytes <n>] [--size-bytes <n>] [--identity-file <file>]";
 
 fn natural(value: &str, option: &str) -> Result<u64> {
     value
@@ -59,6 +60,7 @@ impl Config {
             paired: None,
             producer: String::new(),
             checker: String::new(),
+            orchestrator: None,
             query: String::new(),
             blocks: 1,
             seed: 0x5342_315f_5041_4952,
@@ -83,6 +85,7 @@ impl Config {
                 "--paired" => config.paired = Some(value.into()),
                 "--producer" => config.producer = value.to_owned(),
                 "--checker" => config.checker = value.to_owned(),
+                "--orchestrator" => config.orchestrator = Some(value.to_owned()),
                 "--query" => config.query = value.to_owned(),
                 "--blocks" => config.blocks = positive(value, option)?,
                 "--seed" => config.seed = natural(value, option)?,
@@ -97,8 +100,12 @@ impl Config {
                 _ => return Err(format!("unknown option {option}; {HELP}")),
             }
         }
-        if config.producer.trim().is_empty()
-            || config.checker.trim().is_empty()
+        let commands_valid = if let Some(command) = &config.orchestrator {
+            !command.trim().is_empty() && config.producer.is_empty() && config.checker.is_empty()
+        } else {
+            !config.producer.trim().is_empty() && !config.checker.trim().is_empty()
+        };
+        if !commands_valid
             || config.query.is_empty()
             || config.out.as_os_str().is_empty()
             || !seen.contains("--blocks")
@@ -133,6 +140,9 @@ impl Config {
     }
     pub fn query(&self, composition: &Path) -> Result<PathBuf> {
         let path = match self.query.as_str() {
+            "q-all" if composition.join("queries/q-all.txt").is_file() => {
+                composition.join("queries/q-all.txt")
+            }
             "q-all" | "q-one" | "q-patient" => composition
                 .join("queries")
                 .join(format!("{}.pl", self.query)),

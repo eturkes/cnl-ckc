@@ -1,4 +1,64 @@
 pub fn sha256(bytes: &[u8]) -> String {
+    let mut hash = Sha256::default();
+    hash.update(bytes);
+    hash.finish()
+}
+
+#[derive(Clone)]
+pub struct Sha256 {
+    state: [u32; 8],
+    pending: Vec<u8>,
+    bytes: u64,
+}
+
+impl Default for Sha256 {
+    fn default() -> Self {
+        Self {
+            state: [
+                0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
+                0x5be0cd19,
+            ],
+            pending: Vec::with_capacity(64),
+            bytes: 0,
+        }
+    }
+}
+
+impl Sha256 {
+    pub fn update(&mut self, mut bytes: &[u8]) {
+        self.bytes = self.bytes.wrapping_add(bytes.len() as u64);
+        if !self.pending.is_empty() {
+            let n = bytes.len().min(64 - self.pending.len());
+            self.pending.extend_from_slice(&bytes[..n]);
+            bytes = &bytes[n..];
+            if self.pending.len() == 64 {
+                let block = self.pending.as_slice().try_into().expect("SHA block");
+                compress(&mut self.state, block);
+                self.pending.clear();
+            }
+        }
+        let (blocks, remainder) = bytes.as_chunks::<64>();
+        for block in blocks {
+            compress(&mut self.state, block);
+        }
+        self.pending.extend_from_slice(remainder);
+    }
+
+    pub fn finish(mut self) -> String {
+        let bits = self.bytes.wrapping_mul(8);
+        self.pending.push(0x80);
+        while self.pending.len() % 64 != 56 {
+            self.pending.push(0);
+        }
+        self.pending.extend_from_slice(&bits.to_be_bytes());
+        for block in self.pending.as_chunks::<64>().0 {
+            compress(&mut self.state, block);
+        }
+        self.state.iter().map(|n| format!("{n:08x}")).collect()
+    }
+}
+
+fn compress(state: &mut [u32; 8], block: &[u8; 64]) {
     const K: [u32; 64] = [
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
         0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
@@ -11,61 +71,42 @@ pub fn sha256(bytes: &[u8]) -> String {
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
         0xc67178f2,
     ];
-    let mut state = [
-        0x6a09e667u32,
-        0xbb67ae85,
-        0x3c6ef372,
-        0xa54ff53a,
-        0x510e527f,
-        0x9b05688c,
-        0x1f83d9ab,
-        0x5be0cd19,
-    ];
-    let mut padded = bytes.to_vec();
-    padded.push(0x80);
-    while padded.len() % 64 != 56 {
-        padded.push(0);
+    let mut w = [0u32; 64];
+    for (i, part) in block.as_chunks::<4>().0.iter().enumerate() {
+        w[i] = u32::from_be_bytes(*part);
     }
-    padded.extend_from_slice(&(bytes.len() as u64).wrapping_mul(8).to_be_bytes());
-    for block in padded.as_chunks::<64>().0 {
-        let mut w = [0u32; 64];
-        for (i, part) in block.as_chunks::<4>().0.iter().enumerate() {
-            w[i] = u32::from_be_bytes(*part);
-        }
-        for i in 16..64 {
-            let a = w[i - 15].rotate_right(7) ^ w[i - 15].rotate_right(18) ^ (w[i - 15] >> 3);
-            let b = w[i - 2].rotate_right(17) ^ w[i - 2].rotate_right(19) ^ (w[i - 2] >> 10);
-            w[i] = w[i - 16]
-                .wrapping_add(a)
-                .wrapping_add(w[i - 7])
-                .wrapping_add(b);
-        }
-        let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h] = state;
-        for i in 0..64 {
-            let s1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
-            let ch = (e & f) ^ (!e & g);
-            let t1 = h
-                .wrapping_add(s1)
-                .wrapping_add(ch)
-                .wrapping_add(K[i])
-                .wrapping_add(w[i]);
-            let s0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
-            let maj = (a & b) ^ (a & c) ^ (b & c);
-            let t2 = s0.wrapping_add(maj);
-            h = g;
-            g = f;
-            f = e;
-            e = d.wrapping_add(t1);
-            d = c;
-            c = b;
-            b = a;
-            a = t1.wrapping_add(t2);
-        }
-        for (s, n) in state.iter_mut().zip([a, b, c, d, e, f, g, h]) {
-            *s = s.wrapping_add(n);
-        }
+    for i in 16..64 {
+        let a = w[i - 15].rotate_right(7) ^ w[i - 15].rotate_right(18) ^ (w[i - 15] >> 3);
+        let b = w[i - 2].rotate_right(17) ^ w[i - 2].rotate_right(19) ^ (w[i - 2] >> 10);
+        w[i] = w[i - 16]
+            .wrapping_add(a)
+            .wrapping_add(w[i - 7])
+            .wrapping_add(b);
     }
-    state.iter().map(|n| format!("{n:08x}")).collect()
+    let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h] = *state;
+    for i in 0..64 {
+        let s1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
+        let ch = (e & f) ^ (!e & g);
+        let t1 = h
+            .wrapping_add(s1)
+            .wrapping_add(ch)
+            .wrapping_add(K[i])
+            .wrapping_add(w[i]);
+        let s0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
+        let maj = (a & b) ^ (a & c) ^ (b & c);
+        let t2 = s0.wrapping_add(maj);
+        h = g;
+        g = f;
+        f = e;
+        e = d.wrapping_add(t1);
+        d = c;
+        c = b;
+        b = a;
+        a = t1.wrapping_add(t2);
+    }
+    for (s, n) in state.iter_mut().zip([a, b, c, d, e, f, g, h]) {
+        *s = s.wrapping_add(n);
+    }
 }
 
 #[cfg(test)]
@@ -85,5 +126,25 @@ mod tests {
             sha256(b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"),
             "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
         );
+    }
+    #[test]
+    fn incremental_prefix_clones_preserve_every_chunk_boundary() {
+        let bytes = (0..1025).map(|i| (i % 251) as u8).collect::<Vec<_>>();
+        let expected = sha256(&bytes);
+        for split in 0..=bytes.len() {
+            let mut prefix = Sha256::default();
+            prefix.update(&bytes[..split]);
+            let mut cloned = prefix.clone();
+            cloned.update(&bytes[split..]);
+            assert_eq!(cloned.finish(), expected, "split={split}");
+            assert_eq!(prefix.finish(), sha256(&bytes[..split]));
+        }
+        for chunk in 1..=129 {
+            let mut hash = Sha256::default();
+            for part in bytes.chunks(chunk) {
+                hash.update(part);
+            }
+            assert_eq!(hash.finish(), expected, "chunk={chunk}");
+        }
     }
 }

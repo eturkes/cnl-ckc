@@ -8,15 +8,23 @@
 
 % Untrusted SB1 prototype; the checker, not this process, decides acceptance.
 sb1_main :-
-    catch((current_prolog_flag(argv, Args), sb1_args(Args, Root, Composition, Out),
-           sb1_produce(Root, Composition, Out)), Error, sb1_failure(Error)),
+    catch((current_prolog_flag(argv, Args), sb1_dispatch(Args)), Error, sb1_failure(Error)),
     halt.
+
+sb1_dispatch(['--root', Root, '--slice', Identity, Slice, Out]) :- !,
+    sb1_produce_loaded(sb1_load_slice(Root, Slice, Clauses), Clauses, Identity, Out).
+sb1_dispatch(Args) :-
+    sb1_args(Args, Root, Composition, Out), sb1_produce(Root, Composition, Out).
 
 sb1_args(['--root', Root, Composition, Out], Root, Composition, Out) :- !.
 sb1_args(Args, _, _, _) :- throw(sb1_error(load, usage(Args))).
 
 sb1_produce(Root, Composition, Out) :-
-    sb1_stage(load, sb1_load(Root, Composition, Clauses, Identity), Load),
+    sb1_produce_loaded(sb1_load(Root, Composition, Clauses, Identity), Clauses, Identity, Out).
+
+:- meta_predicate sb1_produce_loaded(0, -, -, +).
+sb1_produce_loaded(Loader, Clauses, Identity, Out) :-
+    sb1_stage(load, Loader, Load),
     sb1_stage(eval, sb1_evaluate(Model), Eval),
     sb1_stage(certificate, sb1_certify(Clauses, Model, Claims), Certificate),
     sb1_stage(write, sb1_write_outputs(Out, Identity, Model, Claims), Write),
@@ -85,6 +93,33 @@ sb1_load(Root, Composition, Clauses, Identity) :-
     forall(member(clause(_, H, B, _), Clauses), sb1_assert(sb1_world, H, B)),
     ( setof(V, sb1_world:guideline_schema_version(V), [2]) -> true
     ; throw(schema_identifier(expected(2))) ).
+
+% The orchestrator binds identity + original ids; this process reads no unsliced
+% documents. An empty slice is a complete empty program, not a missing output.
+sb1_load_slice(Root, Slice, Clauses) :-
+    ( current_prolog_flag(version_data, swi(10, 0, 2, _)) -> true
+    ; throw(expected_swipl('10.0.2')) ),
+    sb1_reset,
+    sb1_path(Root, 'guidelines/schema.pl', Schema),
+    load_files(sb1_world:Schema, [silent(true), if(true)]),
+    sb1_path(Root, Slice, Path),
+    setup_call_cleanup(open(Path, read, Stream, [encoding(utf8)]),
+        sb1_read_slice(Stream, Clauses), close(Stream)),
+    findall(Id, member(clause(Id, _, _, _), Clauses), Ids), sort(Ids, Unique),
+    ( same_length(Ids, Unique) -> true ; throw(duplicate_slice_clause_id) ),
+    forall(member(clause(_, H, B, _), Clauses), sb1_assert(sb1_world, H, B)).
+sb1_read_slice(Stream, Clauses) :-
+    read_term(Stream, Term, [syntax_errors(error)]),
+    ( Term == end_of_file -> Clauses = []
+    ; nonvar(Term), Term = sb1_clause(Doc, Ordinal, Code),
+      integer(Doc), Doc >= 1, integer(Ordinal), Ordinal >= 1, nonvar(Code)
+    -> ( Code = (H :- B) -> true ; H = Code, B = true ),
+       ( sb1_literal(H) -> true ; throw(unsupported_head(Doc, Ordinal, H)) ),
+       sb1_nonlocal(H, B, Variables), sb1_validate_body(B),
+       sb1_safe(B, Variables, [], Bound), term_variables(H, HeadVars), sb1_bound(HeadVars, Bound),
+       ( B == true, \+ ground(H) -> throw(nonground_fact(Doc, Ordinal)) ; true ),
+       Clauses = [clause(Doc-Ordinal, H, B, Variables)|Rest], sb1_read_slice(Stream, Rest)
+    ; throw(malformed_slice_clause(Term)) ).
 
 sb1_path(Root, Listed, Path) :-
     ( is_absolute_file_name(Listed) -> Path = Listed ; directory_file_path(Root, Listed, Path) ).

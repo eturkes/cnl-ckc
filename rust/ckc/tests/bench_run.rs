@@ -81,6 +81,44 @@ impl Scratch {
             .output()
             .unwrap()
     }
+    fn orchestrated(&self, mode: &str) -> Output {
+        let composition = self.composition("target");
+        let script = self.0.join("orchestrator.py");
+        fs::write(&script, ORCHESTRATOR).unwrap();
+        Command::new("timeout")
+            .args(["--kill-after=1", "30"])
+            .arg(program())
+            .args(["bench", "run"])
+            .arg(composition)
+            .args([
+                "--orchestrator",
+                &format!("python3 -I '{}' {mode}", script.display()),
+            ])
+            .args([
+                "--query",
+                "q-all",
+                "--blocks",
+                "1",
+                "--deadline-ms",
+                if mode == "late-timeout" {
+                    "1000"
+                } else {
+                    "5000"
+                },
+                "--sample-ms",
+                "10",
+            ])
+            .args(["--root", root().to_str().unwrap(), "--out"])
+            .arg(self.0.join("result"))
+            .env("SB1_STAGE_TRACE", if mode == "traced" { "1" } else { "0" })
+            .args(if mode == "late-memory" {
+                vec!["--memory-bytes", "42000000"]
+            } else {
+                Vec::new()
+            })
+            .output()
+            .unwrap()
+    }
     fn result(&self, name: &str) -> String {
         fs::read_to_string(self.0.join("result").join(name)).unwrap()
     }
@@ -123,6 +161,245 @@ fn no_answers(s: &Scratch) {
     let run = s.0.join("result/run-000001");
     for path in ["answers.txt", "model.txt", "certificate.txt", ".work"] {
         assert!(!run.join(path).exists(), "partial product: {path}");
+    }
+}
+
+const ORCHESTRATOR: &str = r#"
+import hashlib, pathlib, subprocess, sys, time
+mode = sys.argv[1]
+assert sys.argv[2] == '--root' and len(sys.argv) == 7
+out = pathlib.Path(sys.argv[5])
+start = time.perf_counter()
+rows = []
+for name in ['load_parse', 'load_admission', 'load_analysis', 'load_index',
+             'patient', 'slice', 'materialize', 'producer', 'decode', 'index',
+             'support', 'closure', 'answers']:
+    before = time.perf_counter() - start
+    if name == 'producer':
+        subprocess.run([sys.executable, '-I', '-c', 'import time; x=bytearray(16000000); time.sleep(.08)'], check=True)
+    else:
+        time.sleep(.012)
+    elapsed = time.perf_counter() - start - before
+    kind = 'load' if name.startswith('load_') else 'scored'
+    if mode == 'bad-kind' and name == 'patient': kind = 'load'
+    rows.append([name, str(elapsed), '0', str(before), kind])
+if mode == 'overlap': rows[-1][3] = '0'
+(out / 'orchestrator-phases.tsv').write_text('phase\tseconds\tcpu\tstart_seconds\tkind\n' + ''.join('\t'.join(r)+'\n' for r in rows))
+(out / 'model.txt').write_text('model.\n')
+(out / 'certificate.txt').write_text('certificate\n')
+if mode == 'refused':
+    print('refused claim planted', file=sys.stderr)
+    sys.exit(1)
+if mode == 'producer-error':
+    print('indeterminate producer planted', file=sys.stderr)
+    sys.exit(3)
+answer = b'ORCHESTRATED-ANSWER\n'
+digest = hashlib.sha256(answer).hexdigest()
+with (out / 'answers.txt').open('wb') as sink:
+    sink.write(answer)
+    sink.flush()
+closed = time.time_ns()
+if mode == 'future-sink': closed += 60_000_000_000
+fields = pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()
+cpu = int(fields[11])+int(fields[12])+max(0,int(fields[13]))+max(0,int(fields[14]))
+if mode != 'missing-sink':
+    if mode == 'bad-sink': digest = '0'*64
+    tmp = out / 'sink-complete.tmp'
+    tmp.write_text(f'sb1-sink 1\nclosed_unix_ns\t{closed}\nbytes\t{len(answer)}\nsha256\t{digest}\ncpu_ticks\t{cpu}\n')
+    tmp.rename(out / 'sink-complete.tsv')
+if mode == 'late-teardown':
+    memory = bytearray(24*1024*1024)
+    for i in range(0,len(memory),4096): memory[i]=1
+    time.sleep(.4)
+if mode == 'late-memory':
+    memory = bytearray(40*1024*1024)
+    for i in range(0,len(memory),4096): memory[i]=1
+    time.sleep(2)
+if mode == 'late-timeout': time.sleep(5)
+print('ORCHESTRATED-ANSWER')
+"#;
+
+#[test]
+fn closed_sink_marker_detaches_late_teardown_from_the_score() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("late-teardown");
+    succeeded(&s.orchestrated("late-teardown"));
+    let text = s.result("runs.tsv");
+    let run = &rows(&text)[0];
+    let sink = number(run, "sink_end_ns");
+    let teardown = number(run, "teardown_ns");
+    assert!(
+        teardown >= 350_000_000,
+        "planted 400ms post-sink lifecycle stays outside score"
+    );
+    assert_eq!(number(run, "scored_ns") + number(run, "load_ns"), sink);
+    assert_eq!(sink + teardown, number(run, "wall_ns"));
+    assert!(
+        number(run, "peak_rss_bytes") >= 24_000_000,
+        "post-sink allocation remains sampled"
+    );
+    let ledger_text = s.result("run-000001/intervals.tsv");
+    let ledger = rows(&ledger_text);
+    let lifecycle = ledger.iter().find(|r| r["kind"] == "lifecycle").unwrap();
+    assert_eq!(lifecycle["phase"], "teardown");
+    assert_eq!(number(lifecycle, "start_ns"), sink);
+    assert_eq!(number(lifecycle, "end_ns"), number(run, "wall_ns"));
+    assert_eq!(s.result("run-000001/answers.txt"), "ORCHESTRATED-ANSWER\n");
+}
+
+#[test]
+fn post_sink_caps_still_reject_partial_invocations() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    for (mode, reason) in [("late-memory", "memory"), ("late-timeout", "deadline")] {
+        let s = Scratch::new(mode);
+        let output = s.orchestrated(mode);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let text = s.result("runs.tsv");
+        let row = &rows(&text)[0];
+        assert_eq!((row["outcome"], row["reason"]), ("indeterminate", reason));
+        no_answers(&s);
+    }
+}
+
+#[test]
+fn orchestrated_sink_marker_requires_closed_bytes_and_a_valid_time() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    for mode in ["missing-sink", "bad-sink", "future-sink"] {
+        let s = Scratch::new(mode);
+        let output = s.orchestrated(mode);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let text = s.result("runs.tsv");
+        let row = &rows(&text)[0];
+        assert_eq!(
+            (row["outcome"], row["reason"]),
+            ("indeterminate", "sink-report")
+        );
+        no_answers(&s);
+    }
+}
+
+#[test]
+fn orchestrated_path_keeps_one_owned_tree_and_the_explicit_load_boundary() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("orchestrated");
+    succeeded(&s.orchestrated("normal"));
+    assert_eq!(s.result("run-000001/answers.txt"), "ORCHESTRATED-ANSWER\n");
+    let run_text = s.result("runs.tsv");
+    let run = &rows(&run_text)[0];
+    assert_eq!(run["outcome"], "verified");
+    let ledger_text = s.result("run-000001/intervals.tsv");
+    let ledger = rows(&ledger_text);
+    assert_eq!(
+        ledger.iter().filter(|r| r["kind"] == "subprocess").count(),
+        1
+    );
+    let mut end = 0;
+    for interval in ledger {
+        assert_eq!(number(&interval, "start_ns"), end);
+        end = number(&interval, "end_ns");
+    }
+    assert_eq!(end, number(run, "wall_ns"));
+    assert_eq!(
+        number(run, "scored_ns") + number(run, "load_ns") + number(run, "teardown_ns"),
+        end
+    );
+    assert_eq!(
+        number(run, "scored_ns") + number(run, "load_ns"),
+        number(run, "sink_end_ns")
+    );
+    let phase_text = s.result("run-000001/phases.tsv");
+    let phases = rows(&phase_text);
+    assert_eq!(phases.len(), 13);
+    assert!(phases.iter().all(|r| r["process"] == "orchestrator"));
+    assert_eq!(phases.iter().filter(|r| r["kind"] == "load").count(), 4);
+    assert_eq!(
+        number(run, "load_ns"),
+        phases
+            .iter()
+            .filter(|r| r["kind"] == "load")
+            .map(|r| number(r, "wall_ns"))
+            .sum::<u64>()
+    );
+    let processes_text = s.result("run-000001/processes.tsv");
+    assert!(
+        rows(&processes_text).len() >= 3,
+        "harness + orchestrator + producer child"
+    );
+    assert!(number(run, "peak_rss_bytes") >= 20_000_000);
+}
+
+#[test]
+fn orchestrated_trace_records_exit_and_cleanup_without_changing_answers() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("orchestrated-trace");
+    succeeded(&s.orchestrated("traced"));
+    assert_eq!(s.result("run-000001/answers.txt"), "ORCHESTRATED-ANSWER\n");
+    let text = s.result("run-000001/harness-stage-trace.tsv");
+    let trace = rows(&text);
+    let mut last = 0;
+    for row in &trace {
+        let wall = number(row, "wall_ns");
+        assert!(wall >= last);
+        last = wall;
+    }
+    for event in [
+        "spawn_begin",
+        "registered",
+        "root_nonlive_or_limit",
+        "exit_boundary_done",
+        "wait_begin",
+        "wait_done",
+        "post_wait_boundary_done",
+        "answer_sink_digest_begin",
+        "answer_sink_renamed",
+        "sampler_finish_end",
+        "publish_end",
+        "scored_wall_end",
+    ] {
+        assert!(
+            trace.iter().any(|row| row["event"] == event),
+            "missing {event}"
+        );
+    }
+    let exited = trace
+        .iter()
+        .find(|row| row["event"] == "root_nonlive_or_limit")
+        .unwrap();
+    assert!(matches!(exited["child_state"], "Z" | "X"));
+    assert!(!exited["child_own_ticks"].is_empty());
+}
+
+#[test]
+fn orchestrated_reports_fail_closed_and_keep_refusal_distinct() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    for (mode, outcome, reason) in [
+        ("refused", "refused", "orchestrator"),
+        ("producer-error", "indeterminate", "orchestrator"),
+        ("overlap", "indeterminate", "phase-report"),
+        ("bad-kind", "indeterminate", "phase-report"),
+    ] {
+        let s = Scratch::new(&format!("orchestrated-{mode}"));
+        let output = s.orchestrated(mode);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let text = s.result("runs.tsv");
+        let row = &rows(&text)[0];
+        assert_eq!((row["outcome"], row["reason"]), (outcome, reason));
+        no_answers(&s);
     }
 }
 
@@ -381,6 +658,17 @@ fn refusal_and_producer_failure_stay_distinct_from_verified_empty_answers() {
         assert_eq!(summary["status"], "incomplete");
         assert_eq!(summary["median_seconds"], "");
     }
+}
+
+#[test]
+fn named_q_all_accepts_the_generators_plain_text_marker() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("q-all-marker");
+    let target = s.composition("target");
+    fs::remove_file(target.join("queries/q-all.pl")).unwrap();
+    fs::write(target.join("queries/q-all.txt"), "sb1-q-all 0\n").unwrap();
+    succeeded(&s.invoke(&target, "result", "normal", &[]));
+    assert!(s.result("plan.tsv").contains("queries/q-all.txt"));
 }
 
 #[test]

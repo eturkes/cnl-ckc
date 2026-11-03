@@ -3,6 +3,7 @@ mod config;
 mod execute;
 mod procfs;
 mod report;
+mod sink;
 
 use config::{Config, Random};
 use execute::{Invocation, Ledger, Phase};
@@ -44,6 +45,9 @@ struct RunRow {
     wall: u64,
     load: u64,
     scored: Option<u64>,
+    sink_end: Option<u64>,
+    teardown: u64,
+    sink_uncertainty: Option<u64>,
     cpu: f64,
     peak_rss: u64,
     hwm_sum: u64,
@@ -153,6 +157,9 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
         wall: 0,
         load: 0,
         scored: None,
+        sink_end: None,
+        teardown: 0,
+        sink_uncertainty: None,
         cpu: 0.0,
         peak_rss: 0,
         hwm_sum: 0,
@@ -162,7 +169,13 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
         output_hash: None,
     };
     let mut detail = String::new();
-    for (role, command) in [("producer", &config.producer), ("checker", &config.checker)] {
+    let mut closed_sink = None;
+    let stages = if let Some(command) = &config.orchestrator {
+        vec![("orchestrator", command)]
+    } else {
+        vec![("producer", &config.producer), ("checker", &config.checker)]
+    };
+    for (role, command) in stages {
         if origin.elapsed() >= config.deadline {
             row.outcome = "indeterminate";
             row.reason = "deadline".to_owned();
@@ -195,13 +208,24 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
             break;
         }
         if stage.rc != 0 {
-            row.outcome = if role == "checker" && stage.rc == 1 {
+            row.outcome = if matches!(role, "checker" | "orchestrator") && stage.rc == 1 {
                 "refused"
             } else {
                 "indeterminate"
             };
             row.reason = role.to_owned();
             break;
+        }
+        if let Some(error) = &stage.sink_error {
+            row.outcome = "indeterminate";
+            row.reason = "sink-report".to_owned();
+            detail = error.clone();
+            break;
+        }
+        if let Some(sink) = &stage.sink {
+            row.sink_end = Some(sink.at);
+            row.sink_uncertainty = Some(sink.uncertainty);
+            closed_sink = Some((sink.bytes, sink.sha256.clone()));
         }
         match execute::phases(&work.0, &stage) {
             Ok(reported) => {
@@ -210,7 +234,7 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
                     .checked_add(
                         reported
                             .iter()
-                            .filter(|p| p.name == "load")
+                            .filter(|p| p.kind == "load")
                             .map(|p| p.wall)
                             .sum::<u64>(),
                     )
@@ -224,7 +248,7 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
                 break;
             }
         }
-        if role == "producer"
+        if matches!(role, "producer" | "orchestrator")
             && ["model.txt", "certificate.txt"]
                 .iter()
                 .any(|name| !work.0.join(name).is_file())
@@ -235,19 +259,34 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
         }
     }
     if row.outcome == "verified" {
-        let (size, hash) = report::digest(&work.0.join("checker.stdout"))?;
+        execute::trace(
+            &work.0,
+            origin,
+            "controller",
+            "answer_sink_digest_begin",
+            None,
+        )?;
+        let stdout = work.0.join("checker.stdout");
+        let (size, hash) = if let Some(sink) = closed_sink {
+            sink
+        } else {
+            report::digest(&stdout)?
+        };
         row.output_bytes = Some(size);
         row.output_hash = Some(hash);
         let certificate_size = fs::metadata(work.0.join("certificate.txt"))
             .map_err(|e| e.to_string())?
             .len();
         let model_facts = report::model_lines(&work.0.join("model.txt"))?;
+        let processes = if config.orchestrator.is_some() { 1 } else { 2 };
         let counter = format!(
-            "kind\tname\tvalue\nlogical\tmodel_lines\t{model_facts}\nlogical\tcertificate_bytes\t{certificate_size}\nlogical\toutput_bytes\t{size}\nruntime\tphase_processes\t2\n"
+            "kind\tname\tvalue\nlogical\tmodel_lines\t{model_facts}\nlogical\tcertificate_bytes\t{certificate_size}\nlogical\toutput_bytes\t{size}\nruntime\tphase_processes\t{processes}\n"
         );
         report::write(&work.0.join("harness-counters.tsv"), counter)?;
-        fs::rename(work.0.join("checker.stdout"), work.0.join("answers.txt"))
-            .map_err(|e| e.to_string())?;
+        if config.orchestrator.is_none() {
+            fs::rename(stdout, work.0.join("answers.txt")).map_err(|e| e.to_string())?;
+        }
+        execute::trace(&work.0, origin, "controller", "answer_sink_renamed", None)?;
     }
     if execute::capped(&work.0, config.size_bytes)? {
         row.outcome = "indeterminate";
@@ -257,7 +296,9 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
         row.outcome = "indeterminate";
         row.reason = "deadline".to_owned();
     }
+    execute::trace(&work.0, origin, "controller", "sampler_finish_begin", None)?;
     let state = sampler.finish();
+    execute::trace(&work.0, origin, "controller", "sampler_finish_end", None)?;
     if let Some(error) = &state.error {
         row.outcome = "indeterminate";
         row.reason = "sampler".to_owned();
@@ -266,7 +307,9 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
         row.outcome = "indeterminate";
         row.reason = "memory".to_owned();
     }
+    execute::trace(&work.0, origin, "controller", "publish_begin", None)?;
     let published = publish(&work.0, &directory, row.outcome == "verified")?;
+    execute::trace(&work.0, origin, "controller", "publish_end", None)?;
     if origin.elapsed() >= config.deadline {
         row.outcome = "indeterminate";
         row.reason = "deadline".to_owned();
@@ -284,16 +327,19 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
             }
         }
     }
+    execute::trace(&work.0, origin, "controller", "scored_wall_end", None)?;
     row.wall = ns(origin.elapsed());
     ledger.gap(row.wall);
+    row.teardown = row.sink_end.map_or(0, |sink| row.wall.saturating_sub(sink));
     row.cpu = ledger.intervals.iter().map(|r| r.cpu).sum();
     row.peak_rss = state.peak_rss;
     row.hwm_sum = state.processes.values().map(|r| r.hwm).sum();
     if row.outcome == "verified" {
         row.scored = Some(
-            row.wall
+            row.sink_end
+                .unwrap_or(row.wall)
                 .checked_sub(row.load)
-                .ok_or("load exceeds whole invocation")?,
+                .ok_or("load exceeds complete sink endpoint")?,
         );
     } else {
         row.output_bytes = None;

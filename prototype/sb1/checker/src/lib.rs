@@ -3,8 +3,10 @@ mod digest;
 mod engine;
 mod level;
 mod number;
+pub mod orchestrator;
 mod program;
 mod query;
+mod slice;
 mod term;
 
 use digest::sha256;
@@ -88,6 +90,8 @@ impl Default for Counters {
             "term_depth_max",
             "number_decimal_digits_max",
             "source_header_adapters",
+            "selected_clauses",
+            "typed_analysis_hook",
         ]
         .into_iter()
         .map(|name| (name, 0))
@@ -265,57 +269,18 @@ fn load_with_codec(
     if !text.ends_with('\n') {
         return Err(Failure::parse("composition missing LF"));
     }
-    let schema = read(&request.root.join("guidelines/schema.pl"))?;
-    let mut arena = Arena::default();
-    let mut clauses = Vec::new();
-    let mut documents = Vec::new();
-    let mut source_profile = SourceProfile::default();
-    for line in text.lines() {
-        if line.starts_with('#') || line.is_empty() {
-            continue;
-        }
-        if line.contains(['\t', '\r', '\0']) {
-            return Err(Failure::parse("composition path bytes"));
-        }
-        let path = request.root.join(line);
-        let bytes = read(&path)?;
-        let raw_text = utf8(&bytes, "source")?;
-        let clock = Instant::now();
-        let normalized = if mode == SourceCodec::Kernel {
-            Some(ckc_kernel::contract::v1_read(&bytes))
-        } else {
-            None
-        };
-        source_profile.normalization += clock.elapsed().as_secs_f64();
-        let source = normalized
-            .as_deref()
-            .map(|b| utf8(b, "read source"))
-            .transpose()?
-            .unwrap_or(raw_text);
-        let clock = Instant::now();
-        let mut next = parse_clauses(&mut arena, source, documents.len() + 1)
-            .map_err(|e| Failure::parse(format!("{line} {e}")))?;
-        source_profile.decoder += clock.elapsed().as_secs_f64();
-        counters.logical("source_bytes", bytes.len() as u64);
-        let raw_bytes = source
-            .lines()
-            .filter(|line| !line.is_empty() && !line.starts_with('%') && !line.starts_with(":-"))
-            .map(|line| (line.len() + 1) as u64)
-            .sum::<u64>();
-        let extra = next
-            .iter()
-            .flat_map(|c| &c.anonymous)
-            .map(|(_, v)| (term::variable_name(*v).len() - 1) as u64)
-            .sum::<u64>();
-        counters.logical("clause_term_bytes", raw_bytes + extra);
-        let start = clauses.len();
-        clauses.append(&mut next);
-        documents.push(Document {
-            path: line.into(),
-            bytes,
-            clauses: start..clauses.len(),
-        });
+    let mut loaded = Loaded {
+        arena: Arena::default(),
+        clauses: Vec::new(),
+        documents: Vec::new(),
+        schema: read(&request.root.join("guidelines/schema.pl"))?,
+        source_profile: SourceProfile::default(),
+    };
+    for line in composition_paths(text)? {
+        append_source(&mut loaded, &request.root, &line, counters, mode)?;
     }
+    let documents = &loaded.documents;
+    let clauses = &loaded.clauses;
     if documents.is_empty() {
         return Err(Failure::parse("empty composition"));
     }
@@ -328,14 +293,71 @@ fn load_with_codec(
             .filter(|c| c.document == documents.len() && c.body.is_empty())
             .count() as u64,
     );
-    Ok(Loaded {
-        arena,
-        clauses,
-        documents,
-        schema,
-        source_profile,
-    })
+    Ok(loaded)
 }
+fn composition_paths(text: &str) -> Result<Vec<String>, Failure> {
+    if !text.ends_with('\n') {
+        return Err(Failure::parse("composition missing LF"));
+    }
+    text.lines()
+        .filter(|line| !line.starts_with('#') && !line.is_empty())
+        .map(|line| {
+            if line.contains(['\t', '\r', '\0']) {
+                Err(Failure::parse("composition path bytes"))
+            } else {
+                Ok(line.into())
+            }
+        })
+        .collect()
+}
+fn append_source(
+    loaded: &mut Loaded,
+    root: &Path,
+    line: &str,
+    counters: &mut Counters,
+    mode: SourceCodec,
+) -> Result<(), Failure> {
+    let path = root.join(line);
+    let bytes = read(&path)?;
+    let raw_text = utf8(&bytes, "source")?;
+    let clock = Instant::now();
+    let normalized = if mode == SourceCodec::Kernel {
+        Some(ckc_kernel::contract::v1_read(&bytes))
+    } else {
+        None
+    };
+    loaded.source_profile.normalization += clock.elapsed().as_secs_f64();
+    let source = normalized
+        .as_deref()
+        .map(|b| utf8(b, "read source"))
+        .transpose()?
+        .unwrap_or(raw_text);
+    let clock = Instant::now();
+    let mut next = parse_clauses(&mut loaded.arena, source, loaded.documents.len() + 1)
+        .map_err(|e| Failure::parse(format!("{line} {e}")))?;
+    loaded.source_profile.decoder += clock.elapsed().as_secs_f64();
+    counters.logical("source_bytes", bytes.len() as u64);
+    let raw_bytes = source
+        .lines()
+        .filter(|line| !line.is_empty() && !line.starts_with('%') && !line.starts_with(":-"))
+        .map(|line| (line.len() + 1) as u64)
+        .sum::<u64>();
+    let extra = next
+        .iter()
+        .flat_map(|c| &c.anonymous)
+        .map(|(_, v)| (term::variable_name(*v).len() - 1) as u64)
+        .sum::<u64>();
+    counters.logical("clause_term_bytes", raw_bytes + extra);
+    let start = loaded.clauses.len();
+    loaded.clauses.append(&mut next);
+    loaded.documents.push(Document {
+        path: line.into(),
+        bytes,
+        clauses: start..loaded.clauses.len(),
+    });
+    Ok(())
+}
+
 fn identity(loaded: &Loaded) -> String {
     let mut frame = format!(
         "schema\0{}\0{}\n",
@@ -381,6 +403,33 @@ fn decode(
     loaded: &mut Loaded,
     counters: &mut Counters,
 ) -> Result<(Model, Vec<Claim>, Query), Failure> {
+    counters.logical(
+        "identity_bytes",
+        loaded.schema.len() as u64
+            + loaded
+                .documents
+                .iter()
+                .map(|d| d.bytes.len() as u64)
+                .sum::<u64>(),
+    );
+    let expected = identity(loaded);
+    decode_expected(
+        request,
+        &mut loaded.arena,
+        &loaded.clauses,
+        &expected,
+        None,
+        counters,
+    )
+}
+fn decode_expected(
+    request: &Request,
+    arena: &mut Arena,
+    clauses: &[Clause],
+    expected: &str,
+    query: Option<Query>,
+    counters: &mut Counters,
+) -> Result<(Model, Vec<Claim>, Query), Failure> {
     let bytes = read(&request.certificate)?;
     counters.logical("certificate_bytes", bytes.len() as u64);
     let certificate = std::str::from_utf8(&bytes)
@@ -407,16 +456,7 @@ fn decode(
     {
         return Err(Failure::refused("envelope", "composition digest shape"));
     }
-    counters.logical(
-        "identity_bytes",
-        loaded.schema.len() as u64
-            + loaded
-                .documents
-                .iter()
-                .map(|d| d.bytes.len() as u64)
-                .sum::<u64>(),
-    );
-    if got != identity(loaded) {
+    if got != expected {
         return Err(Failure::refused("identity", "composition digest mismatch"));
     }
     let bytes = read(&request.model)?;
@@ -431,9 +471,9 @@ fn decode(
     let mut facts = Vec::new();
     let mut positions = HashMap::new();
     for (i, line) in model_text.lines().enumerate() {
-        let (fact, canonical) = parse_checked(&mut loaded.arena, line, true)
+        let (fact, canonical) = parse_checked(arena, line, true)
             .map_err(|e| Failure::parse(format!("model line {} {e}", i + 1)))?;
-        if !program::model_fact(&loaded.arena, fact) {
+        if !program::model_fact(arena, fact) {
             return Err(Failure::refused(
                 "claim",
                 format!("model line {} term domain", i + 1),
@@ -450,8 +490,7 @@ fn decode(
         }
         facts.push(fact);
     }
-    let clause_ids = loaded
-        .clauses
+    let clause_ids = clauses
         .iter()
         .enumerate()
         .map(|(i, c)| ((c.document, c.ordinal), i))
@@ -480,7 +519,7 @@ fn decode(
                     Failure::refused("claim", format!("record {row} model index out of range"))
                 })?
         } else {
-            let (fact, canonical) = parse_checked(&mut loaded.arena, fields[0], false)
+            let (fact, canonical) = parse_checked(arena, fields[0], false)
                 .map_err(|e| Failure::refused("envelope", format!("record {row} {e}")))?;
             if !canonical {
                 return Err(Failure::refused(
@@ -503,7 +542,7 @@ fn decode(
             .and_then(|(doc, ord)| Some((doc.parse::<usize>().ok()?, ord.parse::<usize>().ok()?)))
             .and_then(|id| clause_ids.get(&id).copied())
             .ok_or_else(|| Failure::refused("claim", format!("record {row} clause id")))?;
-        let env = valuation(&mut loaded.arena, fields[2], &loaded.clauses[clause])
+        let env = valuation(arena, fields[2], &clauses[clause])
             .map_err(|e| Failure::refused("claim", format!("record {row} {e}")))?;
         let level = Level::parse(fields[3])
             .ok_or_else(|| Failure::refused("envelope", format!("record {row} level")))?;
@@ -529,52 +568,75 @@ fn decode(
         .collect::<Result<Vec<_>, _>>()?;
     counters.logical("model_facts", facts.len() as u64);
     counters.logical("claims", claims.len() as u64);
-    let query_bytes = request.query.as_deref().map(read).transpose()?;
-    let query = Query::parse(&mut loaded.arena, query_bytes.as_deref())?;
-    Ok((Model::new(&loaded.arena, facts, levels)?, claims, query))
+    let query = if let Some(query) = query {
+        query
+    } else {
+        let query_bytes = request.query.as_deref().map(read).transpose()?;
+        Query::parse(arena, query_bytes.as_deref())?
+    };
+    Ok((Model::new(arena, facts, levels)?, claims, query))
 }
 
 fn arena_counters(arena: &Arena, model: &Model, clauses: &[Clause], counters: &mut Counters) {
     counters.logical("interned_terms", arena.nodes.len() as u64);
     counters.runtime("interning_requests", arena.lookups);
-    let mut depths: Vec<u64> = Vec::with_capacity(arena.nodes.len());
-    let mut max_width = 0usize;
-    for node in &arena.nodes {
-        depths.push(match node.as_ref() {
+    fn depth(
+        arena: &Arena,
+        id: term::Id,
+        cache: &mut HashMap<term::Id, u64>,
+        width: &mut usize,
+    ) -> u64 {
+        if let Some(depth) = cache.get(&id) {
+            return *depth;
+        }
+        let value = match arena.node(id) {
             term::Node::Compound(_, args) => {
-                1 + args.iter().map(|id| depths[*id]).max().unwrap_or(0)
+                1 + args
+                    .iter()
+                    .map(|id| depth(arena, *id, cache, width))
+                    .max()
+                    .unwrap_or(0)
+            }
+            term::Node::Integer(n) => {
+                *width = (*width).max(n.trim_start_matches('-').len());
+                0
             }
             _ => 0,
-        });
-        if let term::Node::Integer(n) = node.as_ref() {
-            max_width = max_width.max(n.trim_start_matches('-').len());
-        }
+        };
+        cache.insert(id, value);
+        value
     }
-    fn goal_depth(goals: &[program::Goal], depths: &[u64]) -> u64 {
+    fn goal_depth(
+        arena: &Arena,
+        goals: &[program::Goal],
+        cache: &mut HashMap<term::Id, u64>,
+        width: &mut usize,
+    ) -> u64 {
         goals
             .iter()
             .map(|goal| match goal {
                 program::Goal::Positive(term) | program::Goal::Builtin(term) => {
-                    depths[*term].saturating_sub(1)
+                    depth(arena, *term, cache, width).saturating_sub(1)
                 }
-                program::Goal::Not(inner) => goal_depth(inner, depths),
+                program::Goal::Not(inner) => goal_depth(arena, inner, cache, width),
             })
             .max()
             .unwrap_or(0)
     }
-    let term_depth = model
-        .facts
-        .iter()
-        .map(|id| depths[*id].saturating_sub(1))
-        .chain(clauses.iter().map(|c| {
-            depths[c.head]
-                .saturating_sub(1)
-                .max(goal_depth(&c.body, &depths))
-        }))
-        .max()
-        .unwrap_or(0);
-    counters.logical("term_depth_max", term_depth);
-    counters.logical("number_decimal_digits_max", max_width as u64);
+    // Prepared arenas also hold dormant sources. Counters traverse the checked
+    // slice's reachable terms, not the whole knowledge base after each call.
+    let mut cache = HashMap::new();
+    let mut width = 0;
+    let mut maximum = 0;
+    for fact in &model.facts {
+        maximum = maximum.max(depth(arena, *fact, &mut cache, &mut width).saturating_sub(1));
+    }
+    for clause in clauses {
+        maximum = maximum.max(depth(arena, clause.head, &mut cache, &mut width).saturating_sub(1));
+        maximum = maximum.max(goal_depth(arena, &clause.body, &mut cache, &mut width));
+    }
+    counters.logical("term_depth_max", maximum);
+    counters.logical("number_decimal_digits_max", width as u64);
 }
 
 fn admit_loaded(
@@ -582,9 +644,24 @@ fn admit_loaded(
     counters: &mut Counters,
     mode: SourceCodec,
 ) -> Result<(), Failure> {
+    admit_range(
+        loaded,
+        counters,
+        mode,
+        0..loaded.documents.len(),
+        0..loaded.clauses.len(),
+    )
+}
+fn admit_range(
+    loaded: &mut Loaded,
+    counters: &mut Counters,
+    mode: SourceCodec,
+    documents: std::ops::Range<usize>,
+    clauses: std::ops::Range<usize>,
+) -> Result<(), Failure> {
     let clock = Instant::now();
     let result = (|| {
-        for doc in &loaded.documents {
+        for doc in &loaded.documents[documents] {
             let clauses = &loaded.clauses[doc.clauses.clone()];
             let text = utf8(&doc.bytes, "source")?;
             let docid = clauses
@@ -623,7 +700,7 @@ fn admit_loaded(
     loaded.source_profile.canonical += clock.elapsed().as_secs_f64();
     result?;
     let clock = Instant::now();
-    let result = program::admit(&loaded.arena, &loaded.clauses)
+    let result = program::admit(&loaded.arena, &loaded.clauses[clauses])
         .map_err(|e| Failure::refused("claim", format!("admission {e}")));
     loaded.source_profile.shape_safety += clock.elapsed().as_secs_f64();
     result
@@ -739,5 +816,7 @@ mod tests;
 
 #[cfg(test)]
 mod codec_tests;
+#[cfg(test)]
+mod preflight_tests;
 #[cfg(test)]
 mod transport_tests;

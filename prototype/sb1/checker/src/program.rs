@@ -49,6 +49,7 @@ impl Goal {
     }
 }
 
+#[derive(Clone)]
 pub struct Clause {
     pub document: usize,
     pub ordinal: usize,

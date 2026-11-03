@@ -27,6 +27,22 @@ pub struct Arena {
 }
 
 impl Arena {
+    pub fn checkpoint(&self) -> (usize, usize, u64) {
+        (self.nodes.len(), self.names.len(), self.lookups)
+    }
+
+    pub fn rewind(&mut self, checkpoint: (usize, usize, u64)) {
+        while self.nodes.len() > checkpoint.0 {
+            self.intern.remove(&self.nodes.pop().expect("arena suffix"));
+        }
+        while self.names.len() > checkpoint.1 {
+            self.symbols
+                .remove(&self.names.pop().expect("symbol suffix"));
+            self.spellings.pop();
+        }
+        self.lookups = checkpoint.2;
+    }
+
     pub fn symbol(&mut self, name: &str) -> Symbol {
         if let Some(&id) = self.symbols.get(name) {
             return id;

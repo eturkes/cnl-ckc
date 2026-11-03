@@ -60,16 +60,19 @@ pub(super) fn ticks() -> Result<f64> {
 pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()> {
     let mut settings = "key\tvalue\n".to_owned();
     for (key, value) in [
-        ("format", "sb1-harness-1".to_owned()),
+        ("format", "sb1-harness-2".to_owned()),
         ("root", config.root.display().to_string()),
         ("producer", config.producer.clone()), ("checker", config.checker.clone()),
+        ("orchestrator", config.orchestrator.clone().unwrap_or_default()),
+        ("process_mode", if config.orchestrator.is_some() { "orchestrated" } else { "separate" }.to_owned()),
+        ("checker_rc_scope", "checker-or-combined-orchestrator;producer-rc-empty-in-orchestrated-mode".to_owned()),
         ("query", config.query.clone()), ("blocks", config.blocks.to_string()),
         ("seed", config.seed.to_string()), ("random", "splitmix64;unbiased-paired-order".to_owned()),
         ("deadline_ns", ns(config.deadline).to_string()), ("sample_period_ns", ns(config.period).to_string()),
         ("memory_bytes", config.memory_bytes.to_string()), ("size_bytes", config.size_bytes.to_string()),
         ("clock_ticks_per_second", ticks.to_string()),
         ("sampler_start", "before-first-spawn".to_owned()),
-        ("sampler_end", "after-answer-sink;final-boundary-sample".to_owned()),
+        ("sampler_end", "after-process-teardown;before-publication;final-boundary-sample".to_owned()),
         ("sampler_schedule", "fixed-period;boundary-samples;overrun-skips-catch-up".to_owned()),
         ("process_identity", "pid+proc-stat-starttime;parent-closure+owned-process-groups+previously-observed-lives".to_owned()),
         ("rss_scope", "harness+owned-descendants;live-RSS-summed-per-scan;loaded-RSS-included".to_owned()),
@@ -80,13 +83,15 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         ("process_limit", "unobserved-double-fork+setsid-between-scans-may-escape-tracking".to_owned()),
         ("cpu_source", "proc-root-own+waited-children-ticks;harness-own-ticks;quantized-at-CLK_TCK".to_owned()),
         ("cpu_limit", "unwaited-or-unobserved-descendant-CPU-may-be-missed;child-reported-phase-CPU-kept-apart".to_owned()),
-        ("score", "whole-invocation-wall-minus-declared-producer+checker-load;all-residual-overhead-charged".to_owned()),
+        ("score", "orchestrated=closed-answer-sink-end-minus-declared-load;post-sink-lifecycle-reported-separately;legacy=whole-invocation-minus-load".to_owned()),
+        ("sink_clock", "same-host-UNIX-ns-mapped-to-controller-monotonic-bracket;clock-step-refused;uncertainty-reported".to_owned()),
+        ("lifecycle_cpu", "post-sink-root-CPU-from-CLK_TCK;parent-stage-CPU-conservatively-before-sink;later-parent-CPU-in-lifecycle".to_owned()),
         ("summary_quantile", "linear-interpolation-at-(n-1)*q;IQR=Q75-Q25;incomplete-arm-has-no-latency-summary".to_owned()),
         ("ratio_bootstrap", "ratio-of-medians;whole-pairs;10000-resamples;nearest-rank-one-sided-95-upper;fixed-seed".to_owned()),
         ("binary_identities", "observed-proc-exe-paths-hashed-after-run;explicit-identity-files-hashed-before-run;script-sources-need-identity-file".to_owned()),
         ("cleanup_grace_ns", "2000000000".to_owned()),
         ("child_phase_positions", "reported-apart;duration-only-rows-do-not-imply-measured-offsets".to_owned()),
-        ("sink", "per-run/answers.txt;checker-stdout-regular-file;publish-after-success-only".to_owned()),
+        ("sink", "per-run/answers.txt;orchestrated=explicit-file-flush+close+atomic-marker;legacy=checker-stdout;publish-after-success-only".to_owned()),
         ("caps", "one-invocation-deadline;sampled-process-tree-RSS;polled-total-product-bytes".to_owned()),
         ("resource_limits", "producer-enforces-SWI-table+stack;commands+identity-files-pin-the-settings".to_owned()),
         ("affinity_threads", "inherited-from-reference-protocol;recorded-in-host.tsv".to_owned()),
@@ -177,6 +182,9 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         "checker_command_sha256",
         hash_text(&config.checker),
     );
+    if let Some(command) = &config.orchestrator {
+        pair(&mut host, "orchestrator_command_sha256", hash_text(command));
+    }
     write(&config.out.join("host.tsv"), host)?;
     let mut identities = "arm\tpath\tbytes\tsha256\n".to_owned();
     let mut seen = std::collections::BTreeSet::new();
@@ -240,15 +248,32 @@ pub(super) fn per_run(path: &Path, ledger: &Ledger, phases: &[Phase], state: &St
         ));
     }
     write(&path.join("intervals.tsv"), intervals)?;
-    let mut subphases = "process\tphase\twall_ns\tcpu_seconds\tstart_seconds\n".to_owned();
+    let mut lifecycle = "phase\tside\tstart_ns\tend_ns\twall_ns\tcpu_seconds\n".to_owned();
+    for row in ledger
+        .intervals
+        .iter()
+        .filter(|row| row.kind == "lifecycle")
+    {
+        lifecycle.push_str(&format!(
+            "{}\tload\t{}\t{}\t{}\t{:.9}\n",
+            row.phase,
+            row.start,
+            row.end,
+            row.end - row.start,
+            row.cpu
+        ));
+    }
+    write(&path.join("lifecycle-phases.tsv"), lifecycle)?;
+    let mut subphases = "process\tphase\twall_ns\tcpu_seconds\tstart_seconds\tkind\n".to_owned();
     for row in phases {
         subphases.push_str(&format!(
-            "{}\t{}\t{}\t{:.9}\t{}\n",
+            "{}\t{}\t{}\t{:.9}\t{}\t{}\n",
             row.role,
             field(&row.name),
             row.wall,
             row.cpu,
-            row.start.map(|s| format!("{s:.9}")).unwrap_or_default()
+            row.start.map(|s| format!("{s:.9}")).unwrap_or_default(),
+            row.kind
         ));
     }
     write(&path.join("phases.tsv"), subphases)?;
@@ -318,7 +343,7 @@ pub(super) fn per_run(path: &Path, ledger: &Ledger, phases: &[Phase], state: &St
     }
     write(&path.join("executables.tsv"), executables)
 }
-pub(super) const RUN_HEADER: &str = "run\tblock\torder\tarm\toutcome\treason\twall_ns\tload_ns\tscored_ns\tcpu_seconds\tpeak_rss_bytes\tobserved_hwm_sum_bytes\tsample_period_ns\tmax_sample_gap_ns\tmemory_uncertainty\tproducer_rc\tchecker_rc\toutput_bytes\toutput_sha256\tphase_intervals\tprocess_high_water_marks\n";
+pub(super) const RUN_HEADER: &str = "run\tblock\torder\tarm\toutcome\treason\twall_ns\tload_ns\tscored_ns\tcpu_seconds\tpeak_rss_bytes\tobserved_hwm_sum_bytes\tsample_period_ns\tmax_sample_gap_ns\tmemory_uncertainty\tproducer_rc\tchecker_rc\toutput_bytes\toutput_sha256\tphase_intervals\tprocess_high_water_marks\tsink_end_ns\tteardown_ns\tsink_clock_uncertainty_ns\n";
 pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64) -> String {
     let intervals = ledger
         .intervals
@@ -333,7 +358,7 @@ pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64)
         .collect::<Vec<_>>()
         .join(";");
     format!(
-        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.9}\t{}\t{}\t{}\t{}\tpossibly-missed-subperiod-spike\t{}\t{}\t{}\t{}\t{}\t{}\n",
+        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.9}\t{}\t{}\t{}\t{}\tpossibly-missed-subperiod-spike\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
         row.run,
         row.block,
         row.order,
@@ -353,7 +378,12 @@ pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64)
         row.output_bytes.map(|n| n.to_string()).unwrap_or_default(),
         row.output_hash.as_deref().unwrap_or(""),
         intervals,
-        hwm
+        hwm,
+        row.sink_end.map(|n| n.to_string()).unwrap_or_default(),
+        row.teardown,
+        row.sink_uncertainty
+            .map(|n| n.to_string())
+            .unwrap_or_default()
     )
 }
 fn percentile(values: &[f64], quantile: f64) -> f64 {
