@@ -194,6 +194,9 @@ impl Fixture {
             .env("MOCK_DATA", &self.data)
             .env("GIT_CONFIG_GLOBAL", "/dev/null")
             .env("GIT_CONFIG_NOSYSTEM", "1")
+            // A fixture root sits inside this repository's rust/target: git stops at the root, so
+            // a recipe never reads or writes the repository's own index, objects or step ledger.
+            .env("GIT_CEILING_DIRECTORIES", self.root.parent().unwrap())
             .env("GIT_AUTHOR_NAME", "fixture")
             .env("GIT_AUTHOR_EMAIL", "fixture@localhost")
             .env("GIT_COMMITTER_NAME", "fixture")
@@ -2271,15 +2274,11 @@ fn recipe_list_gives_every_recipe_a_sentence() {
     );
 }
 
-// The gate prints each step's wall-clock and the run's total (CLAUDE.md `Execution`):
-// `_timed` over two steps (each a mocked nested `just`) prints both step lines + total.
-fn timed_lines(s: &Scratch, case: &str, justfile: &str) -> Vec<String> {
-    let fx = Fixture::new(s, case, justfile);
-    put_exec(&fx.mock.join("just"), "#!/usr/bin/env bash\nexit 0\n");
-    let out = fx.run("_timed", &["fmt-check clippy"]);
-    assert_eq!(out.status.code(), Some(0), "{case}: {}", show(&out));
-    String::from_utf8(out.stdout)
-        .unwrap()
+// The gate prints each step's wall-clock + verdict and the run's total (CLAUDE.md `Execution`):
+// `_timed` over two steps (each a mocked nested `just`) prints both step lines + total; each line
+// is kept without its trailing `<s> s`.
+fn time_lines(out: &Output) -> Vec<String> {
+    String::from_utf8_lossy(&out.stdout)
         .lines()
         .filter(|l| l.starts_with("time: "))
         .map(|l| {
@@ -2294,45 +2293,300 @@ fn timed_lines(s: &Scratch, case: &str, justfile: &str) -> Vec<String> {
         .collect()
 }
 
+fn timed_lines(s: &Scratch, case: &str, justfile: &str) -> Vec<String> {
+    let fx = Fixture::new(s, case, justfile);
+    put_exec(&fx.mock.join("just"), "#!/usr/bin/env bash\nexit 0\n");
+    let out = fx.run("_timed", &["fmt-check clippy"]);
+    assert_eq!(out.status.code(), Some(0), "{case}: {}", show(&out));
+    time_lines(&out)
+}
+
 #[test]
 fn gate_steps_print_their_wall_clock() {
     let s = scratch("timed");
     let text = justfile();
-    let want = ["time: fmt-check", "time: clippy", "time: total"];
+    let want = ["time: fmt-check ok", "time: clippy ok", "time: total ok"];
     assert_eq!(timed_lines(&s, "control", &text), want);
     let planted = plant(
         &text,
-        &[("    echo \"time: total $((SECONDS - start)) s\"\n", "")],
+        &[(
+            "    echo \"time: total $verdict $((SECONDS - start)) s\"\n",
+            "",
+        )],
     );
     assert_ne!(
         timed_lines(&s, "planted", &planted),
         want,
         "a missing total line slipped through"
     );
-    // A failing step still ends the run with its total, and the run keeps the step's rc.
+    // A failing step still ends the run with its total, both red, and the run keeps the step's rc.
     let fx = Fixture::new(&s, "failing", &text);
     put_exec(&fx.mock.join("just"), "#!/usr/bin/env bash\nexit 7\n");
     let out = fx.run("_timed", &["fmt-check clippy"]);
-    let lines: Vec<String> = String::from_utf8(out.stdout.clone())
-        .unwrap()
-        .lines()
-        .filter(|l| l.starts_with("time: "))
-        .map(|l| {
-            l.rsplit_once(' ')
-                .unwrap()
-                .0
-                .rsplit_once(' ')
-                .unwrap()
-                .0
-                .to_owned()
-        })
-        .collect();
-    assert_ne!(out.status.code(), Some(0), "failing: {}", show(&out));
+    assert_eq!(out.status.code(), Some(7), "failing: {}", show(&out));
     assert_eq!(
-        lines,
-        ["time: fmt-check", "time: total"],
+        time_lines(&out),
+        ["time: fmt-check red", "time: total red"],
         "failing: {}",
         show(&out)
+    );
+    // Outside any repository (the fixture's git ceiling) the ledger is off, said once.
+    assert!(
+        String::from_utf8_lossy(&out.stdout).starts_with("ledger: off (no git repository"),
+        "failing: {}",
+        show(&out)
+    );
+}
+
+// A fixture holding its own repository: the justfile + a .gitignore of the fixture's working
+// directories, committed. The step ledger's default home = <root>/.git/ckc-gate-ledger.tsv.
+fn ledger_fixture(s: &Scratch, case: &str, justfile: &str) -> Fixture {
+    let fx = Fixture::new(s, case, justfile);
+    put(
+        &fx.root.join(".gitignore"),
+        "/data/\n/mock/\n/tmp/\n/toolchain/\n/origin.git/\n",
+    );
+    fx.git(&["init", "-q", "-b", "main"]);
+    fx.git(&["add", "justfile", ".gitignore"]);
+    fx.git(&["commit", "-q", "-m", "fixture"]);
+    fx
+}
+
+fn ledger_rows(fx: &Fixture) -> Vec<Vec<String>> {
+    fs::read_to_string(fx.root.join(".git/ckc-gate-ledger.tsv"))
+        .unwrap_or_default()
+        .lines()
+        .skip(1)
+        .map(|l| l.split('\t').map(str::to_owned).collect())
+        .collect()
+}
+
+const LEDGER_HEADER: &str = "date\ttree\tstep\tseconds\tverdict\tclass\tnote\n";
+
+// Every `_timed` run appends one row per step (CLAUDE.md `Execution` Gate command: date, tree,
+// step, wall-clock, verdict) + prints it as a `gate-ledger` line. The tree = the working tree's
+// own id: HEAD's when clean; a dirty tree's id = the tree of the commit that records that content
+// (an oracle independent of the recipe's scratch index).
+#[test]
+fn gate_steps_append_ledger_rows() {
+    let s = scratch("ledger-rows");
+    let text = justfile();
+    let run = |fx: &Fixture, rc: u8| {
+        put_exec(
+            &fx.mock.join("just"),
+            &format!("#!/usr/bin/env bash\nexit {rc}\n"),
+        );
+        fx.run("_timed", &["fmt-check clippy"])
+    };
+    let fx = ledger_fixture(&s, "control", &text);
+    let clean = fx.git(&["rev-parse", "HEAD^{tree}"]).trim().to_owned();
+    let out = run(&fx, 0);
+    assert_eq!(out.status.code(), Some(0), "control: {}", show(&out));
+    let rows = ledger_rows(&fx);
+    let cells = |rows: &[Vec<String>]| -> Vec<(String, String, String, String, String)> {
+        rows.iter()
+            .map(|r| {
+                assert_eq!(r.len(), 7, "row {r:?}");
+                (
+                    r[1].clone(),
+                    r[2].clone(),
+                    r[4].clone(),
+                    r[5].clone(),
+                    r[6].clone(),
+                )
+            })
+            .collect()
+    };
+    let row = |tree: &str, step: &str, v: &str, c: &str| {
+        (tree.into(), step.into(), v.into(), c.into(), "-".into())
+    };
+    assert_eq!(
+        cells(&rows),
+        [
+            row(&clean, "fmt-check", "ok", "-"),
+            row(&clean, "clippy", "ok", "-")
+        ],
+        "control: {}",
+        show(&out)
+    );
+    assert!(
+        fs::read_to_string(fx.root.join(".git/ckc-gate-ledger.tsv"))
+            .unwrap()
+            .starts_with(LEDGER_HEADER)
+    );
+    let printed: Vec<String> = String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .filter_map(|l| l.strip_prefix("gate-ledger\t"))
+        .map(str::to_owned)
+        .collect();
+    assert_eq!(
+        printed,
+        rows.iter().map(|r| r.join("\t")).collect::<Vec<_>>(),
+        "printed rows"
+    );
+    // A dirty tree (an untracked file) + a red step: one red row, unclassified, counted.
+    put(&fx.root.join("extra.txt"), "extra\n");
+    let out = run(&fx, 7);
+    assert_eq!(out.status.code(), Some(7), "dirty: {}", show(&out));
+    assert!(
+        String::from_utf8_lossy(&out.stdout).contains("ledger: 1 unclassified red rows"),
+        "dirty: {}",
+        show(&out)
+    );
+    let rows = ledger_rows(&fx);
+    assert_eq!(rows.len(), 3, "dirty: {rows:?}");
+    let dirty = rows[2][1].clone();
+    assert_ne!(dirty, clean, "a dirty tree recorded HEAD's tree");
+    assert_eq!(
+        cells(&rows[2..]),
+        [row(&dirty, "fmt-check", "red", "unclassified")]
+    );
+    fx.git(&["add", "extra.txt"]);
+    fx.git(&["commit", "-q", "-m", "extra"]);
+    assert_eq!(fx.git(&["rev-parse", "HEAD^{tree}"]).trim(), dirty);
+    // Planted: the append removed (rows printed, none kept); the tree read from HEAD alone.
+    let fx = ledger_fixture(
+        &s,
+        "planted-append",
+        &plant(
+            &text,
+            &[(
+                "        if [ -n \"$ledger\" ]; then { flock 9; printf '%s\\n' \"$row\" >> \"$ledger\"; } 9>> \"$ledger.lock\"; fi\n",
+                "",
+            )],
+        ),
+    );
+    run(&fx, 0);
+    assert!(
+        ledger_rows(&fx).is_empty(),
+        "a run without its rows slipped through"
+    );
+    let head_tree = "    if idx=$(git -C \"{{ ROOT }}\" rev-parse --path-format=absolute --git-path index 2>/dev/null); then";
+    let fx = ledger_fixture(
+        &s,
+        "planted-tree",
+        &plant(
+            &text,
+            &[(
+                head_tree,
+                "    tree=$(git -C \"{{ ROOT }}\" rev-parse \"HEAD^{tree}\")\n    if false; then",
+            )],
+        ),
+    );
+    put(&fx.root.join("extra.txt"), "extra\n");
+    run(&fx, 0);
+    let planted_clean = fx.git(&["rev-parse", "HEAD^{tree}"]).trim().to_owned();
+    assert_eq!(
+        ledger_rows(&fx)[0][1],
+        planted_clean,
+        "the plant must record HEAD's tree for a dirty tree, which the dirty assertion refuses"
+    );
+}
+
+// `ledger-classify` rules one red row (CLAUDE.md `Execution` Gate usefulness): class + note
+// written in place; a green row, the header, a row past the end, an unknown class and a note
+// holding a tab are refused with the ledger unchanged.
+#[test]
+fn ledger_classify_rules_red_rows_alone() {
+    let s = scratch("ledger-classify");
+    let text = justfile();
+    let seed = format!(
+        "{LEDGER_HEADER}2026-11-04T10:00:00Z\tt1\tclippy\t30\tok\t-\t-\n2026-11-04T10:00:00Z\tt1\ttest\t90\tred\tunclassified\t-\n"
+    );
+    let case = |name: &str, justfile: &str, args: &[&str]| {
+        let fx = ledger_fixture(&s, name, justfile);
+        put(&fx.root.join(".git/ckc-gate-ledger.tsv"), &seed);
+        let out = fx.run("ledger-classify", args);
+        let after = fs::read_to_string(fx.root.join(".git/ckc-gate-ledger.tsv")).unwrap();
+        (out, after)
+    };
+    let (out, after) = case(
+        "control",
+        &text,
+        &["3", "flake", "passes on rerun, tree t1"],
+    );
+    assert_eq!(out.status.code(), Some(0), "control: {}", show(&out));
+    assert_eq!(
+        after,
+        seed.replace(
+            "red\tunclassified\t-\n",
+            "red\tflake\tpasses on rerun, tree t1\n"
+        )
+    );
+    for (name, args) in [
+        ("green", ["2", "product", "x"]),
+        ("header", ["1", "product", "x"]),
+        ("past-end", ["4", "product", "x"]),
+        ("class", ["3", "bogus", "x"]),
+        ("tab", ["3", "product", "a\tb"]),
+    ] {
+        let (out, after) = case(name, &text, &args);
+        assert_eq!(out.status.code(), Some(2), "{name}: {}", show(&out));
+        assert_eq!(after, seed, "{name}: ledger changed");
+    }
+    // Planted: the red-row guard removed → a green row takes a class.
+    let guard = "    [ \"$(awk -F'\\t' -v n=\"$line\" 'NR == n {print $5}' \"$l\")\" = red ] || { echo \"ledger-classify: line $line is not a red row\" >&2; exit 2; }\n";
+    let (out, _) = case(
+        "planted",
+        &plant(&text, &[(guard, "")]),
+        &["2", "product", "x"],
+    );
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "the planted guard-free recipe must classify a green row: {}",
+        show(&out)
+    );
+}
+
+// `ledger-import` appends the `gate-ledger` rows of a log the ledger lacks (a pool run's rows),
+// keyed on date + tree + step: a second import appends nothing; a log named `name=value` (an awk
+// assignment operand) still imports. `ledger` then lists the unclassified red row + one summary line
+// per step.
+#[test]
+fn ledger_import_is_idempotent() {
+    let s = scratch("ledger-import");
+    let text = justfile();
+    let log = "gate: fmt ok\ntime: fmt-check ok 3 s\ngate-ledger\t2026-11-04T11:00:00Z\tt2\tfmt-check\t3\tok\t-\t-\ngate-ledger\t2026-11-04T11:00:00Z\tt2\tclippy\t40\tred\tunclassified\t-\ntime: total red 43 s\n";
+    let case = |name: &str, justfile: &str| {
+        let fx = ledger_fixture(&s, name, justfile);
+        put(&fx.root.join("pool=run.log"), log);
+        let first = fx.run("ledger-import", &["pool=run.log"]);
+        let second = fx.run("ledger-import", &["pool=run.log"]);
+        (fx, first, second)
+    };
+    let (fx, first, second) = case("control", &text);
+    assert_eq!(first.status.code(), Some(0), "first: {}", show(&first));
+    assert!(String::from_utf8_lossy(&first.stdout).contains("ledger: imported 2 rows"));
+    assert!(String::from_utf8_lossy(&second.stdout).contains("ledger: imported 0 rows"));
+    let ledger = fs::read_to_string(fx.root.join(".git/ckc-gate-ledger.tsv")).unwrap();
+    assert_eq!(
+        ledger,
+        format!(
+            "{LEDGER_HEADER}2026-11-04T11:00:00Z\tt2\tfmt-check\t3\tok\t-\t-\n2026-11-04T11:00:00Z\tt2\tclippy\t40\tred\tunclassified\t-\n"
+        )
+    );
+    let shown = fx.run("ledger", &[]);
+    let shown = String::from_utf8_lossy(&shown.stdout);
+    let lines: Vec<&str> = shown.lines().skip(1).collect();
+    assert_eq!(
+        lines,
+        [
+            "unclassified: line 3: 2026-11-04T11:00:00Z\tt2\tclippy\t40\tred\tunclassified\t-",
+            "step: fmt-check runs 1, 3 s, red 0 (product 0, sole 0, gate 0, flake 0, planted 0, unclassified 0)",
+            "step: clippy runs 1, 40 s, red 1 (product 0, sole 0, gate 0, flake 0, planted 0, unclassified 1)",
+        ]
+    );
+    // Planted: the key check removed → the second import appends both rows again.
+    let (fx, _, _) = case(
+        "planted",
+        &plant(&text, &[(" && !(($2 FS $3 FS $4) in seen)", "")]),
+    );
+    let ledger = fs::read_to_string(fx.root.join(".git/ckc-gate-ledger.tsv")).unwrap();
+    assert_eq!(
+        ledger.lines().count(),
+        5,
+        "the planted key-free import must duplicate the rows"
     );
 }
 
@@ -2453,6 +2707,29 @@ fn ci_waits_for_every_job_end_before_its_timings() {
     assert!(
         fx.git(&["--git-dir", "origin.git", "branch", "--list", "ci/dq13"])
             .is_empty()
+    );
+    // One step-ledger row per graded job (skipped kani none), on the pushed tree.
+    let tree = fx.git(&["rev-parse", "HEAD^{tree}"]).trim().to_owned();
+    let jobs: Vec<String> = ledger_rows(&fx)
+        .iter()
+        .map(|r| format!("{} {} {} {} {}", r[1] == tree, r[2], r[3], r[4], r[5]))
+        .collect();
+    assert_eq!(
+        jobs,
+        [
+            "true ci:rust 60 ok -",
+            "true ci:check 120 ok -",
+            "true ci:certify 30 ok -"
+        ],
+        "control: {}",
+        show(&out)
+    );
+    let append = "        { flock 9; printf '%s\\n' \"$row\" >> \"$l\"; } 9>> \"$l.lock\"\n";
+    let (out, fx) = case("planted-ledger", &plant(&text, &[(append, "")]), true);
+    assert_eq!(out.status.code(), Some(0), "planted-ledger: {}", show(&out));
+    assert!(
+        ledger_rows(&fx).is_empty(),
+        "a CI run without its ledger rows slipped through"
     );
     // The pre-fix recipe read the jobs once, right after `run watch` returned.
     let fixed = &text[text.find("    # `gh run watch` can return while").unwrap()

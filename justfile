@@ -36,6 +36,7 @@ ci unit:
     status=$(git status --porcelain)
     [ -z "$status" ] || { echo "ci: working tree differs from HEAD (commit first)" >&2; exit 2; }
     b="ci/{{ unit }}"; sha=$(git rev-parse HEAD); tree=$(git rev-parse "HEAD^{tree}")
+    date=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     git push -q -f origin "HEAD:$b"
     id=""
     for _ in $(seq 60); do
@@ -54,9 +55,21 @@ ci unit:
         [ "$i" -lt 31 ] || { echo "ci: run $id: $pending jobs without an end time after 5 min" >&2; exit 2; }
         sleep 10
     done
-    gh run view "$id" --json jobs -q '.jobs[] | select(.conclusion != "skipped") | "time: \(.name) \(.conclusion) \(
+    jobs=$(gh run view "$id" --json jobs -q '.jobs[] | select(.conclusion != "skipped") | [.name, .conclusion,
         if [.startedAt, .completedAt] | any(startswith("0001-")) then "-"
-        else (.completedAt | fromdate) - (.startedAt | fromdate) end) s"'
+        else (.completedAt | fromdate) - (.startedAt | fromdate) end] | @tsv')
+    # One step-ledger row per job (ops.md Step ledger), so a CI red is classified like a local one.
+    l=${CKC_GATE_LEDGER:-}
+    [ -n "$l" ] || l=$(git rev-parse --path-format=absolute --git-common-dir)/ckc-gate-ledger.tsv
+    [ -s "$l" ] || printf 'date\ttree\tstep\tseconds\tverdict\tclass\tnote\n' > "$l"
+    while IFS=$'\t' read -r job conclusion secs; do
+        [ -n "$job" ] || continue
+        echo "time: $job $conclusion $secs s"
+        v=red c=unclassified; [ "$conclusion" != success ] || v=ok c=-
+        row=$(printf '%s\t%s\tci:%s\t%s\t%s\t%s\t-' "$date" "$tree" "$job" "$secs" "$v" "$c")
+        printf 'gate-ledger\t%s\n' "$row"
+        { flock 9; printf '%s\n' "$row" >> "$l"; } 9>> "$l.lock"
+    done <<< "$jobs"
     if [ "$rc" -ne 0 ]; then
         gh run view "$id" --log-failed | tail -80
         echo "ci: run $id red, branch $b kept" >&2; exit 1
@@ -64,21 +77,117 @@ ci unit:
     git push -q origin --delete "$b"
     echo "gate: ci ok"
 
-# Every gate run blocks the critical path, so each step's wall-clock follows its own output, a failed
-# step's included. Steps run in list order without their dependencies (trust's build precedes it).
+# Each step's wall-clock + verdict follows its own output, a failed step's included, and lands as one
+# row in the step ledger (.claude/rules/ops.md Step ledger: the record of which steps buy signal); the
+# printed `gate-ledger` lines carry a pool run's rows home (`just ledger-import <log>`). Steps run in
+# list order without their dependencies (trust's build precedes it) and stop at the first red: a later
+# step would grade a stale ckc binary.
 _timed steps:
     #!/usr/bin/env bash
     set -uo pipefail
-    start=$SECONDS
+    start=$SECONDS rc=0 verdict=ok tree=- ledger=${CKC_GATE_LEDGER:-}
+    date=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    if [ -z "$ledger" ] && d=$(git -C "{{ ROOT }}" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+        ledger=$d/ckc-gate-ledger.tsv
+    fi
+    # The graded tree = the working tree's own id (untracked files included), from a scratch copy of
+    # the index: HEAD^{tree} when the tree is clean.
+    if idx=$(git -C "{{ ROOT }}" rev-parse --path-format=absolute --git-path index 2>/dev/null); then
+        tmp=$(mktemp -d)
+        if [ ! -e "$idx" ] || cp "$idx" "$tmp/index"; then
+            tree=$(GIT_INDEX_FILE=$tmp/index git -C "{{ ROOT }}" add -A 2>/dev/null &&
+                GIT_INDEX_FILE=$tmp/index git -C "{{ ROOT }}" write-tree) || tree=-
+        fi
+        rm -rf "$tmp"
+    fi
+    if [ -z "$ledger" ]; then
+        echo "ledger: off (no git repository; CKC_GATE_LEDGER names a ledger file)"
+    elif [ ! -s "$ledger" ]; then
+        printf 'date\ttree\tstep\tseconds\tverdict\tclass\tnote\n' > "$ledger"
+    fi
     steps=({{ steps }})
     for s in "${steps[@]}"; do
         t=$SECONDS
         just --justfile "{{ justfile() }}" --no-deps "$s"; rc=$?
-        echo "time: $s $((SECONDS - t)) s"
+        secs=$((SECONDS - t)) v=ok c=-
+        [ "$rc" -eq 0 ] || v=red c=unclassified verdict=red
+        echo "time: $s $v $secs s"
+        row=$(printf '%s\t%s\t%s\t%s\t%s\t%s\t-' "$date" "$tree" "$s" "$secs" "$v" "$c")
+        printf 'gate-ledger\t%s\n' "$row"
+        if [ -n "$ledger" ]; then { flock 9; printf '%s\n' "$row" >> "$ledger"; } 9>> "$ledger.lock"; fi
         [ "$rc" -eq 0 ] || break
     done
-    echo "time: total $((SECONDS - start)) s"
+    echo "time: total $verdict $((SECONDS - start)) s"
+    if [ -n "$ledger" ]; then
+        n=$(awk -F'\t' '$5 == "red" && $6 == "unclassified"' "$ledger" | wc -l)
+        [ "$n" -eq 0 ] || echo "ledger: $n unclassified red rows (just ledger)"
+    fi
     exit "$rc"
+
+# Step ledger (.claude/rules/ops.md Step ledger) = <git-common-dir>/ckc-gate-ledger.tsv (CKC_GATE_LEDGER
+# overrides): one row per step of a `_timed` run (`just gate`, `just rust`) + per job of a `just ci`
+# run — date, tree, step, seconds, verdict (ok | red), class (- | unclassified | product | gate |
+# flake | planted), note. Shown: each unclassified red row by line number, then per step its runs,
+# seconds, reds by class + `sole` (product reds no other step of the same run reported).
+[doc("Show the gate step ledger: unclassified red rows, then each step's runs, seconds and reds by class.")]
+ledger:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    l=${CKC_GATE_LEDGER:-}
+    [ -n "$l" ] || l=$(git -C "{{ ROOT }}" rev-parse --path-format=absolute --git-common-dir)/ckc-gate-ledger.tsv
+    [ -s "$l" ] || { echo "ledger: $l holds no rows"; exit 0; }
+    echo "ledger: $l"
+    awk -F'\t' 'NR > 1 && $5 == "red" && $6 == "unclassified" {print "unclassified: line " NR ": " $0}' "$l"
+    awk -F'\t' 'NR == FNR {if (FNR > 1 && $6 == "product") p[$1 FS $2]++; next}
+        FNR > 1 {s = $3; if (!(s in runs)) order[++k] = s; runs[s]++; secs[s] += ($4 == "-" ? 0 : $4)
+            if ($5 == "red") {red[s]++; cls[s, $6]++; if ($6 == "product" && p[$1 FS $2] == 1) sole[s]++}}
+        END {for (i = 1; i <= k; i++) {s = order[i]
+            printf "step: %s runs %d, %d s, red %d (product %d, sole %d, gate %d, flake %d, planted %d, unclassified %d)\n",
+                s, runs[s], secs[s], red[s], cls[s, "product"], sole[s], cls[s, "gate"], cls[s, "flake"],
+                cls[s, "planted"], cls[s, "unclassified"]}}' "$l" "$l"
+
+# Rules one red row on the spot (CLAUDE.md `Execution` Gate usefulness): a gate defect or flake is a
+# gate bug, its fix queued as the next unit. The arguments arrive as environment variables (`$`),
+# never spliced into the script; the note is free text, so a tab or newline in it is refused.
+[doc("Classify red row <line> of the step ledger as product, gate, flake or planted, with a note.")]
+ledger-classify $line $class $note:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    line="${line:?}" class="${class:?}" note="${note:?}"
+    l=${CKC_GATE_LEDGER:-}
+    [ -n "$l" ] || l=$(git -C "{{ ROOT }}" rev-parse --path-format=absolute --git-common-dir)/ckc-gate-ledger.tsv
+    [[ "$class" =~ ^(product|gate|flake|planted)$ ]] || { echo "ledger-classify: class must be product, gate, flake or planted" >&2; exit 2; }
+    [[ -n "$note" && "$note" != *$'\t'* && "$note" != *$'\n'* ]] || { echo "ledger-classify: the note must be one nonempty line without a tab" >&2; exit 2; }
+    exec 9>> "$l.lock"; flock 9
+    n=$(wc -l < "$l")
+    [[ "$line" =~ ^[0-9]+$ && "$line" -ge 2 && "$line" -le "$n" ]] || { echo "ledger-classify: line must name a row (2..$n)" >&2; exit 2; }
+    [ "$(awk -F'\t' -v n="$line" 'NR == n {print $5}' "$l")" = red ] || { echo "ledger-classify: line $line is not a red row" >&2; exit 2; }
+    tmp=$(mktemp "$l.XXXXXX")
+    trap 'rm -f "$tmp"' EXIT
+    awk -F'\t' -v OFS='\t' -v n="$line" 'NR == n {$6 = ENVIRON["class"]; $7 = ENVIRON["note"]} {print}' "$l" > "$tmp"
+    mv "$tmp" "$l"
+    sed -n "${line}p" "$l"
+
+# Appends the `gate-ledger` rows a log printed (a pool run's `_timed`, whose ledger stays on the pool
+# host) that the ledger lacks, keyed on date + tree + step; a rerun of the import appends nothing.
+# The log arrives on stdin: awk reads an operand shaped `name=value` as an assignment.
+[doc("Append the step-ledger rows printed in <log> (a pool run's gate output) that the ledger lacks.")]
+ledger-import $log:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="${log:?}"
+    l=${CKC_GATE_LEDGER:-}
+    [ -n "$l" ] || l=$(git -C "{{ ROOT }}" rev-parse --path-format=absolute --git-common-dir)/ckc-gate-ledger.tsv
+    exec 9>> "$l.lock"; flock 9
+    [ -s "$l" ] || printf 'date\ttree\tstep\tseconds\tverdict\tclass\tnote\n' > "$l"
+    tmp=$(mktemp "$l.XXXXXX")
+    trap 'rm -f "$tmp"' EXIT
+    awk -F'\t' 'NR == FNR {seen[$1 FS $2 FS $3]; next}
+        $1 == "gate-ledger" && NF == 8 && ($6 == "ok" || $6 == "red") && !(($2 FS $3 FS $4) in seen) {
+            seen[$2 FS $3 FS $4]; sub(/^gate-ledger\t/, ""); print}' "$l" - < "$log" > "$tmp"
+    n=$(wc -l < "$tmp")
+    cat "$tmp" >> "$l"
+    echo "ledger: imported $n rows"
 
 # Install every pinned tool into the toolchain dir (idempotent, digest-verified).
 tools:
