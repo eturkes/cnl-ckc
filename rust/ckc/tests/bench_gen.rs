@@ -572,6 +572,146 @@ fn repeated_generation_is_byte_identical() {
     quiet(&s.generate("F1a", 2, "one", &[]));
     assert_eq!(first, files(&s.0.join("one")));
 }
+fn unsalt(text: &str, seed: u64, namespace: usize, slot: usize) -> String {
+    text.replace(
+        &format!("sb{namespace:04}s{seed:016x}"),
+        &format!("sb{slot:04}"),
+    )
+}
+fn path_slot(path: &Path) -> Option<usize> {
+    let mut parts = path.components();
+    let kind = parts.next()?.as_os_str().to_str()?;
+    matches!(kind, "copies" | "intakes")
+        .then(|| parts.next()?.as_os_str().to_str()?.parse().ok())?
+}
+
+#[test]
+fn holdouts_change_only_private_names_namespace_assignment_and_padding_order() {
+    let s = Scratch::new("holdout");
+    for family in ["F1b", "F2", "F3"] {
+        let mut extra = if family == "F3" {
+            assembly_args(family)
+        } else {
+            Vec::new()
+        };
+        quiet(&s.generate(family, 10, family, &extra));
+        let dir = s.0.join(family);
+        let development = files(&dir);
+        let base_manifest = manifest_values(&dir);
+        fs::remove_dir_all(&dir).unwrap();
+        extra.extend(["--seed".into(), "1".into()]);
+        quiet(&s.generate(family, 10, family, &extra));
+        quiet(&s.check(family));
+        let holdout = files(&dir);
+        let m = manifest_values(&dir);
+        assert_eq!(m["variation_version"], "sb1-holdout-1");
+        assert_eq!(m["variation_salt"], "s0000000000000001");
+        let namespaces: BTreeMap<usize, usize> = (1..=10)
+            .map(|slot| {
+                (
+                    slot,
+                    m[&format!("variation_namespace:{slot:04}")]
+                        .parse()
+                        .unwrap(),
+                )
+            })
+            .collect();
+        let mut assigned: Vec<_> = namespaces.values().copied().collect();
+        assigned.sort();
+        assert_eq!(assigned, (1..=10).collect::<Vec<_>>());
+        assert!(namespaces.iter().any(|(slot, namespace)| slot != namespace));
+        if family != "F2" {
+            assert_eq!(namespaces[&1], 1);
+        }
+        let normalize = |path: &Path, bytes: &[u8]| {
+            let slot = path_slot(path).unwrap_or(1);
+            let namespace = namespaces[&slot];
+            (
+                PathBuf::from(unsalt(path.to_str().unwrap(), 1, namespace, slot)),
+                unsalt(std::str::from_utf8(bytes).unwrap(), 1, namespace, slot).into_bytes(),
+            )
+        };
+        let stable =
+            |name: &Path| !matches!(name.to_str(), Some("manifest.tsv" | "composition.tsv"));
+        let normalized: BTreeMap<_, _> = holdout
+            .iter()
+            .filter(|(name, _)| stable(name))
+            .map(|(name, bytes)| normalize(name, bytes))
+            .collect();
+        assert_eq!(
+            development
+                .iter()
+                .filter(|(name, _)| stable(name))
+                .map(|(name, bytes)| (name.clone(), bytes.clone()))
+                .collect::<BTreeMap<_, _>>(),
+            normalized,
+            "{family}: non-variation bytes changed"
+        );
+        let normalize_order = |bytes: &[u8], seeded: bool| {
+            std::str::from_utf8(bytes)
+                .unwrap()
+                .lines()
+                .map(|line| {
+                    let path = Path::new(line)
+                        .strip_prefix(root())
+                        .unwrap_or(Path::new(line));
+                    let relative = path
+                        .strip_prefix(dir.strip_prefix(root()).unwrap())
+                        .unwrap();
+                    if seeded {
+                        let slot = path_slot(relative).unwrap_or(1);
+                        unsalt(line, 1, namespaces[&slot], slot)
+                    } else {
+                        line.to_owned()
+                    }
+                })
+                .collect::<Vec<_>>()
+        };
+        let before = normalize_order(&development[Path::new("composition.tsv")], false);
+        let after = normalize_order(&holdout[Path::new("composition.tsv")], true);
+        let active = base_manifest["active_shards"].parse::<usize>().unwrap();
+        let active_lines = |lines: &[String]| {
+            lines
+                .iter()
+                .filter(|line| {
+                    let suffix = line.split("/copies/").nth(1).unwrap_or("");
+                    suffix
+                        .split('/')
+                        .next()
+                        .and_then(|s| s.parse::<usize>().ok())
+                        .is_some_and(|slot| slot <= active)
+                })
+                .cloned()
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(active_lines(&before), active_lines(&after));
+        if active < 9 {
+            assert_ne!(before, after, "{family}: padding order stayed inert");
+        }
+        let mut before_set = before;
+        let mut after_set = after;
+        before_set.sort();
+        after_set.sort();
+        assert_eq!(before_set, after_set);
+        for (key, value) in &base_manifest {
+            if key == "seed"
+                || key == "composition_sha256"
+                || key.starts_with("copy:") && key.ends_with(":sha256")
+                || key.starts_with("query_sha256:")
+            {
+                continue;
+            }
+            assert_eq!(value, &m[key], "{family}: manifest {key}");
+        }
+        fs::remove_dir_all(&dir).unwrap();
+        quiet(&s.generate(family, 10, family, &extra));
+        assert_eq!(holdout, files(&dir), "{family}: seeded generation differs");
+        replace(&dir.join("manifest.tsv"), "seed\t1\n", "seed\t2\n");
+        refuses(&s.check(family), "transform replay differs");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+}
+
 #[test]
 fn removed_annex_parameter_refuses_before_writing() {
     let s = Scratch::new("annex");

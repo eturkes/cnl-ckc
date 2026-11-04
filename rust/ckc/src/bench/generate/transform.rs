@@ -22,6 +22,7 @@ fn slot(name: &str, index: usize) -> Slot {
 #[derive(Clone)]
 pub struct Rename {
     pub index: usize,
+    pub seed: u64,
     pub shared: BTreeSet<String>,
     pub shared_nouns: BTreeSet<String>,
     pub private: Option<BTreeSet<String>>,
@@ -31,6 +32,7 @@ impl Rename {
     pub fn identity() -> Self {
         Self {
             index: 0,
+            seed: 0,
             shared: BTreeSet::new(),
             shared_nouns: BTreeSet::new(),
             private: None,
@@ -40,6 +42,7 @@ impl Rename {
     pub fn dormant(index: usize, common_roles: bool) -> Self {
         Self {
             index,
+            seed: 0,
             shared: if common_roles {
                 BTreeSet::from(["patient".into(), "clinician".into()])
             } else {
@@ -53,10 +56,22 @@ impl Rename {
     pub fn active(index: usize, produced: &BTreeSet<String>) -> Self {
         Self {
             index,
+            seed: 0,
             shared: BTreeSet::new(),
             shared_nouns: BTreeSet::new(),
             private: Some(produced.clone()),
             preserve_ids: false,
+        }
+    }
+    pub fn with_seed(mut self, seed: u64) -> Self {
+        self.seed = seed;
+        self
+    }
+    fn prefix(&self) -> String {
+        if self.seed == 0 {
+            format!("sb{:04}", self.index)
+        } else {
+            format!("sb{:04}s{:016x}", self.index, self.seed)
         }
     }
     fn target(&self, name: &str, kind: Slot) -> String {
@@ -67,9 +82,9 @@ impl Rename {
         if self.index == 0 {
             name.to_owned()
         } else if kind == Slot::Identity && !self.preserve_ids {
-            format!("sb{:04}-{name}", self.index)
+            format!("{}-{name}", self.prefix())
         } else if lexical {
-            format!("sb{:04}__{name}", self.index)
+            format!("{}__{name}", self.prefix())
         } else {
             name.to_owned()
         }
@@ -238,17 +253,29 @@ pub fn head_produced(documents: &[Document]) -> BTreeSet<String> {
         .map(str::to_owned)
         .collect()
 }
+pub fn namespace_prefix(atom: &str) -> Option<&str> {
+    let rest = atom.strip_prefix("sb")?;
+    if rest.len() < 6 || !rest.as_bytes()[..4].iter().all(u8::is_ascii_digit) {
+        return None;
+    }
+    let tail = &rest[4..];
+    let tail = tail
+        .strip_prefix('s')
+        .filter(|s| {
+            s.get(..16)
+                .is_some_and(|h| h.bytes().all(|b| b.is_ascii_hexdigit()))
+        })
+        .map(|s| &s[16..])
+        .unwrap_or(tail);
+    (tail.starts_with("__") || tail.starts_with('-')).then(|| &atom[..atom.len() - tail.len()])
+}
 pub fn reject_namespace_collision(
     documents: &[Document],
     patient: &Document,
 ) -> Result<(), String> {
     fn walk(t: &Term) -> bool {
         match t {
-            Term::Atom(_, a) => a.strip_prefix("sb").is_some_and(|r| {
-                r.len() >= 6
-                    && r.as_bytes()[..4].iter().all(u8::is_ascii_digit)
-                    && (r[4..].starts_with("__") || r[4..].starts_with('-'))
-            }),
+            Term::Atom(_, a) => namespace_prefix(a).is_some(),
             Term::Compound(_, _, aa) => aa.iter().any(walk),
             Term::List(aa, tail) => aa.iter().any(walk) || tail.as_ref().is_some_and(|t| walk(t)),
             _ => false,

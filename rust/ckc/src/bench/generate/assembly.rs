@@ -41,6 +41,7 @@ impl Template {
 }
 pub struct Shard {
     pub index: usize,
+    pub namespace: usize,
     pub template: Template,
     pub source: String,
     pub attached: Vec<PathBuf>,
@@ -137,6 +138,7 @@ pub fn layout(o: &Options, declared_k: usize) -> Result<Layout, String> {
         inputs.extend(attached.iter().cloned());
         shards.push(Shard {
             index,
+            namespace: index,
             template,
             source,
             attached,

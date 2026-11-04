@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(readlink -f -- "$(dirname -- "$0")/..")
+exec "${CKC_BIN:-$root/rust/target/release/ckc}" bench gen run-manifest "$@"

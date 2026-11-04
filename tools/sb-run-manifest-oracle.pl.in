@@ -1,0 +1,117 @@
+% Contract sb D2/D5: independent consumer-recipe oracle; no prototype code.
+:- use_module(library(assoc)).
+:- use_module(library(crypto)).
+:- use_module(library(readutil)).
+
+sb_manifest_oracle :-
+    catch(sb_oracle_run, E, (print_message(error, E), halt(1))),
+    halt(0).
+
+sb_oracle_run :-
+    current_prolog_flag(argv, [Root, Composition, Queries, Out, Recipe, Mode]),
+    consult(Recipe),
+    ( Mode == wfs
+    -> directory_file_path(Root, 'tests/consumer/wfs.pl.in', Wfs), consult(Wfs)
+    ; Mode == recipe -> true
+    ; throw(error(oracle_mode(Mode), _))
+    ),
+    directory_file_path(Root, 'guidelines/schema.pl', Schema), consult(Schema),
+    read_file_to_string(Composition, Text, []),
+    split_string(Text, "\n", "\r", Lines),
+    forall((member(Line, Lines), Line \== "", \+ sub_string(Line, 0, 1, _, "#")),
+        (directory_file_path(Root, Line, Path), consult(Path))),
+    sb_manifest_identifier_check,
+    sb_indicators(Indicators),
+    findall(T, (member(N/A, Indicators), functor(T, N, A), sb_defined_call(T)), Raw),
+    sort(Raw, Model),
+    directory_file_path(Out, 'model.out', ModelFile), sb_write_terms(ModelFile, Model),
+    sb_answers(Queries, Out, Model),
+    directory_file_path(Out, 'status.tsv', Status),
+    length(Model, Count),
+    setup_call_cleanup(open(Status, write, S, [encoding(utf8), newline(posix)]),
+        format(S, "mode\t~w\nundefined\t0\nmodel_facts\t~d\n", [Mode, Count]), close(S)).
+
+sb_indicators(Indicators) :-
+    findall(N/A,
+        (current_predicate(N/A), sub_atom(N, 0, _, _, guideline_),
+         functor(G, N, A), predicate_property(G, tabled)), Raw),
+    sort(Raw, Indicators),
+    ( length(Indicators, 22) -> true ; throw(error(oracle_indicators(Indicators), _)) ).
+
+sb_defined_call(G) :-
+    call_delays(G, D),
+    ( D == true -> true ; throw(error(oracle_undefined(G, D), _)) ),
+    ( ground(G) -> true ; throw(error(oracle_nonground(G), _)) ).
+
+sb_answers(Queries, Out, Model) :-
+    empty_assoc(Empty), sb_payload_index(Model, Empty, Payloads),
+    findall(box(C, O, Ps),
+        (member(guideline_operator(actual, C, O), Model), memberchk(O, [should, must, may]),
+         (get_assoc(C, Payloads, Raw) -> sort(Raw, Ps) ; Ps = [])), Boxes0),
+    sort(Boxes0, Boxes),
+    directory_file_path(Out, 'q-all.out', All), sb_write_terms(All, Boxes),
+    forall(member(Name, ['q-one', 'q-patient']), sb_question(Queries, Out, Name)).
+
+sb_payload_index([], Map, Map).
+sb_payload_index([T|Ts], Map0, Map) :-
+    ( arg(1, T, C), compound(C), functor(C, '$guideline_id', 5), arg(1, C, context)
+    -> (get_assoc(C, Map0, L) -> true ; L = []), put_assoc(C, Map0, [T|L], Map1)
+    ; Map1 = Map0
+    ),
+    sb_payload_index(Ts, Map1, Map).
+
+sb_question(Queries, Out, Name) :-
+    atom_concat(Name, '.pl', QueryName), directory_file_path(Queries, QueryName, Query),
+    setup_call_cleanup(open(Query, read, S, [encoding(utf8)]),
+        (read_term(S, '$guideline_query'(v2, Id, _, _, _), []),
+         read_term(S, '$guideline_query_projection'(goal(G), answers(As)), []),
+         read_term(S, end_of_file, [])), close(S)),
+    sb_answer_vars(As, Vs),
+    ( As == [] -> (sb_defined_call(G) -> Result = yes ; Result = no(finite_failure))
+    ; findall(sol(Vs), sb_defined_call(G), L0), sort(L0, L), Result = solutions(L)
+    ),
+    read_file_to_codes(Query, Bytes, [type(binary)]),
+    crypto_data_hash(Bytes, Hash, [algorithm(sha256), encoding(octet)]),
+    atom_concat(Name, '.out', AnswerName), directory_file_path(Out, AnswerName, Answer),
+    setup_call_cleanup(open(Answer, write, W, [encoding(utf8), newline(posix)]),
+        (format(W, '% ~w answered against the loaded composition by ckc queries; do not edit.~n', [Id]),
+         sb_write_term(W, '$guideline_answers'(v1, Id, query_sha256(Hash), result(Result)))), close(W)).
+
+sb_answer_vars([], []).
+sb_answer_vars([answer(V, _)|As], [V|Vs]) :- sb_answer_vars(As, Vs).
+
+sb_write_terms(File, Terms) :-
+    setup_call_cleanup(open(File, write, S, [encoding(utf8), newline(posix)]),
+        forall(member(T, Terms), sb_write_term(S, T)), close(S)).
+sb_write_term(S, T) :-
+    write_term(S, T, [quoted(true), ignore_ops(true), numbervars(true), character_escapes(true)]),
+    write(S, '.'), nl(S).
+
+% Ground union model → the same question/payload serialization, without rule evaluation.
+sb_manifest_union_answers :-
+    catch(sb_union_run, E, (print_message(error, E), halt(1))), halt(0).
+sb_union_run :-
+    current_prolog_flag(argv, [Root, ModelFile, Queries, Out, Recipe]),
+    consult(Recipe),
+    directory_file_path(Root, 'guidelines/schema.pl', Schema), consult(Schema),
+    consult(ModelFile), sb_manifest_identifier_check,
+    setup_call_cleanup(open(ModelFile, read, S, [encoding(utf8)]), sb_read_terms(S, Model), close(S)),
+    sb_answers(Queries, Out, Model).
+sb_read_terms(S, Terms) :-
+    read_term(S, T, []),
+    ( T == end_of_file -> Terms = [] ; Terms = [T|Ts], sb_read_terms(S, Ts) ).
+
+% Union all isolated models with SWI's standard term order + duplicate elimination.
+sb_manifest_union_models :-
+    catch(sb_union_models_run, E, (print_message(error, E), halt(1))), halt(0).
+sb_union_models_run :-
+    current_prolog_flag(argv, [ListFile, Out]),
+    read_file_to_string(ListFile, Text, []), split_string(Text, "\n", "\r", Lines),
+    findall(T,
+        (member(Line, Lines), Line \== "",
+         setup_call_cleanup(open(Line, read, S, [encoding(utf8)]),
+             sb_term_member(S, T), close(S))), Raw),
+    sort(Raw, Model), sb_write_terms(Out, Model).
+sb_term_member(S, T) :-
+    read_term(S, Next, []), Next \== end_of_file,
+    ( T = Next ; sb_term_member(S, T) ).

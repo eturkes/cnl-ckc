@@ -80,8 +80,8 @@ impl Abstraction {
                 let doc = aa[1].atom().unwrap_or("");
                 let owner = if self.patient_docids.contains(doc) {
                     format!("patient:{doc}")
-                } else if doc.starts_with("sb") && doc.as_bytes().get(6) == Some(&b'-') {
-                    doc[..6].to_owned()
+                } else if let Some(namespace) = super::transform::namespace_prefix(doc) {
+                    namespace.to_owned()
                 } else {
                     "base".into()
                 };

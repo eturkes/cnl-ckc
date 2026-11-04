@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Contract sb: fresh, complete grading package; baseline reads the current annex.
+set -euo pipefail
+if (( $# > 1 )); then
+  printf 'usage: tools/sb-run-manifest-rerun [<repo>]\n' >&2
+  exit 2
+fi
+root=$(readlink -f -- "${1:-$(dirname -- "$0")/..}")
+if [[ ! -f "$root/bench/sb/interfaces.md" || ! -f "$root/justfile" ]]; then
+  printf 'sb-run-manifest-rerun: repository inputs are absent\n' >&2
+  exit 2
+fi
+bench="$root/rust/target/bench"
+if [[ $(readlink -m -- "$bench") != "$bench" ]]; then
+  printf 'sb-run-manifest-rerun: output parent traverses a symlink\n' >&2
+  exit 2
+fi
+mkdir -p "$bench"
+exec > >(tee "$bench/sb1-job.log") 2>&1
+finish() {
+  local rc=$? pack_rc
+  trap - EXIT
+  set +e
+  printf 'sb1-job-rc=%s\n' "$rc"
+  tar -C "$root" -czf "$bench/sb1-package.tar.gz" \
+    rust/target/bench/sb1-frozen rust/target/bench/sb1-receipts rust/target/bench/sb1-oracles
+  pack_rc=$?
+  printf 'sb1-package-rc=%s\n' "$pack_rc"
+  if (( rc == 0 && pack_rc != 0 )); then rc=$pack_rc; fi
+  exit "$rc"
+}
+rm -rf -- "$bench/sb1-frozen" "$bench/sb1-receipts" "$bench/sb1-oracles"
+mkdir -p "$bench/sb1-frozen" "$bench/sb1-receipts" "$bench/sb1-oracles"
+trap finish EXIT
+printf 'source-commit='; git -C "$root" rev-parse HEAD
+printf 'annex-digests\n'; sha256sum "$root/bench/sb/annex/families.tsv" "$root/bench/sb/annex/sources.tsv"
+export CKC_TOOLCHAIN=${CKC_TOOLCHAIN:-$root/.toolchain}
+export RUSTUP_HOME="$CKC_TOOLCHAIN/rustup" CARGO_HOME="$CKC_TOOLCHAIN/cargo"
+export PATH="$CKC_TOOLCHAIN/verus-x86-linux:$CKC_TOOLCHAIN/cargo/bin:$CKC_TOOLCHAIN/bin:$PATH"
+(cd "$root" && just tools)
+if version=$(swipl --version 2>/dev/null) && [[ "$version" == "SWI-Prolog version 10.0.2 "* ]]; then
+  printf 'swipl: using %s\n' "$version"
+else
+  (cd "$root" && just swipl)
+fi
+(cd "$root" && just fmt-check clippy build trust)
+shellcheck "$root/tools/sb-run-manifest" "$root/tools/sb-run-manifest-rerun"
+(cd "$root/rust" && cargo test --locked --offline --test bench_gen)
+baseline="$bench/sb1-baseline-source"
+mkdir -p "$baseline"
+printf 'baseline-source-commit='; git -C "$root" rev-parse d19958119e0562fa160345537b45cd3f3a18bf19
+git -C "$root" archive d19958119e0562fa160345537b45cd3f3a18bf19 | tar -x -C "$baseline"
+(cd "$baseline" && just build)
+printf 'baseline-binary-digest\n'; sha256sum "$baseline/rust/target/release/ckc"
+"$root/tools/sb-run-manifest" instances --root "$root" --baseline "$baseline/rust/target/release/ckc"
+for mode in oracles write check self-test; do
+  "$root/tools/sb-run-manifest" "$mode" --root "$root"
+done

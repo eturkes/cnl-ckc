@@ -1,8 +1,10 @@
 // Contract sb D4/P1: position-aware family generation + replayable transform audit.
 mod assembly;
 mod isolation;
+mod run_manifest;
 mod text;
 mod transform;
+mod variation;
 
 use self::assembly::{Shard, Template};
 use self::text::{Document, Goal, Term};
@@ -307,9 +309,9 @@ fn renamer(
 ) -> Rename {
     match shard.template {
         Template::Original => Rename::identity(),
-        Template::Independent => Rename::active(shard.index, produced),
+        Template::Independent => Rename::active(shard.namespace, produced),
         Template::Shared => {
-            let mut rename = Rename::active(shard.index, produced);
+            let mut rename = Rename::active(shard.namespace, produced);
             rename.shared_nouns = shared
                 .iter()
                 .cloned()
@@ -317,8 +319,9 @@ fn renamer(
                 .collect();
             rename
         }
-        Template::Padding => Rename::dormant(shard.index, o.family != "F1b"),
+        Template::Padding => Rename::dormant(shard.namespace, o.family != "F1b"),
     }
+    .with_seed(o.seed)
 }
 fn document_id(document: &Document) -> Result<&str, String> {
     document
@@ -398,7 +401,8 @@ struct Product {
 }
 fn build(o: &Options) -> Result<Product, String> {
     let calibration = calibration(o)?;
-    let layout = assembly::layout(o, calibration.declared_k)?;
+    let mut layout = assembly::layout(o, calibration.declared_k)?;
+    let variation = variation::apply(o, &mut layout);
     let fixtures: BTreeMap<PathBuf, Document> = layout
         .fixture_inputs
         .iter()
@@ -512,6 +516,7 @@ fn build(o: &Options) -> Result<Product, String> {
             .into(),
         ),
     ];
+    manifest.extend(variation.rows);
     for (key, path) in [
         ("source_documents", &o.documents),
         ("source_patient", &o.patient),
@@ -547,6 +552,7 @@ fn build(o: &Options) -> Result<Product, String> {
     let mut sampled_shards = Vec::new();
     let mut roles = BTreeMap::<&str, usize>::new();
     let mut composition = String::new();
+    let mut shard_compositions = BTreeMap::new();
     let mut shard_table = String::from("shard\trole\tsource\tattached_documents\n");
     for slot in &layout.shards {
         let index = slot.index;
@@ -564,15 +570,17 @@ fn build(o: &Options) -> Result<Product, String> {
             );
         }
         let mut content = Vec::new();
+        let mut listed_documents = String::new();
         for document in &shard_documents {
             let id = document_id(document)?;
             let bytes = document.render();
             let path = PathBuf::from(format!("copies/{index:04}/{id}.pl"));
-            composition.push_str(&relative(&o.root, &o.out.join(&path))?);
-            composition.push('\n');
+            listed_documents.push_str(&relative(&o.root, &o.out.join(&path))?);
+            listed_documents.push('\n');
             content.extend_from_slice(&bytes);
             files.insert(path, bytes);
         }
+        shard_compositions.insert(index, listed_documents);
         manifest.push((format!("copy:{index:04}:sha256"), digest(&content)));
         manifest.push((
             format!("copy:{index:04}:documents"),
@@ -650,6 +658,9 @@ fn build(o: &Options) -> Result<Product, String> {
             .join(","),
     ));
     files.insert("shards.tsv".into(), shard_table.into_bytes());
+    for index in variation.load_order {
+        composition.push_str(&shard_compositions[&index]);
+    }
     manifest.push((
         "patient_documents".into(),
         patient_documents.len().to_string(),
@@ -857,10 +868,10 @@ fn generate(o: &Options) -> Result<(), String> {
     Ok(())
 }
 pub fn run(args: &[String]) -> ExitCode {
-    let result = if args.first().is_some_and(|s| s == "check") {
-        check(&args[1..])
-    } else {
-        options(args).and_then(|o| generate(&o))
+    let result = match args.first().map(String::as_str) {
+        Some("check") => check(&args[1..]),
+        Some("run-manifest") => run_manifest::run(&args[1..]),
+        _ => options(args).and_then(|o| generate(&o)),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
