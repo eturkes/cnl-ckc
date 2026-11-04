@@ -571,7 +571,9 @@ fn subperiod_spike_retains_the_sampling_uncertainty() {
 fn timeout_discards_partial_answers_and_reaps_the_group() {
     let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let s = Scratch::new("timeout");
-    let output = s.run("timeout", &["--deadline-ms", "250"]);
+    // The mock writes child.pid after two interpreter start-ups; under host load a 250 ms
+    // deadline could expire first. 2,500 ms still lands inside its 5 s hold.
+    let output = s.run("timeout", &["--deadline-ms", "2500"]);
     assert_eq!(
         output.status.code(),
         Some(1),
