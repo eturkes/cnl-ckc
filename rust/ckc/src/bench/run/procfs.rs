@@ -118,22 +118,10 @@ impl State {
             stop: false,
         }
     }
-    fn snapshot(&mut self, origin: Instant) -> Result<Vec<Process>> {
-        let start = ns(origin.elapsed());
-        let mut all = BTreeMap::new();
-        for entry in fs::read_dir("/proc").map_err(|e| format!("/proc: {e}"))? {
-            let Ok(entry) = entry else { continue };
-            let Some(pid) = entry
-                .file_name()
-                .to_str()
-                .and_then(|s| s.parse::<u32>().ok())
-            else {
-                continue;
-            };
-            if let Some(process) = stat(pid) {
-                all.insert(pid, process);
-            }
-        }
+    // The whole-/proc scan stays outside the State lock (`sample`): held across a
+    // scan, the lock starved the harness thread whenever one scan outlasted the period
+    // (unoptimized build, 458-process host: a 0.33 s run took 11.7 s).
+    fn owned(&self, all: &BTreeMap<u32, Process>) -> Result<BTreeSet<u32>> {
         let own = std::process::id();
         if !all.contains_key(&own) {
             return Err("the harness is absent from /proc".to_owned());
@@ -159,19 +147,13 @@ impl State {
                 break;
             }
         }
-        let mut processes = Vec::new();
-        for pid in owned {
-            let Some(mut process) = all.remove(&pid) else {
-                continue;
-            };
-            if status(&mut process)? {
-                processes.push(process);
-            }
-        }
-        let end = ns(origin.elapsed());
+        Ok(owned)
+    }
+    fn record(&mut self, processes: &[Process], start: u64, end: u64, phase: String) {
+        let own = std::process::id();
         let rss = processes.iter().map(|p| p.rss).sum();
         self.peak_rss = self.peak_rss.max(rss);
-        for process in &processes {
+        for process in processes {
             if let Some(path) = &process.executable {
                 self.executables.insert(path.clone());
             }
@@ -200,14 +182,54 @@ impl State {
         self.samples.push(Sample {
             start,
             end,
-            phase: self.phase.clone(),
+            phase,
             rss,
-            processes: processes.clone(),
+            processes: processes.to_vec(),
         });
-        Ok(processes)
     }
 }
-type Shared = Arc<(Mutex<State>, Condvar)>;
+fn scan() -> Result<BTreeMap<u32, Process>> {
+    let mut all = BTreeMap::new();
+    for entry in fs::read_dir("/proc").map_err(|e| format!("/proc: {e}"))? {
+        let Ok(entry) = entry else { continue };
+        let Some(pid) = entry
+            .file_name()
+            .to_str()
+            .and_then(|s| s.parse::<u32>().ok())
+        else {
+            continue;
+        };
+        if let Some(process) = stat(pid) {
+            all.insert(pid, process);
+        }
+    }
+    Ok(all)
+}
+// (state, sampler wake-up, scan gate): the gate serializes samples (ordered starts,
+// one scan at a time); the State lock covers only the ownership read + the record.
+type Shared = Arc<(Mutex<State>, Condvar, Mutex<()>)>;
+fn lock(shared: &Shared) -> std::sync::MutexGuard<'_, State> {
+    shared.0.lock().unwrap_or_else(|e| e.into_inner())
+}
+fn sample(shared: &Shared, origin: Instant) -> Result<Vec<Process>> {
+    let _gate = shared.2.lock().unwrap_or_else(|e| e.into_inner());
+    let start = ns(origin.elapsed());
+    let phase = lock(shared).phase.clone();
+    let mut all = scan()?;
+    let owned = lock(shared).owned(&all)?;
+    let mut processes = Vec::new();
+    for pid in owned {
+        let Some(mut process) = all.remove(&pid) else {
+            continue;
+        };
+        if status(&mut process)? {
+            processes.push(process);
+        }
+    }
+    let end = ns(origin.elapsed());
+    lock(shared).record(&processes, start, end, phase);
+    Ok(processes)
+}
 pub(super) struct Sampler {
     shared: Shared,
     thread: Option<JoinHandle<()>>,
@@ -218,15 +240,14 @@ impl Sampler {
         if !Path::new("/proc/self/stat").is_file() {
             return Err("bench run requires Linux /proc".to_owned());
         }
-        let mut state = State::new();
-        state.snapshot(origin)?;
-        let shared = Arc::new((Mutex::new(state), Condvar::new()));
+        let shared: Shared = Arc::new((Mutex::new(State::new()), Condvar::new(), Mutex::new(())));
+        sample(&shared, origin)?;
         let worker = shared.clone();
         let thread = thread::spawn(move || {
-            let (lock, wake) = &*worker;
+            let wake = &worker.1;
             let mut next = Instant::now();
             loop {
-                let mut state = lock.lock().unwrap_or_else(|e| e.into_inner());
+                let mut state = lock(&worker);
                 if state.stop {
                     break;
                 }
@@ -245,8 +266,9 @@ impl Sampler {
                 if state.stop {
                     break;
                 }
-                if let Err(error) = state.snapshot(origin) {
-                    state.error = Some(error);
+                drop(state);
+                if let Err(error) = sample(&worker, origin) {
+                    lock(&worker).error = Some(error);
                     break;
                 }
             }
@@ -266,9 +288,8 @@ impl Sampler {
     }
     pub fn register(&self, pid: u32) -> Result<()> {
         let process = stat(pid).ok_or("subprocess identity missing from /proc")?;
-        let mut state = self.shared.0.lock().unwrap_or_else(|e| e.into_inner());
-        state.groups.insert(pid, process.start);
-        state.snapshot(self.origin)?;
+        lock(&self.shared).groups.insert(pid, process.start);
+        sample(&self.shared, self.origin)?;
         Ok(())
     }
     pub fn unregister(&self, pid: u32) {
@@ -280,11 +301,7 @@ impl Sampler {
             .remove(&pid);
     }
     pub fn boundary(&self) -> Result<Vec<Process>> {
-        self.shared
-            .0
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .snapshot(self.origin)
+        sample(&self.shared, self.origin)
     }
     pub fn violation(&self, memory_bytes: u64) -> Option<&'static str> {
         let state = self.shared.0.lock().unwrap_or_else(|e| e.into_inner());
@@ -298,11 +315,10 @@ impl Sampler {
     }
     pub fn finish(mut self) -> State {
         self.stop();
-        let mut state = self.shared.0.lock().unwrap_or_else(|e| e.into_inner());
-        if let Err(error) = state.snapshot(self.origin) {
-            state.error = Some(error);
+        if let Err(error) = sample(&self.shared, self.origin) {
+            lock(&self.shared).error = Some(error);
         }
-        std::mem::replace(&mut *state, State::new())
+        std::mem::replace(&mut *lock(&self.shared), State::new())
     }
     fn stop(&mut self) {
         {

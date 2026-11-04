@@ -1452,11 +1452,11 @@ chrome-headless-shell\t155.0.8059.84\tchs.zip\t{}\thttps://storage.googleapis.co
         &format!("{api}/casey/just/releases/latest"),
         r#"{"tag_name": "1.58.0"}"#,
     );
-    // Latest node = the highest version, the Current line included (user ruling), wherever
-    // index.json lists it.
+    // Latest node = the highest released version, the Current line included (user ruling),
+    // wherever index.json lists it; a prerelease (v27.0.0-alpha.0.0.0) is no release.
     fx.route(
         "https://nodejs.org/dist/index.json",
-        r#"[{"version": "v24.22.0", "lts": "Krypton"}, {"version": "v26.1.0", "lts": false}, {"version": "v24.21.0", "lts": "Krypton"}]"#,
+        r#"[{"version": "v27.0.0-alpha.0.0.0", "lts": false}, {"version": "v24.22.0", "lts": "Krypton"}, {"version": "v26.1.0", "lts": false}, {"version": "v24.21.0", "lts": "Krypton"}]"#,
     );
     fx.route(
         "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json",
@@ -1685,11 +1685,26 @@ fn outdated_reads_nodes_highest_release() {
             .to_owned()
     };
     assert_eq!(node("lts-pin", &text), "tool:node\t24.22.0\t26.1.0\tdrift");
+    let filter = r#"jq -r '[.[].version | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")) | ltrimstr("v") | split(".") | map(tonumber)] | max | select(. != null) | map(tostring) | join(".")')"#;
+    // The pre-fix recipe parses every dotted part as a number: the prerelease reds the row
+    // (weekly `updates` run 41478585911).
+    let unfiltered = plant(
+        &text,
+        &[(
+            filter,
+            r#"jq -r '[.[].version | ltrimstr("v") | split(".") | map(tonumber)] | max | select(. != null) | map(tostring) | join(".")')"#,
+        )],
+    );
+    assert_eq!(
+        node("prerelease-planted", &unfiltered),
+        "tool:node\t24.22.0\t?\terror",
+        "the planted unfiltered recipe no longer reds on a prerelease"
+    );
     // The pre-rule recipe reads the newest LTS line: the newer Current release passes unseen.
     let planted = plant(
         &text,
         &[(
-            r#"jq -r '[.[].version | ltrimstr("v") | split(".") | map(tonumber)] | max | select(. != null) | map(tostring) | join(".")')"#,
+            filter,
             r#"jq -r '[.[] | select(.lts != false)][0].version // empty' | sed 's/^v//')"#,
         )],
     );

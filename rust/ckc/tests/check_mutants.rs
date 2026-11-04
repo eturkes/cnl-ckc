@@ -216,11 +216,12 @@ fn mutate(t: &Path, name: &str) {
             b"Check: typed below-parser",
         ),
         "agent-law-glob" => replace(t, ".claude/rules/vendor.md", b"  - \"vendor/**\"\n", b"  - vendor/**\n"),
+        // Right under the heading: no ops.md edit below it moves the pinned line.
         "agent-law-path" => replace(
             t,
             ".claude/rules/ops.md",
-            b"- Presentation rule (user):",
-            b"- Run /home/fixture/x.\n- Presentation rule (user):",
+            b"# Project operations\n\n",
+            b"# Project operations\n\n- Run /home/fixture/x.\n",
         ),
         "agent-law-queue" => append(
             t,

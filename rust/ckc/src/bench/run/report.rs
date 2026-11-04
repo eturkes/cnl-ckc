@@ -29,6 +29,35 @@ pub(super) fn digest(path: &Path) -> Result<(u64, String)> {
         hash.finalize().iter().map(|b| format!("{b:02x}")).collect(),
     ))
 }
+// One digest per executable file per harness process, keyed by its identity + length +
+// mtime: re-hashing every executable after every run (the 63 MB unoptimized test ckc +
+// a 34 MB interpreter, ≈ 9 s per run) pushed the paired harness test past its 30 s wall.
+fn executable_digest(path: &Path) -> Result<(u64, String)> {
+    use std::collections::BTreeMap;
+    use std::os::unix::fs::MetadataExt;
+    use std::sync::{Mutex, OnceLock};
+    type Key = (PathBuf, u64, u64, u64, i64, i64);
+    static CACHE: OnceLock<Mutex<BTreeMap<Key, (u64, String)>>> = OnceLock::new();
+    let m = fs::metadata(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let key = (
+        path.to_owned(),
+        m.dev(),
+        m.ino(),
+        m.len(),
+        m.mtime(),
+        m.mtime_nsec(),
+    );
+    let cache = CACHE.get_or_init(Default::default);
+    if let Some(hit) = cache.lock().unwrap_or_else(|e| e.into_inner()).get(&key) {
+        return Ok(hit.clone());
+    }
+    let value = digest(path)?;
+    cache
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(key, value.clone());
+    Ok(value)
+}
 fn hash_text(text: &str) -> String {
     crate::trust::sha256_hex(text.as_bytes())
 }
@@ -169,9 +198,13 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
     pair(
         &mut host,
         "harness_sha256",
-        digest(&std::env::current_exe().map_err(|e| e.to_string())?)?.1,
+        executable_digest(&std::env::current_exe().map_err(|e| e.to_string())?)?.1,
     );
-    pair(&mut host, "shell_sha256", digest(Path::new("/bin/sh"))?.1);
+    pair(
+        &mut host,
+        "shell_sha256",
+        executable_digest(Path::new("/bin/sh"))?.1,
+    );
     pair(
         &mut host,
         "producer_command_sha256",
@@ -330,7 +363,7 @@ pub(super) fn per_run(path: &Path, ledger: &Ledger, phases: &[Phase], state: &St
     write(&path.join("processes.tsv"), processes)?;
     let mut executables = "path\tbytes\tsha256\tstatus\n".to_owned();
     for executable in &state.executables {
-        match digest(executable) {
+        match executable_digest(executable) {
             Ok((size, hash)) => executables.push_str(&format!(
                 "{}\t{size}\t{hash}\tread\n",
                 field(&executable.display().to_string())
