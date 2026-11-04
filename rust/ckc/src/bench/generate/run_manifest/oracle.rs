@@ -351,7 +351,9 @@ pub(super) fn run(c: &Config) -> Result<(), String> {
                 &p.oracle(&c.root).join("wfs").join(format!("{name}.out")),
             )?;
         }
-        if ["F1a", "F1b", "F2"].contains(&p.family.as_str()) {
+        if p.contrast.is_some() {
+            super::contrast::run(c, &p)?;
+        } else if ["F1a", "F1b", "F2"].contains(&p.family.as_str()) {
             union(c, &p, &recipe)?;
         }
         println!(
@@ -379,7 +381,9 @@ pub(super) fn check(c: &Config, p: &Point) -> Result<(), String> {
             &p.oracle(&c.root).join("wfs").join(format!("{name}.out")),
         )?;
     }
-    if ["F1a", "F1b", "F2"].contains(&p.family.as_str()) {
+    if p.contrast.is_some() {
+        super::contrast::check(c, p)?;
+    } else if ["F1a", "F1b", "F2"].contains(&p.family.as_str()) {
         check_union(c, p, &recipe)?;
     }
     Ok(())

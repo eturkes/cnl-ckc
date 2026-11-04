@@ -904,3 +904,150 @@ fn uncalibrated_scale_and_missing_query_are_refused() {
         "transform duplicate document identity gamma",
     );
 }
+fn listing(s: &Scratch, name: &str) -> BTreeMap<String, Vec<u8>> {
+    let dir = s.0.join(name);
+    let prefix = format!("{}/", dir.strip_prefix(root()).unwrap().display());
+    fs::read_to_string(dir.join("composition.tsv"))
+        .unwrap()
+        .lines()
+        .map(|l| {
+            (
+                l.strip_prefix(&prefix).unwrap().to_owned(),
+                fs::read(root().join(l)).unwrap(),
+            )
+        })
+        .collect()
+}
+// Contract sb D2 MX + F4 (scientist-3 round 4 A4–A6, A9): each contrast changes one
+// declared factor of its base; every other listed file stays byte-identical.
+#[test]
+fn one_factor_contrasts_change_only_their_declared_factor() {
+    let s = Scratch::new("contrasts");
+    let mx = |seed: u64, contrast: Option<&str>| {
+        let name = format!("mx-s{seed}-{}", contrast.unwrap_or("base"));
+        let mut extra = vec![
+            "--patient".into(),
+            assembly_patient("MX").display().to_string(),
+            "--seed".into(),
+            seed.to_string(),
+        ];
+        if let Some(c) = contrast {
+            extra.extend(["--contrast".into(), c.into()]);
+        }
+        quiet(&s.generate("MX", 10, &name, &extra));
+        quiet(&s.check(&name));
+        name
+    };
+    let diff = |base: &str, other: &str| {
+        let (a, b) = (listing(&s, base), listing(&s, other));
+        let removed: Vec<_> = a.keys().filter(|k| !b.contains_key(*k)).cloned().collect();
+        let added: Vec<_> = b.keys().filter(|k| !a.contains_key(*k)).cloned().collect();
+        let changed: Vec<_> = a
+            .iter()
+            .filter(|(k, v)| b.get(*k).is_some_and(|w| w != *v))
+            .map(|(k, _)| k.clone())
+            .collect();
+        (removed, added, changed)
+    };
+    let base = mx(0, None);
+    let bridge = mx(0, Some("mx-bridge-b4"));
+    assert_eq!(
+        diff(&base, &bridge),
+        (
+            vec!["copies/0003/sb-f3-b4-reader.pl".to_owned()],
+            vec![],
+            vec![]
+        )
+    );
+    let m = manifest_values(&s.0.join(&bridge));
+    assert_eq!(m["contrast"], "mx-bridge-b4");
+    assert_eq!(m["shard:0003:attached_documents"], "none");
+    // The shared bridge nouns keep the full reader set: the base's spelling stays.
+    assert_eq!(
+        m["shared_bridge_nouns"],
+        manifest_values(&s.0.join(&base))["shared_bridge_nouns"]
+    );
+
+    let key = mx(0, Some("mx-key"));
+    let (removed, added, changed) = diff(&base, &key);
+    assert!(removed.is_empty() && added.is_empty());
+    assert!(changed.contains(&"patient.pl".to_owned()));
+    assert!(
+        changed
+            .iter()
+            .all(|f| f == "patient.pl" || f.starts_with("intakes/"))
+    );
+    let before = fs::read_to_string(s.0.join(&base).join("patient.pl")).unwrap();
+    let after = fs::read_to_string(s.0.join(&key).join("patient.pl")).unwrap();
+    let s17 = "'sb-p-mx',17,";
+    let gone: Vec<_> = before
+        .lines()
+        .filter(|l| !after.lines().any(|a| a == *l))
+        .collect();
+    assert_eq!(gone.len(), 10, "{gone:?}");
+    assert!(gone[0].starts_with("% S17: "));
+    assert!(gone[1..].iter().all(|l| l.contains(s17)));
+    assert!(!after.contains(s17));
+    // Surviving identities keep their sentence numbers.
+    assert!(after.contains("'$guideline_id'(product,'sb-p-mx',18,"));
+
+    let shard = mx(0, Some("mx-shard"));
+    let (removed, added, changed) = diff(&base, &shard);
+    assert_eq!(removed, vec!["intakes/0006/sb-p-mx.pl".to_owned()]);
+    assert!(added.is_empty());
+    assert!(!changed.is_empty() && changed.iter().all(|f| f.starts_with("copies/0006/")));
+    let m = manifest_values(&s.0.join(&shard));
+    assert_eq!((m["k"].as_str(), m["active_shards"].as_str()), ("5", "5"));
+    assert_eq!(m["shard:0006:role"], "padding");
+    assert_eq!(m["shard:0006:source"], "F1a-padding-0006");
+
+    // Under the holdout variation the shard contrast keeps its base's namespaces + order.
+    let (holdout, holdout_shard) = (mx(1, None), mx(1, Some("mx-shard")));
+    let order = |name: &str| {
+        fs::read_to_string(s.0.join(name).join("composition.tsv"))
+            .unwrap()
+            .lines()
+            .filter_map(|l| l.split("/copies/").nth(1).map(|r| r[..4].to_owned()))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(order(&holdout), order(&holdout_shard));
+    let (h, hs) = (
+        manifest_values(&s.0.join(&holdout)),
+        manifest_values(&s.0.join(&holdout_shard)),
+    );
+    for slot in 1..=10 {
+        let key = format!("variation_namespace:{slot:04}");
+        assert_eq!(h[&key], hs[&key]);
+    }
+
+    let f4 = |name: &str, extra: &[&str]| {
+        let mut args = assembly_args("F4");
+        args.extend(extra.iter().map(|s| s.to_string()));
+        quiet(&s.generate("F4", 1, name, &args));
+        quiet(&s.check(name));
+    };
+    f4("f4-base", &[]);
+    f4("f4-l2", &["--contrast", "f4-l2"]);
+    assert_eq!(
+        diff("f4-base", "f4-l2"),
+        (vec!["copies/0001/sb-f4-l2.pl".to_owned()], vec![], vec![])
+    );
+
+    let patient = assembly_patient("MX").display().to_string();
+    let contrast = |family: &str, count: usize, name: &str| {
+        s.generate(
+            family,
+            count,
+            &format!("refused-{name}"),
+            &[
+                "--patient".into(),
+                patient.clone(),
+                "--contrast".into(),
+                name.into(),
+            ],
+        )
+    };
+    refuses(&contrast("MX", 10, "mx-nope"), "unknown contrast mx-nope");
+    refuses(&contrast("MX", 4, "mx-key"), "G >= 6");
+    refuses(&contrast("MX", 10, "f4-l2"), "belongs to family F4");
+}

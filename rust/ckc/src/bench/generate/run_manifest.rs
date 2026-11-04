@@ -1,4 +1,5 @@
 // Contract sb Grading authorization: frozen inputs + independent oracle receipts.
+mod contrast;
 mod instances;
 mod oracle;
 
@@ -30,10 +31,21 @@ struct Point {
     family: String,
     scale: usize,
     seed: u64,
+    contrast: Option<&'static str>,
 }
 impl Point {
     fn id(&self) -> String {
-        format!("{}-g{:03}-s{}", self.family, self.scale, self.seed)
+        let base = format!("{}-g{:03}-s{}", self.family, self.scale, self.seed);
+        match self.contrast {
+            Some(c) => format!("{base}-{c}"),
+            None => base,
+        }
+    }
+    fn base(&self) -> Self {
+        Self {
+            contrast: None,
+            ..self.clone()
+        }
     }
     fn dir(&self, root: &Path) -> PathBuf {
         root.join(BASE).join(self.id())
@@ -45,22 +57,28 @@ impl Point {
         root.join(ORACLES).join(self.id())
     }
 }
+// Contract sb D2: per family G1/2/4/10/100 seed 0 + the G100 seed-1 holdout, then its
+// one-factor contrasts at G100 for both seeds (after their base: the contrast check reads it).
 fn points(c: &Config) -> Vec<Point> {
     FAMILIES
         .into_iter()
         .filter(|f| c.family.as_deref().is_none_or(|selected| selected == *f))
         .flat_map(|family| {
+            let point = move |scale, seed, contrast| Point {
+                family: family.into(),
+                scale,
+                seed,
+                contrast,
+            };
             [1, 2, 4, 10, 100]
                 .into_iter()
-                .map(move |scale| Point {
-                    family: family.into(),
-                    scale,
-                    seed: 0,
-                })
-                .chain(std::iter::once(Point {
-                    family: family.into(),
-                    scale: 100,
-                    seed: 1,
+                .map(move |scale| point(scale, 0, None))
+                .chain(std::iter::once(point(100, 1, None)))
+                .chain(contrast::NAMES.into_iter().flat_map(move |(f, name)| {
+                    (f == family)
+                        .then(|| [point(100, 0, Some(name)), point(100, 1, Some(name))])
+                        .into_iter()
+                        .flatten()
                 }))
         })
         .filter(|p| c.seed.is_none_or(|seed| p.seed == seed))
@@ -314,7 +332,9 @@ fn inventory(c: &Config) -> Result<String, String> {
                 "{id}: composition identity or shard inventory differs"
             ));
         }
-        let value = format!(
+        // Seed 1 = a representation/order holdout of the same clinical workload
+        // (scientist-3 G7), not a fresh patient or topology.
+        let mut value = format!(
             "family={};G={};seed={};role={}",
             point.family,
             point.scale,
@@ -322,9 +342,12 @@ fn inventory(c: &Config) -> Result<String, String> {
             if point.seed == 0 {
                 "development"
             } else {
-                "holdout"
+                "holdout-representation"
             }
         );
+        if let Some(contrast) = point.contrast {
+            value.push_str(&format!(";contrast={contrast};base={}", point.base().id()));
+        }
         row(
             &mut out,
             [
@@ -436,9 +459,31 @@ fn inventory(c: &Config) -> Result<String, String> {
                     "copy-by-copy-model-union",
                 )?;
             }
+            if point.contrast.is_some() {
+                for name in ["receipt.tsv", "removed.out", "added.out"] {
+                    file_row(
+                        &mut out,
+                        &c.root,
+                        "contrast",
+                        &id,
+                        name,
+                        &point.oracle(&c.root).join("contrast").join(name),
+                        "delta-vs-base-recipe-model",
+                    )?;
+                }
+            }
         }
     }
     Ok(out)
+}
+fn counts(c: &Config) -> String {
+    let all = points(c);
+    let contrasts = all.iter().filter(|p| p.contrast.is_some()).count();
+    let endpoints = all.iter().filter(|p| p.scale == 100).count();
+    format!(
+        "{} instances ({contrasts} contrasts), {endpoints} endpoint oracles",
+        all.len()
+    )
 }
 fn validate(want: &str, got: &str) -> Result<(), String> {
     if want == got {
@@ -459,12 +504,12 @@ pub(super) fn run(args: &[String]) -> Result<(), String> {
         "write" => {
             let text = inventory(&c)?;
             write(&c.file, text)?;
-            println!("sb-run-manifest: frozen 54 instances, 18 endpoint oracles");
+            println!("sb-run-manifest: frozen {}", counts(&c));
             Ok(())
         }
         "check" => {
             validate(&inventory(&c)?, &string(&c.file)?)?;
-            println!("sb-run-manifest: ok 54 instances, 18 endpoint oracles");
+            println!("sb-run-manifest: ok {}", counts(&c));
             Ok(())
         }
         "self-test" => {

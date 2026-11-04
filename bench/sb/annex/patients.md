@@ -92,11 +92,11 @@ Source-supported synthetic adult Veteran outpatient with actual chronic non-canc
 
 ```text
 VA Appendix C: vetted symptoms + impairment/distress → patient P has OUD instance D.
-ASAM glossary: the same D is a SUD; P-has-D remains unchanged.
-CDC s60-11: P has actual pain and D typed SUD → document-specific MUST pain management.
+ASAM consequence: P has a fresh SUD witness S; P-has-D/OUD remains unchanged.
+CDC s60-11: P has actual pain and S typed SUD → document-specific MUST pain management.
 ```
 
-`F4-DEPTH`: 3 enumerated semantic rules, 2 guideline hops, 3 source guidelines. Compiled support depth, negative strata, term nesting, SCC/frontier/intermediate counts remain **unmeasured**. No source justifies a longer serial chain or multiplication of depth by copies. Only F4-L1..L3 define the positive path; a separate pain-classification branch is not concatenated into it.
+`F4-DEPTH`: 3 enumerated semantic rules, 2 guideline hops, 3 source guidelines. Compiled support depth, negative strata, term nesting, SCC/frontier/intermediate counts remain **unmeasured**. The ASAM consequence is a patient-level existential (`F4-SUBTYPE`): its fresh SUD witness adds constructor + support work, measured as compiled, never charged as an identity-preserving type-edge cost. The ASAM consequence is a patient-level existential (`F4-SUBTYPE`): its fresh SUD witness adds constructor + support work, measured as compiled, never charged as an identity-preserving type-edge cost. No source justifies a longer serial chain or multiplication of depth by copies. Only F4-L1..L3 define the positive path; a separate pain-classification branch is not concatenated into it.
 
 Controls from `researcher-9:C6`: remove the vetted diagnostic seed; remove actual pain; remove/rename the subtype link while withholding all other SUD producers; add medically supervised tolerance/withdrawal as the only count contributors; add each CDC age/setting/disease/care exclusion separately. Supervision excludes those two symptoms, not every possible OUD diagnosis. A hospital/ED/observation case with no actual discharge-prescription witness blocks CDC's endpoint; no prescription duty can supply that witness.
 
@@ -171,7 +171,7 @@ Window/dedup = `F5-WINDOW-*`, `F5-RECORD-MAP`. The source lacks dated supply int
 
 ## P-MX
 
-Main's requested structural mixture = F3 topology/eligibility plus the **intact F5b medication tuple** (`MX-*`, `P-F5B-OPIOID-DEGREE`, `P-F5B-BZD-DEGREE`, `P-F5B-GABA-DEGREE`). The two F5 people remain separate; Mayo's numeric duration, MME and dated UDT pair are not transferred.
+Main's requested structural mixture = F3 topology/eligibility plus F5b's **drug counts, classes and PRN prescription status** (`MX-*`, `P-F5B-OPIOID-DEGREE`, `P-F5B-BZD-DEGREE`, `P-F5B-GABA-DEGREE`): a qualitatively source-supported synthetic scenario (`MX-COHERENCE`, scientist-3 G2), not an observed person. The two F5 people remain separate; Mayo's numeric duration, MME and dated UDT pair are not transferred, and no Sayles dose, age or interruption history is.
 
 ```text
 Use P-F3's synthetic eligibility dossier and selected six-source topology.
@@ -179,11 +179,11 @@ Keep F5b's joint prescription counts: 2 opioids, 1 benzodiazepine, 1 gabapentino
 Preserve prescription status, episode identity and current-window caveats.
 ```
 
-`MX-JOINTNESS`: the case report does not document OUD/T2DM/CKD or the full F3 eligibility dossier. This is a **main-selected synthetic structural mixture**, not an observed F5b patient with those diagnoses. Full clinical joint realism remains **unconfirmed** and must pass the scientist's load-bearing-row appraisal before grading. An intact observed medication correlation is supported; a whole-patient joint distribution is not.
+`MX-JOINTNESS`: the case report does not document OUD/T2DM/CKD or the full F3 eligibility dossier. This is a **main-selected synthetic structural mixture**, not an observed F5b patient with those diagnoses; its qualitative coherence is accepted (scientist-3 G2). An intact observed medication correlation is supported; the full joint tuple and its prevalence are not observed.
 
 Matched one-factor diagnostic controls (not additional clinically observed positives):
-- `MX-CONTRAST-BRIDGE`: drop one bridge. Exact compiled bridge/target context is not yet selected; remove every alternative support of that target before attributing an endpoint change.
-- `MX-CONTRAST-KEY`: drop one repeated key. The supported multiplicity is the opioid medication key, not repeated numeric pain durations. Exact removed record is not yet selected.
-- `MX-CONTRAST-SHARD`: drop one active shard. Exact shard and whether a dormant replacement holds G fixed are not yet selected.
+- `MX-CONTRAST-BRIDGE`: remove the complete preflight-selected bridge-reader group — F3-B4's reader first, F3-B1's only if no clean observable F3-B4 target can be isolated — while upstream OUD/chronic-pain facts and every other classifier + reader stay unchanged; selection by correctness + structure, never by measured speed. A wider multi-producer cut would be labelled target-support-cut, not pure bridge removal.
+- `MX-CONTRAST-KEY`: remove the second opioid record — the oxycodone prescription + product of `p-mx.ace` sentence 17 — and its associated fact set; opioid degree 2 → 1; fentanyl, alprazolam, the patient, every other record and G retained; surviving identities never renumbered.
+- `MX-CONTRAST-SHARD`: replace the T2DM-labelled shared slot with an F1a-kind padding copy at the same slot; G = 100; intended active-source count 6 → 5; patient facts unchanged. An active-hub-versus-residue intervention: its clause, term, edge + answer deltas are the treatment, reported, since equal G is not equal logical work.
 
-These are the three perturbation classes in main's brief. Concrete contrast IDs cannot be transcribed from a source that never chose them. Main must freeze them with the later compiled fixture; this annex does not invent them. All clinical/exposure limitations of P-F3 and P-F5b apply. Small G=1/2/4 prefixes are smoke-only for the full mixed topology; G=10/100 retain the selected six-source construction.
+These are diagnostic controls, not additional clinically observed positives. Each contrast's descriptor (disabled documents or facts, the replaced slot) + its expected removed and preserved answer sets are recorded per seed in the frozen run manifest (`run-manifest.tsv`) and checked against the oracle before timing. All clinical/exposure limitations of P-F3 and P-F5b apply. Small G=1/2/4 prefixes are smoke-only for the full mixed topology; G=10/100 retain the selected six-source construction.

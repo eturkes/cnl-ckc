@@ -1,5 +1,6 @@
 // Contract sb D4/P1: position-aware family generation + replayable transform audit.
 mod assembly;
+mod contrast;
 mod isolation;
 mod run_manifest;
 mod text;
@@ -29,6 +30,7 @@ struct Options {
     out: PathBuf,
     expected: Option<PathBuf>,
     seed: u64,
+    contrast: Option<String>,
     commit: Option<String>,
 }
 fn read(path: &Path) -> Result<Vec<u8>, String> {
@@ -108,6 +110,7 @@ fn pairs(args: &[String]) -> Result<BTreeMap<String, String>, String> {
                 | "--out"
                 | "--expected"
                 | "--seed"
+                | "--contrast"
         ) {
             return Err(format!("unknown option {}", p[0]));
         }
@@ -144,6 +147,7 @@ fn options(args: &[String]) -> Result<Options, String> {
             .map(|s| s.parse().map_err(|_| "seed must be a u64"))
             .transpose()?
             .unwrap_or(0),
+        contrast: opts.get("--contrast").cloned(),
         root,
         family,
         scale,
@@ -400,9 +404,12 @@ struct Product {
     files: BTreeMap<PathBuf, Vec<u8>>,
 }
 fn build(o: &Options) -> Result<Product, String> {
+    contrast::validate(o)?;
     let calibration = calibration(o)?;
     let mut layout = assembly::layout(o, calibration.declared_k)?;
     let variation = variation::apply(o, &mut layout);
+    // After the variation: a contrast keeps its base's namespaces + load order.
+    let contrast_rows = contrast::apply_layout(o, &mut layout)?;
     let fixtures: BTreeMap<PathBuf, Document> = layout
         .fixture_inputs
         .iter()
@@ -414,7 +421,7 @@ fn build(o: &Options) -> Result<Product, String> {
         .iter()
         .map(|p| load(p))
         .collect::<Result<Vec<_>, _>>()?;
-    let patient = load(&o.patient)?;
+    let patient = contrast::apply_patient(o, load(&o.patient)?)?;
     if patient.clauses().any(|c| {
         let mut variables = BTreeMap::new();
         c.head.variables(&mut variables);
@@ -517,6 +524,7 @@ fn build(o: &Options) -> Result<Product, String> {
         ),
     ];
     manifest.extend(variation.rows);
+    manifest.extend(contrast_rows);
     for (key, path) in [
         ("source_documents", &o.documents),
         ("source_patient", &o.patient),
@@ -805,6 +813,7 @@ fn check(args: &[String]) -> Result<(), String> {
             .map(|p| resolve_input(&root, p))
             .transpose()?,
         seed: get("seed")?.parse().map_err(|_| "manifest seed")?,
+        contrast: m.get("contrast").cloned(),
         commit: Some(get("generator_commit")?.into()),
         root,
         out,
@@ -878,7 +887,7 @@ pub fn run(args: &[String]) -> ExitCode {
         Err(e) => {
             if e == "usage" {
                 eprintln!(
-                    "ckc: bench gen: usage: ckc bench gen <F1a|F1b|F2|F3|F4|F5a|F5b|F5c|MX> <1|2|4|10|100> --root <repo> --patient <compiled.pl> --out <rust/target/bench/dir> [--queries <dir>] [--documents <dir|file|manifest.tsv>] [--annex <dir>] [--expected <q-all-output>] [--seed <u64>]; ckc bench gen check <dir> --root <repo>"
+                    "ckc: bench gen: usage: ckc bench gen <F1a|F1b|F2|F3|F4|F5a|F5b|F5c|MX> <1|2|4|10|100> --root <repo> --patient <compiled.pl> --out <rust/target/bench/dir> [--queries <dir>] [--documents <dir|file|manifest.tsv>] [--annex <dir>] [--expected <q-all-output>] [--seed <u64>] [--contrast <mx-bridge-b4|mx-bridge-b1|mx-key|mx-shard|f4-l2>]; ckc bench gen check <dir> --root <repo>"
                 );
                 ExitCode::from(2)
             } else {

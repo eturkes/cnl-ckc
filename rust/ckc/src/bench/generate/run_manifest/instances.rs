@@ -6,7 +6,7 @@ fn args(c: &Config, p: &Point) -> Vec<String> {
     } else {
         p.family.to_ascii_lowercase()
     };
-    vec![
+    let mut argv = vec![
         p.family.clone(),
         p.scale.to_string(),
         "--root".into(),
@@ -17,7 +17,11 @@ fn args(c: &Config, p: &Point) -> Vec<String> {
         relative(&c.root, &p.dir(&c.root)).unwrap(),
         "--seed".into(),
         p.seed.to_string(),
-    ]
+    ];
+    if let Some(contrast) = p.contrast {
+        argv.extend(["--contrast".into(), contrast.into()]);
+    }
+    argv
 }
 fn listing_path(c: &Config, p: &Point, kind: &str) -> PathBuf {
     c.root
@@ -25,7 +29,7 @@ fn listing_path(c: &Config, p: &Point, kind: &str) -> PathBuf {
         .join(format!("{}.{kind}.sha256.tsv", p.id()))
 }
 fn baseline_required(p: &Point) -> bool {
-    p.seed == 0 && p.scale < 100
+    p.seed == 0 && p.scale < 100 && p.contrast.is_none()
 }
 
 pub(super) fn run(c: &Config) -> Result<(), String> {
@@ -146,6 +150,7 @@ pub(super) fn check(c: &Config, p: &Point) -> Result<(), String> {
         || m.get("seed") != Some(&p.seed.to_string())
         || m.get("generator_commit") != receipt.get("generator_commit")
         || m.get("transform_version").map(String::as_str) != Some(super::super::VERSION)
+        || m.get("contrast").map(String::as_str) != p.contrast
     {
         return Err(format!("{}: frozen family/vector/version", p.id()));
     }
