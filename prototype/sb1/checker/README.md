@@ -36,6 +36,10 @@ The CLI retains the prepared knowledge base through process exit. The OS reclaim
 
 The orchestrator writes `orchestrator-phases.tsv` with explicit load/scored kinds and exclusive offsets. The producer's entire child interval is scored once; its own subphases remain diagnostic. Loaded RSS remains charged. The outer harness charges every gap through the complete answer sink. It reports later process teardown as a load-side lifecycle phase, keeps RSS sampling and the operational deadline/caps active through teardown, and reaps the owned process tree. Usage, metrics and outcome details are in `bench/sb/interfaces.md`.
 
+### Warm server
+
+`checker serve [--provider all|static] [--producer <file>] [--swipl <file>] (--ta-receipts <dir>|none | --ta-run <census binary>) --root <repo> <composition.tsv> <arm-dir>` prepares once, verifies the knowledge base's census receipt by its knowledge identity (`--ta-receipts none` = an unchecked development load; `--ta-run` = the census runs in-process after the prepare), prints `ready`, then answers one stdin request `<id>\t<query>\t<new call dir>` at a time with `done\t<id>\t<rc>` after the call's files exist. Protocol + files: `bench/sb/interfaces.md` § Warm server. `ckc bench run --serve '<this command>'` drives it.
+
 ### Gap trace
 
 `SB1_STAGE_TRACE=1` enables diagnostic TSVs without changing load/scored kinds, deadlines or RSS sampling. `orchestrator-trace.tsv` records owner-relative monotonic wall time and absolute thread CPU nanoseconds: patient decode/admission, identity, query/slice, materialization, SWI spawn/wait, model/certificate decode, checks, answer computation, call-state rollback, metrics, stdout write/flush and pre-exit. `harness-stage-trace.tsv` records controller-relative events through owner exit, wait/reap, answer-sink handling, sampler finish and publication. Its child CPU ticks + the pinned `CLK_TCK` can be compared with the owner's pre-exit CPU, up to tick quantization. The two wall origins are separate; startup and post-exit deltas must be identified before comparing them. The stdout guard drop is not an explicit close of file descriptor 1.

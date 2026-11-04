@@ -408,7 +408,9 @@ pub(super) fn phases(work: &Path, stage: &Stage) -> Result<Vec<Phase>> {
     let (offset, kinds) = match lines.next() {
         Some("phase\tseconds\tcpu") if stage.role != "orchestrator" => (false, false),
         Some("phase\tseconds\tcpu\tstart_seconds") if stage.role != "orchestrator" => (true, false),
-        Some("phase\tseconds\tcpu\tstart_seconds\tkind") if stage.role == "orchestrator" => {
+        Some("phase\tseconds\tcpu\tstart_seconds\tkind")
+            if matches!(stage.role, "orchestrator" | "call" | "load") =>
+        {
             (true, true)
         }
         _ => return Err("phase report header".to_owned()),
@@ -453,7 +455,29 @@ pub(super) fn phases(work: &Path, stage: &Stage) -> Result<Vec<Phase>> {
             },
         });
     }
-    let expected: &[&str] = if stage.role == "orchestrator" {
+    // Warm mode splits the orchestrator table: `load` once per server, `call` per request.
+    const SCORED: [&str; 9] = [
+        "patient",
+        "slice",
+        "materialize",
+        "producer",
+        "decode",
+        "index",
+        "support",
+        "closure",
+        "answers",
+    ];
+    let expected: &[&str] = if stage.role == "call" {
+        &SCORED
+    } else if stage.role == "load" {
+        &[
+            "load_parse",
+            "load_admission",
+            "load_analysis",
+            "load_index",
+            "load_receipt",
+        ]
+    } else if stage.role == "orchestrator" {
         &[
             "load_parse",
             "load_admission",

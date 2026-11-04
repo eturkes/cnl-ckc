@@ -51,6 +51,48 @@ fn orchestrated(
     })
 }
 
+// `serve` takes the `orchestrate` options + `--ta-receipts <dir>|none` and an arm
+// directory in place of `<out> <query>`; requests arrive on stdin.
+fn served(
+    args: &[std::ffi::OsString],
+) -> Result<sb1_checker::orchestrator::ServeRequest, sb1_checker::Failure> {
+    let usage = || {
+        sb1_checker::Failure {
+        rc: 2,
+        message: "usage: checker serve [--provider all|static] [--producer <file>] [--swipl <file>] (--ta-receipts <dir>|none | --ta-run <ta-binary>) --root <repo> <composition.tsv> <arm-dir>".into(),
+    }
+    };
+    let mut rest = Vec::new();
+    let mut receipts = None;
+    let mut ta_run = None;
+    let mut at = 0;
+    while at < args.len() {
+        if args[at] == "--ta-receipts" && receipts.is_none() {
+            let value = args.get(at + 1).ok_or_else(usage)?;
+            receipts = Some((value != "none").then(|| PathBuf::from(value)));
+            at += 2;
+        } else if args[at] == "--ta-run" && ta_run.is_none() {
+            ta_run = Some(PathBuf::from(args.get(at + 1).ok_or_else(usage)?));
+            at += 2;
+        } else {
+            rest.push(args[at].clone());
+            at += 1;
+        }
+    }
+    let receipts = match (receipts, &ta_run) {
+        (Some(receipts), None) => receipts,
+        (None, Some(_)) => None,
+        _ => return Err(usage()),
+    };
+    rest.push("-".into());
+    let base = orchestrated(&rest).map_err(|_| usage())?;
+    Ok(sb1_checker::orchestrator::ServeRequest {
+        base,
+        receipts,
+        ta_run,
+    })
+}
+
 fn write_orchestrated(
     directory: &Path,
     text: &str,
@@ -104,6 +146,20 @@ fn main() {
                 // allocations in Drop would add O(loaded KB) per-call teardown.
                 std::process::exit(0);
             }
+            Err(error) => {
+                eprintln!("{}", error.message);
+                std::process::exit(error.rc);
+            }
+        }
+    }
+    if args.first().is_some_and(|a| a == "serve") {
+        let result = served(&args[1..]).and_then(|request| {
+            let stdin = std::io::stdin().lock();
+            sb1_checker::orchestrator::serve(&request, mode, stdin, std::io::stdout().lock())
+        });
+        match result {
+            // The checked KB is process-lifetime state (as `orchestrate`).
+            Ok(()) => std::process::exit(0),
             Err(error) => {
                 eprintln!("{}", error.message);
                 std::process::exit(error.rc);

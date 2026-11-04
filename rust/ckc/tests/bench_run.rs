@@ -682,3 +682,189 @@ fn usage_error_never_reuses_an_existing_output_directory() {
     assert_eq!(output.status.code(), Some(2));
     assert_eq!(s.result("runs.tsv"), original);
 }
+
+// Warm mode (contract sb § Carried rulings): one mock server per arm, the checker's
+// `serve` protocol (tests/bench-run/server.py).
+impl Scratch {
+    fn warm(&self, mode: &str, paired: bool, extra: &[&str]) -> Output {
+        let target = self.composition("target");
+        for q in ["q-one", "q-patient"] {
+            fs::write(target.join(format!("queries/{q}.pl")), "query.\n").unwrap();
+        }
+        let mut args: Vec<String> = vec![
+            "bench".into(),
+            "run".into(),
+            target.display().to_string(),
+            "--serve".into(),
+            format!(
+                "python3 -I '{}' {mode}",
+                root().join("tests/bench-run/server.py").display()
+            ),
+            "--root".into(),
+            root().display().to_string(),
+            "--out".into(),
+            self.0.join("result").display().to_string(),
+            "--query".into(),
+            "q-one".into(),
+            "--query".into(),
+            "q-patient".into(),
+            "--blocks".into(),
+            "2".into(),
+            "--deadline-ms".into(),
+            "3000".into(),
+            "--sample-ms".into(),
+            "10".into(),
+        ];
+        if paired {
+            let baseline = self.composition("baseline");
+            for q in ["q-one", "q-patient"] {
+                fs::write(baseline.join(format!("queries/{q}.pl")), "query.\n").unwrap();
+            }
+            args.extend(["--paired".into(), baseline.display().to_string()]);
+        }
+        for pair in extra.as_chunks::<2>().0 {
+            if let Some(index) = args.iter().position(|value| value == pair[0]) {
+                args[index + 1] = pair[1].to_owned();
+            } else {
+                args.extend(pair.iter().map(|s| (*s).to_owned()));
+            }
+        }
+        Command::new("timeout")
+            .args(["--kill-after=1", "60"])
+            .arg(program())
+            .args(&args)
+            .current_dir(&self.0)
+            .output()
+            .unwrap()
+    }
+}
+// The server leads its own process group; the harness does not.
+fn server_pids(s: &Scratch, run: usize) -> std::collections::BTreeSet<String> {
+    let text = s.result(&format!("run-{run:06}/rss-processes.tsv"));
+    rows(&text)
+        .into_iter()
+        .filter(|r| r["pid"] == r["pgrp"])
+        .map(|r| format!("{}@{}", r["pid"], r["start_ticks"]))
+        .collect()
+}
+
+#[test]
+fn warm_server_loads_once_and_scores_each_call_at_its_sink() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("warm");
+    succeeded(&s.warm("normal", false, &[]));
+    let loads_text = s.result("loads.tsv");
+    let loads = rows(&loads_text);
+    assert_eq!(loads.len(), 1);
+    assert_eq!((loads[0]["arm"], loads[0]["outcome"]), ("target", "ready"));
+    let runs_text = s.result("runs.tsv");
+    let runs = rows(&runs_text);
+    assert_eq!(runs.len(), 4, "2 blocks × 2 queries");
+    for run in &runs {
+        assert_eq!(run["outcome"], "verified");
+        assert_eq!(
+            number(run, "load_ns"),
+            0,
+            "load is reported once, never per call"
+        );
+        assert_eq!(number(run, "scored_ns"), number(run, "sink_end_ns"));
+        assert!(number(run, "scored_ns") <= number(run, "wall_ns"));
+        assert!(
+            number(run, "scored_ns") >= 30_000_000,
+            "the mock's 30 ms call"
+        );
+    }
+    // One server process answered every call: the same pid in each call window.
+    let first = server_pids(&s, 1);
+    assert_eq!(first.len(), 1, "{first:?}");
+    for run in 2..=4 {
+        assert_eq!(server_pids(&s, run), first);
+    }
+    assert_eq!(s.result("run-000002/answers.txt"), "ANSWER q-patient.pl\n");
+    let products = s.result("run-000001/products.tsv");
+    assert!(products.contains("model.txt\t6\t") && products.contains("\tno\n"));
+    assert!(!s.0.join("result/run-000001/model.txt").exists());
+    let summary_text = s.result("summary.tsv");
+    let summary = rows(&summary_text);
+    assert_eq!(summary.len(), 2, "one row per query");
+    assert!(summary.iter().all(|r| r["status"] == "complete"));
+    let memory = s.result("memory.tsv");
+    assert!(memory.contains("peak_summed_rss_bytes\t"));
+    assert!(s.result("teardown.tsv").contains("exit status: 0"));
+}
+
+#[test]
+fn warm_paired_ratio_is_per_query() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("warm-paired");
+    succeeded(&s.warm("normal", true, &[]));
+    assert_eq!(rows(&s.result("loads.tsv")).len(), 2);
+    let ratio_text = s.result("ratio.tsv");
+    let ratio = rows(&ratio_text);
+    assert_eq!(
+        ratio.iter().map(|r| r["query"]).collect::<Vec<_>>(),
+        ["q-one.pl", "q-patient.pl"]
+    );
+    assert!(
+        ratio
+            .iter()
+            .all(|r| r["status"] == "complete" && r["pairs"] == "2")
+    );
+}
+
+#[test]
+fn warm_failures_lose_the_server_and_mark_its_later_calls() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    for (mode, extra, first) in [
+        ("slow", &["--deadline-ms", "300"][..], "deadline"),
+        ("memory", &["--memory-bytes", "30000000"][..], "memory"),
+        ("protocol", &[][..], "protocol"),
+    ] {
+        let s = Scratch::new(mode);
+        let output = s.warm(mode, false, extra);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "{mode}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let text = s.result("runs.tsv");
+        let runs = rows(&text);
+        assert_eq!(
+            (runs[0]["outcome"], runs[0]["reason"]),
+            ("indeterminate", first),
+            "{mode}"
+        );
+        for run in &runs[1..] {
+            assert_eq!(run["outcome"], "indeterminate", "{mode}");
+            assert_eq!(run["reason"], format!("server-lost:{first}"), "{mode}");
+        }
+        assert!(!s.0.join("result/run-000001/answers.txt").exists() || first == "protocol");
+    }
+    let s = Scratch::new("load-exit");
+    let output = s.warm("load-exit", false, &[]);
+    assert_eq!(output.status.code(), Some(1));
+    let loads_text = s.result("loads.tsv");
+    assert_eq!(rows(&loads_text)[0]["outcome"], "indeterminate");
+    let text = s.result("runs.tsv");
+    assert!(
+        rows(&text)
+            .iter()
+            .all(|r| r["reason"] == "server-lost:load-server-exit")
+    );
+}
+
+#[test]
+fn warm_refused_call_keeps_the_server_serving() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("refuse-first");
+    let output = s.warm("refuse-first", false, &[]);
+    assert_eq!(output.status.code(), Some(1));
+    let text = s.result("runs.tsv");
+    let runs = rows(&text);
+    assert_eq!(
+        (runs[0]["outcome"], runs[0]["reason"]),
+        ("refused", "orchestrator")
+    );
+    assert!(runs[1..].iter().all(|r| r["outcome"] == "verified"));
+}

@@ -819,4 +819,6 @@ mod codec_tests;
 #[cfg(test)]
 mod preflight_tests;
 #[cfg(test)]
+mod serve_tests;
+#[cfg(test)]
 mod transport_tests;

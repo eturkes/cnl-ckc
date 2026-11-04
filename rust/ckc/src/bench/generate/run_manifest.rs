@@ -228,6 +228,11 @@ fn settings(out: &mut String, c: &Config) -> Result<(), String> {
     for (name, value) in [
         ("format", "sb1-run-manifest-1"),
         ("deadline_ms", "1800000"),
+        // Warm campaign (contract sb § Carried rulings): the frozen value bounds each
+        // call + each server load; scored = request write → closed sink.
+        ("harness_mode", "served;checker-serve;ta-receipts"),
+        ("call_deadline_ms", "1800000"),
+        ("load_deadline_ms", "1800000"),
         ("scored_budget_ms", "300000"),
         ("memory_bytes", "48000000000"),
         ("pass_memory_bytes", "32000000000"),

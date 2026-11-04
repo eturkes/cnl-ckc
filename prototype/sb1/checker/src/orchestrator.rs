@@ -673,3 +673,224 @@ pub fn orchestrate_retained(
     prepared.trace(&request.output, "result_return_ready")?;
     Ok((result?, prepared))
 }
+
+// Builder-13's census identity of a knowledge base (contract sb § Carried rulings,
+// typed-analysis receipts): content alone, in composition order, the schema first.
+pub fn knowledge_identity(schema: &[u8], documents: &[&[u8]]) -> String {
+    let mut digest = Sha256::default();
+    digest.update(b"sb1-ta-knowledge\0dc=1\0");
+    digest.update(&(documents.len() as u64).to_le_bytes());
+    digest.update(&(schema.len() as u64).to_le_bytes());
+    digest.update(schema);
+    for bytes in documents {
+        digest.update(&(bytes.len() as u64).to_le_bytes());
+        digest.update(bytes);
+    }
+    digest.finish()
+}
+pub struct ServeRequest {
+    // `output` = the arm directory; `query` is unused (each call names its own).
+    pub base: OrchestratedRequest,
+    // Census receipts by knowledge identity; None = an unchecked development load.
+    pub receipts: Option<PathBuf>,
+    // The census binary run in-process at load, the prepared knowledge base resident
+    // (the pilot's integrated check of the receipt-sum memory bound).
+    pub ta_run: Option<PathBuf>,
+}
+// `ta --dc --patient last` over the whole composition; rc 0 = admitted.
+fn run_census(request: &ServeRequest, binary: &Path) -> Result<Vec<(String, String)>, Failure> {
+    let out = request.base.output.join("ta");
+    let status = Command::new(binary)
+        .arg("--root")
+        .arg(&request.base.root)
+        .arg("--composition")
+        .arg(&request.base.composition)
+        .arg("--out")
+        .arg(&out)
+        .args(["--dc", "--patient", "last"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map_err(|e| Failure::io(binary, e))?;
+    match status.code() {
+        Some(0) => Ok(vec![
+            ("receipt".into(), "integrated".into()),
+            ("ta_out".into(), out.display().to_string()),
+        ]),
+        Some(1) => Err(Failure::refused(
+            "load",
+            "the in-process typed analysis refused",
+        )),
+        _ => Err(Failure {
+            rc: 2,
+            message: format!("in-process typed analysis {status}"),
+        }),
+    }
+}
+fn receipt(directory: &Path, identity: &str) -> Result<Vec<(String, String)>, Failure> {
+    let path = directory.join(format!("{identity}.tsv"));
+    let bytes = read(&path).map_err(|_| {
+        Failure::refused(
+            "load",
+            format!("no typed-analysis receipt for knowledge base {identity}"),
+        )
+    })?;
+    let rows = utf8(&bytes, "typed-analysis receipt")?
+        .lines()
+        .map(|line| {
+            line.split_once('\t')
+                .map(|(k, v)| (k.to_owned(), v.to_owned()))
+                .ok_or_else(|| Failure::parse("typed-analysis receipt row"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let get = |key: &str| rows.iter().find(|(k, _)| k == key).map(|(_, v)| v.as_str());
+    if get("format") != Some("sb1-ta-receipt 1")
+        || get("kb_identity") != Some(identity)
+        || get("dc") != Some("1")
+    {
+        return Err(Failure::parse(format!(
+            "typed-analysis receipt {}",
+            path.display()
+        )));
+    }
+    if get("verdict") != Some("admitted") {
+        return Err(Failure::refused(
+            "load",
+            format!("typed analysis did not admit knowledge base {identity}"),
+        ));
+    }
+    Ok(rows)
+}
+fn publish(directory: &Path, name: &str, text: &str) -> Result<(), Failure> {
+    let tmp = directory.join(format!("{name}.tmp"));
+    fs::write(&tmp, text).map_err(|e| Failure::io(&tmp, e))?;
+    let path = directory.join(name);
+    fs::rename(&tmp, &path).map_err(|e| Failure::io(&path, e))
+}
+impl PreparedProgram {
+    // `origin` rebases the offsets (seconds since the prepare origin) onto the call's
+    // own start, so a call's phase table measures from its request.
+    fn write_phases(
+        &self,
+        directory: &Path,
+        name: &str,
+        from: usize,
+        origin: f64,
+    ) -> Result<(), Failure> {
+        let mut text = String::from("phase\tseconds\tcpu\tstart_seconds\tkind\n");
+        for phase in &self.phases[from..] {
+            text.push_str(&format!(
+                "{}\t{:.9}\t{:.9}\t{:.9}\t{}\n",
+                phase.name,
+                phase.seconds,
+                phase.cpu,
+                (phase.start - origin).max(0.0),
+                phase.kind
+            ));
+        }
+        let path = directory.join(name);
+        fs::write(&path, text).map_err(|e| Failure::io(&path, e))
+    }
+}
+// Warm multi-call server (contract sb § Carried rulings: one orchestrator per family
+// serves every block's calls). Load once, then one call per stdin line
+// `<id>\t<query>\t<new call directory>`: a fresh SWI child + tables, the patient suffix
+// re-admitted, per-call phases + counters + the closed answer sink, `call-done.tsv`,
+// then `done\t<id>\t<rc>` on stdout. EOF ends the process.
+pub fn serve(
+    request: &ServeRequest,
+    codec: SourceCodec,
+    input: impl std::io::BufRead,
+    mut output: impl Write,
+) -> Result<(), Failure> {
+    let arm = &request.base.output;
+    fs::create_dir_all(arm).map_err(|e| Failure::io(arm, e))?;
+    let mut prepared =
+        PreparedProgram::prepare(&request.base.root, &request.base.composition, codec, None)?;
+    let origin = prepared.origin;
+    let mut load = vec![(
+        "knowledge_documents".to_owned(),
+        prepared.loaded.documents.len().to_string(),
+    )];
+    let rows = phase(&mut prepared.phases, origin, "load_receipt", "load", || {
+        let documents = prepared
+            .loaded
+            .documents
+            .iter()
+            .map(|d| d.bytes.as_slice())
+            .collect::<Vec<_>>();
+        let identity = knowledge_identity(&prepared.loaded.schema, &documents);
+        let mut rows = vec![("kb_identity".to_owned(), identity.clone())];
+        match (&request.receipts, &request.ta_run) {
+            (Some(directory), None) => rows.extend(
+                receipt(directory, &identity)?
+                    .into_iter()
+                    .map(|(k, v)| (format!("receipt_{k}"), v)),
+            ),
+            (None, Some(binary)) => rows.extend(run_census(request, binary)?),
+            (None, None) => rows.push(("receipt".into(), "unchecked".into())),
+            (Some(_), Some(_)) => {
+                return Err(Failure::parse("receipts + in-process census both given"));
+            }
+        }
+        Ok(rows)
+    })?;
+    load.extend(rows);
+    prepared.write_phases(arm, "load-phases.tsv", 0, 0.0)?;
+    let path = arm.join("load-counters.tsv");
+    fs::write(&path, prepared.counters.render()).map_err(|e| Failure::io(&path, e))?;
+    publish(
+        arm,
+        "load.tsv",
+        &load
+            .iter()
+            .map(|(k, v)| format!("{k}\t{v}\n"))
+            .collect::<String>(),
+    )?;
+    let io = |e: std::io::Error| Failure {
+        rc: 2,
+        message: format!("I/O serve stream {e}"),
+    };
+    writeln!(output, "ready")
+        .and_then(|_| output.flush())
+        .map_err(io)?;
+    let loaded = prepared.phases.len();
+    for line in input.lines() {
+        let line = line.map_err(io)?;
+        let fields = line.split('\t').collect::<Vec<_>>();
+        let [id, query, directory] = fields.as_slice() else {
+            return Err(Failure::parse("serve request shape"));
+        };
+        let started = origin.elapsed().as_secs_f64();
+        let directory = PathBuf::from(directory);
+        fs::create_dir(&directory).map_err(|e| Failure::io(&directory, e))?;
+        prepared.phases.truncate(loaded);
+        prepared.counters = Counters::default();
+        let call = OrchestratedRequest {
+            output: directory.clone(),
+            query: PathBuf::from(query),
+            ..request.base.clone()
+        };
+        let rc = match prepared.call(&call, None) {
+            Ok(text) => {
+                prepared.write_complete_sink(&directory, &text)?;
+                0
+            }
+            Err(failure) => {
+                let path = directory.join("call.stderr");
+                fs::write(&path, format!("{}\n", failure.message))
+                    .map_err(|e| Failure::io(&path, e))?;
+                failure.rc
+            }
+        };
+        prepared.write_phases(&directory, "call-phases.tsv", loaded, started)?;
+        let path = directory.join("checker-counters.tsv");
+        fs::write(&path, prepared.counters.render()).map_err(|e| Failure::io(&path, e))?;
+        publish(&directory, "call-done.tsv", &format!("rc\t{rc}\n"))?;
+        writeln!(output, "done\t{id}\t{rc}")
+            .and_then(|_| output.flush())
+            .map_err(io)?;
+    }
+    Ok(())
+}

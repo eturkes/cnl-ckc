@@ -93,7 +93,12 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         ("root", config.root.display().to_string()),
         ("producer", config.producer.clone()), ("checker", config.checker.clone()),
         ("orchestrator", config.orchestrator.clone().unwrap_or_default()),
-        ("process_mode", if config.orchestrator.is_some() { "orchestrated" } else { "separate" }.to_owned()),
+        ("serve", config.serve.clone().unwrap_or_default()),
+        ("queries", config.queries.join(",")),
+        ("load_deadline_ns", ns(config.load_deadline).to_string()),
+        ("keep_products", config.keep_products.to_string()),
+        ("process_mode", if config.serve.is_some() { "served" } else if config.orchestrator.is_some() { "orchestrated" } else { "separate" }.to_owned()),
+        ("served_scope", "one-server-per-arm;load-once-reported-in-loads.tsv;call=request-write-to-closed-sink;call-deadline=deadline_ns;load-deadline=load_deadline_ns;lost-server-later-calls-indeterminate;times-in-run-dirs-call-relative;memory.tsv=campaign-peak-incl-loads".to_owned()),
         ("checker_rc_scope", "checker-or-combined-orchestrator;producer-rc-empty-in-orchestrated-mode".to_owned()),
         ("query", config.query.clone()), ("blocks", config.blocks.to_string()),
         ("seed", config.seed.to_string()), ("random", "splitmix64;unbiased-paired-order".to_owned()),
@@ -218,9 +223,14 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
     if let Some(command) = &config.orchestrator {
         pair(&mut host, "orchestrator_command_sha256", hash_text(command));
     }
+    if let Some(command) = &config.serve {
+        pair(&mut host, "serve_command_sha256", hash_text(command));
+    }
     write(&config.out.join("host.tsv"), host)?;
     let mut identities = "arm\tpath\tbytes\tsha256\n".to_owned();
     let mut seen = std::collections::BTreeSet::new();
+    let queries: std::collections::BTreeSet<_> =
+        plan.iter().map(|e| (e.arm, e.query.clone())).collect();
     for entry in plan {
         if !seen.insert(entry.arm) {
             continue;
@@ -228,9 +238,14 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         let mut paths = vec![
             config.root.join("guidelines/schema.pl"),
             entry.composition.clone(),
-            entry.query.clone(),
-            entry.directory.join("manifest.tsv"),
         ];
+        paths.extend(
+            queries
+                .iter()
+                .filter(|(arm, _)| *arm == entry.arm)
+                .map(|(_, q)| q.clone()),
+        );
+        paths.push(entry.directory.join("manifest.tsv"));
         let composition = fs::read_to_string(&entry.composition).map_err(|e| e.to_string())?;
         for line in composition
             .lines()
@@ -434,70 +449,78 @@ fn stats(mut values: Vec<f64>) -> (f64, f64, f64) {
     )
 }
 pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {
-    let mut text = "arm\ttotal\tverified\trefused\tindeterminate\tstatus\tmedian_seconds\tiqr_seconds\tmax_seconds\tmedian_peak_rss_bytes\tiqr_peak_rss_bytes\tmax_peak_rss_bytes\n".to_owned();
+    let queries: std::collections::BTreeSet<&str> = runs.iter().map(|r| r.query.as_str()).collect();
+    let mut text = "arm\tquery\ttotal\tverified\trefused\tindeterminate\tstatus\tmedian_seconds\tiqr_seconds\tmax_seconds\tmedian_peak_rss_bytes\tiqr_peak_rss_bytes\tmax_peak_rss_bytes\n".to_owned();
     for arm in ["baseline", "target"] {
-        let rows: Vec<_> = runs.iter().filter(|r| r.arm == arm).collect();
-        if rows.is_empty() {
-            continue;
-        }
-        let good: Vec<_> = rows.iter().filter(|r| r.outcome == "verified").collect();
-        let refused = rows.iter().filter(|r| r.outcome == "refused").count();
-        text.push_str(&format!(
-            "{arm}\t{}\t{}\t{refused}\t{}\t{}",
-            rows.len(),
-            good.len(),
-            rows.len() - good.len() - refused,
-            if good.len() == rows.len() {
-                "complete"
-            } else {
-                "incomplete"
+        for query in &queries {
+            let rows: Vec<_> = runs
+                .iter()
+                .filter(|r| r.arm == arm && r.query == *query)
+                .collect();
+            if rows.is_empty() {
+                continue;
             }
-        ));
-        if good.len() != rows.len() {
-            text.push_str("\t\t\t\t\t\t\n");
-            continue;
+            let good: Vec<_> = rows.iter().filter(|r| r.outcome == "verified").collect();
+            let refused = rows.iter().filter(|r| r.outcome == "refused").count();
+            text.push_str(&format!(
+                "{arm}\t{}\t{}\t{}\t{refused}\t{}\t{}",
+                field(query),
+                rows.len(),
+                good.len(),
+                rows.len() - good.len() - refused,
+                if good.len() == rows.len() {
+                    "complete"
+                } else {
+                    "incomplete"
+                }
+            ));
+            if good.len() != rows.len() {
+                text.push_str("\t\t\t\t\t\t\n");
+                continue;
+            }
+            let (median, iqr, max) = stats(
+                good.iter()
+                    .map(|r| r.scored.unwrap_or_default() as f64 / 1e9)
+                    .collect(),
+            );
+            let (rss, rss_iqr, rss_max) = stats(good.iter().map(|r| r.peak_rss as f64).collect());
+            text.push_str(&format!(
+                "\t{median:.9}\t{iqr:.9}\t{max:.9}\t{rss:.0}\t{rss_iqr:.0}\t{rss_max:.0}\n"
+            ));
         }
-        let (median, iqr, max) = stats(
-            good.iter()
-                .map(|r| r.scored.unwrap_or_default() as f64 / 1e9)
-                .collect(),
-        );
-        let (rss, rss_iqr, rss_max) = stats(good.iter().map(|r| r.peak_rss as f64).collect());
-        text.push_str(&format!(
-            "\t{median:.9}\t{iqr:.9}\t{max:.9}\t{rss:.0}\t{rss_iqr:.0}\t{rss_max:.0}\n"
-        ));
     }
     write(&config.out.join("summary.tsv"), text)?;
     if config.paired.is_none() {
         return Ok(());
     }
-    let pairs: Vec<_> = (1..=config.blocks)
-        .filter_map(|block| {
-            let baseline = runs
-                .iter()
-                .find(|r| r.block == block && r.arm == "baseline" && r.outcome == "verified")?
-                .scored? as f64;
-            let target = runs
-                .iter()
-                .find(|r| r.block == block && r.arm == "target" && r.outcome == "verified")?
-                .scored? as f64;
-            if baseline <= 0.0 {
-                None
-            } else {
-                Some((baseline, target))
-            }
-        })
-        .collect();
     let mut ratio =
-        "pairs\tstatus\tratio_of_medians\tone_sided_95_upper\tbootstrap_resamples\tseed\n"
+        "query\tpairs\tstatus\tratio_of_medians\tone_sided_95_upper\tbootstrap_resamples\tseed\n"
             .to_owned();
-    if pairs.len() != config.blocks as usize {
-        ratio.push_str(&format!(
-            "{}\tnot-estimable\t\t\t10000\t{}\n",
-            pairs.len(),
-            config.seed
-        ));
-    } else {
+    for query in &queries {
+        let scored = |block: u64, arm: &str| {
+            runs.iter()
+                .find(|r| {
+                    r.block == block && r.arm == arm && r.query == *query && r.outcome == "verified"
+                })
+                .and_then(|r| r.scored)
+                .map(|n| n as f64)
+        };
+        let pairs: Vec<_> = (1..=config.blocks)
+            .filter_map(|block| {
+                let baseline = scored(block, "baseline")?;
+                let target = scored(block, "target")?;
+                (baseline > 0.0).then_some((baseline, target))
+            })
+            .collect();
+        if pairs.len() != config.blocks as usize {
+            ratio.push_str(&format!(
+                "{}\t{}\tnot-estimable\t\t\t10000\t{}\n",
+                field(query),
+                pairs.len(),
+                config.seed
+            ));
+            continue;
+        }
         let observed = stats(pairs.iter().map(|p| p.1).collect()).0
             / stats(pairs.iter().map(|p| p.0).collect()).0;
         let mut random = Random::new(config.seed);
@@ -514,7 +537,8 @@ pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {
         estimates.sort_by(f64::total_cmp);
         let upper = estimates[(0.95 * estimates.len() as f64).ceil() as usize - 1];
         ratio.push_str(&format!(
-            "{}\tcomplete\t{observed:.9}\t{upper:.9}\t10000\t{}\n",
+            "{}\t{}\tcomplete\t{observed:.9}\t{upper:.9}\t10000\t{}\n",
+            field(query),
             pairs.len(),
             config.seed
         ));

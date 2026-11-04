@@ -313,6 +313,51 @@ impl Sampler {
             None
         }
     }
+    // Warm mode: the samples since the last drain become one window's State (its own
+    // processes, peaks + gaps); the campaign-wide peaks + error stay in the sampler.
+    pub fn drain(&self) -> State {
+        let mut shared = lock(&self.shared);
+        let samples = std::mem::take(&mut shared.samples);
+        let mut window = State::new();
+        window.error = shared.error.clone();
+        let own = std::process::id();
+        for sample in samples {
+            window.peak_rss = window.peak_rss.max(sample.rss);
+            if let Some(previous) = window.samples.last() {
+                window.max_gap = window
+                    .max_gap
+                    .max(sample.start.saturating_sub(previous.start));
+            }
+            for process in &sample.processes {
+                if let Some(path) = &process.executable {
+                    window.executables.insert(path.clone());
+                }
+                if process.pid != own {
+                    window.peak_single_hwm = window.peak_single_hwm.max(process.hwm);
+                }
+                let seen = window
+                    .processes
+                    .entry(process.key())
+                    .or_insert_with(|| Seen {
+                        process: process.clone(),
+                        first: sample.start,
+                        last: sample.end,
+                        samples: 0,
+                        peak_rss: 0,
+                        hwm: 0,
+                        own_ticks: 0,
+                    });
+                seen.process = process.clone();
+                seen.last = sample.end;
+                seen.samples += 1;
+                seen.peak_rss = seen.peak_rss.max(process.rss);
+                seen.hwm = seen.hwm.max(process.hwm);
+                seen.own_ticks = seen.own_ticks.max(process.own_ticks);
+            }
+            window.samples.push(sample);
+        }
+        window
+    }
     pub fn finish(mut self) -> State {
         self.stop();
         if let Err(error) = sample(&self.shared, self.origin) {

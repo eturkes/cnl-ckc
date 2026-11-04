@@ -3,6 +3,7 @@ mod config;
 mod execute;
 mod procfs;
 mod report;
+mod serve;
 mod sink;
 
 use config::{Config, Random};
@@ -37,6 +38,8 @@ struct Plan {
 }
 struct RunRow {
     run: usize,
+    // The plan's query file name: summaries + ratios group by it (warm mode calls several).
+    query: String,
     block: u64,
     order: usize,
     arm: &'static str,
@@ -67,27 +70,39 @@ fn plan(config: &Config) -> Result<Vec<Plan>> {
                 arms.swap(0, 1);
             }
         }
-        for (order, (arm, directory)) in arms.into_iter().enumerate() {
+        // Warm mode calls every query per arm in each block; the arm order stays randomized.
+        let mut order = 0;
+        for (arm, directory) in arms {
             let composition = directory
                 .join("composition.tsv")
                 .canonicalize()
                 .map_err(|e| format!("{}: {e}", directory.display()))?;
-            let query = config.query(&directory)?;
-            if !composition.is_file() || !query.is_file() {
-                return Err("composition + query must be regular files".to_owned());
+            for name in &config.queries {
+                let query = config.named_query(name, &directory)?;
+                if !composition.is_file() || !query.is_file() {
+                    return Err("composition + query must be regular files".to_owned());
+                }
+                order += 1;
+                plan.push(Plan {
+                    run: plan.len() + 1,
+                    block,
+                    order,
+                    arm,
+                    directory: directory.clone(),
+                    composition: composition.clone(),
+                    query,
+                });
             }
-            plan.push(Plan {
-                run: plan.len() + 1,
-                block,
-                order: order + 1,
-                arm,
-                directory,
-                composition,
-                query,
-            });
         }
     }
     Ok(plan)
+}
+fn query_name(entry: &Plan) -> String {
+    entry
+        .query
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default()
 }
 struct Work(PathBuf);
 impl Drop for Work {
@@ -149,6 +164,7 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
     let mut phases: Vec<Phase> = Vec::new();
     let mut row = RunRow {
         run: entry.run,
+        query: query_name(entry),
         block: entry.block,
         order: entry.order,
         arm: entry.arm,
@@ -356,6 +372,10 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
 }
 fn campaign(config: Config) -> Result<bool> {
     let plan = plan(&config)?;
+    if config.serve.is_some() {
+        let rows = serve::campaign(&config, &plan)?;
+        return finish(&config, &rows);
+    }
     let ticks = report::ticks()?;
     private_directory(&config.out)?;
     report::metadata(&config, &plan, ticks)?;
@@ -370,7 +390,10 @@ fn campaign(config: Config) -> Result<bool> {
         raw.flush().map_err(|e| e.to_string())?;
         rows.push(row);
     }
-    report::summary(&config, &rows)?;
+    finish(&config, &rows)
+}
+fn finish(config: &Config, rows: &[RunRow]) -> Result<bool> {
+    report::summary(config, rows)?;
     let verified = rows.iter().filter(|r| r.outcome == "verified").count();
     let refused = rows.iter().filter(|r| r.outcome == "refused").count();
     eprintln!(

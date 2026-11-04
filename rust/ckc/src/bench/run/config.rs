@@ -11,6 +11,11 @@ pub(super) struct Config {
     pub producer: String,
     pub checker: String,
     pub orchestrator: Option<String>,
+    // Warm mode (`--serve`): one server per arm, every `--query` called once per block.
+    pub serve: Option<String>,
+    pub queries: Vec<String>,
+    pub load_deadline: Duration,
+    pub keep_products: bool,
     pub query: String,
     pub blocks: u64,
     pub seed: u64,
@@ -21,7 +26,7 @@ pub(super) struct Config {
     pub size_bytes: u64,
     pub identities: Vec<PathBuf>,
 }
-pub(super) const HELP: &str = "usage: ckc bench run <composition-dir> (--producer <cmd> --checker <cmd> | --orchestrator <cmd>) --query <q> --blocks <n> --out <dir> [--root <repo>] [--paired <composition-dir>] [--seed <n>] [--deadline-ms <n>] [--sample-ms <n>] [--memory-bytes <n>] [--size-bytes <n>] [--identity-file <file>]";
+pub(super) const HELP: &str = "usage: ckc bench run <composition-dir> (--producer <cmd> --checker <cmd> | --orchestrator <cmd> | --serve <cmd> [--load-deadline-ms <n>] [--keep-products yes|no]) --query <q> (repeatable with --serve) --blocks <n> --out <dir> [--root <repo>] [--paired <composition-dir>] [--seed <n>] [--deadline-ms <n>] [--sample-ms <n>] [--memory-bytes <n>] [--size-bytes <n>] [--identity-file <file>]";
 
 fn natural(value: &str, option: &str) -> Result<u64> {
     value
@@ -61,6 +66,10 @@ impl Config {
             producer: String::new(),
             checker: String::new(),
             orchestrator: None,
+            serve: None,
+            queries: Vec::new(),
+            load_deadline: Duration::ZERO,
+            keep_products: false,
             query: String::new(),
             blocks: 1,
             seed: 0x5342_315f_5041_4952,
@@ -74,7 +83,7 @@ impl Config {
         let mut seen = BTreeSet::new();
         for pair in args[1..].as_chunks::<2>().0 {
             let (option, value) = (pair[0].as_str(), pair[1].as_str());
-            if option != "--identity-file" && !seen.insert(option) {
+            if !matches!(option, "--identity-file" | "--query") && !seen.insert(option) {
                 return Err(format!("duplicate option {option}"));
             }
             if value.contains('\0') {
@@ -86,7 +95,21 @@ impl Config {
                 "--producer" => config.producer = value.to_owned(),
                 "--checker" => config.checker = value.to_owned(),
                 "--orchestrator" => config.orchestrator = Some(value.to_owned()),
-                "--query" => config.query = value.to_owned(),
+                "--query" => {
+                    seen.insert(option);
+                    config.queries.push(value.to_owned())
+                }
+                "--serve" => config.serve = Some(value.to_owned()),
+                "--load-deadline-ms" => {
+                    config.load_deadline = Duration::from_millis(positive(value, option)?)
+                }
+                "--keep-products" => {
+                    config.keep_products = match value {
+                        "yes" => true,
+                        "no" => false,
+                        _ => return Err(format!("{option}: expected yes|no")),
+                    }
+                }
                 "--blocks" => config.blocks = positive(value, option)?,
                 "--seed" => config.seed = natural(value, option)?,
                 "--out" => config.out = value.into(),
@@ -100,11 +123,27 @@ impl Config {
                 _ => return Err(format!("unknown option {option}; {HELP}")),
             }
         }
-        let commands_valid = if let Some(command) = &config.orchestrator {
-            !command.trim().is_empty() && config.producer.is_empty() && config.checker.is_empty()
-        } else {
-            !config.producer.trim().is_empty() && !config.checker.trim().is_empty()
+        let commands_valid = match (&config.orchestrator, &config.serve) {
+            (Some(command), None) | (None, Some(command)) => {
+                !command.trim().is_empty()
+                    && config.producer.is_empty()
+                    && config.checker.is_empty()
+            }
+            (None, None) => !config.producer.trim().is_empty() && !config.checker.trim().is_empty(),
+            (Some(_), Some(_)) => false,
         };
+        let warm = config.serve.is_some();
+        if (!warm && (seen.contains("--load-deadline-ms") || seen.contains("--keep-products")))
+            || (!warm && config.queries.len() != 1)
+            || config.queries.is_empty()
+            || config.queries.iter().any(String::is_empty)
+        {
+            return Err(HELP.to_owned());
+        }
+        config.query = config.queries[0].clone();
+        if config.load_deadline.is_zero() {
+            config.load_deadline = config.deadline;
+        }
         if !commands_valid
             || config.query.is_empty()
             || config.out.as_os_str().is_empty()
@@ -138,16 +177,16 @@ impl Config {
         }
         Ok(config)
     }
-    pub fn query(&self, composition: &Path) -> Result<PathBuf> {
-        let path = match self.query.as_str() {
+    pub fn named_query(&self, name: &str, composition: &Path) -> Result<PathBuf> {
+        let path = match name {
             "q-all" if composition.join("queries/q-all.txt").is_file() => {
                 composition.join("queries/q-all.txt")
             }
-            "q-all" | "q-one" | "q-patient" => composition
-                .join("queries")
-                .join(format!("{}.pl", self.query)),
+            "q-all" | "q-one" | "q-patient" => {
+                composition.join("queries").join(format!("{name}.pl"))
+            }
             _ => {
-                let path = PathBuf::from(&self.query);
+                let path = PathBuf::from(name);
                 if path.is_absolute() {
                     path
                 } else {
