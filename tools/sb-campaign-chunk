@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Contract sb D6 + § Carried rulings: one campaign chunk = one warm server over one frozen
+# instance (or the R pair) on the reference machine, frozen settings, sealed binaries.
+# Usage: tools/sb-campaign-chunk <repo> <instance-dir> <out-dir> <blocks> <seed> <ckc> <checker> [--r-pair <G1-instance-dir>]
+set -euo pipefail
+if (( $# != 7 && $# != 9 )); then
+  printf 'usage: tools/sb-campaign-chunk <repo> <instance-dir> <out-dir> <blocks> <seed> <ckc> <checker> [--r-pair <G1-instance-dir>]\n' >&2
+  exit 2
+fi
+root=$(readlink -f -- "$1")
+instance=$(readlink -f -- "$2")
+out=$3
+blocks=$4
+seed=$5
+ckc=$(readlink -f -- "$6")
+checker=$(readlink -f -- "$7")
+receipts="$root/bench/sb/receipts"
+producer="$root/prototype/sb1/producer.prolog"
+for path in "$instance/composition.tsv" "$receipts" "$ckc" "$checker" "$producer"; do
+  if [[ ! -e "$path" ]]; then
+    printf 'sb-campaign-chunk: missing %s\n' "$path" >&2
+    exit 2
+  fi
+done
+queries=(--query q-all --query q-one --query q-patient)
+paired=()
+if (( $# == 9 )); then
+  [[ "$8" == --r-pair ]] || { printf 'sb-campaign-chunk: expected --r-pair\n' >&2; exit 2; }
+  paired=(--paired "$(readlink -f -- "$9")")
+  queries=(--query q-one)
+fi
+# Settings = the run manifest's frozen values (call + load deadline 1,800,000 ms, kill cap
+# 48 GB, RSS sample 50 ms, size cap 8 GB); SWI limits live in the server's producer call.
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 RAYON_NUM_THREADS=1 CKC_JOBS=1
+exec "$ckc" bench run "$instance" "${paired[@]}" --root "$root" \
+  --serve "$checker serve --provider static --ta-receipts $receipts --producer $producer" \
+  "${queries[@]}" --blocks "$blocks" --seed "$seed" \
+  --deadline-ms 1800000 --load-deadline-ms 1800000 --sample-ms 50 \
+  --memory-bytes 48000000000 --size-bytes 8000000000 \
+  --identity-file "$checker" --identity-file "$producer" --out "$out"
