@@ -4,10 +4,10 @@ mod engine;
 mod level;
 mod number;
 pub mod orchestrator;
-mod program;
-mod query;
+pub mod program;
+pub mod query;
 mod slice;
-mod term;
+pub mod term;
 
 use digest::sha256;
 use engine::{Claim, Model};

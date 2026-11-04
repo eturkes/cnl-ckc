@@ -1,0 +1,2 @@
+% S1: An arithmetic output feeds its own quantity input.
+guideline_cardinality(actual,A,na,B,C) :- guideline_entity(actual,A,unit,countable), guideline_cardinality(actual,A,na,D,E), guideline_product(D,E,exactly,2,B,C).

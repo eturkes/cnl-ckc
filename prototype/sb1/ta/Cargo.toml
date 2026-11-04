@@ -1,0 +1,18 @@
+[package]
+name = "sb1-ta"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0 WITH LLVM-exception"
+publish = false
+
+[workspace]
+
+[dependencies]
+sb1-checker = { path = "../checker" }
+
+[[bin]]
+name = "ta"
+path = "src/main.rs"
+
+[profile.dev.package.ckc-kernel]
+opt-level = 3

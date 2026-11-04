@@ -1,0 +1,4 @@
+% S1: A guarded should box feeds actual content, then the exclusion.
+guideline_operator(actual,'$guideline_id'(product,l1,1,box(1),[]),should) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(l1).
+guideline_property(actual,A,derived,pos) :- guideline_entity(actual,A,patient,countable), guideline_operator(actual,'$guideline_id'(product,l1,1,box(1),[]),should).
+guideline_exclusion(l1) :- guideline_property(actual,A,derived,pos).

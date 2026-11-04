@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""D8 controls + endpoint census. Caller owns the SB1 timing lock + heavy slot."""
+import argparse
+import csv
+import pathlib
+import subprocess
+import sys
+
+FAMILIES = ("F1a", "F1b", "F2", "F3", "F4", "F5a", "F5b", "F5c", "MX")
+
+
+def run(args, name, composition, patient, expected="admitted", queries=True, dc=True, full_emit=None):
+    out = args.out / name
+    out.mkdir(parents=True, exist_ok=True)
+    command = [str(args.ta), "--root", str(args.root), "--composition", str(composition),
+               "--patient", patient, "--out", str(out)]
+    if dc:
+        command += ["--dc"]
+    if full_emit is not None:
+        command += ["--emit", str(full_emit)]
+    if queries and expected == "admitted":
+        for query in ("q-one.pl.in", "q-all.txt", "q-patient.pl.in"):
+            command += ["--query", str(args.root / "bench/sb/queries" / query)]
+        if args.emit:
+            command += ["--slice-dir", str(args.emit / name)]
+    (out / "command.txt").write_text("\n".join(command) + "\n")
+    with (out / "stdout.txt").open("w") as stdout, (out / "stderr.txt").open("w") as stderr:
+        result = subprocess.run(command, stdout=stdout, stderr=stderr, check=False)
+    (out / "rc.txt").write_text(f"{result.returncode}\n")
+    if expected == "admitted":
+        good = result.returncode == 0
+    else:
+        witnesses = out / "witnesses.tsv"
+        kinds = set()
+        if witnesses.exists():
+            with witnesses.open() as stream:
+                kinds = {row["kind"] for row in csv.DictReader(stream, delimiter="\t")}
+        good = result.returncode == 1 and expected in kinds
+    print(f"{name}\t{'pass' if good else 'FAIL'}\texpected={expected}\trc={result.returncode}", flush=True)
+    if not good:
+        raise RuntimeError(f"{name}: expected {expected}, rc={result.returncode}; evidence {out}")
+
+
+def composition(args, name, paths):
+    path = args.out / "inputs" / f"{name}.tsv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(f"{p}\n" for p in paths))
+    return path
+
+
+def controls(args):
+    cdc = sorted((args.root / "guidelines/cdc-2022-opioid/pl").glob("*.pl"))
+    if not cdc:
+        raise RuntimeError("CDC document inventory empty")
+    shaped = args.out / "cdc-shaped"
+    run(args, "cdc", composition(args, "cdc", cdc), "none", full_emit=shaped)
+    # Plants are frozen clause programs; their comments are not compiler groups.
+    cdc = [line for line in (shaped / "composition.tsv").read_text().splitlines()
+           if line and not line.startswith("#")]
+    worlds = [args.root / "tests/consumer" / f"{w}.pl.in" for w in ("adult", "minor", "cancer")]
+    worlds += [args.root / "tests/queries/green/dose-arithmetic/tree/guidelines/fx/pl/world.pl"]
+    for world in worlds:
+        run(args, f"world-{world.stem}", composition(args, world.name, cdc + [world]), "last", dc=False)
+    plants = args.root / "prototype/sb1/ta/plants"
+    for name in ("L1", "L2", "L3", "L4", "L5", "G1", "G2", "P3", "P4", "P5", "P6"):
+        files = [plants / f"{name}.pl.in"]
+        if name in ("L5", "P5"):
+            files = [plants / f"{name}-A.pl.in", plants / f"{name}-B.pl.in"]
+        expected = "negative" if name.startswith("L") else "growth" if name.startswith("G") else "admitted"
+        run(args, name, composition(args, name, cdc + files), "none", expected, queries=False, dc=False)
+
+
+def endpoints(args):
+    if args.compositions is None:
+        raise RuntimeError("--compositions required for endpoints")
+    for family in FAMILIES:
+        path = args.compositions / f"{family}-100/composition/composition.tsv"
+        if not path.is_file():
+            raise RuntimeError(f"missing endpoint {path}")
+        run(args, f"{family}-100", path, "last")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("mode", choices=("controls", "endpoints"))
+    p.add_argument("--root", required=True, type=pathlib.Path)
+    p.add_argument("--ta", required=True, type=pathlib.Path)
+    p.add_argument("--out", required=True, type=pathlib.Path)
+    p.add_argument("--emit", type=pathlib.Path)
+    p.add_argument("--compositions", type=pathlib.Path)
+    args = p.parse_args()
+    for key in ("root", "ta", "out", "emit", "compositions"):
+        value = getattr(args, key)
+        if value is not None:
+            setattr(args, key, value.resolve())
+    (controls if args.mode == "controls" else endpoints)(args)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, RuntimeError) as error:
+        print(f"census: {error}", file=sys.stderr)
+        sys.exit(1)

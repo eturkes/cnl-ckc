@@ -1,0 +1,3 @@
+% S1: The exclusion reads the guarded should box.
+guideline_operator(actual,'$guideline_id'(product,l2,1,box(1),[]),should) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(l2).
+guideline_exclusion(l2) :- guideline_operator(actual,A,should).

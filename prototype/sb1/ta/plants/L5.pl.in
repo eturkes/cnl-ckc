@@ -1,0 +1,5 @@
+% S1: Two guideline scopes read each other's guarded actual content.
+guideline_property(actual,A,content_a,pos) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(l5a).
+guideline_property(actual,A,content_b,pos) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(l5b).
+guideline_exclusion(l5a) :- guideline_property(actual,A,content_b,pos).
+guideline_exclusion(l5b) :- guideline_property(actual,A,content_a,pos).

@@ -1,0 +1,3 @@
+% S1: A superseded root deontic follows its date guard.
+guideline_operator(actual,'$guideline_id'(product,p6,1,box(1),[]),should) :- guideline_evaluation_date(A), guideline_satisfies(exactly,A,less,20221229), \+ guideline_exclusion(p6).
+guideline_exclusion(p6) :- guideline_entity(actual,A,excluded_population,countable).

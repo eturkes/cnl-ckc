@@ -1,0 +1,3 @@
+% S1: Scope A reads patient facts alone.
+guideline_operator(actual,'$guideline_id'(product,p5a,1,box(1),[]),should) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(p5a).
+guideline_exclusion(p5a) :- guideline_entity(actual,A,excluded_a,countable).

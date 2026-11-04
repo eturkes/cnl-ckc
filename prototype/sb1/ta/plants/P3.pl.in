@@ -1,0 +1,4 @@
+% S1: A deontic condition has no path to an exclusion.
+guideline_operator(actual,'$guideline_id'(product,p3,1,box(1),[]),should) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(p3).
+guideline_property(actual,A,recommended,pos) :- guideline_entity(actual,A,patient,countable), guideline_operator(actual,'$guideline_id'(product,p3,1,box(1),[]),should).
+guideline_exclusion(p3) :- guideline_entity(actual,A,excluded_population,countable).

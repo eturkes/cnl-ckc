@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""Run whole/slice producer + checker, then byte-compare the three query answers."""
+import argparse
+import hashlib
+import pathlib
+import subprocess
+import sys
+
+QUERIES = ("q-one.pl.in", "q-all.txt", "q-patient.pl.in")
+
+
+def checked(command, out, name):
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"{name}.command").write_text("\n".join(map(str, command)) + "\n")
+    result = subprocess.run(command, capture_output=True, check=False)
+    (out / f"{name}.stdout").write_bytes(result.stdout)
+    (out / f"{name}.stderr").write_bytes(result.stderr)
+    (out / f"{name}.rc").write_text(f"{result.returncode}\n")
+    if result.returncode != 0 or result.stderr:
+        raise RuntimeError(f"{name}: rc={result.returncode}; stderr={result.stderr[:400]!r}; {out}")
+    return result.stdout
+
+
+def produce(args, composition, out):
+    command = [args.swipl, "--stack-limit=32g", "--table-space=32g", "-q", "-f", "none", "-F", "none", "-s", str(args.producer),
+               "-g", "sb1_main", "-t", "halt(9)", "--", "--root", str(args.root), str(composition), str(out)]
+    checked(command, out, "producer")
+
+
+def check(args, composition, model_dir, query):
+    command = [str(args.checker), "--root", str(args.root), str(composition), str(model_dir / "model.txt"),
+               str(model_dir / "certificate.txt"), str(query)]
+    return checked(command, model_dir, query.name.replace(".", "_"))
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for option in ("root", "producer", "checker", "composition", "slices", "out"):
+        p.add_argument(f"--{option}", required=True, type=pathlib.Path)
+    p.add_argument("--swipl", default="swipl")
+    args = p.parse_args()
+    for option in ("root", "producer", "checker", "composition", "slices", "out"):
+        setattr(args, option, getattr(args, option).resolve())
+    whole = args.out / "whole"
+    produce(args, args.composition, whole)
+    summary = ["query\twhole_facts\tslice_facts\tanswer_bytes\tsha256\tbyte_equal\n"]
+    for name in QUERIES:
+        query = args.root / "bench/sb/queries" / name
+        key = name.replace(".", "_").replace("-", "_")
+        composition = args.slices / key / "composition.tsv"
+        if not composition.is_file():
+            raise RuntimeError(f"slice missing: {composition}")
+        out = args.out / key
+        produce(args, composition, out)
+        expected = check(args, args.composition, whole, query)
+        actual = check(args, composition, out, query)
+        if expected != actual:
+            raise RuntimeError(f"answer mismatch: {name}; {whole} vs {out}")
+        whole_facts = sum(1 for _ in (whole / "model.txt").open())
+        slice_facts = sum(1 for _ in (out / "model.txt").open())
+        summary.append(f"{name}\t{whole_facts}\t{slice_facts}\t{len(actual)}\t{hashlib.sha256(actual).hexdigest()}\tyes\n")
+    text = "".join(summary)
+    (args.out / "equality.tsv").write_text(text)
+    print(text, end="")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, RuntimeError) as error:
+        print(f"slice-check: {error}", file=sys.stderr)
+        sys.exit(1)

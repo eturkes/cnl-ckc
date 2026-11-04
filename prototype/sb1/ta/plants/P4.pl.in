@@ -1,0 +1,4 @@
+% S1: A should box below a classical negation is not NAF.
+guideline_operator(actual,'$guideline_id'(product,p4,1,box(1),[]),-) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(p4).
+guideline_operator('$guideline_id'(product,p4,1,box(1),[]),'$guideline_id'(product,p4,1,box(2),[]),should) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(p4).
+guideline_exclusion(p4) :- guideline_entity(actual,A,excluded_population,countable).

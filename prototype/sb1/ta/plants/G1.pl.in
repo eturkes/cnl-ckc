@@ -1,0 +1,2 @@
+% S1: A constructed entity re-enters its own noun with a larger Deps term.
+guideline_entity(actual,'$guideline_id'(product,g1,1,ref(1),[A]),patient,countable) :- guideline_entity(actual,A,patient,countable).

@@ -1,0 +1,4 @@
+% S1: The exclusion reads a classical box before its content.
+guideline_operator(actual,'$guideline_id'(product,l3,1,box(1),[]),-) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(l3).
+guideline_entity('$guideline_id'(product,l3,1,box(1),[]),'$guideline_id'(product,l3,1,ref(2),[]),contraindication,countable) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(l3).
+guideline_exclusion(l3) :- guideline_operator(actual,A,-), guideline_entity(A,B,contraindication,countable).

@@ -1,0 +1,3 @@
+% S1: A variable-headed producer supplies a correlated NAF noun.
+guideline_entity(actual,A,blocker,countable) :- guideline_entity(actual,A,patient,countable), \+ guideline_exclusion(l4).
+guideline_exclusion(l4) :- \+ (guideline_event(actual,A,has), guideline_arg(actual,A,1,B), guideline_entity(actual,B,blocker,countable)).
