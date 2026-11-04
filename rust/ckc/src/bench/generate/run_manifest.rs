@@ -241,7 +241,10 @@ fn settings(out: &mut String, c: &Config) -> Result<(), String> {
         ("swi_stack_limit", "32g"),
         ("swi_table_space", "32g"),
         ("swi_version", "10.0.2"),
-        ("oracle", "independent-consumer-recipe+tnot"),
+        (
+            "oracle",
+            "independent-consumer-recipe+tnot;isolation-group-union-at-G100;whole=union-at-G10",
+        ),
         ("harness", "ckc-bench-run;source-pinned"),
         ("ckc_version", env!("CARGO_PKG_VERSION")),
         ("oracle_version", "sb1-independent-recipe-1"),
@@ -412,58 +415,53 @@ fn inventory(c: &Config) -> Result<String, String> {
                 "frozen-query",
             )?;
         }
-        if point.scale == 100 {
+        if oracle::oracle_point(&point) {
             oracle::check(c, &point)?;
-            for mode in ["recipe", "wfs"] {
-                for answer in ANSWERS {
+            let base = point.oracle(&c.root);
+            if point.scale == 10 {
+                for mode in ["recipe", "wfs"] {
+                    for answer in ANSWERS {
+                        file_row(
+                            &mut out,
+                            &c.root,
+                            "oracle",
+                            &id,
+                            &format!("{mode}:{answer}"),
+                            &base.join(mode).join(format!("{answer}.out")),
+                            "whole-composition;exact;undefined=0;=union",
+                        )?;
+                    }
                     file_row(
                         &mut out,
                         &c.root,
                         "oracle",
                         &id,
-                        &format!("{mode}:{answer}"),
-                        &point
-                            .oracle(&c.root)
-                            .join(mode)
-                            .join(format!("{answer}.out")),
-                        "exact;undefined=0",
+                        &format!("{mode}:receipt"),
+                        &base.join(mode).join("receipt.tsv"),
+                        "rc=0;stdout=0;stderr=0",
                     )?;
                 }
-                file_row(
-                    &mut out,
-                    &c.root,
-                    "oracle",
-                    &id,
-                    &format!("{mode}:receipt"),
-                    &point.oracle(&c.root).join(mode).join("receipt.tsv"),
-                    "rc=0;stdout=0;stderr=0",
-                )?;
             }
-            if ["F1a", "F1b", "F2"].contains(&point.family.as_str()) {
-                for answer in ANSWERS {
-                    file_row(
-                        &mut out,
-                        &c.root,
-                        "union",
-                        &id,
-                        answer,
-                        &point
-                            .oracle(&c.root)
-                            .join("union")
-                            .join(format!("{answer}.out")),
-                        "100-isolated-contributions=whole",
-                    )?;
-                }
+            for answer in ANSWERS {
                 file_row(
                     &mut out,
                     &c.root,
                     "union",
                     &id,
-                    "receipt",
-                    &point.oracle(&c.root).join("union/receipt.tsv"),
-                    "copy-by-copy-model-union",
+                    answer,
+                    &base.join("union").join(format!("{answer}.out")),
+                    "isolation-group-union;recipe=wfs;undefined=0",
                 )?;
             }
+            file_row(
+                &mut out,
+                &c.root,
+                "union",
+                &id,
+                "receipt",
+                &base.join("union/receipt.tsv"),
+                "per-group-recipe+wfs",
+            )?;
             if point.contrast.is_some() {
                 for name in ["receipt.tsv", "removed.out", "added.out"] {
                     file_row(
@@ -473,7 +471,7 @@ fn inventory(c: &Config) -> Result<String, String> {
                         &id,
                         name,
                         &point.oracle(&c.root).join("contrast").join(name),
-                        "delta-vs-base-recipe-model",
+                        "delta-vs-base-union-model",
                     )?;
                 }
             }
@@ -485,8 +483,9 @@ fn counts(c: &Config) -> String {
     let all = points(c);
     let contrasts = all.iter().filter(|p| p.contrast.is_some()).count();
     let endpoints = all.iter().filter(|p| p.scale == 100).count();
+    let crosses = all.iter().filter(|p| p.scale == 10).count();
     format!(
-        "{} instances ({contrasts} contrasts), {endpoints} endpoint oracles",
+        "{} instances ({contrasts} contrasts), {endpoints} endpoint union oracles, {crosses} whole = union cross-checks at G10",
         all.len()
     )
 }

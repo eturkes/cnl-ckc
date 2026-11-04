@@ -195,7 +195,7 @@ fn judge(i: &Inputs) -> Result<Delta, String> {
 fn delta(c: &Config, p: &Point) -> Result<Delta, String> {
     let name = p.contrast.ok_or("contrast point")?;
     let base = p.base();
-    let model = |q: &Point| q.oracle(&c.root).join("recipe/model.out");
+    let model = |q: &Point| q.oracle(&c.root).join("union/model.out");
     let mut d = judge(&Inputs {
         name,
         want: listing(c, &base)?,

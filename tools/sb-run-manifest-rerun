@@ -29,10 +29,18 @@ finish() {
   if (( rc == 0 && pack_rc != 0 )); then rc=$pack_rc; fi
   exit "$rc"
 }
-rm -rf -- "$bench/sb1-frozen" "$bench/sb1-receipts" "$bench/sb1-oracles"
+# SB1_RESUME=instances keeps frozen instances + receipts (each reuse re-verified against
+# its receipt + current bytes) and recomputes every oracle: a long package interrupted
+# after generation resumes without regenerating.
+if [[ "${SB1_RESUME:-}" == instances ]]; then
+  rm -rf -- "$bench/sb1-oracles"
+else
+  rm -rf -- "$bench/sb1-frozen" "$bench/sb1-receipts" "$bench/sb1-oracles"
+fi
 mkdir -p "$bench/sb1-frozen" "$bench/sb1-receipts" "$bench/sb1-oracles"
 trap finish EXIT
 printf 'source-commit='; git -C "$root" rev-parse HEAD
+printf 'resume=%s\n' "${SB1_RESUME:-none}"
 printf 'annex-digests\n'; sha256sum "$root/bench/sb/annex/families.tsv" "$root/bench/sb/annex/sources.tsv"
 export CKC_TOOLCHAIN=${CKC_TOOLCHAIN:-$root/.toolchain}
 export RUSTUP_HOME="$CKC_TOOLCHAIN/rustup" CARGO_HOME="$CKC_TOOLCHAIN/cargo"
