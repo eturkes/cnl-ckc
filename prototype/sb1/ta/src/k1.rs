@@ -440,7 +440,7 @@ impl Refined {
         registry.positions = BTreeMap::new();
         registry.refine = None;
         ir.record_memory("k1-parse");
-        let model = Model::build(&ir, None, m.generic_patient());
+        let model = Model::build_mode(&ir, None, m.generic_patient(), None, m.mode);
         if progress {
             eprintln!(
                 "k1 features={} clauses={}",

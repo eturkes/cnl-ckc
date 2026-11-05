@@ -20,6 +20,7 @@ pub struct Analysis {
 }
 impl Analysis {
     pub fn load(program: &Program) -> Result<Self, String> {
+        program.validate_patient_boundary()?;
         let model = Model::build(program, None, true);
         let graph = Graph::build(program, &model, None);
         let growth = growth::Growth::build(program, &model, None);
@@ -71,11 +72,12 @@ impl Analysis {
             }
         }
         let coarse_clauses = candidate.len();
-        let model = Model::build_shared(
+        let model = Model::build_mode(
             program,
             Some(&candidate),
             false,
             Some(self.model.abs.clone()),
+            self.model.mode,
         );
         let graph = Graph::build(program, &model, Some(&candidate));
         let growth = growth::Growth::build(program, &model, Some(&candidate));

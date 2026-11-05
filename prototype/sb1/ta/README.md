@@ -25,12 +25,20 @@ sets; coarse concrete scalar domains retain full posting intersection.
 
 ## Scale boundary
 
-The strict-isolation census at ×100 admits. The shared-role census at ×100
-is memory-censored in may-feature closure, before graph
-construction. Context-qualified owner links + link-consistent generic closure
-are the pending refinement; this abstraction remains its reference. The memory
-cap stays unchanged. Per-call typed selection also needs a prepared index;
-the current full-program refinement is a census, not that implementation.
+The default may-model qualifies argument/preposition links by their fact's
+owner context and closes generic rule bodies with those links. `--reference`
+selects the preceding owner-forgotten, unary-only generic closure (diagnostic
+reference, not a soundness oracle). `--compare-reference` checks stored unary
+sets + owner-forgotten link sets against that reference; `--features-only`
+ends after closure without an admission verdict. Cost/endpoint comparisons
+use immutable SHA-named binaries and the same 28 GiB cap, swap disabled.
+
+Patient/top referents retain KB-derived stored links as well as implicit
+patient links. Each patient document is fact-only; its terms/metadata must
+avoid every KB identity/docid namespace. Admission refuses a collision with
+its source clause. This is an explicit input rule, not an assumed disjointness.
+Per-call typed selection still needs a prepared index; the current full-program
+refinement is a census, not that implementation.
 
 ## Run
 
@@ -49,9 +57,14 @@ cargo test -p sb1-ta --lib --locked
 manifest's `patient_documents` or an emitted `# patient_documents` line; absent
 metadata = one final document. `--patient none` = knowledge base alone. Every
 patient document must contain facts; conflicting/out-of-range counts refuse.
-The census emitter preserves the suffix count for replay.
+The census emitter preserves the suffix count for replay. It writes
+`manifest.tsv` (`sb1-ta-composition 1`): actual emitted document/clause counts
++ patient suffix count, without inventing generator provenance. This also lets
+the benchmark harness hash a full or sliced emitted composition.
 `--dc` transforms statement guards in memory. `--emit <dir>` writes that
-composition. Corpus files stay unchanged. Slice emission keeps per-document
+composition. `--shape-only --emit <dir>` emits after source admission + shaping,
+without the typed analysis (explicitly no admission verdict); this separates
+the DC thin-path cost experiment from analysis completion. Corpus files stay unchanged. Slice emission keeps per-document
 headers, declarations, metadata + selected sentence comments. Output paths are
 absolute; choose an output directory distinct from the inputs.
 
@@ -66,8 +79,29 @@ provider. A refusal writes witnesses before exit and stops query execution.
 `python3 -I census controls …` runs CDC + consumer worlds + CDC/plants.
 `python3 -I census endpoints …` runs existing frozen ×100 compositions.
 `python3 -I slice-check …` compares whole/slice producer + checker answer bytes.
-Each helper's `--help` lists its paths. Caller holds the shared SB1 timing lock
-and a `heavy` slot. These helpers preserve command vectors, rc + raw output.
+Each helper's `--help` lists its paths. Workstation timing callers hold the
+shared SB1 timing lock + `heavy`; construction census runs can use the pool.
+These helpers preserve command vectors, rc + raw output.
+
+`probe.py --ta <SHA-named executable> --root <repo> --composition <file>
+--out <new-dir>` runs one capped construction census (28 GiB, swap 0), with
+input identities + a full-lifetime RSS trace. `--receipt-dir <dir>
+--ta-source-commit <full-SHA> --receipt-host pool|workstation` publishes
+`<kb-identity>.tsv`, format `sb1-ta-receipt 1`, after a refined full analysis.
+Reference/feature-only runs emit no receipt. `--service-unit <name>` uses an
+existing detached user service instead of creating a separate scope. The probe
+reads its cgroup-v2 membership and requires that service's actual 28 GiB memory
+cap + zero swap before starting TA. The detached unit survives an SSH drop;
+reattach waits with `offload run --no-sync` and preserves its original inputs.
+The KB identity frames the schema
+and ordered non-patient document bytes under `dc=1`; `knowledge_bytes` counts
+those document bytes alone (the schema is separate). Missing/censored measures
+read `unavailable`, never an invented zero. A derived record has two extra
+fields, `basis=renaming|subset` + `basis_identity`. Its basis must be admitted;
+its target identity/inventory are computed from target bytes; measured costs
+and TA provenance remain those of the basis, explicitly not a target run.
+`python3 -I probe-tests.py` grades
+the receipt structure, refusal/censor states + missing-evidence controls.
 
 ## Feature representation
 
@@ -77,12 +111,12 @@ and a `heavy` slot. These helpers preserve command vectors, rc + raw output.
   symbols, integers + structural argument roles retain exact values; role 1
   never matches role 2. Unknown numeric values have a separate abstraction.
 - Per-origin features = nouns, event lemmas, box operators, properties + context
-  payload predicates. Argument/preposition labels map a source origin to a
-  target-origin domain. No abstract whole-program relation tuples or Cartesian
+  payload predicates. Argument/preposition labels map (owner context, source
+  origin) to a target-origin domain. No abstract whole-program relation tuples or Cartesian
   antecedent environments are materialized.
 - Load features start from every fixed head + fact. Variable-headed producers
   propagate features to every origin permitted by their full positive-body
-  unary constraints. Monotone closure includes every rule's possible feature
+  unary + owner/source/target link constraints. Monotone closure includes every rule's possible feature
   contributions; NAF + built-in truth are over-approximated.
 - A call pattern holds the whole positive conjunction's features + links. For
   a NAF goal, the NAF item's entire conjunction joins those outer constraints.
@@ -103,9 +137,10 @@ and a `heavy` slot. These helpers preserve command vectors, rc + raw output.
 - Each refusal keeps a shortest cycle. Witnesses give clauses, origin templates,
   every goal of the correlated conjunction + selected feature/link bindings.
   `growth-edges.tsv` keeps the full origin graph.
-- Generic patient constants have every feature. Their links stay within the
-  patient/atomic domain, distinct from KB Skolem origins in census worlds.
-  A general patient/KB identity-collision policy remains a production obligation.
+- Generic patient constants have every feature. Implicit patient links stay
+  within the patient/atomic domain. Rule-produced links from those constants
+  may target KB origins and remain in the closure. Patient/KB namespaces are
+  checked disjoint at admission; production must preserve this boundary.
 - Query roots use full-conjunction patterns; q-all also roots every payload
   predicate of each possible should/must/may context. Typed transitive closure
   gives a candidate slice. Its concrete-patient feature closure replaces the

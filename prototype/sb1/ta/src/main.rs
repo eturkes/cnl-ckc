@@ -2,7 +2,7 @@ use sb1_ta::Analysis;
 use sb1_ta::graph::{Graph, Question};
 use sb1_ta::growth::Growth;
 use sb1_ta::k1::Refined;
-use sb1_ta::may::Model;
+use sb1_ta::may::{Mode, Model};
 use sb1_ta::source::Program;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -102,6 +102,10 @@ fn run() -> Result<i32, String> {
     let mut queries = Vec::new();
     let mut slice_dir = None;
     let mut emit_edges = false;
+    let mut mode = Mode::Refined;
+    let mut shape_only = false;
+    let mut features_only = false;
+    let mut compare_reference = false;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -111,6 +115,10 @@ fn run() -> Result<i32, String> {
             }
             "--out" => out = Some(PathBuf::from(args.next().ok_or("--out value")?)),
             "--dc" => dc = true,
+            "--reference" => mode = Mode::Reference,
+            "--shape-only" => shape_only = true,
+            "--features-only" => features_only = true,
+            "--compare-reference" => compare_reference = true,
             "--edges" => emit_edges = true,
             "--patient" => {
                 patient_last = match args.next().as_deref() {
@@ -126,10 +134,16 @@ fn run() -> Result<i32, String> {
             }
             _ => {
                 return Err(format!(
-                    "argument {arg}; usage: ta --root ROOT --composition FILE --out DIR [--dc] [--edges] [--patient none|last] [--emit DIR] [--query FILE]... [--slice-dir DIR]"
+                    "argument {arg}; usage: ta --root ROOT --composition FILE --out DIR [--dc] [--reference] [--shape-only --emit DIR | --features-only] [--compare-reference] [--edges] [--patient none|last] [--emit DIR] [--query FILE]... [--slice-dir DIR]"
                 ));
             }
         }
+    }
+    if shape_only && (emit.is_none() || features_only || compare_reference || !queries.is_empty()) {
+        return Err("--shape-only requires --emit and no analysis/query options".into());
+    }
+    if compare_reference && mode == Mode::Reference {
+        return Err("--compare-reference requires refined mode".into());
     }
     let root = root.ok_or("--root required")?;
     let composition = composition.ok_or("--composition required")?;
@@ -157,11 +171,53 @@ fn run() -> Result<i32, String> {
             program.documents.iter().filter(|d| d.patient).count(),
         ),
     )?;
+    if shape_only {
+        println!("shape-only\tno-admission\tguard_goals_added={guard_goals}");
+        println!(
+            "composition\t{}",
+            program.emit(&emit.unwrap(), None)?.display()
+        );
+        return Ok(0);
+    }
     let start = Instant::now();
-    let model = Model::build(&program, None, true);
+    let model = Model::build_mode(&program, None, true, None, mode);
     let may_seconds = start.elapsed().as_secs_f64();
     phase(&out, &mut phases, "may_fixpoint", may_seconds)?;
     model.record_memory("may_fixpoint");
+    let (unary, links) = model.feature_counts();
+    write(
+        &out.join("features.tsv"),
+        &format!(
+            "mode\tunary\tlinks\tincidences\tfeature_insertions\twriter_insertions\tworklist_steps\tseconds\tpeak_rss_bytes\n{mode:?}\t{unary}\t{links}\t{}\t{}\t{}\t{}\t{may_seconds:.9}\t{}\n",
+            model.fact_count(),
+            model.counters.feature_insertions,
+            model.counters.writer_insertions,
+            model.counters.worklist_steps,
+            rss(),
+        ),
+    )?;
+    if compare_reference {
+        let reference = Model::build_mode(
+            &program,
+            None,
+            true,
+            Some(model.abs.clone()),
+            Mode::Reference,
+        );
+        model.refines_reference(&reference, &program.arena)?;
+        write(
+            &out.join("refinement.tsv"),
+            "check\tresult\nunary-subset\tpass\nowner-forgotten-link-subset\tpass\n",
+        )?;
+        println!("features\trefined-subset-reference");
+    }
+    if features_only {
+        println!(
+            "features-only\tno-admission\tincidences={}",
+            model.fact_count()
+        );
+        return Ok(0);
+    }
     let start = Instant::now();
     let graph = Graph::build(&program, &model, None);
     let graph_seconds = start.elapsed().as_secs_f64();

@@ -146,12 +146,43 @@ impl Domain {
         }
         self
     }
+    #[cfg(test)]
+    pub(crate) fn meet_reference(&self, other: &Self, arena: &Arena) -> Self {
+        match (self, other) {
+            (Self::All, x) | (x, Self::All) => x.clone().normalized(arena),
+            (Self::Set(a), Self::Set(b)) => {
+                let mut out = a.intersection(b).copied().collect::<BTreeSet<_>>();
+                for wild in [Value::Patient, Value::Number] {
+                    if a.contains(&wild) {
+                        out.extend(
+                            b.iter()
+                                .filter_map(|b| Abstraction::intersect(arena, wild, *b)),
+                        );
+                    }
+                    if b.contains(&wild) {
+                        out.extend(
+                            a.iter()
+                                .filter_map(|a| Abstraction::intersect(arena, *a, wild)),
+                        );
+                    }
+                }
+                Self::Set(out).normalized(arena)
+            }
+        }
+    }
     pub fn meet(&self, other: &Self, arena: &Arena) -> Self {
         match (self, other) {
             (Self::All, x) | (x, Self::All) => x.clone().normalized(arena),
             (Self::Set(a), Self::Set(b)) => {
                 let mut out = a.intersection(b).copied().collect::<BTreeSet<_>>();
                 for wild in [Value::Patient, Value::Number] {
+                    // The shared wildcard already covers every scalar another
+                    // scan could contribute. Keep only non-subsumed choices.
+                    if out.contains(&Value::Patient)
+                        || wild == Value::Number && out.contains(&Value::Number)
+                    {
+                        continue;
+                    }
                     if a.contains(&wild) {
                         out.extend(
                             b.iter()

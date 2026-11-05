@@ -93,7 +93,64 @@ impl Program {
             }
         }
         program::admit(&out.arena, &out.clauses)?;
+        out.validate_patient_boundary()?;
         Ok(out)
+    }
+    pub fn validate_patient_boundary(&self) -> Result<(), String> {
+        fn namespaces(arena: &Arena, t: Id, out: &mut BTreeSet<Id>) {
+            if let Some(a) = arena.named(t, "$guideline_id", 5) {
+                out.insert(a[1]);
+            }
+            if let Some(a) = arena.named(t, "guideline_document", 4) {
+                out.insert(a[0]);
+            }
+            if let Some((_, args)) = arena.call(t) {
+                for t in args {
+                    namespaces(arena, *t, out);
+                }
+            }
+        }
+        fn goals(arena: &Arena, body: &[Goal], out: &mut BTreeSet<Id>) {
+            for g in body {
+                match g {
+                    Goal::Positive(t) | Goal::Builtin(t) => namespaces(arena, *t, out),
+                    Goal::Not(inner) => goals(arena, inner, out),
+                }
+            }
+        }
+        fn collision(arena: &Arena, t: Id, kb: &BTreeSet<Id>) -> Option<Id> {
+            if kb.contains(&t) {
+                return Some(t);
+            }
+            arena
+                .call(t)
+                .and_then(|(_, a)| a.iter().find_map(|t| collision(arena, *t, kb)))
+        }
+        let mut kb = BTreeSet::new();
+        for (i, c) in self.clauses.iter().enumerate() {
+            if !self.patient(i) {
+                namespaces(&self.arena, c.head, &mut kb);
+                goals(&self.arena, &c.body, &mut kb);
+            }
+        }
+        for (i, c) in self.clauses.iter().enumerate() {
+            if self.patient(i) {
+                if !c.body.is_empty() {
+                    return Err(format!(
+                        "patient document contains a rule: {}",
+                        self.label(i)
+                    ));
+                }
+                if let Some(namespace) = collision(&self.arena, c.head, &kb) {
+                    return Err(format!(
+                        "patient knowledge-base namespace collision at {}: {}",
+                        self.label(i),
+                        self.arena.render(namespace),
+                    ));
+                }
+            }
+        }
+        Ok(())
     }
     pub fn add(&mut self, path: PathBuf, text: String, patient: bool) -> Result<(), String> {
         let start = self.clauses.len();
@@ -244,6 +301,8 @@ impl Program {
         fs::create_dir_all(output).map_err(|e| e.to_string())?;
         let mut composition = String::new();
         let mut patient_documents = 0;
+        let mut documents = 0;
+        let mut clauses = 0;
         for (d, doc) in self.documents.iter().enumerate() {
             let chosen = doc
                 .clauses
@@ -274,6 +333,7 @@ impl Program {
                     if !meta && selected.is_some_and(|s| !s.contains(&i)) {
                         continue;
                     }
+                    clauses += 1;
                     text.push_str(if self.changed.contains(&i) { "" } else { raw });
                     if self.changed.contains(&i) {
                         text.push_str(&self.render_clause(i));
@@ -297,11 +357,16 @@ impl Program {
             let path = output.join(format!("document-{:05}.pl", d + 1));
             fs::write(&path, text).map_err(|e| e.to_string())?;
             composition.push_str(&format!("{}\n", path.display()));
+            documents += 1;
             patient_documents += usize::from(doc.patient);
         }
         let path = output.join("composition.tsv");
         let composition = format!("# patient_documents\t{patient_documents}\n{composition}");
         fs::write(&path, composition).map_err(|e| e.to_string())?;
+        fs::write(
+            output.join("manifest.tsv"),
+            format!("format\tsb1-ta-composition 1\ndocuments\t{documents}\nclauses\t{clauses}\npatient_documents\t{patient_documents}\n"),
+        ).map_err(|e| e.to_string())?;
         Ok(path)
     }
     pub fn metadata(&self, clause: usize) -> bool {

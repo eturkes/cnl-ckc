@@ -10,6 +10,19 @@ fn input(text: &str) -> Program {
     program::admit(&p.arena, &p.clauses).unwrap();
     p
 }
+struct Directory(PathBuf);
+impl Drop for Directory {
+    fn drop(&mut self) {
+        std::fs::remove_dir_all(&self.0).unwrap();
+    }
+}
+fn directory(name: &str) -> Directory {
+    let parent = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target");
+    std::fs::create_dir_all(&parent).unwrap();
+    let dir = Directory(parent.join(format!("{name}-{}", std::process::id())));
+    std::fs::create_dir(&dir.0).unwrap();
+    dir
+}
 const CASES: [(&str, &str, Option<Refusal>); 11] = [
     (
         "L1",
@@ -536,18 +549,46 @@ fn released_parser_metadata_keeps_admission_edges_and_source() {
 }
 
 #[test]
+fn emitted_compositions_carry_truthful_manifest_counts() {
+    let mut p = input(
+        "guideline_schema_version(2).\nguideline_document(d,ace_sha256(h),ulex(none),vocabulary(none)).\nguideline_entity(actual,x,left,countable).\nguideline_entity(actual,y,right,countable).\n",
+    );
+    p.add(
+        PathBuf::from("patient"),
+        "guideline_entity(actual,p,patient,countable).\n".into(),
+        true,
+    )
+    .unwrap();
+    let dir = directory("emission-manifest");
+    for (name, selected, counts) in [
+        ("full", None, (2, 5, 1)),
+        ("subset", Some(BTreeSet::from([2, 4])), (2, 4, 1)),
+        ("knowledge", Some(BTreeSet::from([2])), (1, 3, 0)),
+    ] {
+        let out = dir.0.join(name);
+        let composition = p.emit(&out, selected.as_ref()).unwrap();
+        let manifest = std::fs::read_to_string(out.join("manifest.tsv")).unwrap();
+        let actual = Program::load(&dir.0, &composition, true).unwrap();
+        assert_eq!(actual.documents.len(), counts.0);
+        assert_eq!(actual.clauses.len(), counts.1);
+        assert_eq!(
+            actual.documents.iter().filter(|d| d.patient).count(),
+            counts.2
+        );
+        assert_eq!(
+            manifest,
+            format!(
+                "format\tsb1-ta-composition 1\ndocuments\t{}\nclauses\t{}\npatient_documents\t{}\n",
+                counts.0, counts.1, counts.2
+            )
+        );
+    }
+}
+
+#[test]
 fn patient_projection_suffix_is_per_call_and_replays() {
     use std::fs;
-    struct Directory(PathBuf);
-    impl Drop for Directory {
-        fn drop(&mut self) {
-            fs::remove_dir_all(&self.0).unwrap();
-        }
-    }
-    let parent = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target");
-    fs::create_dir_all(&parent).unwrap();
-    let dir = Directory(parent.join(format!("patient-suffix-{}", std::process::id())));
-    fs::create_dir(&dir.0).unwrap();
+    let dir = directory("patient-suffix");
     fs::write(
         dir.0.join("kb.pl"),
         "guideline_entity(actual,k,seed,countable).\n",
@@ -599,6 +640,182 @@ fn patient_projection_suffix_is_per_call_and_replays() {
             .unwrap()
             .contains("patient suffix")
     );
+}
+
+#[test]
+fn generic_closure_keeps_owner_and_target_link_constraints() {
+    use features::{Mode, Model};
+    for owner in ["actual", "'$guideline_id'(context,links,1,box(1),[])"] {
+        let target = if owner == "actual" { 2 } else { 3 };
+        let p = input(&format!(
+            "guideline_event(actual,'$guideline_id'(product,links,1,ref(1),[]),go).\nguideline_entity(actual,'$guideline_id'(product,links,1,ref(2),[]),left,countable).\nguideline_entity(actual,'$guideline_id'(product,links,1,ref(3),[]),right,countable).\nguideline_arg({owner},'$guideline_id'(product,links,1,ref(1),[]),1,'$guideline_id'(product,links,1,ref({target}),[])).\nguideline_entity(actual,A,selected,countable) :- guideline_event(actual,A,go), guideline_arg(actual,A,1,B), guideline_entity(actual,B,right,countable).\n",
+        ));
+        let refined = Model::build(&p, None, true);
+        let reference =
+            Model::build_mode(&p, None, true, Some(refined.abs.clone()), Mode::Reference);
+        let (_, args) = p.arena.call(p.clauses[0].head).unwrap();
+        assert!(!refined.noun_at(&p.arena, args[1], "selected"), "{owner}");
+        assert!(reference.noun_at(&p.arena, args[1], "selected"), "{owner}");
+        refined.refines_reference(&reference, &p.arena).unwrap();
+    }
+}
+
+#[test]
+fn generic_closure_reads_stored_links_for_patient_and_numeric_sources() {
+    for source in ["p", "5", "rational(1,2)"] {
+        let p = input(&format!(
+            "guideline_arg(actual,{source},1,'$guideline_id'(product,stored,1,ref(1),[])).\nguideline_entity(actual,B,marked,countable) :- guideline_entity(actual,A,patient,countable), guideline_arg(actual,A,1,B).\n",
+        ));
+        let model = may::Model::build(&p, None, true);
+        let (_, args) = p.arena.call(p.clauses[0].head).unwrap();
+        assert!(model.noun_at(&p.arena, args[3], "marked"), "{source}");
+    }
+}
+
+#[test]
+fn owner_variables_keep_joint_link_domains_and_unknown_owners_stay_may() {
+    use features::{Domain, Expr, Pattern};
+    let p = input(
+        "guideline_arg(actual,'$guideline_id'(product,owner,1,ref(1),[]),1,'$guideline_id'(product,owner,1,ref(2),[])).\nguideline_arg('$guideline_id'(context,owner,1,box(1),[]),'$guideline_id'(product,owner,1,ref(1),[]),1,'$guideline_id'(product,owner,1,ref(3),[])).\nguideline_exclusion(k) :- guideline_arg(A,'$guideline_id'(product,owner,1,ref(1),[]),1,'$guideline_id'(product,owner,1,ref(3),[])).\n",
+    );
+    let model = may::Model::build(&p, None, true);
+    let c = &p.clauses[2];
+    let mut pattern = Pattern::body(&p.arena, &model.abs, &c.body, c.names.len(), None);
+    for (index, expected) in [(0, false), (1, true)] {
+        let (_, args) = p.arena.call(p.clauses[index].head).unwrap();
+        let mut counters = Counters::default();
+        assert_eq!(
+            model
+                .bound_state(
+                    &p.arena,
+                    &pattern,
+                    Expr::Var(0),
+                    &Domain::one(model.abs.value(args[0])),
+                    &mut counters
+                )
+                .is_some(),
+            expected
+        );
+    }
+    pattern.unary.clear();
+    assert!(
+        model
+            .state(&p.arena, &pattern, &mut Counters::default())
+            .is_some()
+    );
+}
+
+#[test]
+fn refinement_comparison_accepts_wildcard_reference_sources() {
+    use features::{Mode, Model};
+    let p = input(
+        "guideline_event(actual,'$guideline_id'(product,cmp,1,ref(1),[]),go).\nguideline_arg(actual,'$guideline_id'(product,cmp,1,ref(1),[]),1,'$guideline_id'(product,cmp,1,ref(2),[])).\nguideline_arg(actual,B,2,B) :- guideline_event(actual,A,go), guideline_arg(actual,A,1,B).\n",
+    );
+    let model = Model::build(&p, None, true);
+    let reference = Model::build_mode(&p, None, true, Some(model.abs.clone()), Mode::Reference);
+    model.refines_reference(&reference, &p.arena).unwrap();
+    let missing_writer = Model::build_mode(
+        &p,
+        Some(&BTreeSet::from([0, 1])),
+        true,
+        Some(model.abs.clone()),
+        Mode::Reference,
+    );
+    assert!(model.refines_reference(&missing_writer, &p.arena).is_err());
+}
+
+#[test]
+fn patient_namespace_collisions_fail_closed() {
+    let kb = "guideline_entity(actual,'$guideline_id'(product,kb,1,ref(1),[]),seed,countable).\n";
+    for fact in [
+        "guideline_entity(actual,'$guideline_id'(product,kb,1,ref(1),[]),patient,countable).\n",
+        "guideline_entity(actual,'$guideline_id'(product,kb,2,ref(4),[]),patient,countable).\n",
+        "guideline_entity(actual,kb,patient,countable).\n",
+        "guideline_document(kb,ace_sha256(h),ulex(none),vocabulary(none)).\n",
+    ] {
+        let mut p = input(kb);
+        p.add(PathBuf::from("patient"), fact.into(), true).unwrap();
+        assert!(
+            p.validate_patient_boundary()
+                .unwrap_err()
+                .contains("namespace collision")
+        );
+        assert!(
+            Analysis::load(&p)
+                .err()
+                .unwrap()
+                .contains("namespace collision")
+        );
+    }
+    let mut p = input(kb);
+    p.add(
+        PathBuf::from("patient"),
+        "guideline_entity(actual,'$guideline_id'(product,world,1,ref(1),[]),patient,countable).\n"
+            .into(),
+        true,
+    )
+    .unwrap();
+    p.validate_patient_boundary().unwrap();
+    assert!(Analysis::load(&p).unwrap().admitted());
+}
+
+#[test]
+fn top_referent_keeps_knowledge_links_in_negative_cycles() {
+    let p = input(
+        "guideline_arg(actual,p,1,'$guideline_id'(product,top,1,ref(1),[])) :- \\+ guideline_exclusion(k).\nguideline_exclusion(k) :- guideline_arg(actual,p,1,'$guideline_id'(product,top,1,ref(1),[])).\n",
+    );
+    let a = Analysis::load(&p).unwrap();
+    assert!(
+        !a.admitted(),
+        "a KB-derived link from patient/top must keep its negative cycle"
+    );
+    assert!(
+        a.graph
+            .witnesses
+            .iter()
+            .any(|w| w.kind == Refusal::Negative)
+    );
+}
+
+#[test]
+fn wildcard_meet_shortcuts_equal_the_unoptimized_relation_on_all_small_domains() {
+    use features::{Domain, Value};
+    let mut arena = sb1_checker::term::Arena::default();
+    let atom = arena.atom("opaque");
+    let one = arena.put(Node::Integer("1".into()));
+    let two = arena.put(Node::Integer("2".into()));
+    let rational = arena.compound("rational", vec![one, two]);
+    let values = [
+        Value::Any,
+        Value::Patient,
+        Value::Number,
+        Value::Exact(atom),
+        Value::Exact(one),
+        Value::Exact(rational),
+        Value::Origin(0),
+        Value::Origin(1),
+    ];
+    let domains = (0..1 << values.len())
+        .map(|mask| {
+            Domain::Set(
+                values
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, v)| (mask & (1 << i) != 0).then_some(*v))
+                    .collect(),
+            )
+        })
+        .chain(std::iter::once(Domain::All))
+        .collect::<Vec<_>>();
+    for a in &domains {
+        for b in &domains {
+            assert_eq!(
+                a.meet(b, &arena),
+                a.meet_reference(b, &arena),
+                "{a:?} ∩ {b:?}"
+            );
+        }
+    }
 }
 
 #[test]

@@ -16,6 +16,8 @@ def run(args, name, composition, patient, expected="admitted", queries=True, dc=
                "--patient", patient, "--out", str(out)]
     if dc:
         command += ["--dc"]
+    if args.reference:
+        command += ["--reference"]
     if full_emit is not None:
         command += ["--emit", str(full_emit)]
     if queries and expected == "admitted":
@@ -88,6 +90,7 @@ def main():
     p.add_argument("--out", required=True, type=pathlib.Path)
     p.add_argument("--emit", type=pathlib.Path)
     p.add_argument("--compositions", type=pathlib.Path)
+    p.add_argument("--reference", action="store_true")
     args = p.parse_args()
     for key in ("root", "ta", "out", "emit", "compositions"):
         value = getattr(args, key)

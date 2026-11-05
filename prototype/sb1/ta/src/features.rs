@@ -50,6 +50,7 @@ pub struct Unary {
 }
 #[derive(Clone, Debug)]
 pub struct Link {
+    pub owner: Expr,
     pub source: Expr,
     pub label: Label,
     pub target: Expr,
@@ -117,6 +118,7 @@ fn literal_features(arena: &Arena, abs: &Abstraction, t: Id) -> (Vec<Unary>, Vec
     }
     if matches!(name, "guideline_arg" | "guideline_pp") {
         links.push(Link {
+            owner: expr(arena, abs, a[0]),
             source: expr(arena, abs, a[1]),
             label: Label(p, selector(2)),
             target: expr(arena, abs, a[3]),
@@ -306,24 +308,36 @@ impl Heads {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum Mode {
+    #[default]
+    Refined,
+    Reference,
+}
+type Owners = HashMap<Value, Domain>;
+
 pub struct Model {
     pub abs: Rc<Abstraction>,
     pub counters: Counters,
+    pub mode: Mode,
     unary: HashMap<Feature, BTreeSet<Value>>,
     families: HashMap<Feature, BTreeSet<Value>>,
-    links: HashMap<(Value, Label), Domain>,
+    links: HashMap<(Value, Label), Owners>,
+    scalar_sources: HashMap<Label, BTreeSet<Value>>,
     predicates: HashSet<Symbol>,
     generic: bool,
     heads: HashMap<Symbol, Heads>,
 }
 impl Model {
-    fn new(program: &Program, generic: bool, abs: Option<Rc<Abstraction>>) -> Self {
+    fn new(program: &Program, generic: bool, abs: Option<Rc<Abstraction>>, mode: Mode) -> Self {
         Self {
             abs: abs.unwrap_or_else(|| Rc::new(Abstraction::new(&program.arena))),
             counters: Counters::default(),
+            mode,
             unary: HashMap::new(),
             families: HashMap::new(),
             links: HashMap::new(),
+            scalar_sources: HashMap::new(),
             predicates: HashSet::new(),
             generic,
             heads: HashMap::new(),
@@ -384,32 +398,92 @@ impl Model {
             .flatten()
             .any(|s| s.contains(&v) || s.contains(&Value::Any))
     }
-    fn targets(&self, arena: &Arena, source: Value, label: Label) -> Domain {
+    fn targets(&self, arena: &Arena, owner: Value, source: Value, label: Label) -> Domain {
+        self.targets_limited(arena, owner, source, label, None)
+    }
+    fn targets_limited(
+        &self,
+        arena: &Arena,
+        owner: Value,
+        source: Value,
+        label: Label,
+        limit: Option<&Domain>,
+    ) -> Domain {
+        let narrow = |domain: Domain| {
+            limit.map_or_else(|| domain.clone(), |target| domain.meet(target, arena))
+        };
         if source == Value::Any {
-            return Domain::All;
+            return narrow(Domain::All);
         }
-        if self.top(arena, source) {
-            return Domain::one(Value::Patient);
+        if self.mode == Mode::Reference && self.top(arena, source) {
+            return narrow(Domain::one(Value::Patient));
         }
-        let mut out = Domain::empty();
-        for key in [
-            (source, label),
-            (source, Label(label.0, Value::Any)),
-            (Value::Any, label),
-            (Value::Any, Label(label.0, Value::Any)),
-        ] {
-            if let Some(targets) = self.links.get(&key) {
-                out.union(targets);
+        // Patient facts cannot name a KB origin. Rules still can attach a KB
+        // target to a patient referent: implicit patient links must union with
+        // stored links, never replace them.
+        let mut out = narrow(if self.top(arena, owner) && self.top(arena, source) {
+            Domain::one(Value::Patient)
+        } else {
+            Domain::empty()
+        });
+        let mut sources = vec![source, Value::Any];
+        if self.mode == Mode::Refined {
+            if Abstraction::intersect(arena, source, Value::Patient).is_some() {
+                sources.push(Value::Patient);
             }
-        }
-        if label.1 == Value::Any {
-            for ((s, l), targets) in &self.links {
-                if (*s == source || *s == Value::Any) && l.0 == label.0 {
-                    out.union(targets);
+            if Abstraction::intersect(arena, source, Value::Number).is_some() {
+                sources.push(Value::Number);
+            }
+            if matches!(source, Value::Patient | Value::Number) {
+                for l in [label, Label(label.0, Value::Any)] {
+                    if let Some(values) = self.scalar_sources.get(&l) {
+                        sources.extend(
+                            values
+                                .iter()
+                                .filter(|v| Abstraction::intersect(arena, source, **v).is_some()),
+                        );
+                    }
                 }
             }
         }
-        out
+        sources.sort_unstable();
+        sources.dedup();
+        let mut include = |owners: &Owners| {
+            for (o, targets) in owners {
+                if self.mode == Mode::Reference
+                    || Abstraction::intersect(arena, owner, *o).is_some()
+                {
+                    if let Some(target) = limit {
+                        out.union(&targets.meet(target, arena));
+                    } else {
+                        out.union(targets);
+                    }
+                }
+            }
+        };
+        for s in &sources {
+            for l in [label, Label(label.0, Value::Any)] {
+                if let Some(owners) = self.links.get(&(*s, l)) {
+                    include(owners);
+                }
+            }
+        }
+        if label.1 == Value::Any {
+            for ((s, l), owners) in &self.links {
+                if l.0 == label.0
+                    && (sources.contains(s)
+                        || self.mode == Mode::Refined
+                            && Abstraction::intersect(arena, source, *s).is_some())
+                {
+                    include(owners);
+                }
+            }
+        }
+        if limit.is_some() {
+            out.meet(&Domain::All, arena)
+        } else {
+            out
+        }
     }
     fn source_size(&self, arena: &Arena, f: Feature) -> usize {
         if Self::tag_domain(arena, f).is_some() {
@@ -519,19 +593,38 @@ impl Model {
             for link in &pattern.links {
                 let source = state.domain(link.source);
                 let target = state.domain(link.target);
+                let owner = if self.mode == Mode::Reference {
+                    Domain::All
+                } else {
+                    state.domain(link.owner)
+                };
                 if let Some(sources) = source.values() {
                     let mut allowed_sources = BTreeSet::new();
+                    let mut allowed_owners = Domain::empty();
                     let mut allowed_targets = Domain::empty();
-                    for s in sources {
-                        let ts = self.targets(arena, *s, link.label);
-                        let compatible = ts.meet(&target, arena);
-                        if !compatible.is_empty() {
-                            allowed_sources.insert(*s);
-                            allowed_targets.union(&compatible);
+                    let owners = owner.values().map_or_else(
+                        || vec![Value::Any],
+                        |values| values.iter().copied().collect(),
+                    );
+                    for o in owners {
+                        for s in sources {
+                            let compatible = if selective && self.mode == Mode::Refined {
+                                self.targets_limited(arena, o, *s, link.label, Some(&target))
+                            } else {
+                                self.targets(arena, o, *s, link.label).meet(&target, arena)
+                            };
+                            if !compatible.is_empty() {
+                                allowed_sources.insert(*s);
+                                allowed_owners.union(&Domain::one(o));
+                                allowed_targets.union(&compatible);
+                            }
                         }
                     }
                     changed |= state.limit(link.source, &Domain::Set(allowed_sources), arena)?;
                     changed |= state.limit(link.target, &allowed_targets, arena)?;
+                    if self.mode == Mode::Refined {
+                        changed |= state.limit(link.owner, &allowed_owners, arena)?;
+                    }
                 }
             }
             counters.join_rows += u64::from(changed);
@@ -601,10 +694,15 @@ impl Model {
         }
         changed
     }
-    fn add_link(&mut self, source: Value, label: Label, target: &Domain) -> bool {
+    fn add_link(&mut self, owner: Value, source: Value, label: Label, target: &Domain) -> bool {
+        if matches!(source, Value::Exact(_)) {
+            self.scalar_sources.entry(label).or_default().insert(source);
+        }
         let d = self
             .links
             .entry((source, label))
+            .or_default()
+            .entry(owner)
             .or_insert_with(Domain::empty);
         let before = d.values().map_or(1, BTreeSet::len);
         let changed = d.union(target);
@@ -648,17 +746,25 @@ impl Model {
         }
         for l in links {
             if constant_only
-                && (matches!(l.source, Expr::Var(_)) || matches!(l.target, Expr::Var(_)))
+                && (matches!(l.source, Expr::Var(_))
+                    || matches!(l.target, Expr::Var(_))
+                    || self.mode == Mode::Refined && matches!(l.owner, Expr::Var(_)))
             {
                 continue;
             }
+            let values = |d: Domain| match d {
+                Domain::All => vec![Value::Any],
+                Domain::Set(s) => s.into_iter().collect(),
+            };
             let target = domain(l.target);
-            match domain(l.source) {
-                Domain::All => changed |= self.add_link(Value::Any, l.label, &target),
-                Domain::Set(ss) => {
-                    for s in ss {
-                        changed |= self.add_link(s, l.label, &target);
-                    }
+            let owners = values(if self.mode == Mode::Reference {
+                Domain::All
+            } else {
+                domain(l.owner)
+            });
+            for s in values(domain(l.source)) {
+                for o in &owners {
+                    changed |= self.add_link(*o, s, l.label, &target);
                 }
             }
         }
@@ -673,7 +779,16 @@ impl Model {
         generic: bool,
         abs: Option<Rc<Abstraction>>,
     ) -> Self {
-        let mut model = Self::new(program, generic, abs);
+        Self::build_mode(program, selected, generic, abs, Mode::Refined)
+    }
+    pub fn build_mode(
+        program: &Program,
+        selected: Option<&BTreeSet<usize>>,
+        generic: bool,
+        abs: Option<Rc<Abstraction>>,
+        mode: Mode,
+    ) -> Self {
+        let mut model = Self::new(program, generic, abs, mode);
         let arena = &program.arena;
         let ids = selected.map_or_else(
             || (0..program.clauses.len()).collect::<Vec<_>>(),
@@ -710,7 +825,7 @@ impl Model {
                     arena,
                     pattern,
                     State::new(pattern.vars),
-                    !generic,
+                    !generic || mode == Mode::Refined,
                     &mut counters,
                 ) {
                     changed |= model.head(program, *i, Some(&state), false);
@@ -788,6 +903,7 @@ impl Model {
         let link_values = self
             .links
             .values()
+            .flat_map(HashMap::values)
             .filter_map(Domain::values)
             .map(BTreeSet::len)
             .sum();
@@ -841,7 +957,12 @@ impl Model {
             (
                 "origin-link-map",
                 self.links.len(),
-                bytes::<((Value, Label), Domain)>(self.links.capacity()),
+                bytes::<((Value, Label), Owners)>(self.links.capacity())
+                    + self
+                        .links
+                        .values()
+                        .map(|o| bytes::<(Value, Domain)>(o.capacity()))
+                        .sum::<usize>(),
                 "payload-lower-bound",
             ),
             (
@@ -860,13 +981,62 @@ impl Model {
         rows.extend(self.abs.memory_rows());
         record(stage, &rows);
     }
-    pub fn fact_count(&self) -> usize {
-        self.unary.values().map(BTreeSet::len).sum::<usize>()
-            + self
-                .links
+    pub fn feature_counts(&self) -> (usize, usize) {
+        (
+            self.unary.values().map(BTreeSet::len).sum(),
+            self.links
                 .values()
+                .flat_map(HashMap::values)
                 .map(|d| d.values().map_or(1, BTreeSet::len))
-                .sum::<usize>()
+                .sum(),
+        )
+    }
+    pub fn fact_count(&self) -> usize {
+        let (unary, links) = self.feature_counts();
+        unary + links
+    }
+    pub fn refines_reference(&self, reference: &Self, arena: &Arena) -> Result<(), String> {
+        if self.mode != Mode::Refined
+            || reference.mode != Mode::Reference
+            || !Rc::ptr_eq(&self.abs, &reference.abs)
+        {
+            return Err(
+                "feature comparison requires shared abstraction + refined/reference models".into(),
+            );
+        }
+        for (feature, values) in &self.unary {
+            let allowed = reference
+                .unary
+                .get(feature)
+                .ok_or_else(|| format!("missing reference feature {feature:?}"))?;
+            if !values.is_subset(allowed) && !allowed.contains(&Value::Any) {
+                return Err(format!("unary refinement not contained: {feature:?}"));
+            }
+        }
+        for (key @ (source, label), owners) in &self.links {
+            let domain = Domain::one(*source);
+            let mut allowed = Domain::empty();
+            for broad in [*source, Value::Any, Value::Patient, Value::Number] {
+                if domain.meet(&Domain::one(broad), arena) != domain {
+                    continue;
+                }
+                for label in [*label, Label(label.0, Value::Any)] {
+                    if let Some(targets) = reference
+                        .links
+                        .get(&(broad, label))
+                        .and_then(|o| o.get(&Value::Any))
+                    {
+                        allowed.union(targets);
+                    }
+                }
+            }
+            for targets in owners.values() {
+                if targets.meet(&allowed, arena) != targets.meet(&Domain::All, arena) {
+                    return Err(format!("link refinement not contained: {key:?}"));
+                }
+            }
+        }
+        Ok(())
     }
     pub fn describe_state(&self, arena: &Arena, pattern: &Pattern, state: &State) -> String {
         let mut out = String::new();
@@ -895,9 +1065,10 @@ impl Model {
             }
             for link in l {
                 out.push_str(&format!(
-                    " link({},{})={}->{}",
+                    " link({},{},owner={})={}->{}",
                     arena.name(link.label.0),
                     self.abs.describe(arena, link.label.1),
+                    self.describe_domain(arena, &state.domain(link.owner)),
                     self.describe_domain(arena, &state.domain(link.source)),
                     self.describe_domain(arena, &state.domain(link.target))
                 ));

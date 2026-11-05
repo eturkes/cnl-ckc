@@ -1,0 +1,14 @@
+format	sb1-ta-receipt 1
+kb_identity	91894f4a4892ed2f7c4f8e42b5b64f0fb5d3d86b7e9b7fdb2e9c5a1d3649e255
+knowledge_documents	49200
+knowledge_bytes	1034073675
+verdict	admitted
+ta_source_commit	822ffa102ce6cb4ce42bafea589d917f7ae494fd
+ta_binary_sha256	a3126ef5137b596169c112b64479e9c213cea88ed036cad86ac0e950feb31388
+dc	1
+cap_bytes	30064771072
+vmhwm_bytes	12500029440
+parse_seconds	39.506677271
+analysis_seconds	2545.549563644
+host	workstation
+command	systemd-run --user --scope --unit sb1-b14-6a5f67f06c8dc6df -q -p MemoryMax=28G -p MemorySwapMax=0 -p OOMPolicy=continue timeout 43200 .scratch/worktrees/builder-14/rust/target/bench/builder-14-bin/ta-a3126ef5137b596169c112b64479e9c213cea88ed036cad86ac0e950feb31388 --root .scratch/worktrees/rerun --composition .scratch/worktrees/rerun/rust/target/bench/sb1-frozen/F1b-g100-s0/composition.tsv --patient last --dc --out .scratch/worktrees/builder-14/rust/target/bench/builder-14-workstation/F1b-g100-s0/metrics --query .scratch/worktrees/rerun/rust/target/bench/sb1-frozen/F1b-g100-s0/queries/q-one.pl --query .scratch/worktrees/rerun/rust/target/bench/sb1-frozen/F1b-g100-s0/queries/q-patient.pl
