@@ -49,7 +49,10 @@ struct Chunk {
     memory: fn(i64, &str, &str) -> (u64, u64), // (peak RSS, HWM sum) per call
     output: fn(i64, &str, &str) -> Option<String>, // a planted output digest
     identity: fn(&str, &str, String) -> Option<String>, // a planted identities.tsv digest per path
-    drop_row: Option<&'static str>,   // an identities.tsv path suffix left out
+    drop: fn(&str) -> bool,           // identities.tsv paths left out
+    mirror: fn(&str) -> bool,         // identities.tsv paths recorded again under a second root
+    sink: fn(i64, &str, &str) -> bool, // a closed sink written per (block, arm, query)
+    throttle: fn(&Chunk, i64) -> (i64, i64), // cumulative core + package throttle counts at t
 }
 fn clean(name: &'static str) -> Chunk {
     Chunk {
@@ -66,7 +69,10 @@ fn clean(name: &'static str) -> Chunk {
         memory: |_, _, _| (1_000_000_000, 1_200_000_000),
         output: |_, _, _| None,
         identity: |_, _, _| None,
-        drop_row: None,
+        drop: |_| false,
+        mirror: |_| false,
+        sink: |_, _, _| true,
+        throttle: |_, _| (0, 0),
     }
 }
 // Block b's calls, in order: (arm, query, start µs, end µs).
@@ -167,11 +173,17 @@ fn grade(c: &Chunk) -> Graded {
     let mut manifest = "kind\tinstance\tname\tpath\tsha256\tbytes\tcount\tvalue\n".to_owned();
     let mut identities = "arm\tpath\tbytes\tsha256\n".to_owned();
     let mut record = |arm: &str, rel: &str, bytes: &[u8]| {
-        if c.drop_row.is_some_and(|s| rel.ends_with(s)) {
+        if (c.drop)(rel) {
             return;
         }
         let digest = (c.identity)(arm, rel, sha(bytes)).unwrap_or_else(|| sha(bytes));
         identities.push_str(&format!("{arm}\t/pool/{rel}\t{}\t{digest}\n", bytes.len()));
+        if (c.mirror)(rel) {
+            identities.push_str(&format!(
+                "{arm}\t/mirror/{rel}\t{}\t{digest}\n",
+                bytes.len()
+            ));
+        }
     };
     for (arm, iid) in &arms {
         let base = format!("rust/target/bench/sb1-frozen/{iid}");
@@ -251,11 +263,13 @@ fn grade(c: &Chunk) -> Graded {
             ));
             let sink = run.join(format!("run-{n:06}"));
             fs::create_dir_all(&sink).unwrap();
-            fs::write(
-                sink.join("sink-complete.tsv"),
-                format!("sb1-sink 1\nclosed_unix_ns\t{}\nbytes\t1\n", end * 1000),
-            )
-            .unwrap();
+            if (c.sink)(b, arm, query) {
+                fs::write(
+                    sink.join("sink-complete.tsv"),
+                    format!("sb1-sink 1\nclosed_unix_ns\t{}\nbytes\t1\n", end * 1000),
+                )
+                .unwrap();
+            }
         }
     }
     fs::write(run.join("plan.tsv"), plan).unwrap();
@@ -295,8 +309,9 @@ fn grade(c: &Chunk) -> Graded {
         while t <= end {
             if (c.sampled)(c, t) {
                 let swap = (c.swap)(c, t).map_or("NA".into(), |b| b.to_string());
+                let (core, package) = (c.throttle)(c, t);
                 rows.push_str(&format!(
-                    "{t}\t{busy}\t5000\t{cpu}\t{swap}\t0\t0\t0\t0\t50000\n"
+                    "{t}\t{busy}\t5000\t{cpu}\t{swap}\t0\t0\t{core}\t{package}\t50000\n"
                 ));
             }
             // The next second: the campaign holds 2 CPUs, foreign work the rest (USER_HZ 100).
@@ -332,7 +347,8 @@ fn accepted(n: usize) -> Vec<(String, String)> {
 
 #[test]
 fn clean_chunk_matches_identity_and_accepts_every_block() {
-    let g = grade(&clean("clean"));
+    let c = clean("clean");
+    let g = grade(&c);
     assert_eq!(g.rc, 0, "{}", g.stdout);
     assert_eq!(g.blocks(), accepted(2));
     let identity = &g.rows("identity")[0];
@@ -354,26 +370,59 @@ fn clean_chunk_matches_identity_and_accepts_every_block() {
         ),
         ("ok", "same", "ok")
     );
+    assert_eq!(
+        [
+            "blocks",
+            "accepted",
+            "rejected",
+            "unassessed",
+            "budget_fail",
+            "sha_bad"
+        ]
+        .map(|k| &s[k][..]),
+        ["2", "2", "0", "0", "0", "0"]
+    );
     assert_eq!(g.rows("kb")[0][2], format!("kb-{TARGET}"));
+    // A block's interval = its first call's request write (closed sink − score) → its last sink.
+    let (start, end) = block_span(&c, 1);
+    assert_eq!(
+        g.rows("block")[0][2..4],
+        [start.to_string(), end.to_string()]
+    );
+    assert_eq!(
+        g.rows("stat")[0][1..],
+        ["target", "q-all", "2", "1.500", "0.000", "1.500", "1.00"]
+    );
 }
 
 #[test]
 fn foreign_cpu_above_half_rejects_its_block_alone() {
     let mut c = clean("x1");
-    // Block 1 carries 0.6 foreign CPUs, block 2 0.4: X1's line sits at 0.5.
+    // Blocks 1–3 carry 0.6, 0.4 + exactly 0.5 foreign CPUs: X1 rejects above its 0.5 line alone.
+    c.blocks = 3;
     c.foreign = |c, t| {
         if within(c, 1, t) {
             0.6
         } else if within(c, 2, t) {
             0.4
+        } else if within(c, 3, t) {
+            0.5
         } else {
             0.0
         }
     };
     let g = grade(&c);
     assert_eq!(g.blocks()[0], ("rejected".into(), "X1".into()));
-    assert_eq!(g.blocks()[1], ("accepted".into(), "-".into()));
-    assert_eq!(g.rows("block")[0][6], "0.600");
+    assert_eq!(g.blocks()[1..], accepted(2));
+    assert_eq!(
+        [g.rows("block")[0][6], g.rows("block")[2][6]],
+        ["0.600", "0.500"]
+    );
+    let s = g.summary();
+    assert_eq!(
+        ["accepted", "rejected", "unassessed"].map(|k| &s[k][..]),
+        ["2", "1", "0"]
+    );
 }
 
 #[test]
@@ -397,9 +446,15 @@ fn unit_swap_rejects_its_block_and_unreadable_swap_leaves_it_unassessed() {
     );
     let mut c = clean("x2-unreadable");
     c.swap = |_, _| None;
+    let g = grade(&c);
     assert_eq!(
-        grade(&c).blocks(),
+        g.blocks(),
         vec![("unassessed".to_owned(), "X2-unreadable".to_owned()); 2]
+    );
+    let s = g.summary();
+    assert_eq!(
+        ["accepted", "rejected", "unassessed"].map(|k| &s[k][..]),
+        ["0", "0", "2"]
     );
 }
 
@@ -434,6 +489,54 @@ fn sampling_gaps_reject_through_x4() {
     let mut c = clean("x4-tail-ok");
     // Sampling ends 0.5 s before block 2's last sink: an edge under one period passes.
     c.sampled = |c, t| t <= block_span(c, 2).1 - 500_000;
+    assert_eq!(grade(&c).blocks(), accepted(2));
+    // A spacing of exactly 5 s inside block 1: X4's line is strict.
+    let mut c = clean("x4-five");
+    c.sampled = |c, t| {
+        let s = block_span(c, 1).0;
+        !(s < t && t < s + 5_000_000)
+    };
+    let g = grade(&c);
+    assert_eq!(g.blocks(), accepted(2));
+    assert_eq!(g.rows("block")[0][7], "5.00");
+    // 31 s blocks whose sampling begins inside block 1 (window = first sample → the first after
+    // the block) or ends inside block 2 (the last sample before the block → the last sample): the
+    // open edge alone decides X4.
+    let long: fn(i64, &str, &str) -> u64 = |_, _, _| 10_000_000_000;
+    let mut c = clean("x4-head-edge");
+    c.score = long;
+    c.sampled = |c, t| t >= block_span(c, 1).0 + 6_000_000;
+    let g = grade(&c);
+    assert_eq!(g.blocks()[0], ("rejected".into(), "X4".into()));
+    assert_eq!(g.rows("block")[0][7], "6.00");
+    assert_eq!(g.blocks()[1], ("accepted".into(), "-".into()));
+    let mut c = clean("x4-head-edge-ok");
+    c.score = long;
+    c.sampled = |c, t| t >= block_span(c, 1).0 + 4_000_000;
+    let g = grade(&c);
+    assert_eq!(g.blocks(), accepted(2));
+    assert_eq!(g.rows("block")[0][7], "4.00");
+    let mut c = clean("x4-tail-edge");
+    c.score = long;
+    c.sampled = |c, t| t <= block_span(c, 2).1 - 6_000_000;
+    let g = grade(&c);
+    assert_eq!(g.blocks()[0], ("accepted".into(), "-".into()));
+    assert_eq!(g.blocks()[1], ("rejected".into(), "X4".into()));
+    assert_eq!(g.rows("block")[1][7], "6.00");
+    // A 7 s spacing that ends at block 1's first request or begins at its last sink covers none of
+    // the block (the X1 window starts + ends on those samples).
+    let mut c = clean("x4-meets-start");
+    c.sampled = |c, t| {
+        let s = block_span(c, 1).0;
+        !(s - 7_000_000 < t && t < s)
+    };
+    assert_eq!(grade(&c).blocks(), accepted(2));
+    let mut c = clean("x4-meets-end");
+    c.score = |_, _, _| 2_000_000_000; // block 1 ends on a whole second
+    c.sampled = |c, t| {
+        let e = block_span(c, 1).1;
+        !(e < t && t < e + 7_000_000)
+    };
     assert_eq!(grade(&c).blocks(), accepted(2));
     let mut c = clean("x4-head");
     // Sampling begins after block 1 ends: block 1 is unbracketed.
@@ -495,7 +598,7 @@ fn identity_mismatches_refuse() {
     assert_eq!((g.rc, g.rows("identity")[0][3]), (1, "MISMATCH"));
     assert_eq!(g.summary()["identity"], "bad");
     let mut c = clean("identity-missing-row");
-    c.drop_row = Some("copies/0001/a.pl");
+    c.drop = |rel| rel.ends_with("copies/0001/a.pl");
     let g = grade(&c);
     assert_eq!(g.rc, 1);
     assert!(
@@ -505,6 +608,20 @@ fn identity_mismatches_refuse() {
     );
     let mut c = clean("identity-query");
     c.identity = |_, rel, _| rel.ends_with("q-one.pl").then(|| "1".repeat(64));
+    let g = grade(&c);
+    assert_eq!((g.rc, g.rows("identity")[0][5]), (1, "bad=1"));
+    // A run that recorded no frozen query proves no query identity.
+    let mut c = clean("identity-no-query");
+    c.drop = |rel| rel.contains("/queries/");
+    let g = grade(&c);
+    assert_eq!(
+        (g.rc, &g.rows("identity")[0][3..6]),
+        (1, &["MATCH", "queries-checked=0", "bad=0"][..])
+    );
+    assert_eq!(g.summary()["identity"], "bad");
+    // One frozen query recorded under two roots (same bytes + digest) is ambiguous.
+    let mut c = clean("identity-query-twice");
+    c.mirror = |rel| rel.ends_with("q-one.pl");
     let g = grade(&c);
     assert_eq!((g.rc, g.rows("identity")[0][5]), (1, "bad=1"));
 }
@@ -542,10 +659,42 @@ fn budget_boundaries_hold_at_300_s_and_32_gb() {
     let g = grade(&c);
     let budget: Vec<&str> = g.rows("call").iter().map(|r| r[10]).collect();
     assert_eq!(budget, ["ok", "fail:ok", "fail:uncertain"]);
+    assert_eq!(g.summary()["budget_fail"], "2");
     let mut c = clean("budget-over");
     c.blocks = 1;
     c.memory = |_, _, _| (32_000_000_001, 32_000_000_001);
-    assert!(grade(&c).rows("call").iter().all(|r| r[10] == "fail:over"));
+    let g = grade(&c);
+    assert!(g.rows("call").iter().all(|r| r[10] == "fail:over"));
+    assert_eq!(g.summary()["budget_fail"], "3");
+}
+
+#[test]
+fn throttle_counts_are_recorded_and_never_exclude() {
+    let mut c = clean("throttle");
+    // Core + package throttle counters step by 3 + 7 inside block 1 (from 10 + 20).
+    c.throttle = |c, t| {
+        if t >= block_span(c, 1).0 + 3_000_000 {
+            (13, 27)
+        } else {
+            (10, 20)
+        }
+    };
+    let g = grade(&c);
+    assert_eq!(g.blocks(), accepted(2));
+    let rows = g.rows("block");
+    assert_eq!(rows[0][8..10], ["3", "7"]);
+    assert_eq!(rows[1][8..10], ["0", "0"]);
+}
+
+#[test]
+fn a_call_without_a_closed_sink_counts_in_its_block() {
+    let mut c = clean("unsunk");
+    c.sink = |b, _, q| !(b == 2 && q == "q-patient");
+    let g = grade(&c);
+    let rows = g.rows("block");
+    assert_eq!([rows[0][11], rows[1][11]], ["0", "1"]);
+    // Block 2's interval ends at its last closed sink (the q-one call's).
+    assert_eq!(rows[1][3], calls(&c, 2)[1].3.to_string());
 }
 
 #[test]
@@ -589,4 +738,102 @@ fn accepted_blocks_drop_a_rejected_pair_from_r() {
             .filter(|r| r[3] == "baseline")
             .all(|r| r[9] == "yes")
     );
+}
+
+#[test]
+fn r_over_no_accepted_pair_is_not_estimable() {
+    let mut c = clean("ratio-none");
+    c.paired = true;
+    c.foreign = |_, _| 0.8;
+    let g = grade(&c);
+    assert_eq!(g.rc, 0, "{}", g.stdout);
+    assert_eq!(
+        g.rows("ratio_recomputed")[1][1..],
+        ["accepted", "pairs=0", "not-estimable"]
+    );
+}
+
+#[test]
+fn a_zero_baseline_score_leaves_r() {
+    let mut c = clean("ratio-zero");
+    c.paired = true;
+    c.blocks = 3;
+    c.score = |b, arm, _| match (arm, b) {
+        ("baseline", 1) => 0,
+        ("baseline", _) => 1_000_000_000,
+        _ => 2_000_000_000,
+    };
+    let g = grade(&c);
+    assert_eq!(
+        g.rows("ratio_recomputed")[0][1..],
+        ["all", "pairs=2", "R=2.000000000", "UB95=2.000000000"]
+    );
+}
+
+#[test]
+fn stat_rows_and_r_take_interpolated_medians() {
+    let mut c = clean("medians");
+    c.blocks = 4;
+    // q-all scores 1, 2, 3, 10 s: median 2.5, IQR 4.75 − 1.75 = 3 (linear interpolation).
+    c.score = |b, _, q| {
+        if q == "q-all" {
+            [1, 2, 3, 10][b as usize - 1] * 1_000_000_000
+        } else {
+            1_500_000_000
+        }
+    };
+    let g = grade(&c);
+    assert_eq!(
+        g.rows("stat")[0][1..],
+        ["target", "q-all", "4", "2.500", "3.000", "10.000", "1.00"]
+    );
+    // Two pairs (1 s, 2 s) + (3 s, 4 s): R = median 3 / median 2; the bootstrap's resamples take
+    // R ∈ {4/3, 3/2, 2} with weights ¼, ½, ¼ ⇒ its 95th percentile = 2.
+    let mut c = clean("ratio-even");
+    c.paired = true;
+    c.score = |b, arm, _| match (arm, b) {
+        ("baseline", 1) => 1_000_000_000,
+        ("baseline", _) => 3_000_000_000,
+        (_, 1) => 2_000_000_000,
+        _ => 4_000_000_000,
+    };
+    let g = grade(&c);
+    assert_eq!(
+        g.rows("ratio_recomputed")[1][1..],
+        ["accepted", "pairs=2", "R=1.500000000", "UB95=2.000000000"]
+    );
+}
+
+#[test]
+fn the_bootstrap_draws_every_pair_with_equal_chance() {
+    // Eight accepted pairs, four 3× (target 3 s, baseline 1 s) + four 1×: R = median 2 / median 1.
+    // A resample (8 draws) reaches R = 3 once ≥ 5 draws are 3× pairs: P = 93/256 ≈ 36 % under
+    // uniform draws ⇒ UB95 = 3; draws biased to ¼ against the 3× half leave P ≈ 2.7 % ⇒ UB95 = 2.
+    // The 3× pairs sit last, then first: a bias may favor either half.
+    let late: fn(i64, &str, &str) -> u64 = |b, arm, _| {
+        if arm == "target" && b >= 5 {
+            3_000_000_000
+        } else {
+            1_000_000_000
+        }
+    };
+    let early: fn(i64, &str, &str) -> u64 = |b, arm, _| {
+        if arm == "target" && b <= 4 {
+            3_000_000_000
+        } else {
+            1_000_000_000
+        }
+    };
+    for (name, score) in [("bootstrap-late", late), ("bootstrap-early", early)] {
+        let mut c = clean(name);
+        c.paired = true;
+        c.blocks = 8;
+        c.score = score;
+        let g = grade(&c);
+        assert_eq!(
+            g.rows("ratio_recomputed")[1][1..],
+            ["accepted", "pairs=8", "R=2.000000000", "UB95=3.000000000"],
+            "{name}"
+        );
+    }
 }
