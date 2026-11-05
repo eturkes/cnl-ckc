@@ -198,27 +198,3 @@ impl Config {
             .map_err(|e| format!("{}: {e}", path.display()))
     }
 }
-
-pub(super) struct Random(u64);
-impl Random {
-    pub fn new(seed: u64) -> Self {
-        Self(seed)
-    }
-    pub fn next(&mut self) -> u64 {
-        self.0 = self.0.wrapping_add(0x9e37_79b9_7f4a_7c15);
-        let mut value = self.0;
-        value = (value ^ (value >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
-        value = (value ^ (value >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
-        value ^ (value >> 31)
-    }
-    pub fn below(&mut self, bound: usize) -> usize {
-        let bound = bound as u64;
-        let threshold = bound.wrapping_neg() % bound;
-        loop {
-            let value = self.next();
-            if value >= threshold {
-                return (value % bound) as usize;
-            }
-        }
-    }
-}

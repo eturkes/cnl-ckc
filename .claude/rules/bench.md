@@ -1,0 +1,13 @@
+---
+paths:
+  - "rust/ckc/src/bench/**"
+  - "rust/ckc/tests/bench_*.rs"
+  - "tools/sb-*"
+---
+
+# Scale benchmark law (contract `.agent/contracts/sb.md`)
+
+- `ckc bench gen` writes family compositions + the run manifest; `ckc bench run` times the producer → checker path (cold or `--serve` warm); `ckc bench grade` grades one campaign chunk; `bench/stats.rs` = the one definition of the percentiles, SplitMix64 + the whole-pair bootstrap of R ⇒ a grade's recomputed R equals the harness's `ratio.tsv` on the same pairs; `generate.rs` `identity_frame` = the one composition-identity framing (the generator writes it, the grade recomputes it from a run's `identities.tsv`).
+- Campaign chunk on the reference machine = `tools/sb-campaign-unit run` (the `tools/sb-campaign-chunk` call as a systemd user unit, `CPUAffinity=2 3 6 7`, the wrapper + its sampler on CPUs 0 1 4 5; waits ≤ 1 h for the sleeper's marker) beside `tools/sb-campaign-unit hold` = the sleeper, launched as a job of another offload project (offload runs one job per project per host). State = `<base>/state/<id>/`: `rc`, `chunk.log`, `host-before.txt` + `host-after.txt` (exact X3 keys `Model name:`, `CPU(s):`, `governors:`, `online:`, `slice-cpus:` + `clk_tck:`), `unit-cpus.txt` (the applied `Cpus_allowed_list`), `host-samples.tsv` (1 s: epoch µs, busy + idle jiffies, the unit's cgroup CPU µs + swap bytes, `pswpin`/`pswpout`, throttle counts, hottest zone).
+- `ckc bench grade <run-dir> <state-dir> <frozen-root> <run-manifest>` = contract sb § Carried rulings X1–X4 as operationalized there: a block's interval = its first request → its last closed sink; X1 = foreign CPUs > 0.5 over the last sample ≤ start → the first ≥ end; X2 = unit swap > 0 inside (unreadable throughout = `unassessed`); X3 (chunk-wide) = any X3 key or the kernel changed (an incomplete record = `unassessed`); X4 = a sample spacing or open edge > 5 s, or no two samples bracketing the block; no sampler file = `unassessed` (p01). rc 1 = an identity mismatch or a wrong output digest; budget fails + rejected blocks are graded results (rc 0).
+- Firing = `rust/ckc/tests/bench_grade.rs` (`CKC_BENCH_GRADE_TEST_BIN`): each rule's planted host record + its control, identity (file, missing row, query) + output-digest plants, the 300 s / 32 GB boundaries, R over accepted blocks dropping a rejected pair. Reintroduced defects each turn it red: X3 keys matched as substrings (lscpu's varying `CPU(s) scaling MHz:` reads as a host change), an empty sampler read as `unassessed`, an unbracketed short block accepted (its X1 window degenerate), unreadable swap accepted. The open edges measured from the block instead of the samples = an equivalent change (every case where they differ is unbracketed ⇒ X4 either way).

@@ -6,7 +6,8 @@ mod report;
 mod serve;
 mod sink;
 
-use config::{Config, Random};
+use super::stats::Random;
+use config::Config;
 use execute::{Invocation, Ledger, Phase};
 use procfs::{Sampler, State};
 use std::fs::{self, File};

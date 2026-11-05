@@ -758,16 +758,31 @@ fn composition_identity(
     files: &BTreeMap<PathBuf, Vec<u8>>,
     o: &Options,
 ) -> Result<String, String> {
-    let mut framed = format!("schema\0{}\0{}\n", schema.len(), digest(schema)).into_bytes();
+    let mut rows = Vec::new();
     for line in composition.lines() {
         let path = o.root.join(line);
         let relative = path.strip_prefix(&o.out).map_err(|e| e.to_string())?;
         let bytes = files.get(relative).ok_or("composition file absent")?;
-        framed.extend_from_slice(
-            format!("file\0{line}\0{}\0{}\n", bytes.len(), digest(bytes)).as_bytes(),
-        );
+        rows.push((line, bytes.len() as u64, digest(bytes)));
     }
-    Ok(digest(&framed))
+    Ok(identity_frame(
+        (schema.len() as u64, &digest(schema)),
+        rows.iter()
+            .map(|(line, size, sha)| (*line, *size, sha.as_str())),
+    ))
+}
+/// The run manifest's composition identity: sha256 over the schema's size + digest, then per
+/// composition line (root-relative path) its size + digest; `ckc bench grade` recomputes it from a
+/// run's `identities.tsv`.
+pub(super) fn identity_frame<'a>(
+    schema: (u64, &str),
+    files: impl IntoIterator<Item = (&'a str, u64, &'a str)>,
+) -> String {
+    let mut framed = format!("schema\0{}\0{}\n", schema.0, schema.1).into_bytes();
+    for (line, size, sha) in files {
+        framed.extend_from_slice(format!("file\0{line}\0{size}\0{sha}\n").as_bytes());
+    }
+    digest(&framed)
 }
 fn manifest(path: &Path) -> Result<BTreeMap<String, String>, String> {
     let mut rows = BTreeMap::new();

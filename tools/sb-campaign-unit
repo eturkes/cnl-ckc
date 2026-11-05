@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Contract sb D6 + § Carried rulings (affinity + interference exclusion): one campaign chunk on the
+# reference machine. `run` starts tools/sb-campaign-chunk as a detached systemd user unit pinned to
+# CPUs 2 3 6 7 (cores 2 + 3 with their siblings) once the sleeper's marker shows the second offload
+# slot held, records the host before + after, the unit's applied CPU list and a 1 s host sample
+# stream (the X1–X4 inputs of `ckc bench grade`); a rerun with the same id re-attaches to a live unit
+# (an ssh loss leaves the unit running). `hold` = the sleeper: run as a job of another offload project,
+# it holds the second slot until the chunk ends. The wrapper + its sampler stay on CPUs 0 1 4 5.
+# Layout: <base>/markers/<id>.{sleeper,done}, <base>/runs/<id>/ (harness), <base>/state/<id>/ (rc,
+# chunk.log, host-before.txt, host-after.txt, unit-cpus.txt, host-samples.tsv).
+# SB1_TA_RECEIPTS passes through to the chunk (`none` = census verdicts pending); SB1_SLEEPER=none
+# skips the marker wait (a host without a second slot to hold).
+set -euo pipefail
+usage() {
+  printf 'usage: tools/sb-campaign-unit run <base> <id> <instance-dir> <blocks> <seed> <ckc> <checker> [<r-pair G1 instance-dir>]\n       tools/sb-campaign-unit hold <base> <id>\n' >&2
+  exit 2
+}
+(( $# >= 3 )) || usage
+mode=$1 base=$(readlink -f -- "$2") id=$3
+[[ $id =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'sb-campaign-unit: bad id %s\n' "$id" >&2; exit 2; }
+m=$base/markers st=$base/state/$id
+mkdir -p "$m" "$st" "$base/runs"
+if [[ $mode == hold ]]; then
+  (( $# == 3 )) || usage
+  touch "$m/$id.sleeper"
+  end=$((SECONDS + 12 * 3600))
+  until [[ -e $m/$id.done || -s $st/rc ]] || (( SECONDS > end )); do sleep 10; done
+  rm -f "$m/$id.sleeper"
+  printf 'sleeper %s released\n' "$id"
+  exit 0
+fi
+if [[ $mode != run ]] || (( $# != 8 && $# != 9 )); then usage; fi
+root=$(readlink -f -- "$(dirname -- "$0")/..")
+instance=$(readlink -f -- "$4") blocks=$5 seed=$6 ckc=$(readlink -f -- "$7") checker=$(readlink -f -- "$8")
+args=("$root" "$instance" "$base/runs/$id" "$blocks" "$seed" "$ckc" "$checker")
+(( $# == 8 )) || args+=(--r-pair "$(readlink -f -- "$9")")
+XDG_RUNTIME_DIR=/run/user/$(id -u)
+export XDG_RUNTIME_DIR
+unit=sb1-chunk-$id
+taskset -cp 0,1,4,5 "$$" >/dev/null 2>&1 || printf 'sb-campaign-unit: wrapper left unpinned (taskset)\n' >&2
+host() {
+  { date -u +%FT%TZ; uname -r; lscpu | grep -E '^Model name|^CPU\(s\)' || true
+    printf 'governors: '; { sort /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2>/dev/null || true; } | uniq -c | tr -s ' \n' ' '; echo
+    printf 'online: '; cat /sys/devices/system/cpu/online
+    printf 'slice-cpus: '; cat "/sys/fs/cgroup/user.slice/user-$(id -u).slice/cpuset.cpus.effective" 2>/dev/null || echo NA
+    printf 'clk_tck: '; getconf CLK_TCK
+    printf 'swap: '; swapon --show --noheadings | tr '\n' ' '; echo
+    printf 'thermal: '; { cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null || true; } | tr '\n' ' '; echo
+    uptime; { ps -eo pid,pcpu,rss,etimes,comm --sort=-pcpu || true; } | head -8; } >"$1"
+}
+active() { local s; s=$(systemctl --user show "$unit" -p ActiveState --value 2>/dev/null) || return 1; [[ $s == active || $s == activating || $s == deactivating ]]; }
+# 1 s host samples until the unit's cgroup goes or its rc lands; bash builtins + sleep. Throttle
+# counters repeat per sibling/package: only their deltas matter.
+sample() {
+  local cg=$1 out=$2 t us ni sy id io irq sirq stl cu sw si so k v ct pt mt f x
+  [[ -s $out ]] || printf 'epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc\n' >"$out"
+  while [[ -e $cg/cpu.stat && ! -s $st/rc ]]; do
+    t=${EPOCHREALTIME/./}
+    read -r _ us ni sy id io irq sirq stl _ </proc/stat
+    cu=NA; while read -r k v; do [[ $k == usage_usec ]] && { cu=$v; break; }; done 2>/dev/null <"$cg/cpu.stat"
+    sw=NA; { read -r sw <"$cg/memory.swap.current"; } 2>/dev/null || sw=NA
+    si=NA so=NA; while read -r k v; do case $k in pswpin) si=$v ;; pswpout) so=$v; break ;; esac; done </proc/vmstat
+    ct=0 pt=0 mt=0
+    for f in /sys/devices/system/cpu/cpu*/thermal_throttle/core_throttle_count; do read -r x <"$f" && ct=$((ct + x)); done
+    for f in /sys/devices/system/cpu/cpu*/thermal_throttle/package_throttle_count; do read -r x <"$f" && pt=$((pt + x)); done
+    for f in /sys/class/thermal/thermal_zone*/temp; do { read -r x <"$f"; } 2>/dev/null && (( x > mt )) && mt=$x; done
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$t" $((us + ni + sy + irq + sirq + stl)) $((id + io)) "$cu" "$sw" "$si" "$so" "$ct" "$pt" "$mt" >>"$out"
+    sleep 1
+  done
+}
+if [[ ${SB1_SLEEPER:-} != none ]]; then
+  end=$((SECONDS + 3600))
+  until [[ -e $m/$id.sleeper ]]; do
+    (( SECONDS < end )) || { printf 'sb-campaign-unit: no sleeper marker for %s within 1 h\n' "$id" >&2; exit 3; }
+    sleep 5
+  done
+fi
+if [[ ! -s $st/rc ]] && ! active; then
+  host "$st/host-before.txt"
+  # shellcheck disable=SC2016  # "$@" + $ST expand inside the unit's shell
+  systemd-run --user --quiet --unit="$unit" --working-directory="$root" \
+    -p "CPUAffinity=2 3 6 7" \
+    -E PATH="$PATH" -E HOME="$HOME" -E LANG=C.UTF-8 -E SB1_TA_RECEIPTS="${SB1_TA_RECEIPTS:-}" -E ST="$st" \
+    -p "StandardOutput=append:$st/chunk.log" -p "StandardError=append:$st/chunk.log" \
+    bash -c 'tools/sb-campaign-chunk "$@"; printf "%s\n" "$?" >"$ST/rc"' _ "${args[@]}"
+fi
+sp=
+cgp=$(systemctl --user show "$unit" -p ControlGroup --value 2>/dev/null || true)
+if [[ -n $cgp ]] && active; then
+  # X3 evidence: the CPU list systemd applied to the unit's main process.
+  { systemctl --user show "$unit" -p CPUAffinity -p MainPID
+    grep -E '^Cpus_allowed_list' "/proc/$(systemctl --user show "$unit" -p MainPID --value)/status"; } >"$st/unit-cpus.txt" 2>&1 || true
+  ( set +e; sample "/sys/fs/cgroup$cgp" "$st/host-samples.tsv" ) &
+  sp=$!
+fi
+while active; do sleep 15; done
+[[ -z $sp ]] || wait "$sp" || true
+host "$st/host-after.txt"
+touch "$m/$id.done"
+tail -n 2 "$st/chunk.log" 2>/dev/null || true
+rc=$(cat "$st/rc" 2>/dev/null || echo 125)
+printf 'chunk %s rc=%s\n' "$id" "$rc"
+exit "$rc"

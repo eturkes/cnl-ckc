@@ -1,7 +1,8 @@
-use super::config::{Config, Random};
+use super::config::Config;
 use super::execute::{Ledger, Phase};
 use super::procfs::State;
 use super::{Plan, Result, RunRow, field, ns};
+use crate::bench::stats::{ratio, stats};
 use sha2::{Digest, Sha256};
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Read, Write};
@@ -434,20 +435,6 @@ pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64)
             .unwrap_or_default()
     )
 }
-fn percentile(values: &[f64], quantile: f64) -> f64 {
-    let rank = (values.len() - 1) as f64 * quantile;
-    let lower = rank.floor() as usize;
-    let upper = rank.ceil() as usize;
-    values[lower] + (values[upper] - values[lower]) * rank.fract()
-}
-fn stats(mut values: Vec<f64>) -> (f64, f64, f64) {
-    values.sort_by(f64::total_cmp);
-    (
-        percentile(&values, 0.5),
-        percentile(&values, 0.75) - percentile(&values, 0.25),
-        values[values.len() - 1],
-    )
-}
 pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {
     let queries: std::collections::BTreeSet<&str> = runs.iter().map(|r| r.query.as_str()).collect();
     let mut text = "arm\tquery\ttotal\tverified\trefused\tindeterminate\tstatus\tmedian_seconds\tiqr_seconds\tmax_seconds\tmedian_peak_rss_bytes\tiqr_peak_rss_bytes\tmax_peak_rss_bytes\n".to_owned();
@@ -493,7 +480,7 @@ pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {
     if config.paired.is_none() {
         return Ok(());
     }
-    let mut ratio =
+    let mut table =
         "query\tpairs\tstatus\tratio_of_medians\tone_sided_95_upper\tbootstrap_resamples\tseed\n"
             .to_owned();
     for query in &queries {
@@ -513,7 +500,7 @@ pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {
             })
             .collect();
         if pairs.len() != config.blocks as usize {
-            ratio.push_str(&format!(
+            table.push_str(&format!(
                 "{}\t{}\tnot-estimable\t\t\t10000\t{}\n",
                 field(query),
                 pairs.len(),
@@ -521,29 +508,15 @@ pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {
             ));
             continue;
         }
-        let observed = stats(pairs.iter().map(|p| p.1).collect()).0
-            / stats(pairs.iter().map(|p| p.0).collect()).0;
-        let mut random = Random::new(config.seed);
-        let mut estimates = Vec::with_capacity(10000);
-        for _ in 0..10000 {
-            let selected: Vec<_> = (0..pairs.len())
-                .map(|_| pairs[random.below(pairs.len())])
-                .collect();
-            estimates.push(
-                stats(selected.iter().map(|p| p.1).collect()).0
-                    / stats(selected.iter().map(|p| p.0).collect()).0,
-            );
-        }
-        estimates.sort_by(f64::total_cmp);
-        let upper = estimates[(0.95 * estimates.len() as f64).ceil() as usize - 1];
-        ratio.push_str(&format!(
+        let (observed, upper) = ratio(&pairs, config.seed);
+        table.push_str(&format!(
             "{}\t{}\tcomplete\t{observed:.9}\t{upper:.9}\t10000\t{}\n",
             field(query),
             pairs.len(),
             config.seed
         ));
     }
-    write(&config.out.join("ratio.tsv"), ratio)
+    write(&config.out.join("ratio.tsv"), table)
 }
 pub(super) fn model_lines(path: &Path) -> Result<u64> {
     let file = File::open(path).map_err(|e| e.to_string())?;

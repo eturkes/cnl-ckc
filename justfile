@@ -689,7 +689,7 @@ shellcheck:
     w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
     mkdir "$w/recipes"
     just --justfile "{{ justfile() }}" --dump | awk -v DIR="$w/recipes" -f tools/shell-recipes.awk
-    shellcheck "$w"/recipes/*.sh rust/kani/bootstrap.sh rust/verus-canary/run.sh .agent/spec-lint
+    shellcheck "$w"/recipes/*.sh rust/kani/bootstrap.sh rust/verus-canary/run.sh .agent/spec-lint tools/sb-campaign-chunk tools/sb-campaign-unit tools/sb-run-manifest tools/sb-run-manifest-rerun
     # shellcheck disable=SC2016 # the red input's `$x` stays literal on purpose
     printf '#!/usr/bin/env bash\nx="a b"\nrm -- $x\n' > "$w/red.sh"
     if shellcheck "$w/red.sh" > /dev/null; then echo "shellcheck: the unquoted red input passed" >&2; exit 2; fi
