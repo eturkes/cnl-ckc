@@ -817,9 +817,11 @@ fn warm_paired_ratio_is_per_query() {
 #[test]
 fn warm_failures_lose_the_server_and_mark_its_later_calls() {
     let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    // The load sums the harness (≈ 9 MB) + the mock server's interpreter (20–23 MB: system python vs
+    // the uv cpython shim) ≈ 32 MB; the first call adds 48 MiB ⇒ 50 MB separates the two.
     for (mode, extra, first) in [
         ("slow", &["--deadline-ms", "300"][..], "deadline"),
-        ("memory", &["--memory-bytes", "30000000"][..], "memory"),
+        ("memory", &["--memory-bytes", "50000000"][..], "memory"),
         ("protocol", &[][..], "protocol"),
     ] {
         let s = Scratch::new(mode);
