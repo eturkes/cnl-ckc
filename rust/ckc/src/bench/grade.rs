@@ -3,8 +3,9 @@
 // writes (rc, host records, 1 s host samples, the unit's CPU list) against the frozen instances + the
 // run manifest. Report (TSV on stdout): input identity per arm, each call's output digest against the
 // manifest's union (×100) or recipe oracle row, the 300 s + 32 GB budget per call, X1–X4 per block,
-// R over every block + over the accepted ones. rc 1 = an identity mismatch or a wrong output (the
-// chunk is no evidence); rc 2 = usage or an unreadable input.
+// R over every block + over the accepted ones. rc 1 = an identity mismatch, a wrong output or a call
+// whose (instance, query) the manifest gives no expected output (`sha_unchecked`: its correctness is
+// unestablished) — the chunk is no evidence; rc 2 = usage or an unreadable input.
 use super::generate::identity_frame;
 use super::stats::{ratio, stats};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -435,7 +436,7 @@ fn grade(args: &[String]) -> Result<bool> {
         "#call\trun\tblock\tarm\tquery\toutcome\tscored_s\tpeak_rss_gb\thwm_sum_gb\tsha_ok\tbudget"
             .into(),
     );
-    let (mut wrong, mut over) = (0, 0);
+    let (mut wrong, mut unchecked, mut over) = (0, 0, 0);
     let mut per: BTreeMap<(String, String), Vec<(f64, u64)>> = BTreeMap::new();
     let mut blocks: BTreeMap<u64, (i64, i64)> = BTreeMap::new();
     let mut unsunk: BTreeMap<u64, usize> = BTreeMap::new();
@@ -451,7 +452,10 @@ fn grade(args: &[String]) -> Result<bool> {
         let hwm = number(row, "observed_hwm_sum_bytes")?.unwrap_or(0);
         let iid = arms.get(arm).ok_or("runs.tsv arm outside plan.tsv")?;
         let sha = match m.outputs.get(&(iid.clone(), query.clone())) {
-            None => "none",
+            None => {
+                unchecked += 1;
+                "none"
+            }
             Some(want) if want == cell(row, "output_sha256")? => "yes",
             Some(_) => {
                 wrong += 1;
@@ -611,11 +615,11 @@ fn grade(args: &[String]) -> Result<bool> {
         }
     }
     out.push(format!(
-        "summary\tidentity={}\tsha_bad={wrong}\tbudget_fail={over}\tblocks={}\taccepted={}\trejected={rejected}\tunassessed={unassessed}\tx3={x3}\tpinned={pinned}",
+        "summary\tidentity={}\tsha_bad={wrong}\tsha_unchecked={unchecked}\tbudget_fail={over}\tblocks={}\taccepted={}\trejected={rejected}\tunassessed={unassessed}\tx3={x3}\tpinned={pinned}",
         if matched { "ok" } else { "bad" },
         all.len(),
         accepted.len()
     ));
     println!("{}", out.join("\n"));
-    Ok(matched && wrong == 0)
+    Ok(matched && wrong == 0 && unchecked == 0)
 }

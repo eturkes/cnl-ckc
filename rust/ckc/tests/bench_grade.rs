@@ -48,6 +48,7 @@ struct Chunk {
     score: fn(i64, &str, &str) -> u64, // ns per (block, arm, query)
     memory: fn(i64, &str, &str) -> (u64, u64), // (peak RSS, HWM sum) per call
     output: fn(i64, &str, &str) -> Option<String>, // a planted output digest
+    expected: fn(&str, &str) -> bool, // the manifest carries an expected output per (instance, query)
     identity: fn(&str, &str, String) -> Option<String>, // a planted identities.tsv digest per path
     drop: fn(&str) -> bool,           // identities.tsv paths left out
     mirror: fn(&str) -> bool,         // identities.tsv paths recorded again under a second root
@@ -68,6 +69,7 @@ fn clean(name: &'static str) -> Chunk {
         score: |_, _, _| 1_500_000_000,
         memory: |_, _, _| (1_000_000_000, 1_200_000_000),
         output: |_, _, _| None,
+        expected: |_, _| true,
         identity: |_, _, _| None,
         drop: |_| false,
         mirror: |_| false,
@@ -223,10 +225,13 @@ fn grade(c: &Chunk) -> Graded {
             ));
             record(arm, &format!("{base}/queries/{file}"), bytes.as_bytes());
             let want = sha(format!("output {iid} {q}\n").as_bytes());
-            if *iid == TARGET {
-                manifest.push_str(&format!("union\t{iid}\t{q}\t-\t{want}\t0\t0\t-\n"));
+            let row = if *iid == TARGET {
+                format!("union\t{iid}\t{q}\t-\t{want}\t0\t0\t-\n")
             } else {
-                manifest.push_str(&format!("oracle\t{iid}\trecipe:{q}\t-\t{want}\t0\t0\t-\n"));
+                format!("oracle\t{iid}\trecipe:{q}\t-\t{want}\t0\t0\t-\n")
+            };
+            if (c.expected)(iid, q) {
+                manifest.push_str(&row);
             }
         }
         fs::create_dir_all(run.join(format!("arm-{arm}"))).unwrap();
@@ -378,10 +383,11 @@ fn clean_chunk_matches_identity_and_accepts_every_block() {
             "rejected",
             "unassessed",
             "budget_fail",
-            "sha_bad"
+            "sha_bad",
+            "sha_unchecked"
         ]
         .map(|k| &s[k][..]),
-        ["2", "2", "0", "0", "0", "0"]
+        ["2", "2", "0", "0", "0", "0", "0"]
     );
     assert_eq!(g.rows("kb")[0][2], format!("kb-{TARGET}"));
     // A block's interval = its first call's request write (closed sink − score) → its last sink.
@@ -635,6 +641,39 @@ fn a_wrong_output_digest_refuses() {
     assert_eq!(g.rc, 1);
     assert_eq!(g.summary()["sha_bad"], "1");
     assert_eq!(g.rows("call").iter().filter(|r| r[9] == "NO").count(), 1);
+}
+
+#[test]
+fn a_call_without_an_expected_output_refuses() {
+    // A manifest without the R baseline's q-one output: those calls read unchecked, never matched.
+    let mut c = clean("unchecked");
+    c.paired = true;
+    let g = grade(&c);
+    assert_eq!(g.rc, 0, "{}", g.stdout);
+    assert_eq!(g.summary()["sha_unchecked"], "0");
+    c.expected = |iid, q| !(iid == BASELINE && q == "q-one");
+    let g = grade(&c);
+    assert_eq!(g.rc, 1, "{}", g.stdout);
+    let s = g.summary();
+    assert_eq!(
+        (s["sha_bad"].as_str(), s["sha_unchecked"].as_str()),
+        ("0", "2")
+    );
+    let calls = g.rows("call");
+    assert_eq!(
+        calls
+            .iter()
+            .map(|r| (r[3], r[9]))
+            .filter(|&(arm, sha)| arm == "baseline" && sha == "none")
+            .count(),
+        2
+    );
+    assert!(
+        calls
+            .iter()
+            .filter(|r| r[3] == "target")
+            .all(|r| r[9] == "yes")
+    );
 }
 
 #[test]
