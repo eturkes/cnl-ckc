@@ -14,9 +14,13 @@ blocks=$4
 seed=$5
 ckc=$(readlink -f -- "$6")
 checker=$(readlink -f -- "$7")
-receipts="$root/bench/sb/receipts"
+# SB1_TA_RECEIPTS=none = census verdicts pending (the exploratory pilot): the server records
+# `receipt unchecked` + `kb_identity` in load.tsv; D11 joins admitted receipts by identity.
+receipts=${SB1_TA_RECEIPTS:-$root/bench/sb/receipts}
 producer="$root/prototype/sb1/producer.prolog"
-for path in "$instance/composition.tsv" "$receipts" "$ckc" "$checker" "$producer"; do
+required=("$instance/composition.tsv" "$ckc" "$checker" "$producer")
+[[ "$receipts" == none ]] || required+=("$receipts")
+for path in "${required[@]}"; do
   if [[ ! -e "$path" ]]; then
     printf 'sb-campaign-chunk: missing %s\n' "$path" >&2
     exit 2
