@@ -574,9 +574,15 @@ fn grade(args: &[String]) -> Result<bool> {
                 cell(h, "one_sided_95_upper")?
             ));
         }
+        // The harness names the query by its file (`q-one.pl`), the plan by its path: match stems.
         let seed = harness
             .iter()
-            .find(|h| h.get("query").map(String::as_str) == Some("q-one"))
+            .find(|h| {
+                h.get("query")
+                    .and_then(|q| Path::new(q).file_stem())
+                    .and_then(|s| s.to_str())
+                    == Some("q-one")
+            })
             .map(|h| number(h, "seed"))
             .transpose()?
             .flatten();

@@ -281,9 +281,10 @@ fn grade(c: &Chunk) -> Graded {
     }
     fs::write(run.join("loads.tsv"), loads).unwrap();
     if c.paired {
+        // The harness's spelling (`run/report.rs`): the query column holds the query file name.
         fs::write(
             run.join("ratio.tsv"),
-            format!("query\tpairs\tstatus\tratio_of_medians\tone_sided_95_upper\tbootstrap_resamples\tseed\nq-one\t{}\tcomplete\t2.000000000\t2.000000000\t10000\t{SEED}\n", c.blocks),
+            format!("query\tpairs\tstatus\tratio_of_medians\tone_sided_95_upper\tbootstrap_resamples\tseed\nq-one.pl\t{}\tcomplete\t2.000000000\t2.000000000\t10000\t{SEED}\n", c.blocks),
         )
         .unwrap();
     }
@@ -730,7 +731,7 @@ fn accepted_blocks_drop_a_rejected_pair_from_r() {
         r[1][1..],
         ["accepted", "pairs=1", "R=2.000000000", "UB95=2.000000000"]
     );
-    assert_eq!(g.rows("ratio_harness")[0][1..3], ["q-one", "pairs=3"]);
+    assert_eq!(g.rows("ratio_harness")[0][1..3], ["q-one.pl", "pairs=3"]);
     // The baseline arm's outputs grade against its recipe oracle rows.
     assert!(
         g.rows("call")
