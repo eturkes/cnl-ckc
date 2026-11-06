@@ -27,6 +27,9 @@ pub(super) const BUDGET_BYTES: u64 = 32_000_000_000;
 const FOREIGN_CPUS: f64 = 0.5;
 const GAP_US: i64 = 5_000_000;
 const PINNED: &str = "2-3,6-7";
+const HOST: &str = "0-1,4-5";
+// A preflight control = a 60 s burner; its marks also frame the launch of its unit.
+const CONTROL_US: std::ops::RangeInclusive<i64> = 60_000_000..=65_000_000;
 const QUIET_US: i64 = 150_000_000;
 const QUIET_WINDOWS: i64 = 4;
 // X3 fields beside the kernel (the record's second line): exact keys, since lscpu's
@@ -386,6 +389,19 @@ fn host_config(path: &Path) -> Result<Option<Vec<String>>> {
     }
     Ok(Some(fields))
 }
+// X3 over a state's two host records: same | DIFFERS | missing.
+fn x3_config(state: &Path) -> Result<&'static str> {
+    Ok(
+        match (
+            host_config(&state.join("host-before.txt"))?,
+            host_config(&state.join("host-after.txt"))?,
+        ) {
+            (Some(a), Some(b)) if a == b => "same",
+            (Some(_), Some(_)) => "DIFFERS",
+            _ => "missing",
+        },
+    )
+}
 // The host record's `key: value` line, if present.
 fn host_value(path: &Path, key: &str) -> Result<Option<String>> {
     if !path.is_file() {
@@ -395,6 +411,70 @@ fn host_value(path: &Path, key: &str) -> Result<Option<String>> {
         .lines()
         .find_map(|l| l.strip_prefix(key))
         .map(|v| v.trim().to_owned()))
+}
+// The applied protocol (contract sb § Carried rulings Affinity + Shield), from the state
+// `tools/sb-campaign-unit` writes: the unit on CPUs 2 3 6 7 inside sb1.slice's 2 3 6 7, the wrapper +
+// its sampler on 0 1 4 5, every shield target on 0 1 4 5 as the unit began (`shielded`) + as it
+// ended (`final`, its ExecStopPost's record before the restore), the restore run, the sleeper's
+// marker seen (`sleeper: none` = the second slot unheld). Each failed item, by name.
+pub(super) fn policy(state: &Path) -> Result<Vec<String>> {
+    let mut bad = Vec::new();
+    let mut expect = |file: &str, key: &str, want: &str, item: &str| -> Result<()> {
+        if host_value(&state.join(file), key)?.as_deref() != Some(want) {
+            bad.push(item.to_owned());
+        }
+        Ok(())
+    };
+    expect("unit-cpus.txt", "Cpus_allowed_list:", PINNED, "unit-cpus")?;
+    expect("host-before.txt", "slice-cpus:", PINNED, "slice-cpus")?;
+    expect(
+        "wrapper-cpus.txt",
+        "wrapper Cpus_allowed_list:",
+        HOST,
+        "wrapper-cpus",
+    )?;
+    expect(
+        "wrapper-cpus.txt",
+        "sampler Cpus_allowed_list:",
+        HOST,
+        "sampler-cpus",
+    )?;
+    let path = state.join("shield.txt");
+    let shield = if path.is_file() {
+        text(&path)?
+    } else {
+        String::new()
+    };
+    let records = |tag: &str| -> Vec<String> {
+        shield
+            .lines()
+            .filter_map(|l| {
+                l.split_once(&format!(" {tag}: "))
+                    .map(|(_, v)| v.to_owned())
+            })
+            .collect()
+    };
+    let shielded = |sets: Option<&String>| {
+        sets.is_some_and(|v| {
+            let mut pairs = v.split_whitespace().peekable();
+            pairs.peek().is_some()
+                && pairs.all(|p| p.split_once('=').is_some_and(|(_, c)| c == HOST))
+        })
+    };
+    if !shielded(records("shielded").first()) {
+        bad.push("shield-shielded".into());
+    }
+    if !shielded(records("final").last()) {
+        bad.push("shield-final".into());
+    }
+    if records("restored").is_empty() {
+        bad.push("shield-restored".into());
+    }
+    let sleeper = host_value(&state.join("sleeper.txt"), "sleeper:")?;
+    if !sleeper.is_some_and(|v| !v.is_empty() && v.bytes().all(|b| b.is_ascii_digit())) {
+        bad.push("sleeper".into());
+    }
+    Ok(bad)
 }
 fn closed_us(run: &Path, n: u64) -> Result<Option<i64>> {
     let path = run.join(format!("run-{n:06}/sink-complete.tsv"));
@@ -502,14 +582,7 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
     }
 
     let before = state.join("host-before.txt");
-    let x3 = match (
-        host_config(&before)?,
-        host_config(&state.join("host-after.txt"))?,
-    ) {
-        (Some(a), Some(b)) if a == b => "same",
-        (Some(_), Some(_)) => "DIFFERS",
-        _ => "missing",
-    };
+    let x3 = x3_config(state)?;
     out.push(format!("x3_host_config\t{x3}"));
     let cpus = host_value(&state.join("unit-cpus.txt"), "Cpus_allowed_list:")?;
     let pinned = if cpus.as_deref() == Some(PINNED) {
@@ -778,11 +851,16 @@ fn clock_ticks(before: &Path) -> Result<f64> {
 }
 
 // Contract sb § Carried rulings (preflight, its rule fixed before the confirmation): the marks of
-// `preflight.tsv` (`<window>-start|end`, epoch µs) frame three synthetic controls — a burner inside
-// the sampled unit on CPU 2 (campaign CPUs 0.9–1.1, pinned foreign ≤ 0.2), one outside it on CPU 3
-// (pinned foreign 0.8–1.3), one on CPU 0 (pinned foreign ≤ 0.2, host foreign ≥ 0.8) — + the quiet
-// stretch, cut into consecutive 150 s windows (≥ 4), each passing X1 (pinned foreign ≤ 0.5); every
-// window passes X4 (gap ≤ 5 s). rc 0 = go, rc 1 = hold.
+// `preflight.tsv` (`<window>-start|end`, epoch µs; `<control>-usage_us` = a wrapper burner's own
+// cgroup CPU µs, `NA` = its unit failed) frame three synthetic controls of 60–65 s each, in order —
+// a burner inside the sampled unit on CPU 2 (the unit's CPU time 0.9–1.1 CPUs of its window, pinned
+// foreign ≤ 0.2), one loop outside it on CPU 3 (own time 0.9–1.1, pinned foreign within 0.2 of it),
+// three loops on CPUs 0 1 4 (own time 2.7–3.3, pinned foreign ≤ 0.2, host foreign ≥ own − 0.2: the
+// four host CPUs hold ≤ 4 CPUs of work, so a host column blind to the loops reads ≤ 4.2 − own,
+// whatever the background) — + the quiet stretch, cut into consecutive 150 s windows (≥ 4), each
+// passing X1 (pinned foreign ≤ 0.5); every window passes X4 (gap ≤ 5 s); X3 same + the policy
+// applied. An own rate over its window = did the burner run its 60 s; beside a sampled rate it
+// divides by the samples' bracket, which holds the burner's whole life. rc 0 = go, rc 1 = hold.
 fn preflight_check(args: &[String]) -> Result<bool> {
     let [state] = args else {
         return Err(PREFLIGHT_HELP.into());
@@ -790,9 +868,14 @@ fn preflight_check(args: &[String]) -> Result<bool> {
     let state = Path::new(state);
     let hz = clock_ticks(&state.join("host-before.txt"))?;
     let rows = samples(&state.join("host-samples.tsv"))?.ok_or("no host-samples.tsv")?;
-    let mut marks = HashMap::new();
+    let (mut marks, mut usage) = (HashMap::new(), HashMap::new());
     for line in text(&state.join("preflight.tsv"))?.lines() {
-        if let Some((name, at)) = line.split_once('\t') {
+        let Some((name, at)) = line.split_once('\t') else {
+            continue;
+        };
+        if let Some(control) = name.strip_suffix("-usage_us") {
+            usage.insert(control.to_owned(), at.parse::<u64>().ok());
+        } else {
             let at: i64 = at.parse().map_err(|_| format!("preflight.tsv: {line}"))?;
             marks.insert(name.to_owned(), at);
         }
@@ -807,43 +890,72 @@ fn preflight_check(args: &[String]) -> Result<bool> {
         Ok((edge("start")?, edge("end")?))
     };
     let mut windows = Vec::new();
-    for name in ["campaign-control", "pinned-control", "host-control"] {
+    for name in [
+        "campaign-control",
+        "pinned-control",
+        "host-control",
+        "quiet",
+    ] {
         let (s, e) = span(name)?;
         windows.push((name.to_owned(), s, e));
     }
-    let (quiet, end) = span("quiet")?;
+    let ordered = windows.iter().all(|w| w.1 < w.2) && windows.windows(2).all(|p| p[0].2 <= p[1].1);
+    let (_, quiet, end) = windows.pop().ok_or("preflight.tsv: no quiet")?;
     let count = (end - quiet) / QUIET_US;
     for k in 0..count {
         let s = quiet + k * QUIET_US;
         windows.push((format!("quiet-{}", k + 1), s, s + QUIET_US));
     }
     let mut out = vec![
-        "#window\tname\tstart_us\tend_us\tcampaign_cpus\tpinned_foreign_cpus\thost_foreign_cpus\tmax_gap_s\tverdict"
+        "#window\tname\tstart_us\tend_us\tcampaign_cpus\tpinned_foreign_cpus\thost_foreign_cpus\town_cpus\tmax_gap_s\tverdict"
             .to_owned(),
     ];
-    let mut go = count >= QUIET_WINDOWS;
+    let mut go = count >= QUIET_WINDOWS && ordered;
     for (name, s, e) in &windows {
         let b = bracket(&rows, *s, *e).ok_or("host-samples.tsv: no samples")?;
         let pinned = b
             .pinned(hz)
             .ok_or("host-samples.tsv: no pinned_busy_jiffies")?;
         let (campaign, host) = (b.campaign(), b.host(hz));
+        // The burner's CPU-seconds: the sampled unit's own cgroup time for campaign-control, the
+        // wrapper burner's own record for the other two.
+        let own = match name.as_str() {
+            "campaign-control" => Some((b.hi.cpu - b.lo.cpu) as f64 / 1e6),
+            name => usage.get(name).copied().flatten().map(|u| u as f64 / 1e6),
+        };
+        let window = (e - s) as f64 / 1e6;
+        let ran = |lo: f64, hi: f64| {
+            CONTROL_US.contains(&(e - s)) && own.is_some_and(|o| (lo..=hi).contains(&(o / window)))
+        };
+        let sampled = own.map(|o| o / b.span());
         let read = match name.as_str() {
-            "campaign-control" => (0.9..=1.1).contains(&campaign) && pinned <= 0.2,
-            "pinned-control" => (0.8..=1.3).contains(&pinned),
-            "host-control" => pinned <= 0.2 && host >= 0.8,
+            "campaign-control" => ran(0.9, 1.1) && pinned <= 0.2,
+            "pinned-control" => ran(0.9, 1.1) && sampled.is_some_and(|o| (pinned - o).abs() <= 0.2),
+            "host-control" => {
+                ran(2.7, 3.3) && pinned <= 0.2 && sampled.is_some_and(|o| host >= o - 0.2)
+            }
             _ => pinned <= FOREIGN_CPUS,
         };
         let ok = read && b.gap <= GAP_US;
         go &= ok;
         out.push(format!(
-            "window\t{name}\t{s}\t{e}\t{campaign:.3}\t{pinned:.3}\t{host:.3}\t{:.2}\t{}",
+            "window\t{name}\t{s}\t{e}\t{campaign:.3}\t{pinned:.3}\t{host:.3}\t{}\t{:.2}\t{}",
+            own.map_or("NA".into(), |o| format!("{:.3}", o / window)),
             b.gap as f64 / 1e6,
             if ok { "ok" } else { "bad" }
         ));
     }
+    let x3 = x3_config(state)?;
+    let policy = policy(state)?;
+    go &= x3 == "same" && policy.is_empty();
     out.push(format!(
-        "preflight\tquiet_windows={count}\tverdict={}",
+        "preflight\tquiet_windows={count}\torder={}\tx3={x3}\tpolicy={}\tverdict={}",
+        if ordered { "ok" } else { "bad" },
+        if policy.is_empty() {
+            "ok".to_owned()
+        } else {
+            policy.join("+")
+        },
         if go { "go" } else { "hold" }
     ));
     println!("{}", out.join("\n"));

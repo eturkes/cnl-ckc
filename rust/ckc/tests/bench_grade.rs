@@ -139,7 +139,7 @@ fn host(governor: &str, mhz: u32, full: bool) -> String {
         "2026-11-05T00:00:00Z\n6.6.0-test\nCPU(s):                                  8\nModel name:                              Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\nCPU(s) scaling MHz:                      {mhz}%\ngovernors:  8 {governor} \n"
     );
     if full {
-        text.push_str("online: 0-7\nslice-cpus: NA\nclk_tck: 100\n");
+        text.push_str("online: 0-7\nslice-cpus: 2-3,6-7\nclk_tck: 100\n");
     }
     text
 }
@@ -1214,32 +1214,64 @@ fn the_memory_bound_grades_each_call_and_its_absence_is_counted() {
 }
 
 // Contract sb § Carried rulings (preflight): `ckc bench preflight` over synthetic samples. Marks
-// (seconds after P0): campaign-control 20–80, pinned-control 100–160, host-control 180–240,
-// quiet 260 → 260 + quiet; samples every second, USER_HZ 100.
+// (seconds after P0): campaign-control 20–80, pinned-control 100–160, host-control 180–240 (each
+// burner's own CPU time recorded beside its window), quiet 260 → 260 + quiet; samples every second,
+// USER_HZ 100; the state files of an applied protocol (unit, wrapper + sampler CPUs, the shield's
+// three records, the sleeper's marker) + an unchanged host record after.
 const P0: i64 = 1_900_000_000_000_000;
 struct Preflight {
     name: &'static str,
-    campaign: f64,         // the sampled unit's CPUs during campaign-control
-    misattributed: bool,   // its burner runs on a pinned CPU outside the unit's accounting
-    pinned_control: f64,   // foreign CPUs on 2 3 6 7 during pinned-control
-    host_control: f64,     // foreign CPUs on the other CPUs during host-control
+    spans: [(i64, i64); 3],  // the three control windows (s after P0)
+    campaign: f64,           // the sampled unit's CPUs during campaign-control
+    misattributed: bool,     // its burner runs on a pinned CPU outside the unit's accounting
+    pinned_control: f64,     // foreign CPUs on 2 3 6 7 during pinned-control
+    pinned_own: Option<f64>, // its burner's own CPUs (None = the `NA` of a failed unit)
+    host_control: f64,       // foreign CPUs on the other CPUs during host-control
+    host_own: Option<f64>,
     background: f64,       // the shielded jobs' CPUs off the pinned set, throughout
     quiet: fn(i64) -> f64, // foreign CPUs on 2 3 6 7 at second s of the quiet stretch
     quiet_s: i64,
     pinned_column: bool,
+    after: Option<&'static str>, // the governor of the host record after (None = no record)
+    files: Vec<(&'static str, &'static str)>, // state files replaced after the calm ones
 }
 fn calm(name: &'static str) -> Preflight {
     Preflight {
         name,
+        spans: [(20, 80), (100, 160), (180, 240)],
         campaign: 1.0,
         misattributed: false,
         pinned_control: 1.0,
-        host_control: 1.0,
+        pinned_own: Some(1.0),
+        host_control: 3.0,
+        host_own: Some(3.0),
         background: 0.85,
         quiet: |_| 0.1,
         quiet_s: 600,
         pinned_column: true,
+        after: Some("performance"),
+        files: Vec::new(),
     }
+}
+const SHIELDED: &str = "init.scope=0-1,4-5 system.slice=0-1,4-5 user.slice=0-1,4-5 ";
+fn policy_files() -> Vec<(&'static str, String)> {
+    vec![
+        (
+            "unit-cpus.txt",
+            "CPUAffinity=2-3 6-7\nMainPID=4242\nCpus_allowed_list:\t2-3,6-7\n".into(),
+        ),
+        (
+            "wrapper-cpus.txt",
+            "wrapper Cpus_allowed_list:\t0-1,4-5\nsampler Cpus_allowed_list:\t0-1,4-5\n".into(),
+        ),
+        (
+            "shield.txt",
+            format!(
+                "2026-11-06T00:00:00Z shielded: {SHIELDED}\n2026-11-06T00:15:00Z final: {SHIELDED}\n2026-11-06T00:15:01Z restored: init.scope=0-7 system.slice=0-7 user.slice=0-7 \n"
+            ),
+        ),
+        ("sleeper.txt", "sleeper: 1900000000\n".into()),
+    ]
 }
 fn preflight(p: &Preflight) -> Graded {
     let dir = root().join(format!(
@@ -1252,17 +1284,34 @@ fn preflight(p: &Preflight) -> Graded {
     let fixture = Fixture { dir: dir.clone() };
     let at = |s: i64| P0 + s * 1_000_000;
     let quiet_end = 260 + p.quiet_s;
+    let [campaign_span, pinned_span, host_span] = p.spans;
     let mut marks = String::new();
-    for (name, s, e) in [
-        ("campaign-control", 20, 80),
-        ("pinned-control", 100, 160),
-        ("host-control", 180, 240),
-        ("quiet", 260, quiet_end),
+    for (name, (s, e), own) in [
+        ("campaign-control", campaign_span, None),
+        ("pinned-control", pinned_span, Some(p.pinned_own)),
+        ("host-control", host_span, Some(p.host_own)),
+        ("quiet", (260, quiet_end), None),
     ] {
         marks.push_str(&format!("{name}-start\t{}\n{name}-end\t{}\n", at(s), at(e)));
+        if let Some(own) = own {
+            let us = own.map_or("NA".into(), |o: f64| {
+                ((o * (e - s) as f64) * 1e6).round().to_string()
+            });
+            marks.push_str(&format!("{name}-usage_us\t{us}\n"));
+        }
     }
     fs::write(dir.join("preflight.tsv"), marks).unwrap();
     fs::write(dir.join("host-before.txt"), host("performance", 77, true)).unwrap();
+    if let Some(governor) = p.after {
+        fs::write(dir.join("host-after.txt"), host(governor, 81, true)).unwrap();
+    }
+    for (file, body) in policy_files() {
+        fs::write(dir.join(file), body).unwrap();
+    }
+    for (file, body) in &p.files {
+        fs::write(dir.join(file), body).unwrap();
+    }
+    let within = |(s, e): (i64, i64), t: i64| (s..e).contains(&t);
     let head = if p.pinned_column {
         "\tpinned_busy_jiffies"
     } else {
@@ -1283,7 +1332,7 @@ fn preflight(p: &Preflight) -> Graded {
             at(s)
         ));
         // Second s → s + 1.
-        let burning = (20..80).contains(&s);
+        let burning = within(campaign_span, s);
         let own = if burning && !p.misattributed {
             p.campaign
         } else {
@@ -1291,7 +1340,7 @@ fn preflight(p: &Preflight) -> Graded {
         };
         let foreign = if burning && p.misattributed {
             p.campaign
-        } else if (100..160).contains(&s) {
+        } else if within(pinned_span, s) {
             p.pinned_control
         } else if (260..quiet_end).contains(&s) {
             (p.quiet)(s - 260)
@@ -1299,7 +1348,7 @@ fn preflight(p: &Preflight) -> Graded {
             0.0
         };
         let other = p.background
-            + if (180..240).contains(&s) {
+            + if within(host_span, s) {
                 p.host_control
             } else {
                 0.0
@@ -1321,11 +1370,28 @@ fn preflight(p: &Preflight) -> Graded {
         _fixture: fixture,
     }
 }
+// (window, verdict): the verdict = each row's last field.
 fn windows(g: &Graded) -> Vec<(String, String)> {
     g.rows("window")
         .iter()
-        .map(|r| (r[1].to_owned(), r[8].to_owned()))
+        .map(|r| (r[1].to_owned(), r[r.len() - 1].to_owned()))
         .collect()
+}
+fn verdict_line(g: &Graded) -> Vec<String> {
+    g.rows("preflight")
+        .first()
+        .map(|r| r[1..].iter().map(|f| (*f).to_owned()).collect())
+        .unwrap_or_default()
+}
+fn verdict_with(quiet: usize, order: &str, x3: &str, policy: &str, verdict: &str) -> Vec<String> {
+    [
+        format!("quiet_windows={quiet}"),
+        format!("order={order}"),
+        format!("x3={x3}"),
+        format!("policy={policy}"),
+        format!("verdict={verdict}"),
+    ]
+    .into()
 }
 fn verdicts(bad: &[&str], quiet: usize) -> Vec<(String, String)> {
     ["campaign-control", "pinned-control", "host-control"]
@@ -1342,48 +1408,136 @@ fn verdicts(bad: &[&str], quiet: usize) -> Vec<(String, String)> {
         })
         .collect()
 }
+// A plant's (name, rc, window verdicts, verdict line); a test compares every plant's reading at once,
+// so a red run shows how the binary read each one.
+type Reading = (String, i32, Vec<(String, String)>, Vec<String>);
+fn reading(p: &Preflight) -> Reading {
+    let g = preflight(p);
+    (p.name.to_owned(), g.rc, windows(&g), verdict_line(&g))
+}
+fn held(p: &Preflight, bad: &[&str], quiet: usize, line: Vec<String>) -> Reading {
+    (p.name.to_owned(), 1, verdicts(bad, quiet), line)
+}
 
 #[test]
 fn a_calm_preflight_reads_its_controls_and_goes() {
     let g = preflight(&calm("calm"));
     assert_eq!(g.rc, 0, "{}", g.stdout);
     assert_eq!(windows(&g), verdicts(&[], 4));
-    assert_eq!(
-        g.rows("preflight")[0][1..],
-        ["quiet_windows=4", "verdict=go"]
-    );
+    assert_eq!(verdict_line(&g), verdict_with(4, "ok", "same", "ok", "go"));
+    let own: Vec<&str> = g.rows("window")[..3].iter().map(|r| r[7]).collect();
+    assert_eq!(own, ["1.000", "1.000", "3.000"]);
 }
 
 // Each control's planted failure (an accounting that misses foreign work on the pinned CPUs, one
-// that books the unit's own burner as foreign, a host-only burner the host column misses) and a
-// busy or short quiet stretch hold the campaign; a sampler without the pinned column is no input.
+// that books the unit's own burner as foreign, host loops the host column misses while the shielded
+// jobs keep their 0.85 CPU, a host burner that never ran under that background, a pinned burner
+// without its own record or at half a CPU) and a busy or short quiet stretch hold the campaign; a
+// sampler without the pinned column is no input.
 #[test]
 fn preflight_plants_hold() {
+    let hold = |quiet| verdict_with(quiet, "ok", "same", "ok", "hold");
+    let mut plants: Vec<(Preflight, &[&str], usize)> = Vec::new();
     let mut p = calm("pinned-blind");
     p.pinned_control = 0.0;
-    let g = preflight(&p);
-    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["pinned-control"], 4)));
+    plants.push((p, &["pinned-control"], 4));
     let mut p = calm("misattributed");
     p.misattributed = true;
-    let g = preflight(&p);
-    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["campaign-control"], 4)));
+    plants.push((p, &["campaign-control"], 4));
     let mut p = calm("host-blind");
-    (p.host_control, p.background) = (0.0, 0.0);
-    let g = preflight(&p);
-    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["host-control"], 4)));
+    p.host_control = 0.0;
+    plants.push((p, &["host-control"], 4));
+    let mut p = calm("no-host-burner");
+    (p.host_control, p.host_own) = (0.0, None);
+    plants.push((p, &["host-control"], 4));
+    let mut p = calm("pinned-no-record");
+    p.pinned_own = None;
+    plants.push((p, &["pinned-control"], 4));
+    let mut p = calm("pinned-half");
+    (p.pinned_control, p.pinned_own) = (0.5, Some(0.5));
+    plants.push((p, &["pinned-control"], 4));
     let mut p = calm("busy-quiet");
     // 0.6 CPU through the third window alone (quiet seconds 300–449).
     p.quiet = |s| if (300..450).contains(&s) { 0.6 } else { 0.1 };
-    let g = preflight(&p);
-    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["quiet-3"], 4)));
+    plants.push((p, &["quiet-3"], 4));
     let mut p = calm("short-quiet");
     p.quiet_s = 450;
-    let g = preflight(&p);
-    assert_eq!((g.rc, windows(&g)), (1, verdicts(&[], 3)));
-    assert_eq!(g.rows("preflight")[0][2], "verdict=hold");
+    plants.push((p, &[], 3));
+    let got: Vec<Reading> = plants.iter().map(|(p, _, _)| reading(p)).collect();
+    let want: Vec<Reading> = plants
+        .iter()
+        .map(|(p, bad, quiet)| held(p, bad, *quiet, hold(*quiet)))
+        .collect();
+    assert_eq!(got, want);
     let mut p = calm("unpinned");
     p.pinned_column = false;
     assert_eq!(preflight(&p).rc, 2);
+}
+
+// The protocol around the controls: 1 s controls (each burner's rate intact), a host control that
+// overlaps the pinned one, a governor changed by the end, no host record after, and each policy item
+// unapplied hold.
+#[test]
+fn preflight_protocol_plants_hold() {
+    let mut plants: Vec<(Preflight, &[&str], Vec<String>)> = Vec::new();
+    let mut p = calm("short-controls");
+    p.spans = [(20, 21), (100, 101), (180, 181)];
+    let three: &[&str] = &["campaign-control", "pinned-control", "host-control"];
+    plants.push((p, three, verdict_with(4, "ok", "same", "ok", "hold")));
+    let mut p = calm("overlap");
+    p.spans[2] = (150, 210);
+    plants.push((p, &[], verdict_with(4, "bad", "same", "ok", "hold")));
+    let mut p = calm("governor");
+    p.after = Some("powersave");
+    plants.push((p, &[], verdict_with(4, "ok", "DIFFERS", "ok", "hold")));
+    let mut p = calm("no-after");
+    p.after = None;
+    plants.push((p, &[], verdict_with(4, "ok", "missing", "ok", "hold")));
+    let restored =
+        "2026-11-06T00:15:01Z restored: init.scope=0-7 system.slice=0-7 user.slice=0-7 \n";
+    for (name, file, body, item) in [
+        ("sleeper-none", "sleeper.txt", "sleeper: none\n", "sleeper"),
+        (
+            "unit-unpinned",
+            "unit-cpus.txt",
+            "Cpus_allowed_list:\t0-7\n",
+            "unit-cpus",
+        ),
+        (
+            "wrapper-unpinned",
+            "wrapper-cpus.txt",
+            "wrapper Cpus_allowed_list:\t0-7\nsampler Cpus_allowed_list:\t0-1,4-5\n",
+            "wrapper-cpus",
+        ),
+        (
+            "never-shielded",
+            "shield.txt",
+            restored,
+            "shield-shielded+shield-final",
+        ),
+        (
+            "shield-lifted",
+            "shield.txt",
+            "x shielded: user.slice=0-1,4-5 \nx final: user.slice=0-7 \nx restored: user.slice=0-7 \n",
+            "shield-final",
+        ),
+        (
+            "no-restore",
+            "shield.txt",
+            "x shielded: user.slice=0-1,4-5 \nx final: user.slice=0-1,4-5 \n",
+            "shield-restored",
+        ),
+    ] {
+        let mut p = calm(name);
+        p.files = vec![(file, body)];
+        plants.push((p, &[], verdict_with(4, "ok", "same", item, "hold")));
+    }
+    let got: Vec<Reading> = plants.iter().map(|(p, _, _)| reading(p)).collect();
+    let want: Vec<Reading> = plants
+        .iter()
+        .map(|(p, bad, line)| held(p, bad, 4, line.clone()))
+        .collect();
+    assert_eq!(got, want);
 }
 
 // A call that ends short of verified printed no output: its digest reads NA and it fails the
