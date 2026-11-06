@@ -964,6 +964,11 @@ fn warm_block_spacing_starts_each_block_at_its_offset() {
         assert_eq!(number(row, "planned_ns"), base + 400_000_000 * k as u64);
         assert!(number(row, "started_ns") >= number(row, "planned_ns"));
     }
+    // The decision tool checks each attempt's spacing + replayed blocks against the plan.
+    let settings = s.result("settings.tsv");
+    for line in ["spacing_ns\t400000000", "only_blocks\t"] {
+        assert!(settings.lines().any(|l| l == line), "{line}: {settings}");
+    }
 }
 
 // Contract sb P6: a sparse replay draws the full plan (one arm-order draw per block from block 1)
@@ -992,6 +997,14 @@ fn only_blocks_replays_the_full_plans_rows() {
         ));
         let sparse_text = s.result("plan.tsv");
         assert_eq!(rows(&sparse_text), keep, "seed {seed}");
+        let listed = |settings: &str, want: &str| {
+            settings
+                .lines()
+                .any(|l| l.strip_prefix("only_blocks\t") == Some(want))
+        };
+        assert!(listed(&s.result("settings.tsv"), "2,5"));
+        let full_settings = fs::read_to_string(s.0.join("full/settings.tsv")).unwrap();
+        assert!(listed(&full_settings, ""));
         let runs_text = s.result("runs.tsv");
         assert_eq!(
             rows(&runs_text)

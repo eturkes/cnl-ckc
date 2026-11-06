@@ -103,6 +103,8 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         ("checker_rc_scope", "checker-or-combined-orchestrator;producer-rc-empty-in-orchestrated-mode".to_owned()),
         ("query", config.query.clone()), ("blocks", config.blocks.to_string()),
         ("seed", config.seed.to_string()), ("random", "splitmix64;unbiased-paired-order".to_owned()),
+        ("spacing_ns", ns(config.spacing).to_string()),
+        ("only_blocks", config.only.iter().flatten().map(u64::to_string).collect::<Vec<_>>().join(",")),
         ("deadline_ns", ns(config.deadline).to_string()), ("sample_period_ns", ns(config.period).to_string()),
         ("memory_bytes", config.memory_bytes.to_string()), ("size_bytes", config.size_bytes.to_string()),
         ("clock_ticks_per_second", ticks.to_string()),
@@ -130,7 +132,7 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         ("caps", "one-invocation-deadline;sampled-process-tree-RSS;polled-total-product-bytes".to_owned()),
         ("resource_limits", "producer-enforces-SWI-table+stack;commands+identity-files-pin-the-settings".to_owned()),
         ("affinity_threads", "inherited-from-reference-protocol;recorded-in-host.tsv".to_owned()),
-        ("exclusions", "none;every-run-kept;interference-rerun-is-a-whole-block-new-campaign".to_owned()),
+        ("exclusions", "none-in-the-harness;every-run-kept;X1-X4-by-ckc-bench-grade;a-replacement-replays-the-full-plan-for-only_blocks".to_owned()),
         ("claim", "benchmark-outcome-only;not-the-public-verified-patient-answer-claim".to_owned()),
     ] { pair(&mut settings, key, value); }
     write(&config.out.join("settings.tsv"), settings)?;

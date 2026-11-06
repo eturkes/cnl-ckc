@@ -5,9 +5,11 @@
 // manifest's union (×100) or recipe oracle row, the 300 s + 32 GB budget per call, X1–X4 per block,
 // R over every block + over the accepted ones. rc 1 = an identity mismatch, a wrong output or a call
 // whose (instance, query) the manifest gives no expected output (`sha_unchecked`: its correctness is
-// unestablished) — the chunk is no evidence; rc 2 = usage or an unreadable input.
+// unestablished) — the chunk is no evidence; rc 2 = usage or an unreadable input. A call that ended
+// short of verified printed no output: its digest reads `NA` (a budget fail, never a wrong output).
 // `preflight` grades the host-only preflight of the same contract section: its synthetic controls
-// read as planted + every 150 s quiet window passes X1 + X4 (rc 0 = go, 1 = hold).
+// read as planted + every 150 s quiet window passes X1 + X4 (rc 0 = go, 1 = hold). `assess` = one
+// chunk's grade as data, shared with `ckc bench decide`.
 use super::generate::identity_frame;
 use super::stats::{ratio, stats};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -15,13 +17,13 @@ use std::fs;
 use std::path::Path;
 use std::process::ExitCode;
 
-type Result<T> = std::result::Result<T, String>;
-type Row = BTreeMap<String, String>;
+pub(super) type Result<T> = std::result::Result<T, String>;
+pub(super) type Row = BTreeMap<String, String>;
 
 const HELP: &str = "usage: ckc bench grade <run-dir> <state-dir> <frozen-root> <run-manifest>";
 const PREFLIGHT_HELP: &str = "usage: ckc bench preflight <state-dir>";
 const BUDGET_NS: u64 = 300_000_000_000;
-const BUDGET_BYTES: u64 = 32_000_000_000;
+pub(super) const BUDGET_BYTES: u64 = 32_000_000_000;
 const FOREIGN_CPUS: f64 = 0.5;
 const GAP_US: i64 = 5_000_000;
 const PINNED: &str = "2-3,6-7";
@@ -43,7 +45,7 @@ pub fn run(args: &[String]) -> ExitCode {
 pub fn preflight(args: &[String]) -> ExitCode {
     exit("preflight", preflight_check(args))
 }
-fn exit(command: &str, verdict: Result<bool>) -> ExitCode {
+pub(super) fn exit(command: &str, verdict: Result<bool>) -> ExitCode {
     match verdict {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::from(1),
@@ -54,10 +56,10 @@ fn exit(command: &str, verdict: Result<bool>) -> ExitCode {
     }
 }
 
-fn text(path: &Path) -> Result<String> {
+pub(super) fn text(path: &Path) -> Result<String> {
     fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))
 }
-fn table(path: &Path) -> Result<Vec<Row>> {
+pub(super) fn table(path: &Path) -> Result<Vec<Row>> {
     let text = text(path)?;
     let mut lines = text.lines();
     let head: Vec<&str> = lines
@@ -75,13 +77,13 @@ fn table(path: &Path) -> Result<Vec<Row>> {
         })
         .collect())
 }
-fn cell<'a>(row: &'a Row, key: &str) -> Result<&'a str> {
+pub(super) fn cell<'a>(row: &'a Row, key: &str) -> Result<&'a str> {
     row.get(key)
         .map(String::as_str)
         .ok_or_else(|| format!("missing column {key}"))
 }
 // An empty cell = not measured (an indeterminate call has no score).
-fn number(row: &Row, key: &str) -> Result<Option<u64>> {
+pub(super) fn number(row: &Row, key: &str) -> Result<Option<u64>> {
     cell(row, key)?;
     optional(row, key)
 }
@@ -97,14 +99,14 @@ fn optional(row: &Row, key: &str) -> Result<Option<u64>> {
 }
 
 #[derive(Default)]
-struct Manifest {
+pub(super) struct Manifest {
     composition: HashMap<String, String>,
     // instance → (path, sha256, bytes) per frozen query file
     queries: HashMap<String, Vec<(String, String, String)>>,
     // (instance, query) → expected output sha256; a union row wins over a recipe oracle row
     outputs: HashMap<(String, String), String>,
 }
-fn manifest(path: &Path) -> Result<Manifest> {
+pub(super) fn manifest(path: &Path) -> Result<Manifest> {
     let mut m = Manifest::default();
     let mut oracle = Vec::new();
     for line in text(path)?.lines() {
@@ -410,12 +412,43 @@ fn closed_us(run: &Path, n: u64) -> Result<Option<i64>> {
     Ok(Some(ns / 1000))
 }
 
+pub(super) struct Call {
+    pub block: u64,
+    pub arm: String,
+    pub query: String,
+    pub outcome: String,
+    pub scored: Option<u64>,
+    // Verified within 300 s, sampled peak + bound (or the HWM-sum fallback) within 32 GB.
+    pub budget: bool,
+    pub bound: Option<u64>,
+}
+// One chunk's grade: the report `ckc bench grade` prints + the facts `ckc bench decide` selects on.
+pub(super) struct Assessment {
+    pub report: Vec<String>,
+    pub rc: String,
+    pub plan: Vec<Row>,
+    pub matched: bool,
+    // arm → its server's knowledge identity (`arm-<arm>/load.tsv`)
+    pub kb: BTreeMap<String, String>,
+    pub loads: Vec<Row>,
+    pub pinned: bool,
+    pub calls: Vec<Call>,
+    // block → accepted | rejected | unassessed
+    pub verdicts: BTreeMap<u64, String>,
+    pub wrong: usize,
+    pub unchecked: usize,
+    pub unbounded: usize,
+}
 fn grade(args: &[String]) -> Result<bool> {
     let [run, state, frozen, manifest_path] = args else {
         return Err(HELP.into());
     };
-    let (run, state, frozen) = (Path::new(run), Path::new(state), Path::new(frozen));
     let m = manifest(Path::new(manifest_path))?;
+    let a = assess(Path::new(run), Path::new(state), Path::new(frozen), &m)?;
+    println!("{}", a.report.join("\n"));
+    Ok(a.matched && a.wrong == 0 && a.unchecked == 0)
+}
+pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> Result<Assessment> {
     let mut out = Vec::new();
     let rc = match fs::read_to_string(state.join("rc")) {
         Ok(rc) => rc.trim().to_owned(),
@@ -443,9 +476,10 @@ fn grade(args: &[String]) -> Result<bool> {
     }
     let ids = identities(run)?;
     let mut matched = true;
+    let mut kb = BTreeMap::new();
     let empty = HashMap::new();
     for (arm, iid) in &arms {
-        let (pass, detail) = identity(ids.get(arm).unwrap_or(&empty), &frozen.join(iid), iid, &m)?;
+        let (pass, detail) = identity(ids.get(arm).unwrap_or(&empty), &frozen.join(iid), iid, m)?;
         matched &= pass;
         out.push(format!("identity\t{arm}\t{iid}\t{detail}"));
         let load = run.join(format!("arm-{arm}/load.tsv"));
@@ -461,6 +495,9 @@ fn grade(args: &[String]) -> Result<bool> {
                 get("kb_identity"),
                 get("receipt")
             ));
+            if let Some(identity) = rows.get("kb_identity") {
+                kb.insert(arm.clone(), identity.clone());
+            }
         }
     }
 
@@ -496,6 +533,7 @@ fn grade(args: &[String]) -> Result<bool> {
     let mut blocks: BTreeMap<u64, (i64, i64)> = BTreeMap::new();
     let mut unsunk: BTreeMap<u64, usize> = BTreeMap::new();
     let mut scored: BTreeMap<(u64, String, String), u64> = BTreeMap::new();
+    let mut calls = Vec::new();
     for row in &runs {
         let n = number(row, "run")?.ok_or("runs.tsv run")?;
         let block = number(row, "block")?.ok_or("runs.tsv block")?;
@@ -506,11 +544,13 @@ fn grade(args: &[String]) -> Result<bool> {
         let peak = number(row, "peak_rss_bytes")?.unwrap_or(0);
         let hwm = number(row, "observed_hwm_sum_bytes")?.unwrap_or(0);
         let iid = arms.get(arm).ok_or("runs.tsv arm outside plan.tsv")?;
+        let verified = outcome == "verified";
         let sha = match m.outputs.get(&(iid.clone(), query.clone())) {
             None => {
                 unchecked += 1;
                 "none"
             }
+            Some(_) if !verified => "NA",
             Some(want) if want == cell(row, "output_sha256")? => "yes",
             Some(_) => {
                 wrong += 1;
@@ -518,13 +558,14 @@ fn grade(args: &[String]) -> Result<bool> {
             }
         };
         // The harness's bound (a sum of per-process maxima, the producer's exact wait4 peak
-        // included) ≥ the simultaneous peak; a run without one falls back to the observed HWM
-        // sum, which bounds no process the sampler missed (counted: `memory_unbounded`).
+        // included) ≥ the simultaneous peak; a verified run without one falls back to the
+        // observed HWM sum, which bounds no process the sampler missed (counted:
+        // `memory_unbounded`).
         let bound = optional(row, "memory_bound_bytes")?;
         let basis = if bound.is_some() {
             "bound"
         } else {
-            unbounded += 1;
+            unbounded += usize::from(verified);
             "hwm-sum"
         };
         let memory = if peak > BUDGET_BYTES {
@@ -534,13 +575,21 @@ fn grade(args: &[String]) -> Result<bool> {
         } else {
             "ok"
         };
-        let budget =
-            if outcome == "verified" && score.is_some_and(|s| s <= BUDGET_NS) && memory == "ok" {
-                "ok".to_owned()
-            } else {
-                over += 1;
-                format!("fail:{memory}")
-            };
+        let budget = if verified && score.is_some_and(|s| s <= BUDGET_NS) && memory == "ok" {
+            "ok".to_owned()
+        } else {
+            over += 1;
+            format!("fail:{memory}")
+        };
+        calls.push(Call {
+            block,
+            arm: arm.into(),
+            query: query.clone(),
+            outcome: outcome.into(),
+            scored: score,
+            budget: budget == "ok",
+            bound,
+        });
         out.push(format!(
             "call\t{n}\t{block}\t{arm}\t{query}\t{outcome}\t{}\t{:.2}\t{:.2}\t{sha}\t{budget}\t{basis}\t{}",
             score.map_or("NA".into(), |s| format!("{:.3}", s as f64 / 1e9)),
@@ -576,16 +625,19 @@ fn grade(args: &[String]) -> Result<bool> {
             peak as f64 / 1e9
         ));
     }
-    if run.join("loads.tsv").is_file() {
-        for l in table(&run.join("loads.tsv"))? {
-            out.push(format!(
-                "load\t{}\t{:.1}\trss_at_ready_gb={:.2}\t{}",
-                cell(&l, "arm")?,
-                number(&l, "load_ns")?.unwrap_or(0) as f64 / 1e9,
-                number(&l, "rss_at_ready_bytes")?.unwrap_or(0) as f64 / 1e9,
-                cell(&l, "outcome")?
-            ));
-        }
+    let loads = if run.join("loads.tsv").is_file() {
+        table(&run.join("loads.tsv"))?
+    } else {
+        Vec::new()
+    };
+    for l in &loads {
+        out.push(format!(
+            "load\t{}\t{:.1}\trss_at_ready_gb={:.2}\t{}",
+            cell(l, "arm")?,
+            number(l, "load_ns")?.unwrap_or(0) as f64 / 1e9,
+            number(l, "rss_at_ready_bytes")?.unwrap_or(0) as f64 / 1e9,
+            cell(l, "outcome")?
+        ));
     }
 
     let host = samples(&state.join("host-samples.tsv"))?;
@@ -595,6 +647,7 @@ fn grade(args: &[String]) -> Result<bool> {
         .filter_map(|r| number(r, "block").ok().flatten())
         .collect();
     let (mut accepted, mut rejected, mut unassessed) = (BTreeSet::new(), 0, 0);
+    let mut verdicts = BTreeMap::new();
     for &n in &all {
         let missing = unsunk.get(&n).copied().unwrap_or(0);
         let mut v = match blocks.get(&n) {
@@ -631,6 +684,7 @@ fn grade(args: &[String]) -> Result<bool> {
             "rejected" => rejected += 1,
             _ => unassessed += 1,
         }
+        verdicts.insert(n, v[0].clone());
         let (s, e) = blocks.get(&n).map_or(("NA".into(), "NA".into()), |b| {
             (b.0.to_string(), b.1.to_string())
         });
@@ -700,8 +754,20 @@ fn grade(args: &[String]) -> Result<bool> {
         all.len(),
         accepted.len()
     ));
-    println!("{}", out.join("\n"));
-    Ok(matched && wrong == 0 && unchecked == 0)
+    Ok(Assessment {
+        report: out,
+        rc,
+        plan,
+        matched,
+        kb,
+        loads,
+        pinned: pinned == "ok",
+        calls,
+        verdicts,
+        wrong,
+        unchecked,
+        unbounded,
+    })
 }
 // CLK_TCK from the host record; the records before the field come from the pool host (USER_HZ 100).
 fn clock_ticks(before: &Path) -> Result<f64> {

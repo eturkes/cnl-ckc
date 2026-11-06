@@ -6,7 +6,7 @@
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn root() -> PathBuf {
@@ -33,6 +33,12 @@ const GAP_US: i64 = 500_000; // between one call's closed sink + the next reques
 const TARGET: &str = "T-g100-s0";
 const BASELINE: &str = "T-g001-s0";
 const SEED: u64 = 1102;
+const HARNESS: &str = "4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a";
+const CHECKER: &str = "c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4";
+const CENSUS: &str = "3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c";
+const OTHER: &str = "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f";
+const CHECKER_PATH: &str = "/pool/bin/checker";
+const SCHEMA: &[u8] = b"schema bytes\n";
 
 #[derive(Clone)]
 struct Chunk {
@@ -58,6 +64,15 @@ struct Chunk {
     mirror: fn(&str) -> bool,         // identities.tsv paths recorded again under a second root
     sink: fn(i64, &str, &str) -> bool, // a closed sink written per (block, arm, query)
     throttle: fn(&Chunk, i64) -> (i64, i64), // cumulative core + package throttle counts at t
+    seed: u64,                        // settings.tsv seed (+ the R bootstrap's)
+    only: &'static [i64],             // a replacement's replayed blocks (empty = every block)
+    t0: i64,                          // block 1's first request (µs)
+    rc: &'static str,                 // the unit's recorded rc
+    // Per call: short of `verified` = no score, output, bound or closed sink.
+    outcome: fn(i64, &str, &str) -> &'static str,
+    settings: fn(&str, String) -> String, // a planted settings.tsv value per key
+    harness: &'static str,                // host.tsv harness_sha256
+    checker: &'static str,                // the served checker's identities.tsv digest
 }
 fn clean(name: &'static str) -> Chunk {
     Chunk {
@@ -83,6 +98,14 @@ fn clean(name: &'static str) -> Chunk {
         mirror: |_| false,
         sink: |_, _, _| true,
         throttle: |_, _| (0, 0),
+        seed: SEED,
+        only: &[],
+        t0: T0,
+        rc: "0",
+        outcome: |_, _, _| "verified",
+        settings: |_, value| value,
+        harness: HARNESS,
+        checker: CHECKER,
     }
 }
 // Block b's calls, in order: (arm, query, start µs, end µs).
@@ -96,7 +119,7 @@ fn calls(c: &Chunk, b: i64) -> Vec<(&'static str, &'static str, i64, i64)> {
             ("target", "q-patient"),
         ]
     };
-    let mut t = T0 + (b - 1) * BLOCK_US;
+    let mut t = c.t0 + (b - 1) * BLOCK_US;
     order
         .into_iter()
         .map(|(arm, query)| {
@@ -161,17 +184,89 @@ impl Graded {
             .map(|(k, v)| (k.to_owned(), v.to_owned()))
             .collect()
     }
+    fn holds(&self) -> Vec<&str> {
+        self.rows("hold").iter().map(|r| r[1]).collect()
+    }
+    // `decide verdict=<go|hold> holds=<n>`: n = the hold rows printed.
+    fn verdict(&self) -> &str {
+        let line = &self.rows("decide")[0];
+        assert_eq!(
+            line[2],
+            format!("holds={}", self.holds().len()),
+            "{}",
+            self.stdout
+        );
+        line[1].strip_prefix("verdict=").expect("decide verdict=")
+    }
 }
-fn grade(c: &Chunk) -> Graded {
-    let dir = root().join(format!(
-        "rust/target/bench-grade/{}-{}",
-        std::process::id(),
-        c.name
-    ));
-    let _ = fs::remove_dir_all(&dir);
-    let fixture = Fixture { dir: dir.clone() };
-    let (run, state, frozen) = (dir.join("run"), dir.join("state"), dir.join("frozen"));
-    for d in [&run, &state] {
+fn instance_base(iid: &str) -> String {
+    format!("rust/target/bench/sb1-frozen/{iid}")
+}
+fn composition(iid: &str) -> Vec<String> {
+    ["a.pl", "b.pl"]
+        .iter()
+        .map(|f| format!("{}/copies/0001/{f}", instance_base(iid)))
+        .collect()
+}
+// The knowledge identity a server reports for an instance (64 hex, as the census names receipts).
+fn kb_of(iid: &str) -> String {
+    sha(format!("kb {iid}").as_bytes())
+}
+// The frozen instances + the run manifest, shared by a campaign's attempts: both instances, every
+// query, the expected outputs `c.expected` keeps (union rows for the target, recipe oracle rows
+// for the baseline). Expected identities come from the manifest framing written out here,
+// independent of the grade's code.
+fn freeze(c: &Chunk, dir: &Path) -> (PathBuf, PathBuf) {
+    let frozen = dir.join("frozen");
+    let mut manifest = "kind\tinstance\tname\tpath\tsha256\tbytes\tcount\tvalue\n".to_owned();
+    for iid in [TARGET, BASELINE] {
+        let base = instance_base(iid);
+        let lines = composition(iid);
+        fs::create_dir_all(frozen.join(iid)).unwrap();
+        fs::write(
+            frozen.join(iid).join("composition.tsv"),
+            lines.join("\n") + "\n",
+        )
+        .unwrap();
+        let mut framed = format!("schema\0{}\0{}\n", SCHEMA.len(), sha(SCHEMA));
+        for line in &lines {
+            let bytes = format!("document {line}\n");
+            framed.push_str(&format!(
+                "file\0{line}\0{}\0{}\n",
+                bytes.len(),
+                sha(bytes.as_bytes())
+            ));
+        }
+        manifest.push_str(&format!(
+            "instance\t{iid}\tcomposition\t{base}/composition.tsv\t{}\t0\t0\t-\n",
+            sha(framed.as_bytes())
+        ));
+        for q in ["q-all", "q-one", "q-patient"] {
+            let file = query_file(q);
+            let bytes = format!("query {iid} {q}\n");
+            manifest.push_str(&format!(
+                "query\t{iid}\t{file}\t{base}/queries/{file}\t{}\t{}\t1\tfrozen\n",
+                sha(bytes.as_bytes()),
+                bytes.len()
+            ));
+            let want = sha(format!("output {iid} {q}\n").as_bytes());
+            let row = if iid == TARGET {
+                format!("union\t{iid}\t{q}\t-\t{want}\t0\t0\t-\n")
+            } else {
+                format!("oracle\t{iid}\trecipe:{q}\t-\t{want}\t0\t0\t-\n")
+            };
+            if (c.expected)(iid, q) {
+                manifest.push_str(&row);
+            }
+        }
+    }
+    let path = dir.join("run-manifest.tsv");
+    fs::write(&path, manifest).unwrap();
+    (frozen, path)
+}
+// One attempt's run + state directories, as `ckc bench run` + `tools/sb-campaign-unit` write them.
+fn attempt(c: &Chunk, run: &Path, state: &Path) {
+    for d in [run, state] {
         fs::create_dir_all(d).unwrap();
     }
     let arms: Vec<(&str, &str)> = if c.paired {
@@ -179,8 +274,6 @@ fn grade(c: &Chunk) -> Graded {
     } else {
         vec![("target", TARGET)]
     };
-    let schema = b"schema bytes\n";
-    let mut manifest = "kind\tinstance\tname\tpath\tsha256\tbytes\tcount\tvalue\n".to_owned();
     let mut identities = "arm\tpath\tbytes\tsha256\n".to_owned();
     let mut record = |arm: &str, rel: &str, bytes: &[u8]| {
         if (c.drop)(rel) {
@@ -196,62 +289,28 @@ fn grade(c: &Chunk) -> Graded {
         }
     };
     for (arm, iid) in &arms {
-        let base = format!("rust/target/bench/sb1-frozen/{iid}");
-        let lines: Vec<String> = ["a.pl", "b.pl"]
-            .iter()
-            .map(|f| format!("{base}/copies/0001/{f}"))
-            .collect();
-        fs::create_dir_all(frozen.join(iid)).unwrap();
-        fs::write(
-            frozen.join(iid).join("composition.tsv"),
-            lines.join("\n") + "\n",
-        )
-        .unwrap();
-        // The manifest's composition identity, framed as the run manifest defines it.
-        let mut framed = format!("schema\0{}\0{}\n", schema.len(), sha(schema));
-        record(arm, "guidelines/schema.pl", schema);
-        for line in &lines {
-            let bytes = format!("document {line}\n");
-            framed.push_str(&format!(
-                "file\0{line}\0{}\0{}\n",
-                bytes.len(),
-                sha(bytes.as_bytes())
-            ));
-            record(arm, line, bytes.as_bytes());
+        let base = instance_base(iid);
+        record(arm, "guidelines/schema.pl", SCHEMA);
+        for line in composition(iid) {
+            record(arm, &line, format!("document {line}\n").as_bytes());
         }
-        manifest.push_str(&format!(
-            "instance\t{iid}\tcomposition\t{base}/composition.tsv\t{}\t0\t0\t-\n",
-            sha(framed.as_bytes())
-        ));
         for q in ["q-all", "q-one", "q-patient"] {
             let file = query_file(q);
             let bytes = format!("query {iid} {q}\n");
-            manifest.push_str(&format!(
-                "query\t{iid}\t{file}\t{base}/queries/{file}\t{}\t{}\t1\tfrozen\n",
-                sha(bytes.as_bytes()),
-                bytes.len()
-            ));
             record(arm, &format!("{base}/queries/{file}"), bytes.as_bytes());
-            let want = sha(format!("output {iid} {q}\n").as_bytes());
-            let row = if *iid == TARGET {
-                format!("union\t{iid}\t{q}\t-\t{want}\t0\t0\t-\n")
-            } else {
-                format!("oracle\t{iid}\trecipe:{q}\t-\t{want}\t0\t0\t-\n")
-            };
-            if (c.expected)(iid, q) {
-                manifest.push_str(&row);
-            }
         }
         fs::create_dir_all(run.join(format!("arm-{arm}"))).unwrap();
         fs::write(
             run.join(format!("arm-{arm}/load.tsv")),
-            format!("kb_identity\tkb-{iid}\nreceipt\tunchecked\n"),
+            format!("kb_identity\t{}\nreceipt\tunchecked\n", kb_of(iid)),
         )
         .unwrap();
     }
+    // The served checker's identity file (`--identity-file`), hashed per arm.
+    for (arm, _) in &arms {
+        identities.push_str(&format!("{arm}\t{CHECKER_PATH}\t1000\t{}\n", c.checker));
+    }
     fs::write(run.join("identities.tsv"), identities).unwrap();
-    let manifest_path = dir.join("run-manifest.tsv");
-    fs::write(&manifest_path, manifest).unwrap();
 
     let mut plan = "run\tblock\torder\tarm\tcomposition\tquery\n".to_owned();
     let mut runs = format!(
@@ -265,33 +324,43 @@ fn grade(c: &Chunk) -> Graded {
     let mut n = 0;
     for b in 1..=c.blocks {
         for (k, (arm, query, _, end)) in calls(c, b).into_iter().enumerate() {
+            // A replacement keeps the full plan's run numbers for the blocks it replays.
             n += 1;
+            if !c.only.is_empty() && !c.only.contains(&b) {
+                continue;
+            }
             let iid = if arm == "target" { TARGET } else { BASELINE };
-            let base = format!("/pool/rust/target/bench/sb1-frozen/{iid}");
+            let base = format!("/pool/{}", instance_base(iid));
             plan.push_str(&format!(
                 "{n}\t{b}\t{}\t{arm}\t{base}/composition.tsv\t{base}/queries/{}\n",
                 k + 1,
                 query_file(query)
             ));
-            let output = (c.output)(b, arm, query)
-                .unwrap_or_else(|| sha(format!("output {iid} {query}\n").as_bytes()));
+            let outcome = (c.outcome)(b, arm, query);
+            let verified = outcome == "verified";
             let (peak, hwm) = (c.memory)(b, arm, query);
-            let bound = if c.bound_column {
-                format!(
-                    "\t{}",
-                    (c.bound)(b, arm, query).map_or(String::new(), |v| v.to_string())
+            let (score, output, bound) = if verified {
+                (
+                    (c.score)(b, arm, query).to_string(),
+                    (c.output)(b, arm, query)
+                        .unwrap_or_else(|| sha(format!("output {iid} {query}\n").as_bytes())),
+                    (c.bound)(b, arm, query).map_or(String::new(), |v| v.to_string()),
                 )
+            } else {
+                (String::new(), String::new(), String::new())
+            };
+            let bound = if c.bound_column {
+                format!("\t{bound}")
             } else {
                 String::new()
             };
             runs.push_str(&format!(
-                "{n}\t{b}\t{}\t{arm}\tverified\t{}\t{peak}\t{hwm}\t{output}{bound}\n",
-                k + 1,
-                (c.score)(b, arm, query)
+                "{n}\t{b}\t{}\t{arm}\t{outcome}\t{score}\t{peak}\t{hwm}\t{output}{bound}\n",
+                k + 1
             ));
             let sink = run.join(format!("run-{n:06}"));
             fs::create_dir_all(&sink).unwrap();
-            if (c.sink)(b, arm, query) {
+            if verified && (c.sink)(b, arm, query) {
                 fs::write(
                     sink.join("sink-complete.tsv"),
                     format!("sb1-sink 1\nclosed_unix_ns\t{}\nbytes\t1\n", end * 1000),
@@ -312,12 +381,38 @@ fn grade(c: &Chunk) -> Graded {
         // The harness's spelling (`run/report.rs`): the query column holds the query file name.
         fs::write(
             run.join("ratio.tsv"),
-            format!("query\tpairs\tstatus\tratio_of_medians\tone_sided_95_upper\tbootstrap_resamples\tseed\nq-one.pl\t{}\tcomplete\t2.000000000\t2.000000000\t10000\t{SEED}\n", c.blocks),
+            format!("query\tpairs\tstatus\tratio_of_medians\tone_sided_95_upper\tbootstrap_resamples\tseed\nq-one.pl\t{}\tcomplete\t2.000000000\t2.000000000\t10000\t{}\n", c.blocks, c.seed),
         )
         .unwrap();
     }
+    let (queries, spacing) = if c.paired {
+        ("q-one", "30000000000")
+    } else {
+        ("q-all,q-one,q-patient", "0")
+    };
+    let only: Vec<String> = c.only.iter().map(i64::to_string).collect();
+    let mut settings = "key\tvalue\n".to_owned();
+    for (key, value) in [
+        ("seed", c.seed.to_string()),
+        ("blocks", c.blocks.to_string()),
+        ("queries", queries.to_owned()),
+        ("spacing_ns", spacing.to_owned()),
+        ("only_blocks", only.join(",")),
+        (
+            "serve",
+            format!("{CHECKER_PATH} serve --provider static --ta-receipts none --producer /pool/p"),
+        ),
+    ] {
+        settings.push_str(&format!("{key}\t{}\n", (c.settings)(key, value)));
+    }
+    fs::write(run.join("settings.tsv"), settings).unwrap();
+    fs::write(
+        run.join("host.tsv"),
+        format!("key\tvalue\nharness_sha256\t{}\n", c.harness),
+    )
+    .unwrap();
 
-    fs::write(state.join("rc"), "0\n").unwrap();
+    fs::write(state.join("rc"), format!("{}\n", c.rc)).unwrap();
     fs::write(state.join("host-before.txt"), host("performance", 77, true)).unwrap();
     fs::write(
         state.join("host-after.txt"),
@@ -341,7 +436,7 @@ fn grade(c: &Chunk) -> Graded {
             "epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc{pinned_head}\n"
         );
         let end = block_span(c, c.blocks).1 + 30_000_000;
-        let (mut t, mut busy, mut pinned, mut cpu) = (T0 - 30_000_000, 1_000_i64, 400_i64, 0_i64);
+        let (mut t, mut busy, mut pinned, mut cpu) = (c.t0 - 30_000_000, 1_000_i64, 400_i64, 0_i64);
         while t <= end {
             if (c.sampled)(c, t) {
                 let swap = (c.swap)(c, t).map_or("NA".into(), |b| b.to_string());
@@ -365,11 +460,8 @@ fn grade(c: &Chunk) -> Graded {
         }
         fs::write(state.join("host-samples.tsv"), rows).unwrap();
     }
-    let out = Command::new(program())
-        .args(["bench", "grade"])
-        .args([&run, &state, &frozen, &manifest_path])
-        .output()
-        .unwrap();
+}
+fn graded(out: std::process::Output, fixture: Fixture) -> Graded {
     assert!(
         out.status.code() != Some(2),
         "{}",
@@ -380,6 +472,133 @@ fn grade(c: &Chunk) -> Graded {
         stdout: String::from_utf8(out.stdout).unwrap(),
         _fixture: fixture,
     }
+}
+fn scratch(name: &str) -> Fixture {
+    let dir = root().join(format!(
+        "rust/target/bench-grade/{}-{name}",
+        std::process::id()
+    ));
+    let _ = fs::remove_dir_all(&dir);
+    Fixture { dir }
+}
+fn grade(c: &Chunk) -> Graded {
+    let fixture = scratch(c.name);
+    let (frozen, manifest) = freeze(c, &fixture.dir);
+    let (run, state) = (fixture.dir.join("run"), fixture.dir.join("state"));
+    attempt(c, &run, &state);
+    let out = Command::new(program())
+        .args(["bench", "grade"])
+        .args([&run, &state, &frozen, &manifest])
+        .output()
+        .unwrap();
+    graded(out, fixture)
+}
+
+// A confirmation campaign for `ckc bench decide`: the plan rows, each attempt (`runs/<id>` +
+// `state/<id>`), the census receipt per knowledge identity (None = no `--receipts`), runs/
+// directories outside the plan.
+struct Campaign {
+    name: &'static str,
+    plan: String,
+    attempts: Vec<(&'static str, Chunk)>,
+    receipts: Option<fn(&str) -> Option<String>>,
+    extra: &'static [&'static str],
+}
+fn plan_row(chunk: &str, paired: bool, blocks: i64, seed: u64, ratio: &str) -> String {
+    let pair = if paired { BASELINE } else { "-" };
+    format!("{chunk}\t{TARGET}\t{blocks}\t{seed}\t{pair}\t{ratio}\t{HARNESS}\t{CHECKER}\n")
+}
+// An admitted direct receipt of the census binary on the pool: full load = 120 s prepared load +
+// 50 s parse + 1,500 s analysis + the 10 s overhead = 1,680 s; charged = 20 + 6 GB at ready.
+fn receipt_body(kb: &str, plants: &[(&str, &str)]) -> String {
+    let mut fields: Vec<(&str, String)> = vec![
+        ("format", "sb1-ta-receipt 1".into()),
+        ("kb_identity", kb.into()),
+        ("knowledge_documents", "2".into()),
+        ("knowledge_bytes", "100".into()),
+        ("verdict", "admitted".into()),
+        ("ta_source_commit", "a".repeat(40)),
+        ("ta_binary_sha256", CENSUS.into()),
+        ("dc", "1".into()),
+        ("cap_bytes", "30064771072".into()),
+        ("vmhwm_bytes", "20000000000".into()),
+        ("parse_seconds", "50.0".into()),
+        ("analysis_seconds", "1500.0".into()),
+        ("host", "pool".into()),
+        ("command", "ta --dc --patient last".into()),
+    ];
+    for &(key, value) in plants {
+        match fields.iter_mut().find(|f| f.0 == key) {
+            Some(f) => f.1 = value.into(),
+            None => fields.push((key, value.into())),
+        }
+    }
+    fields.iter().map(|(k, v)| format!("{k}\t{v}\n")).collect()
+}
+// r01 = the gating R pair (seed 1102), c01 = a three-query chunk (seed 1103), both clean.
+fn campaign(name: &'static str) -> Campaign {
+    let mut r01 = clean(name);
+    r01.paired = true;
+    let mut c01 = clean(name);
+    c01.seed = SEED + 1;
+    Campaign {
+        name,
+        plan: plan_row("r01", true, 2, SEED, "gate") + &plan_row("c01", false, 2, SEED + 1, "-"),
+        attempts: vec![("r01", r01), ("c01", c01)],
+        receipts: Some(|kb| Some(receipt_body(kb, &[]))),
+        extra: &[],
+    }
+}
+// A replacement of chunk `of`: its blocks, seed + plan size, one hour after the original.
+fn replacement(of: &Chunk, only: &'static [i64]) -> Chunk {
+    let mut r = clean(of.name);
+    (r.paired, r.blocks, r.seed, r.only) = (of.paired, of.blocks, of.seed, only);
+    r.t0 = T0 + 3_600_000_000;
+    r
+}
+fn decide(k: &Campaign) -> Graded {
+    let fixture = scratch(k.name);
+    let dir = fixture.dir.clone();
+    let (frozen, manifest) = freeze(&k.attempts[0].1, &dir);
+    fs::create_dir_all(dir.join("runs")).unwrap();
+    for (id, c) in &k.attempts {
+        attempt(c, &dir.join("runs").join(id), &dir.join("state").join(id));
+    }
+    for extra in k.extra {
+        fs::create_dir_all(dir.join("runs").join(extra)).unwrap();
+    }
+    let plan = dir.join("plan.tsv");
+    fs::write(
+        &plan,
+        format!(
+            "chunk\tinstance\tblocks\tseed\tpair\tratio\tckc\tchecker\n{}",
+            k.plan
+        ),
+    )
+    .unwrap();
+    let mut command = Command::new(program());
+    command.args(["bench", "decide"]);
+    command.args([&plan, &dir, &frozen, &manifest]);
+    if let Some(receipt) = k.receipts {
+        let receipts = dir.join("receipts");
+        fs::create_dir_all(&receipts).unwrap();
+        for iid in [TARGET, BASELINE] {
+            let kb = kb_of(iid);
+            if let Some(body) = receipt(&kb) {
+                fs::write(receipts.join(format!("{kb}.tsv")), body).unwrap();
+            }
+        }
+        command.arg("--receipts").arg(&receipts);
+        command.args([
+            "--census",
+            CENSUS,
+            "--host",
+            "pool",
+            "--overhead-ms",
+            "10000",
+        ]);
+    }
+    graded(command.output().unwrap(), fixture)
 }
 fn within(c: &Chunk, b: i64, t: i64) -> bool {
     let (s, e) = block_span(c, b);
@@ -427,7 +646,7 @@ fn clean_chunk_matches_identity_and_accepts_every_block() {
         .map(|k| &s[k][..]),
         ["2", "2", "0", "0", "0", "0", "0"]
     );
-    assert_eq!(g.rows("kb")[0][2], format!("kb-{TARGET}"));
+    assert_eq!(g.rows("kb")[0][2], kb_of(TARGET));
     // A block's interval = its first call's request write (closed sink − score) → its last sink.
     let (start, end) = block_span(&c, 1);
     assert_eq!(
@@ -1165,4 +1384,374 @@ fn preflight_plants_hold() {
     let mut p = calm("unpinned");
     p.pinned_column = false;
     assert_eq!(preflight(&p).rc, 2);
+}
+
+// A call that ends short of verified printed no output: its digest reads NA and it fails the
+// budget, while the chunk stays graded evidence (rc 0) and its missing bound counts as no unbounded
+// verified call.
+#[test]
+fn a_call_short_of_verified_fails_the_budget_without_a_wrong_output() {
+    let mut c = clean("indeterminate");
+    c.outcome = |b, _, q| {
+        if b == 2 && q == "q-patient" {
+            "indeterminate"
+        } else {
+            "verified"
+        }
+    };
+    let g = grade(&c);
+    assert_eq!(g.rc, 0, "{}", g.stdout);
+    let calls = g.rows("call");
+    let call = calls
+        .iter()
+        .find(|r| r[2] == "2" && r[4] == "q-patient")
+        .unwrap();
+    assert_eq!(
+        (call[5], call[6], call[9], call[10]),
+        ("indeterminate", "NA", "NA", "fail:ok")
+    );
+    let s = g.summary();
+    assert_eq!(
+        ["sha_bad", "budget_fail", "memory_unbounded"].map(|k| &s[k][..]),
+        ["0", "1", "0"]
+    );
+}
+
+// Contract sb § Carried rulings (decision tool, replacement round, R pairs, typed analysis at
+// load): `ckc bench decide` over synthetic campaigns. A clean campaign goes once every measured
+// knowledge identity joins its receipt, and holds while the census verdicts are pending.
+#[test]
+fn a_clean_campaign_goes_once_its_receipts_join() {
+    let mut k = campaign("decide-clean");
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    assert!(g.holds().is_empty());
+    let selected: Vec<&str> = g.rows("selected").iter().map(|r| r[3]).collect();
+    assert_eq!(selected, ["r01", "r01", "c01", "c01"]);
+    assert_eq!(
+        g.rows("ratio")[0][1..],
+        [
+            "r01",
+            "gate",
+            "pairs=2",
+            "R=1.000000000",
+            "UB95=1.000000000"
+        ]
+    );
+    let receipts = g.rows("receipt");
+    let loads: Vec<(&str, &str)> = receipts.iter().map(|r| (r[1], r[2])).collect();
+    let (target, baseline) = (kb_of(TARGET), kb_of(BASELINE));
+    let mut want = vec![(target.as_str(), "2"), (baseline.as_str(), "1")];
+    want.sort();
+    assert_eq!(loads, want);
+    assert!(receipts.iter().all(|r| r[3..] == ["1680.0", "26.00", "ok"]));
+    k.receipts = None;
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (1, "hold"), "{}", g.stdout);
+    assert_eq!(
+        g.holds(),
+        ["receipt join pending: census verdicts outstanding"]
+    );
+    assert_eq!(g.rows("receipt_join")[0][1], "pending");
+}
+
+// An original block that X1–X4 reject takes its replacement's attempt, whatever its outcomes (here a
+// memory bound past 32 GB + an indeterminate call); without the replacement the chunk holds.
+#[test]
+fn replacements_fill_invalid_blocks_blind_to_their_outcomes() {
+    let mut k = campaign("decide-replace");
+    k.plan = plan_row("r01", true, 2, SEED, "gate") + &plan_row("c01", false, 3, SEED + 1, "-");
+    let c01 = &mut k.attempts[1].1;
+    c01.blocks = 3;
+    c01.foreign = |c, t| if within(c, 2, t) { 0.8 } else { 0.0 };
+    c01.bound = |b, _, q| {
+        Some(if b == 2 && q == "q-all" {
+            40_000_000_000
+        } else {
+            1_300_000_000
+        })
+    };
+    c01.outcome = |b, _, q| {
+        if b == 2 && q == "q-patient" {
+            "indeterminate"
+        } else {
+            "verified"
+        }
+    };
+    let g = decide(&k);
+    assert_eq!(
+        g.holds(),
+        ["c01: block 2: no valid attempt"],
+        "{}",
+        g.stdout
+    );
+    let mut r = replacement(&k.attempts[1].1, &[2]);
+    r.score = |_, _, _| 2_500_000_000;
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    let c01: Vec<&str> = g
+        .rows("selected")
+        .iter()
+        .filter(|r| r[1] == "c01")
+        .map(|r| r[3])
+        .collect();
+    assert_eq!(c01, ["c01", "c01-r", "c01"]);
+    let blocks = g.rows("block");
+    assert!(
+        blocks
+            .iter()
+            .any(|r| r[1..] == ["c01", "c01", "2", "rejected", "invalid"])
+    );
+    assert!(
+        blocks
+            .iter()
+            .any(|r| r[1..] == ["c01", "c01-r", "2", "accepted", "valid"])
+    );
+}
+
+// A valid original block's budget failure stands, and a replacement may not touch a valid block.
+#[test]
+fn a_valid_original_budget_failure_stays_a_failure() {
+    let mut k = campaign("decide-budget");
+    k.attempts[1].1.bound = |b, _, q| {
+        Some(if b == 1 && q == "q-all" {
+            40_000_000_000
+        } else {
+            1_300_000_000
+        })
+    };
+    let fail = "c01: block 1: target q-all verified outside the budget";
+    let g = decide(&k);
+    assert_eq!(g.holds(), [fail], "{}", g.stdout);
+    let r = replacement(&k.attempts[1].1, &[1]);
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    assert_eq!(
+        g.holds(),
+        ["c01: attempt c01-r: replaces a valid block", fail],
+        "{}",
+        g.stdout
+    );
+}
+
+// Every attempt is sound: settings, executables, harness rc, inputs + bounds as planned; a wrong
+// output holds even in a block its replacement covers.
+#[test]
+fn every_attempt_must_be_sound() {
+    type Plant = fn(&mut Chunk);
+    let plants: [(&'static str, usize, Plant, &str); 9] = [
+        (
+            "decide-seed",
+            1,
+            |c| c.settings = |k, v| if k == "seed" { "7".into() } else { v },
+            "c01: attempt c01: settings seed",
+        ),
+        (
+            "decide-queries",
+            1,
+            |c| c.settings = |k, v| if k == "queries" { "q-one".into() } else { v },
+            "c01: attempt c01: settings queries",
+        ),
+        (
+            "decide-spacing",
+            0,
+            |c| c.settings = |k, v| if k == "spacing_ns" { "0".into() } else { v },
+            "r01: attempt r01: settings spacing_ns",
+        ),
+        (
+            "decide-only",
+            1,
+            |c| c.settings = |k, v| if k == "only_blocks" { "1".into() } else { v },
+            "c01: attempt c01: settings only_blocks",
+        ),
+        (
+            "decide-ckc",
+            1,
+            |c| c.harness = OTHER,
+            "c01: attempt c01: ckc executable",
+        ),
+        (
+            "decide-checker",
+            0,
+            |c| c.checker = OTHER,
+            "r01: attempt r01: checker executable",
+        ),
+        (
+            "decide-rc",
+            1,
+            |c| c.rc = "2",
+            "c01: attempt c01: harness rc 2",
+        ),
+        (
+            "decide-identity",
+            1,
+            |c| c.identity = |_, rel, _| rel.ends_with("b.pl").then(|| "0".repeat(64)),
+            "c01: attempt c01: input identity",
+        ),
+        (
+            "decide-unbounded",
+            1,
+            |c| c.bound = |b, _, q| (b != 2 || q != "q-one").then_some(1_300_000_000),
+            "c01: attempt c01: 1 verified calls without a memory bound",
+        ),
+    ];
+    for (name, index, plant, hold) in plants {
+        let mut k = campaign(name);
+        plant(&mut k.attempts[index].1);
+        let g = decide(&k);
+        assert_eq!((g.rc, g.verdict()), (1, "hold"), "{name}: {}", g.stdout);
+        assert!(g.holds().contains(&hold), "{name}: {:?}", g.holds());
+    }
+    let mut k = campaign("decide-wrong");
+    let c01 = &mut k.attempts[1].1;
+    c01.foreign = |c, t| if within(c, 2, t) { 0.8 } else { 0.0 };
+    c01.output = |b, _, q| (b == 2 && q == "q-patient").then(|| "f".repeat(64));
+    let r = replacement(&k.attempts[1].1, &[2]);
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    assert_eq!(
+        g.holds(),
+        ["c01: attempt c01: 1 wrong output digests"],
+        "{}",
+        g.stdout
+    );
+}
+
+// R gates on the plan's gating chunk alone: UB95 above 2 there holds; the same pairs on the
+// reported chunk stand beside a passing gate.
+#[test]
+fn r_gates_on_its_gating_chunk_alone() {
+    let triple: fn(i64, &str, &str) -> u64 = |_, arm, _| {
+        if arm == "target" {
+            3_000_000_000
+        } else {
+            1_000_000_000
+        }
+    };
+    let mut k = campaign("decide-r");
+    k.attempts[0].1.score = triple;
+    let g = decide(&k);
+    assert_eq!(
+        g.holds(),
+        ["r01: R upper bound 3.000 above 2"],
+        "{}",
+        g.stdout
+    );
+    assert_eq!(
+        g.rows("ratio")[0][1..],
+        [
+            "r01",
+            "gate",
+            "pairs=2",
+            "R=3.000000000",
+            "UB95=3.000000000"
+        ]
+    );
+    let mut k = campaign("decide-r-report");
+    let mut r02 = clean("decide-r-report");
+    (r02.paired, r02.seed, r02.score) = (true, SEED + 2, triple);
+    k.attempts.push(("r02", r02));
+    k.plan += &plan_row("r02", true, 2, SEED + 2, "report");
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    assert_eq!(
+        g.rows("ratio")[1][1..],
+        [
+            "r02",
+            "report",
+            "pairs=2",
+            "R=3.000000000",
+            "UB95=3.000000000"
+        ]
+    );
+}
+
+// Each measured knowledge identity needs an admitted direct receipt of the named census binary on
+// the named host, a full load ≤ 1,800 s + a charged memory ≤ 32 GB (both lines inclusive).
+#[test]
+fn the_receipt_join_fails_closed() {
+    type Receipt = fn(&str) -> Option<String>;
+    let plants: [(&'static str, Receipt, String); 9] = [
+        ("receipt-missing", |_| None, "no receipt".into()),
+        (
+            "receipt-refused",
+            |kb| Some(receipt_body(kb, &[("verdict", "refused")])),
+            "verdict refused".into(),
+        ),
+        (
+            "receipt-census",
+            |kb| Some(receipt_body(kb, &[("ta_binary_sha256", OTHER)])),
+            format!("ta_binary_sha256 {OTHER}"),
+        ),
+        (
+            "receipt-host",
+            |kb| Some(receipt_body(kb, &[("host", "workstation")])),
+            "host workstation".into(),
+        ),
+        (
+            "receipt-derived",
+            |kb| Some(receipt_body(kb, &[("basis", "renaming")])),
+            "derived (an alias carries admission alone)".into(),
+        ),
+        (
+            "receipt-unmeasured",
+            |kb| Some(receipt_body(kb, &[("analysis_seconds", "unavailable")])),
+            "analysis_seconds unmeasured".into(),
+        ),
+        (
+            "receipt-twice",
+            |kb| Some(receipt_body(kb, &[]) + "verdict\tadmitted\n"),
+            "malformed receipt".into(),
+        ),
+        (
+            "receipt-slow",
+            |kb| Some(receipt_body(kb, &[("analysis_seconds", "1620.5")])),
+            "full load 1800.5 s above 1,800 s".into(),
+        ),
+        (
+            "receipt-memory",
+            |kb| Some(receipt_body(kb, &[("vmhwm_bytes", "26000000001")])),
+            "charged memory 32.00 GB above 32 GB".into(),
+        ),
+    ];
+    for (name, receipt, why) in plants {
+        let mut k = campaign(name);
+        k.receipts = Some(receipt);
+        let g = decide(&k);
+        assert_eq!((g.rc, g.verdict()), (1, "hold"), "{name}: {}", g.stdout);
+        let mut want: Vec<String> = [TARGET, BASELINE]
+            .map(|iid| format!("receipt {}: {why}", kb_of(iid)))
+            .into();
+        want.sort();
+        assert_eq!(g.holds(), want, "{name}");
+    }
+    let mut k = campaign("receipt-lines");
+    k.receipts = Some(|kb| {
+        Some(receipt_body(
+            kb,
+            &[
+                ("analysis_seconds", "1620.0"),
+                ("vmhwm_bytes", "26000000000"),
+            ],
+        ))
+    });
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    assert!(
+        g.rows("receipt")
+            .iter()
+            .all(|r| r[3..] == ["1800.0", "32.00", "ok"])
+    );
+}
+
+// Every runs/ directory is a planned attempt, and every planned chunk ran.
+#[test]
+fn every_attempt_directory_is_planned_and_every_chunk_ran() {
+    let mut k = campaign("decide-unplanned");
+    k.extra = &["c01-r2"];
+    assert_eq!(decide(&k).holds(), ["unplanned attempt runs/c01-r2"]);
+    let mut k = campaign("decide-missing");
+    k.plan += &plan_row("c02", false, 2, SEED + 3, "-");
+    assert_eq!(decide(&k).holds(), ["c02: no original attempt"]);
 }
