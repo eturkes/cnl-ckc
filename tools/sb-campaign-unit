@@ -12,8 +12,9 @@
 # in-shield sets, then restores each recorded value ⇒ neither a lost wrapper nor a partial shield
 # leaves it up. The wrapper records the host before + after, the unit's applied CPU list, its own +
 # the sampler's, the sleeper's marker and a 1 s host sample stream (the X1–X4 + policy inputs of
-# `ckc bench grade`); a rerun with the same id re-attaches to a live unit (an ssh loss leaves the
-# unit running) or, once the unit ended, records the host after it. `preflight` = the host-only
+# `ckc bench grade`; the unit idles 2 s before + after the chunk, so samples bracket every block);
+# a rerun with the same id re-attaches to a live unit (an ssh loss leaves the unit running) or, once
+# the unit ended, records the host after it. `preflight` = the host-only
 # preflight under the same shield: a sampled placeholder unit + three synthetic 60 s controls (each
 # burner's own cgroup CPU time recorded) + a 600 s quiet stretch, graded by `ckc bench preflight
 # <state-dir>`. `hold` = the sleeper: run as a job of another offload project, it holds the second
@@ -204,8 +205,11 @@ if [[ ! -s $st/rc ]] && ! active; then
     instance=$(readlink -f -- "$4") blocks=$5 seed=$6 ckc=$(readlink -f -- "$7") checker=$(readlink -f -- "$8")
     args=("$root" "$instance" "$base/runs/$id" "$blocks" "$seed" "$ckc" "$checker")
     (( $# == 8 )) || args+=(--r-pair "$(readlink -f -- "$9")")
+    # 2 s idle before + after the chunk: the 1 s sampler starts once the unit is active + stops once
+    # rc lands ⇒ without them a sub-second block at a chunk's edge can lack a sample on one side
+    # (X4's degenerate bracket: the rehearsal's R block, both samples before it).
     # shellcheck disable=SC2016  # "$@" + $ST expand inside the unit's shell
-    script='tools/sb-campaign-chunk "$@"; printf "%s\n" "$?" >"$ST/rc"'
+    script='sleep 2; tools/sb-campaign-chunk "$@"; r=$?; sleep 2; printf "%s\n" "$r" >"$ST/rc"'
   else
     : >"$st/preflight.tsv"
     args=()
