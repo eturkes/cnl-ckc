@@ -392,7 +392,7 @@ pub(super) fn per_run(path: &Path, ledger: &Ledger, phases: &[Phase], state: &St
     }
     write(&path.join("executables.tsv"), executables)
 }
-pub(super) const RUN_HEADER: &str = "run\tblock\torder\tarm\toutcome\treason\twall_ns\tload_ns\tscored_ns\tcpu_seconds\tpeak_rss_bytes\tobserved_hwm_sum_bytes\tsample_period_ns\tmax_sample_gap_ns\tmemory_uncertainty\tproducer_rc\tchecker_rc\toutput_bytes\toutput_sha256\tphase_intervals\tprocess_high_water_marks\tsink_end_ns\tteardown_ns\tsink_clock_uncertainty_ns\n";
+pub(super) const RUN_HEADER: &str = "run\tblock\torder\tarm\toutcome\treason\twall_ns\tload_ns\tscored_ns\tcpu_seconds\tpeak_rss_bytes\tobserved_hwm_sum_bytes\tsample_period_ns\tmax_sample_gap_ns\tmemory_uncertainty\tproducer_rc\tchecker_rc\toutput_bytes\toutput_sha256\tphase_intervals\tprocess_high_water_marks\tsink_end_ns\tteardown_ns\tsink_clock_uncertainty_ns\tmemory_bound_bytes\n";
 pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64) -> String {
     let intervals = ledger
         .intervals
@@ -407,7 +407,7 @@ pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64)
         .collect::<Vec<_>>()
         .join(";");
     format!(
-        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.9}\t{}\t{}\t{}\t{}\tpossibly-missed-subperiod-spike\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.9}\t{}\t{}\t{}\t{}\tpossibly-missed-subperiod-spike\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
         row.run,
         row.block,
         row.order,
@@ -432,7 +432,8 @@ pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64)
         row.teardown,
         row.sink_uncertainty
             .map(|n| n.to_string())
-            .unwrap_or_default()
+            .unwrap_or_default(),
+        row.memory_bound.map(|n| n.to_string()).unwrap_or_default()
     )
 }
 pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {

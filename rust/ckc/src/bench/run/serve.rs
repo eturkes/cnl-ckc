@@ -141,6 +141,25 @@ fn line(
         }
     }
 }
+// Contract sb P8: a producer child that lives between two RSS samples leaves no reading, so the
+// orchestrator reports its exact wait4 peak; bound = Σ HWM of every other observed process + that
+// peak ≥ the call's simultaneous peak (one producer per call). None = no producer report.
+fn memory_bound(directory: &Path, window: &State) -> Option<u64> {
+    let text = fs::read_to_string(directory.join("checker-counters.tsv")).ok()?;
+    let value = |name: &str| {
+        let prefix = format!("runtime\t{name}\t");
+        text.lines()
+            .find_map(|l| l.strip_prefix(prefix.as_str())?.parse::<u64>().ok())
+    };
+    let (pid, peak) = (value("producer_pid")?, value("producer_maxrss_bytes")?);
+    let others: u64 = window
+        .processes
+        .values()
+        .filter(|p| u64::from(p.process.pid) != pid)
+        .map(|p| p.hwm)
+        .sum();
+    Some(others.saturating_add(peak))
+}
 // Call-relative window: every timestamp minus the call's request time.
 fn rebase(mut window: State, start: u64) -> State {
     for sample in &mut window.samples {
@@ -217,6 +236,7 @@ fn empty_row(entry: &Plan) -> RunRow {
         cpu: 0.0,
         peak_rss: 0,
         hwm_sum: 0,
+        memory_bound: None,
         producer_rc: None,
         checker_rc: None,
         output_bytes: None,
@@ -384,6 +404,7 @@ fn call(
     let window = rebase(sampler.drain(), start);
     row.peak_rss = window.peak_rss;
     row.hwm_sum = window.processes.values().map(|p| p.hwm).sum();
+    row.memory_bound = memory_bound(directory, &window);
     Ok(Call {
         row,
         ledger,
@@ -476,7 +497,26 @@ pub(super) fn campaign(config: &Config, plan: &[Plan]) -> Result<Vec<RunRow>> {
         .map_err(|e| e.to_string())?;
     let mut rows = Vec::new();
     let idle = config.out.join("idle-rss.tsv");
+    // Block b's first call waits for ready + (b − 1) × spacing (original block numbers under a
+    // sparse replay); every wait = idle time outside the calls, recorded in schedule.tsv.
+    let ready = ns(origin.elapsed());
+    let mut schedule = "block\tplanned_ns\tstarted_ns\twaited_ns\n".to_owned();
+    let mut current = None;
     for entry in plan {
+        if current != Some(entry.block) {
+            current = Some(entry.block);
+            let planned = ready.saturating_add(ns(config.spacing).saturating_mul(entry.block - 1));
+            let now = ns(origin.elapsed());
+            if planned > now {
+                std::thread::sleep(Duration::from_nanos(planned - now));
+            }
+            let started = ns(origin.elapsed());
+            schedule.push_str(&format!(
+                "{}\t{planned}\t{started}\t{}\n",
+                entry.block,
+                started - now
+            ));
+        }
         append_samples(
             &idle,
             &format!("before-run-{}", entry.run),
@@ -506,6 +546,7 @@ pub(super) fn campaign(config: &Config, plan: &[Plan]) -> Result<Vec<RunRow>> {
         raw.flush().map_err(|e| e.to_string())?;
         rows.push(row);
     }
+    report::write(&config.out.join("schedule.tsv"), schedule)?;
     // Teardown: EOF on every stdin; a server still alive after the grace period is killed.
     let mut teardown = "arm\tstart_ns\tend_ns\toutcome\n".to_owned();
     for server in &mut servers {

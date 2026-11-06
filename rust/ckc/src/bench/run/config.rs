@@ -25,8 +25,13 @@ pub(super) struct Config {
     pub memory_bytes: u64,
     pub size_bytes: u64,
     pub identities: Vec<PathBuf>,
+    // Warm mode: block b's first call starts no earlier than every server's ready line +
+    // (b − 1) × spacing (contract sb § Carried rulings, R pair offsets).
+    pub spacing: Duration,
+    // Sparse replay: the full plan's draws, then only these blocks (their run numbers kept).
+    pub only: Option<BTreeSet<u64>>,
 }
-pub(super) const HELP: &str = "usage: ckc bench run <composition-dir> (--producer <cmd> --checker <cmd> | --orchestrator <cmd> | --serve <cmd> [--load-deadline-ms <n>] [--keep-products yes|no]) --query <q> (repeatable with --serve) --blocks <n> --out <dir> [--root <repo>] [--paired <composition-dir>] [--seed <n>] [--deadline-ms <n>] [--sample-ms <n>] [--memory-bytes <n>] [--size-bytes <n>] [--identity-file <file>]";
+pub(super) const HELP: &str = "usage: ckc bench run <composition-dir> (--producer <cmd> --checker <cmd> | --orchestrator <cmd> | --serve <cmd> [--load-deadline-ms <n>] [--keep-products yes|no]) --query <q> (repeatable with --serve) --blocks <n> --out <dir> [--root <repo>] [--paired <composition-dir>] [--seed <n>] [--deadline-ms <n>] [--sample-ms <n>] [--memory-bytes <n>] [--size-bytes <n>] [--identity-file <file>] [--block-spacing-ms <n>] [--only-blocks <b>,…]";
 
 fn natural(value: &str, option: &str) -> Result<u64> {
     value
@@ -79,6 +84,8 @@ impl Config {
             memory_bytes: 32_000_000_000,
             size_bytes: 8_000_000_000,
             identities: Vec::new(),
+            spacing: Duration::ZERO,
+            only: None,
         };
         let mut seen = BTreeSet::new();
         for pair in args[1..].as_chunks::<2>().0 {
@@ -120,6 +127,18 @@ impl Config {
                 "--memory-bytes" => config.memory_bytes = positive(value, option)?,
                 "--size-bytes" => config.size_bytes = positive(value, option)?,
                 "--identity-file" => config.identities.push(value.into()),
+                "--block-spacing-ms" => {
+                    config.spacing = Duration::from_millis(natural(value, option)?)
+                }
+                "--only-blocks" => {
+                    let mut blocks = BTreeSet::new();
+                    for item in value.split(',') {
+                        if !blocks.insert(positive(item, option)?) {
+                            return Err(format!("{option}: block {item} listed twice"));
+                        }
+                    }
+                    config.only = Some(blocks);
+                }
                 _ => return Err(format!("unknown option {option}; {HELP}")),
             }
         }
@@ -133,7 +152,18 @@ impl Config {
             (Some(_), Some(_)) => false,
         };
         let warm = config.serve.is_some();
-        if (!warm && (seen.contains("--load-deadline-ms") || seen.contains("--keep-products")))
+        if (!warm
+            && [
+                "--load-deadline-ms",
+                "--keep-products",
+                "--block-spacing-ms",
+            ]
+            .iter()
+            .any(|o| seen.contains(o)))
+            || config
+                .only
+                .as_ref()
+                .is_some_and(|only| only.last().is_some_and(|&b| b > config.blocks))
             || (!warm && config.queries.len() != 1)
             || config.queries.is_empty()
             || config.queries.iter().any(String::is_empty)

@@ -6,6 +6,8 @@
 // R over every block + over the accepted ones. rc 1 = an identity mismatch, a wrong output or a call
 // whose (instance, query) the manifest gives no expected output (`sha_unchecked`: its correctness is
 // unestablished) — the chunk is no evidence; rc 2 = usage or an unreadable input.
+// `preflight` grades the host-only preflight of the same contract section: its synthetic controls
+// read as planted + every 150 s quiet window passes X1 + X4 (rc 0 = go, 1 = hold).
 use super::generate::identity_frame;
 use super::stats::{ratio, stats};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -17,11 +19,14 @@ type Result<T> = std::result::Result<T, String>;
 type Row = BTreeMap<String, String>;
 
 const HELP: &str = "usage: ckc bench grade <run-dir> <state-dir> <frozen-root> <run-manifest>";
+const PREFLIGHT_HELP: &str = "usage: ckc bench preflight <state-dir>";
 const BUDGET_NS: u64 = 300_000_000_000;
 const BUDGET_BYTES: u64 = 32_000_000_000;
 const FOREIGN_CPUS: f64 = 0.5;
 const GAP_US: i64 = 5_000_000;
 const PINNED: &str = "2-3,6-7";
+const QUIET_US: i64 = 150_000_000;
+const QUIET_WINDOWS: i64 = 4;
 // X3 fields beside the kernel (the record's second line): exact keys, since lscpu's
 // `CPU(s) scaling MHz:` varies run to run.
 const CONFIG_KEYS: [&str; 5] = [
@@ -33,11 +38,17 @@ const CONFIG_KEYS: [&str; 5] = [
 ];
 
 pub fn run(args: &[String]) -> ExitCode {
-    match grade(args) {
+    exit("grade", grade(args))
+}
+pub fn preflight(args: &[String]) -> ExitCode {
+    exit("preflight", preflight_check(args))
+}
+fn exit(command: &str, verdict: Result<bool>) -> ExitCode {
+    match verdict {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::from(1),
         Err(error) => {
-            eprintln!("ckc: bench: grade: {error}");
+            eprintln!("ckc: bench: {command}: {error}");
             ExitCode::from(2)
         }
     }
@@ -71,14 +82,18 @@ fn cell<'a>(row: &'a Row, key: &str) -> Result<&'a str> {
 }
 // An empty cell = not measured (an indeterminate call has no score).
 fn number(row: &Row, key: &str) -> Result<Option<u64>> {
-    let value = cell(row, key)?;
-    if value.is_empty() {
-        return Ok(None);
+    cell(row, key)?;
+    optional(row, key)
+}
+// A column older runs lack reads as not measured.
+fn optional(row: &Row, key: &str) -> Result<Option<u64>> {
+    match row.get(key).map(String::as_str) {
+        None | Some("") => Ok(None),
+        Some(value) => value
+            .parse()
+            .map(Some)
+            .map_err(|_| format!("{key}: not a number: {value}")),
     }
-    value
-        .parse()
-        .map(Some)
-        .map_err(|_| format!("{key}: not a number: {value}"))
 }
 
 #[derive(Default)]
@@ -188,6 +203,8 @@ fn identity(
 struct Sample {
     t: i64,
     busy: i64,
+    // Busy jiffies of the campaign's CPUs 2 3 6 7 alone; None = a sampler that predates the column.
+    pinned: Option<i64>,
     cpu: i64,
     swap: Option<i64>,
     core: i64,
@@ -210,12 +227,12 @@ fn samples(path: &Path) -> Result<Option<Vec<Sample>>> {
             int("package_throttle"),
             int("max_temp_mc"),
         ) {
-            let swap = int("campaign_swap_bytes");
             out.push(Sample {
                 t,
                 busy,
+                pinned: int("pinned_busy_jiffies"),
                 cpu,
-                swap,
+                swap: int("campaign_swap_bytes"),
                 core,
                 package,
                 temp,
@@ -224,20 +241,18 @@ fn samples(path: &Path) -> Result<Option<Vec<Sample>>> {
     }
     Ok(Some(out))
 }
-// X1 window = the last sample ≤ s → the first ≥ e (cumulative counters ⇒ exact over it); X4 = every
-// spacing that meets [s, e] + the open edges measured from the samples; an unbracketed block = X4;
-// X2 unreadable on every sample of the window = unassessed.
-fn interference(samples: Option<&[Sample]>, s: i64, e: i64, hz: f64) -> [String; 7] {
-    let verdict = |v: &str, why: &str| [v, why, "NA", "NA", "NA", "NA", "NA"].map(str::to_owned);
-    let Some(rows) = samples else {
-        return verdict("unassessed", "no-sampler");
-    };
-    let (Some(first), Some(last)) = (
-        rows.iter().min_by_key(|r| r.t),
-        rows.iter().max_by_key(|r| r.t),
-    ) else {
-        return verdict("rejected", "X4");
-    };
+// The samples bracketing [s, e]: the last ≤ s (none: the first) → the first ≥ e (none: the last);
+// cumulative counters ⇒ exact over it. `gap` = the largest spacing meeting [s, e] + the open edges
+// measured from the samples; a bracket without two distinct sample times reads as a gap past X4.
+struct Bracket<'a> {
+    lo: &'a Sample,
+    hi: &'a Sample,
+    inside: Vec<&'a Sample>,
+    gap: i64,
+}
+fn bracket(rows: &[Sample], s: i64, e: i64) -> Option<Bracket<'_>> {
+    let first = rows.iter().min_by_key(|r| r.t)?;
+    let last = rows.iter().max_by_key(|r| r.t)?;
     let mut ts: Vec<i64> = rows.iter().map(|r| r.t).collect();
     ts.sort_unstable();
     let mut gap = ts
@@ -265,14 +280,49 @@ fn interference(samples: Option<&[Sample]>, s: i64, e: i64, hz: f64) -> [String;
     if hi.t <= lo.t {
         gap = gap.max(GAP_US + 1);
     }
-    let span = (hi.t - lo.t).max(1) as f64 / 1e6;
-    let foreign = ((hi.busy - lo.busy) as f64 / hz - (hi.cpu - lo.cpu) as f64 / 1e6) / span;
-    let inside: Vec<&Sample> = rows.iter().filter(|r| lo.t <= r.t && r.t <= hi.t).collect();
-    let swap: Vec<i64> = inside.iter().filter_map(|r| r.swap).collect();
+    let inside = rows.iter().filter(|r| lo.t <= r.t && r.t <= hi.t).collect();
+    Some(Bracket {
+        lo,
+        hi,
+        inside,
+        gap,
+    })
+}
+impl Bracket<'_> {
+    fn span(&self) -> f64 {
+        (self.hi.t - self.lo.t).max(1) as f64 / 1e6
+    }
+    // CPUs the campaign's cgroup used on average.
+    fn campaign(&self) -> f64 {
+        (self.hi.cpu - self.lo.cpu) as f64 / 1e6 / self.span()
+    }
+    // Foreign CPUs = busy CPUs − the campaign's, host-wide or over the campaign's CPUs (X1).
+    fn host(&self, hz: f64) -> f64 {
+        (self.hi.busy - self.lo.busy) as f64 / hz / self.span() - self.campaign()
+    }
+    fn pinned(&self, hz: f64) -> Option<f64> {
+        let busy = self.hi.pinned? - self.lo.pinned?;
+        Some(busy as f64 / hz / self.span() - self.campaign())
+    }
+}
+// X1 = foreign CPUs on the campaign's CPUs 2 3 6 7 (host-wide foreign = a reported diagnostic: work
+// the shield keeps on CPUs 0 1 4 5 never contends for the campaign's cores); X4 = the bracket's gap;
+// X2 unreadable on every sample of the window, or a sampler without the pinned column = unassessed.
+fn interference(samples: Option<&[Sample]>, s: i64, e: i64, hz: f64) -> [String; 8] {
+    let verdict =
+        |v: &str, why: &str| [v, why, "NA", "NA", "NA", "NA", "NA", "NA"].map(str::to_owned);
+    let Some(rows) = samples else {
+        return verdict("unassessed", "no-sampler");
+    };
+    let Some(b) = bracket(rows, s, e) else {
+        return verdict("rejected", "X4");
+    };
+    let pinned = b.pinned(hz);
+    let swap: Vec<i64> = b.inside.iter().filter_map(|r| r.swap).collect();
     let mut why: Vec<&str> = [
-        ("X1", foreign > FOREIGN_CPUS),
+        ("X1", pinned.is_some_and(|f| f > FOREIGN_CPUS)),
         ("X2", swap.iter().any(|&b| b > 0)),
-        ("X4", gap > GAP_US),
+        ("X4", b.gap > GAP_US),
     ]
     .into_iter()
     .filter(|(_, bad)| *bad)
@@ -280,13 +330,20 @@ fn interference(samples: Option<&[Sample]>, s: i64, e: i64, hz: f64) -> [String;
     .collect();
     let state = if !why.is_empty() {
         "rejected"
-    } else if swap.is_empty() {
-        why.push("X2-unreadable");
-        "unassessed"
     } else {
-        "accepted"
+        if pinned.is_none() {
+            why.push("X1-unpinned");
+        }
+        if swap.is_empty() {
+            why.push("X2-unreadable");
+        }
+        if why.is_empty() {
+            "accepted"
+        } else {
+            "unassessed"
+        }
     };
-    let temp = inside.iter().map(|r| r.temp).max().unwrap_or(0);
+    let temp = b.inside.iter().map(|r| r.temp).max().unwrap_or(0);
     [
         state.to_owned(),
         if why.is_empty() {
@@ -294,11 +351,12 @@ fn interference(samples: Option<&[Sample]>, s: i64, e: i64, hz: f64) -> [String;
         } else {
             why.join("+")
         },
-        format!("{foreign:.3}"),
-        format!("{:.2}", gap as f64 / 1e6),
-        (hi.core - lo.core).to_string(),
-        (hi.package - lo.package).to_string(),
+        pinned.map_or("NA".into(), |f| format!("{f:.3}")),
+        format!("{:.2}", b.gap as f64 / 1e6),
+        (b.hi.core - b.lo.core).to_string(),
+        (b.hi.package - b.lo.package).to_string(),
         format!("{:.1}", temp as f64 / 1000.0),
+        format!("{:.3}", b.host(hz)),
     ]
 }
 // X3 fields (kernel + CONFIG_KEYS, whitespace-normalized); None = a record without every field
@@ -426,17 +484,14 @@ fn grade(args: &[String]) -> Result<bool> {
         "unit_cpus\t{}\t{pinned}",
         cpus.as_deref().unwrap_or("missing")
     ));
-    let hz = match host_value(&before, "clk_tck:")? {
-        Some(v) => v.parse::<f64>().map_err(|_| format!("clk_tck: {v}"))?,
-        None => 100.0, // USER_HZ on Linux; the pre-clk_tck records come from the pool host (100)
-    };
+    let hz = clock_ticks(&before)?;
 
     let runs = table(&run.join("runs.tsv"))?;
     out.push(
-        "#call\trun\tblock\tarm\tquery\toutcome\tscored_s\tpeak_rss_gb\thwm_sum_gb\tsha_ok\tbudget"
+        "#call\trun\tblock\tarm\tquery\toutcome\tscored_s\tpeak_rss_gb\thwm_sum_gb\tsha_ok\tbudget\tmemory_basis\tbound_gb"
             .into(),
     );
-    let (mut wrong, mut unchecked, mut over) = (0, 0, 0);
+    let (mut wrong, mut unchecked, mut over, mut unbounded) = (0, 0, 0, 0);
     let mut per: BTreeMap<(String, String), Vec<(f64, u64)>> = BTreeMap::new();
     let mut blocks: BTreeMap<u64, (i64, i64)> = BTreeMap::new();
     let mut unsunk: BTreeMap<u64, usize> = BTreeMap::new();
@@ -462,9 +517,19 @@ fn grade(args: &[String]) -> Result<bool> {
                 "NO"
             }
         };
+        // The harness's bound (a sum of per-process maxima, the producer's exact wait4 peak
+        // included) ≥ the simultaneous peak; a run without one falls back to the observed HWM
+        // sum, which bounds no process the sampler missed (counted: `memory_unbounded`).
+        let bound = optional(row, "memory_bound_bytes")?;
+        let basis = if bound.is_some() {
+            "bound"
+        } else {
+            unbounded += 1;
+            "hwm-sum"
+        };
         let memory = if peak > BUDGET_BYTES {
             "over"
-        } else if hwm > BUDGET_BYTES {
+        } else if bound.unwrap_or(hwm) > BUDGET_BYTES {
             "uncertain"
         } else {
             "ok"
@@ -477,10 +542,11 @@ fn grade(args: &[String]) -> Result<bool> {
                 format!("fail:{memory}")
             };
         out.push(format!(
-            "call\t{n}\t{block}\t{arm}\t{query}\t{outcome}\t{}\t{:.2}\t{:.2}\t{sha}\t{budget}",
+            "call\t{n}\t{block}\t{arm}\t{query}\t{outcome}\t{}\t{:.2}\t{:.2}\t{sha}\t{budget}\t{basis}\t{}",
             score.map_or("NA".into(), |s| format!("{:.3}", s as f64 / 1e9)),
             peak as f64 / 1e9,
-            hwm as f64 / 1e9
+            hwm as f64 / 1e9,
+            bound.map_or("NA".into(), |b| format!("{:.2}", b as f64 / 1e9))
         ));
         if let Some(s) = score {
             per.entry((arm.into(), query.clone()))
@@ -523,7 +589,7 @@ fn grade(args: &[String]) -> Result<bool> {
     }
 
     let host = samples(&state.join("host-samples.tsv"))?;
-    out.push("#block\tn\tstart_us\tend_us\tverdict\twhy\tforeign_cpus\tmax_gap_s\tthrottle_core\tthrottle_package\tmax_temp_c\tcalls_without_sink".into());
+    out.push("#block\tn\tstart_us\tend_us\tverdict\twhy\tforeign_cpus\tmax_gap_s\tthrottle_core\tthrottle_package\tmax_temp_c\tcalls_without_sink\thost_foreign_cpus".into());
     let all: BTreeSet<u64> = runs
         .iter()
         .filter_map(|r| number(r, "block").ok().flatten())
@@ -533,7 +599,17 @@ fn grade(args: &[String]) -> Result<bool> {
         let missing = unsunk.get(&n).copied().unwrap_or(0);
         let mut v = match blocks.get(&n) {
             Some(&(s, e)) => interference(host.as_deref(), s, e, hz),
-            None => ["unassessed", "no-interval", "NA", "NA", "NA", "NA", "NA"].map(str::to_owned),
+            None => [
+                "unassessed",
+                "no-interval",
+                "NA",
+                "NA",
+                "NA",
+                "NA",
+                "NA",
+                "NA",
+            ]
+            .map(str::to_owned),
         };
         // X3 is the chunk's: a changed host rejects every block; an incomplete record leaves an
         // otherwise accepted block unassessed.
@@ -558,7 +634,11 @@ fn grade(args: &[String]) -> Result<bool> {
         let (s, e) = blocks.get(&n).map_or(("NA".into(), "NA".into()), |b| {
             (b.0.to_string(), b.1.to_string())
         });
-        out.push(format!("block\t{n}\t{s}\t{e}\t{}\t{missing}", v.join("\t")));
+        out.push(format!(
+            "block\t{n}\t{s}\t{e}\t{}\t{missing}\t{}",
+            v[..7].join("\t"),
+            v[7]
+        ));
     }
 
     if arms.contains_key("baseline") {
@@ -615,11 +695,91 @@ fn grade(args: &[String]) -> Result<bool> {
         }
     }
     out.push(format!(
-        "summary\tidentity={}\tsha_bad={wrong}\tsha_unchecked={unchecked}\tbudget_fail={over}\tblocks={}\taccepted={}\trejected={rejected}\tunassessed={unassessed}\tx3={x3}\tpinned={pinned}",
+        "summary\tidentity={}\tsha_bad={wrong}\tsha_unchecked={unchecked}\tbudget_fail={over}\tblocks={}\taccepted={}\trejected={rejected}\tunassessed={unassessed}\tx3={x3}\tpinned={pinned}\tmemory_unbounded={unbounded}",
         if matched { "ok" } else { "bad" },
         all.len(),
         accepted.len()
     ));
     println!("{}", out.join("\n"));
     Ok(matched && wrong == 0 && unchecked == 0)
+}
+// CLK_TCK from the host record; the records before the field come from the pool host (USER_HZ 100).
+fn clock_ticks(before: &Path) -> Result<f64> {
+    match host_value(before, "clk_tck:")? {
+        Some(v) => v.parse::<f64>().map_err(|_| format!("clk_tck: {v}")),
+        None => Ok(100.0),
+    }
+}
+
+// Contract sb § Carried rulings (preflight, its rule fixed before the confirmation): the marks of
+// `preflight.tsv` (`<window>-start|end`, epoch µs) frame three synthetic controls — a burner inside
+// the sampled unit on CPU 2 (campaign CPUs 0.9–1.1, pinned foreign ≤ 0.2), one outside it on CPU 3
+// (pinned foreign 0.8–1.3), one on CPU 0 (pinned foreign ≤ 0.2, host foreign ≥ 0.8) — + the quiet
+// stretch, cut into consecutive 150 s windows (≥ 4), each passing X1 (pinned foreign ≤ 0.5); every
+// window passes X4 (gap ≤ 5 s). rc 0 = go, rc 1 = hold.
+fn preflight_check(args: &[String]) -> Result<bool> {
+    let [state] = args else {
+        return Err(PREFLIGHT_HELP.into());
+    };
+    let state = Path::new(state);
+    let hz = clock_ticks(&state.join("host-before.txt"))?;
+    let rows = samples(&state.join("host-samples.tsv"))?.ok_or("no host-samples.tsv")?;
+    let mut marks = HashMap::new();
+    for line in text(&state.join("preflight.tsv"))?.lines() {
+        if let Some((name, at)) = line.split_once('\t') {
+            let at: i64 = at.parse().map_err(|_| format!("preflight.tsv: {line}"))?;
+            marks.insert(name.to_owned(), at);
+        }
+    }
+    let span = |name: &str| -> Result<(i64, i64)> {
+        let edge = |edge: &str| {
+            marks
+                .get(&format!("{name}-{edge}"))
+                .copied()
+                .ok_or_else(|| format!("preflight.tsv: no {name}-{edge}"))
+        };
+        Ok((edge("start")?, edge("end")?))
+    };
+    let mut windows = Vec::new();
+    for name in ["campaign-control", "pinned-control", "host-control"] {
+        let (s, e) = span(name)?;
+        windows.push((name.to_owned(), s, e));
+    }
+    let (quiet, end) = span("quiet")?;
+    let count = (end - quiet) / QUIET_US;
+    for k in 0..count {
+        let s = quiet + k * QUIET_US;
+        windows.push((format!("quiet-{}", k + 1), s, s + QUIET_US));
+    }
+    let mut out = vec![
+        "#window\tname\tstart_us\tend_us\tcampaign_cpus\tpinned_foreign_cpus\thost_foreign_cpus\tmax_gap_s\tverdict"
+            .to_owned(),
+    ];
+    let mut go = count >= QUIET_WINDOWS;
+    for (name, s, e) in &windows {
+        let b = bracket(&rows, *s, *e).ok_or("host-samples.tsv: no samples")?;
+        let pinned = b
+            .pinned(hz)
+            .ok_or("host-samples.tsv: no pinned_busy_jiffies")?;
+        let (campaign, host) = (b.campaign(), b.host(hz));
+        let read = match name.as_str() {
+            "campaign-control" => (0.9..=1.1).contains(&campaign) && pinned <= 0.2,
+            "pinned-control" => (0.8..=1.3).contains(&pinned),
+            "host-control" => pinned <= 0.2 && host >= 0.8,
+            _ => pinned <= FOREIGN_CPUS,
+        };
+        let ok = read && b.gap <= GAP_US;
+        go &= ok;
+        out.push(format!(
+            "window\t{name}\t{s}\t{e}\t{campaign:.3}\t{pinned:.3}\t{host:.3}\t{:.2}\t{}",
+            b.gap as f64 / 1e6,
+            if ok { "ok" } else { "bad" }
+        ));
+    }
+    out.push(format!(
+        "preflight\tquiet_windows={count}\tverdict={}",
+        if go { "go" } else { "hold" }
+    ));
+    println!("{}", out.join("\n"));
+    Ok(go)
 }

@@ -55,6 +55,8 @@ struct RunRow {
     cpu: f64,
     peak_rss: u64,
     hwm_sum: u64,
+    // Warm calls: Σ HWM of the non-producer processes + the producer's exact peak (serve.rs).
+    memory_bound: Option<u64>,
     producer_rc: Option<i32>,
     checker_rc: Option<i32>,
     output_bytes: Option<u64>,
@@ -95,6 +97,11 @@ fn plan(config: &Config) -> Result<Vec<Plan>> {
                 });
             }
         }
+    }
+    // Sparse replay keeps each kept block's draw from the full plan (one draw per block from
+    // block 1): a replacement repeats its original's arm order + run numbers.
+    if let Some(only) = &config.only {
+        plan.retain(|entry| only.contains(&entry.block));
     }
     Ok(plan)
 }
@@ -180,6 +187,7 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
         cpu: 0.0,
         peak_rss: 0,
         hwm_sum: 0,
+        memory_bound: None,
         producer_rc: None,
         checker_rc: None,
         output_bytes: None,

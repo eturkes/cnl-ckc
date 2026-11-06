@@ -1,20 +1,72 @@
 #!/usr/bin/env bash
-# Contract sb D6 + § Carried rulings (affinity + interference exclusion): one campaign chunk on the
-# reference machine. `run` starts tools/sb-campaign-chunk as a detached systemd user unit pinned to
-# CPUs 2 3 6 7 (cores 2 + 3 with their siblings) once the sleeper's marker shows the second offload
-# slot held, records the host before + after, the unit's applied CPU list and a 1 s host sample
-# stream (the X1–X4 inputs of `ckc bench grade`); a rerun with the same id re-attaches to a live unit
-# (an ssh loss leaves the unit running). `hold` = the sleeper: run as a job of another offload project,
-# it holds the second slot until the chunk ends. The wrapper + its sampler stay on CPUs 0 1 4 5.
+# Contract sb D6 + § Carried rulings (affinity + interference exclusion, shield, preflight): one
+# campaign chunk on the reference machine. `run` starts tools/sb-campaign-chunk as a detached systemd
+# user unit pinned to CPUs 2 3 6 7 (cores 2 + 3 with their siblings) once the sleeper's marker shows
+# the second offload slot held, shields those CPUs (every other slice + scope → AllowedCPUs 0 1 4 5;
+# user ruling: the user's jobs + desktop session keep running there), records the host before + after,
+# the unit's applied CPU list and a 1 s host sample stream (the X1–X4 inputs of `ckc bench grade`); a
+# rerun with the same id re-attaches to a live unit (an ssh loss leaves the unit running). The unit's
+# own ExecStopPost lifts the shield, so a lost wrapper never leaves it up; `unshield` = the same
+# restore, idempotent, callable alone. `preflight` = the host-only preflight under the same shield: a
+# sampled placeholder unit + three synthetic controls + a 600 s quiet stretch, graded by
+# `ckc bench preflight <state-dir>`. `hold` = the sleeper: run as a job of another offload project, it
+# holds the second slot until the chunk ends. The wrapper + its sampler stay on CPUs 0 1 4 5.
 # Layout: <base>/markers/<id>.{sleeper,done}, <base>/runs/<id>/ (harness), <base>/state/<id>/ (rc,
-# chunk.log, host-before.txt, host-after.txt, unit-cpus.txt, host-samples.tsv).
-# SB1_TA_RECEIPTS passes through to the chunk (`none` = census verdicts pending); SB1_SLEEPER=none
-# skips the marker wait (a host without a second slot to hold).
+# chunk.log, host-before.txt, host-after.txt, unit-cpus.txt, wrapper-cpus.txt, shield.txt,
+# host-samples.tsv; preflight: preflight.tsv).
+# SB1_TA_RECEIPTS + SB1_ONLY_BLOCKS pass through to the chunk (`none` = census verdicts pending; a
+# block list = a sparse replacement replay); SB1_SLEEPER=none skips the marker wait (a host without a
+# second slot to hold); SB1_SHIELD=none skips the shield (a host without sudo).
 set -euo pipefail
 usage() {
-  printf 'usage: tools/sb-campaign-unit run <base> <id> <instance-dir> <blocks> <seed> <ckc> <checker> [<r-pair G1 instance-dir>]\n       tools/sb-campaign-unit hold <base> <id>\n' >&2
+  printf 'usage: tools/sb-campaign-unit run <base> <id> <instance-dir> <blocks> <seed> <ckc> <checker> [<r-pair G1 instance-dir>]\n       tools/sb-campaign-unit preflight <base> <id>\n       tools/sb-campaign-unit hold <base> <id>\n       tools/sb-campaign-unit unshield\n' >&2
   exit 2
 }
+pinned=(2 3 6 7)
+host_cpus=0,1,4,5
+# Shield targets = every top-level slice + scope and every user slice but the campaign user's (its
+# user manager runs the campaign unit; its ssh sessions = this wrapper, already on 0 1 4 5).
+targets() {
+  local d own
+  own=user-$(id -u).slice
+  for d in /sys/fs/cgroup/*.slice /sys/fs/cgroup/*.scope /sys/fs/cgroup/user.slice/user-*.slice; do
+    [[ -d $d ]] || continue
+    d=${d##*/}
+    [[ $d == user.slice || $d == "$own" ]] || printf '%s\n' "$d"
+  done
+}
+cpusets() {
+  local t
+  for t in $(targets); do
+    printf '%s=%s ' "$t" "$(cat "$(find_cg "$t")/cpuset.cpus.effective" 2>/dev/null || echo NA)"
+  done
+  echo
+}
+find_cg() { if [[ $1 == user-*.slice ]]; then printf '/sys/fs/cgroup/user.slice/%s' "$1"; else printf '/sys/fs/cgroup/%s' "$1"; fi; }
+shield() {
+  local t bad=0
+  for t in $(targets); do
+    sudo -n systemctl set-property --runtime "$t" AllowedCPUs="$host_cpus" || bad=1
+  done
+  return "$bad"
+}
+# An empty AllowedCPUs= alone clears systemd's property yet leaves the cgroup's cpuset restricted
+# (systemd 260, kernel 6.18): the full online set first, then the property cleared.
+unshield() {
+  local t bad=0 online
+  online=$(cat /sys/devices/system/cpu/online)
+  for t in $(targets); do
+    sudo -n systemctl set-property --runtime "$t" AllowedCPUs="$online" || bad=1
+    sudo -n systemctl set-property --runtime "$t" AllowedCPUs= || bad=1
+  done
+  return "$bad"
+}
+if [[ ${1:-} == unshield ]]; then
+  (( $# == 1 )) || usage
+  if unshield; then r=0; else r=1; fi
+  printf 'unshield: %s\n' "$(cpusets)"
+  exit "$r"
+fi
 (( $# >= 3 )) || usage
 mode=$1 base=$(readlink -f -- "$2") id=$3
 [[ $id =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'sb-campaign-unit: bad id %s\n' "$id" >&2; exit 2; }
@@ -29,34 +81,45 @@ if [[ $mode == hold ]]; then
   printf 'sleeper %s released\n' "$id"
   exit 0
 fi
-if [[ $mode != run ]] || (( $# != 8 && $# != 9 )); then usage; fi
+case $mode in
+  run) (( $# == 8 || $# == 9 )) || usage ;;
+  preflight) (( $# == 3 )) || usage ;;
+  *) usage ;;
+esac
 root=$(readlink -f -- "$(dirname -- "$0")/..")
-instance=$(readlink -f -- "$4") blocks=$5 seed=$6 ckc=$(readlink -f -- "$7") checker=$(readlink -f -- "$8")
-args=("$root" "$instance" "$base/runs/$id" "$blocks" "$seed" "$ckc" "$checker")
-(( $# == 8 )) || args+=(--r-pair "$(readlink -f -- "$9")")
 XDG_RUNTIME_DIR=/run/user/$(id -u)
 export XDG_RUNTIME_DIR
-unit=sb1-chunk-$id
-taskset -cp 0,1,4,5 "$$" >/dev/null 2>&1 || printf 'sb-campaign-unit: wrapper left unpinned (taskset)\n' >&2
+unit=sb1-$mode-$id
+[[ $mode == run ]] && unit=sb1-chunk-$id
+taskset -cp "$host_cpus" "$$" >/dev/null 2>&1 || printf 'sb-campaign-unit: wrapper left unpinned (taskset)\n' >&2
 host() {
   { date -u +%FT%TZ; uname -r; lscpu | grep -E '^Model name|^CPU\(s\)' || true
     printf 'governors: '; { sort /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2>/dev/null || true; } | uniq -c | tr -s ' \n' ' '; echo
     printf 'online: '; cat /sys/devices/system/cpu/online
     printf 'slice-cpus: '; cat "/sys/fs/cgroup/user.slice/user-$(id -u).slice/cpuset.cpus.effective" 2>/dev/null || echo NA
     printf 'clk_tck: '; getconf CLK_TCK
+    printf 'shield: '; cpusets
     printf 'swap: '; swapon --show --noheadings | tr '\n' ' '; echo
     printf 'thermal: '; { cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null || true; } | tr '\n' ' '; echo
-    uptime; { ps -eo pid,pcpu,rss,etimes,comm --sort=-pcpu || true; } | head -8; } >"$1"
+    uptime; { ps -eo pid,pcpu,psr,rss,etimes,comm --sort=-pcpu || true; } | head -8; } >"$1"
 }
 active() { local s; s=$(systemctl --user show "$unit" -p ActiveState --value 2>/dev/null) || return 1; [[ $s == active || $s == activating || $s == deactivating ]]; }
-# 1 s host samples until the unit's cgroup goes or its rc lands; bash builtins + sleep. Throttle
-# counters repeat per sibling/package: only their deltas matter.
+# 1 s host samples until the unit's cgroup goes or its rc lands; bash builtins + sleep. Busy jiffies
+# host-wide + over the pinned CPUs (X1's input); throttle counters repeat per sibling/package: only
+# their deltas matter.
 sample() {
-  local cg=$1 out=$2 t us ni sy id io irq sirq stl cu sw si so k v ct pt mt f x
-  [[ -s $out ]] || printf 'epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc\n' >"$out"
+  local cg=$1 out=$2 t name us ni sy id io irq sirq stl busy idle pb cu sw si so k v ct pt mt f x
+  [[ -s $out ]] || printf 'epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc\tpinned_busy_jiffies\n' >"$out"
   while [[ -e $cg/cpu.stat && ! -s $st/rc ]]; do
     t=${EPOCHREALTIME/./}
-    read -r _ us ni sy id io irq sirq stl _ </proc/stat
+    busy=0 idle=0 pb=0
+    while read -r name us ni sy id io irq sirq stl _; do
+      case $name in
+        cpu) busy=$((us + ni + sy + irq + sirq + stl)) idle=$((id + io)) ;;
+        cpu*) [[ " ${pinned[*]} " == *" ${name#cpu} "* ]] && pb=$((pb + us + ni + sy + irq + sirq + stl)) ;;
+        *) break ;;
+      esac
+    done </proc/stat
     cu=NA; while read -r k v; do [[ $k == usage_usec ]] && { cu=$v; break; }; done 2>/dev/null <"$cg/cpu.stat"
     sw=NA; { read -r sw <"$cg/memory.swap.current"; } 2>/dev/null || sw=NA
     si=NA so=NA; while read -r k v; do case $k in pswpin) si=$v ;; pswpout) so=$v; break ;; esac; done </proc/vmstat
@@ -64,7 +127,7 @@ sample() {
     for f in /sys/devices/system/cpu/cpu*/thermal_throttle/core_throttle_count; do read -r x <"$f" && ct=$((ct + x)); done
     for f in /sys/devices/system/cpu/cpu*/thermal_throttle/package_throttle_count; do read -r x <"$f" && pt=$((pt + x)); done
     for f in /sys/class/thermal/thermal_zone*/temp; do { read -r x <"$f"; } 2>/dev/null && (( x > mt )) && mt=$x; done
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$t" $((us + ni + sy + irq + sirq + stl)) $((id + io)) "$cu" "$sw" "$si" "$so" "$ct" "$pt" "$mt" >>"$out"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$t" "$busy" "$idle" "$cu" "$sw" "$si" "$so" "$ct" "$pt" "$mt" "$pb" >>"$out"
     sleep 1
   done
 }
@@ -75,23 +138,65 @@ if [[ ${SB1_SLEEPER:-} != none ]]; then
     sleep 5
   done
 fi
+shielded=()
+if [[ ! -s $st/rc && ${SB1_SHIELD:-} != none ]]; then
+  # Idempotent: a re-attach to a live unit re-applies it.
+  shield || printf 'sb-campaign-unit: a shield target refused (see shield.txt)\n' >&2
+  printf '%s shielded: %s\n' "$(date -u +%FT%TZ)" "$(cpusets)" >>"$st/shield.txt"
+  shielded=(-p "ExecStopPost=$root/tools/sb-campaign-unit unshield")
+fi
+started=
 if [[ ! -s $st/rc ]] && ! active; then
   host "$st/host-before.txt"
-  # shellcheck disable=SC2016  # "$@" + $ST expand inside the unit's shell
-  systemd-run --user --quiet --unit="$unit" --working-directory="$root" \
-    -p "CPUAffinity=2 3 6 7" \
-    -E PATH="$PATH" -E HOME="$HOME" -E LANG=C.UTF-8 -E SB1_TA_RECEIPTS="${SB1_TA_RECEIPTS:-}" -E ST="$st" \
+  if [[ $mode == run ]]; then
+    instance=$(readlink -f -- "$4") blocks=$5 seed=$6 ckc=$(readlink -f -- "$7") checker=$(readlink -f -- "$8")
+    args=("$root" "$instance" "$base/runs/$id" "$blocks" "$seed" "$ckc" "$checker")
+    (( $# == 8 )) || args+=(--r-pair "$(readlink -f -- "$9")")
+    # shellcheck disable=SC2016  # "$@" + $ST expand inside the unit's shell
+    script='tools/sb-campaign-chunk "$@"; printf "%s\n" "$?" >"$ST/rc"'
+  else
+    : >"$st/preflight.tsv"
+    args=()
+    # The sampled placeholder: idle, then campaign-control = a 60 s burner on CPU 2 inside it.
+    # shellcheck disable=SC2016  # expands inside the unit's shell
+    script='mark() { printf "%s\t%s\n" "$1" "${EPOCHREALTIME/./}" >>"$ST/preflight.tsv"; }; sleep 20; mark campaign-control-start; timeout 60 taskset -c 2 bash -c "while :; do :; done" || true; mark campaign-control-end; sleep 3600'
+  fi
+  if ! systemd-run --user --quiet --unit="$unit" --working-directory="$root" \
+    -p "CPUAffinity=${pinned[*]}" "${shielded[@]}" \
+    -E PATH="$PATH" -E HOME="$HOME" -E LANG=C.UTF-8 -E SB1_TA_RECEIPTS="${SB1_TA_RECEIPTS:-}" \
+    -E SB1_ONLY_BLOCKS="${SB1_ONLY_BLOCKS:-}" -E ST="$st" \
     -p "StandardOutput=append:$st/chunk.log" -p "StandardError=append:$st/chunk.log" \
-    bash -c 'tools/sb-campaign-chunk "$@"; printf "%s\n" "$?" >"$ST/rc"' _ "${args[@]}"
+    bash -c "$script" _ "${args[@]}"; then
+    (( ${#shielded[@]} == 0 )) || unshield || true
+    printf 'sb-campaign-unit: systemd-run failed for %s\n' "$unit" >&2
+    exit 2
+  fi
+  started=$SECONDS
 fi
 sp=
 cgp=$(systemctl --user show "$unit" -p ControlGroup --value 2>/dev/null || true)
 if [[ -n $cgp ]] && active; then
-  # X3 evidence: the CPU list systemd applied to the unit's main process.
+  # X3 evidence: the CPU list systemd applied to the unit's main process + the wrapper's own.
   { systemctl --user show "$unit" -p CPUAffinity -p MainPID
     grep -E '^Cpus_allowed_list' "/proc/$(systemctl --user show "$unit" -p MainPID --value)/status"; } >"$st/unit-cpus.txt" 2>&1 || true
   ( set +e; sample "/sys/fs/cgroup$cgp" "$st/host-samples.tsv" ) &
   sp=$!
+  { printf 'wrapper '; grep -E '^Cpus_allowed_list' "/proc/$$/status"
+    printf 'sampler '; grep -E '^Cpus_allowed_list' "/proc/$sp/status"; } >"$st/wrapper-cpus.txt" 2>&1 || true
+fi
+if [[ $mode == preflight && -n $started ]]; then
+  # The wrapper's controls + the quiet stretch, on fixed offsets from the unit's start; the marks
+  # frame each window for `ckc bench preflight`.
+  at() { local d=$((started + $1 - SECONDS)); (( d <= 0 )) || sleep "$d"; }
+  mark() { printf '%s\t%s\n' "$1" "${EPOCHREALTIME/./}" >>"$st/preflight.tsv"; }
+  burn() { systemd-run --user --quiet --wait -p "CPUAffinity=$1" timeout 60 bash -c 'while :; do :; done' >/dev/null 2>&1 || true; }
+  at 100; mark pinned-control-start; burn 3; mark pinned-control-end
+  at 180; mark host-control-start; burn 0; mark host-control-end
+  at 260; mark quiet-start; at 860; mark quiet-end
+  # One more sample past the quiet stretch's end before the placeholder's cgroup goes.
+  sleep 2
+  systemctl --user stop "$unit" || true
+  printf '0\n' >"$st/rc"
 fi
 while active; do sleep 15; done
 [[ -z $sp ]] || wait "$sp" || true
@@ -99,5 +204,5 @@ host "$st/host-after.txt"
 touch "$m/$id.done"
 tail -n 2 "$st/chunk.log" 2>/dev/null || true
 rc=$(cat "$st/rc" 2>/dev/null || echo 125)
-printf 'chunk %s rc=%s\n' "$id" "$rc"
+printf '%s %s rc=%s\n' "$mode" "$id" "$rc"
 exit "$rc"

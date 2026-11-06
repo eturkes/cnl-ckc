@@ -490,7 +490,7 @@ impl PreparedProgram {
             let stdout = request.output.join("producer.stdout");
             let stderr = request.output.join("producer.stderr");
             mark(self.origin, &request.output, "producer_spawn_begin")?;
-            let status = Command::new(&request.swipl)
+            let child = Command::new(&request.swipl)
                 .args([
                     "--stack-limit=32g",
                     "--table-space=32g",
@@ -511,9 +511,14 @@ impl PreparedProgram {
                 .stdin(Stdio::null())
                 .stdout(File::create(&stdout).map_err(|e| Failure::io(&stdout, e))?)
                 .stderr(File::create(&stderr).map_err(|e| Failure::io(&stderr, e))?)
-                .status()
+                .spawn()
                 .map_err(|e| Failure::io(&request.swipl, e))?;
+            let exit = crate::peak::wait(child).map_err(|e| Failure::io(&request.swipl, e))?;
             mark(self.origin, &request.output, "producer_exited")?;
+            self.counters.runtime("producer_pid", u64::from(exit.pid));
+            self.counters
+                .runtime("producer_maxrss_bytes", exit.peak_bytes);
+            let status = exit.status;
             if !status.success()
                 || fs::metadata(&stdout)
                     .map_err(|e| Failure::io(&stdout, e))?

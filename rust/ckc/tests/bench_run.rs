@@ -872,3 +872,149 @@ fn warm_refused_call_keeps_the_server_serving() {
     );
     assert!(runs[1..].iter().all(|r| r["outcome"] == "verified"));
 }
+
+// Contract sb P8: a warm call's memory bound = Σ HWM of its observed processes other than the
+// reported producer + that producer's exact (wait4) peak; a call without a report has no bound.
+#[test]
+fn warm_memory_bound_adds_the_producer_peak_to_the_other_processes() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    for (mode, peak) in [("normal", 1_000_000_000_u64), ("producer-self", 1 << 30)] {
+        let s = Scratch::new(&format!("bound-{mode}"));
+        succeeded(&s.warm(mode, false, &[]));
+        let text = s.result("runs.tsv");
+        for run in rows(&text) {
+            let n: usize = run["run"].parse().unwrap();
+            let counters = s.result(&format!("run-{n:06}/checker-counters.tsv"));
+            let pid = counters
+                .lines()
+                .find_map(|l| l.strip_prefix("runtime\tproducer_pid\t"))
+                .unwrap()
+                .to_owned();
+            let processes_text = s.result(&format!("run-{n:06}/processes.tsv"));
+            let processes = rows(&processes_text);
+            let others: u64 = processes
+                .iter()
+                .filter(|p| p["pid"] != pid)
+                .map(|p| number(p, "hwm_bytes"))
+                .sum();
+            assert_eq!(
+                number(&run, "memory_bound_bytes"),
+                others + peak,
+                "{mode} run {n}"
+            );
+            // The server reports itself: its own HWM leaves the sum, the exact peak replaces it.
+            assert_eq!(
+                processes.iter().any(|p| p["pid"] == pid),
+                mode == "producer-self"
+            );
+        }
+    }
+    let s = Scratch::new("bound-unreported");
+    succeeded(&s.warm("unreported", false, &[]));
+    let text = s.result("runs.tsv");
+    assert!(
+        rows(&text)
+            .iter()
+            .all(|r| r["memory_bound_bytes"].is_empty())
+    );
+}
+
+// Contract sb § Carried rulings (R pair offsets): block b's first call starts at the servers'
+// ready line + (b − 1) × the spacing, read on the server's own arrival clock.
+#[test]
+fn warm_block_spacing_starts_each_block_at_its_offset() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("spacing");
+    succeeded(&s.warm(
+        "normal",
+        true,
+        &["--blocks", "3", "--block-spacing-ms", "400"],
+    ));
+    let plan_text = s.result("plan.tsv");
+    let plan = rows(&plan_text);
+    let first: Vec<usize> = (1..=3)
+        .map(|b| {
+            plan.iter().find(|r| r["block"] == b.to_string()).unwrap()["run"]
+                .parse()
+                .unwrap()
+        })
+        .collect();
+    let arrival = |run: usize| -> i128 {
+        s.result(&format!("run-{run:06}/request.tsv"))
+            .trim()
+            .strip_prefix("received_unix_ns\t")
+            .unwrap()
+            .parse()
+            .unwrap()
+    };
+    let t1 = arrival(first[0]);
+    for (k, &run) in first.iter().enumerate().skip(1) {
+        let (offset, want) = (arrival(run) - t1, 400_000_000 * k as i128);
+        assert!(
+            offset >= want - 20_000_000 && offset < want + 1_000_000_000,
+            "block {}: {offset} ns after block 1",
+            k + 1
+        );
+    }
+    let schedule_text = s.result("schedule.tsv");
+    let schedule = rows(&schedule_text);
+    assert_eq!(schedule.len(), 3);
+    let base = number(&schedule[0], "planned_ns");
+    for (k, row) in schedule.iter().enumerate() {
+        assert_eq!(number(row, "planned_ns"), base + 400_000_000 * k as u64);
+        assert!(number(row, "started_ns") >= number(row, "planned_ns"));
+    }
+}
+
+// Contract sb P6: a sparse replay draws the full plan (one arm-order draw per block from block 1)
+// and keeps the listed blocks' rows — run numbers, orders + arms — so a replacement repeats its
+// original; a replay drawing its blocks afresh from block 1 would differ on these seeds.
+#[test]
+fn only_blocks_replays_the_full_plans_rows() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let mut fresh_differs = false;
+    for seed in ["11", "1102", "98172"] {
+        let s = Scratch::new(&format!("only-{seed}"));
+        let common = ["--blocks", "6", "--seed", seed];
+        succeeded(&s.warm("normal", true, &common));
+        fs::rename(s.0.join("result"), s.0.join("full")).unwrap();
+        let full_text = fs::read_to_string(s.0.join("full/plan.tsv")).unwrap();
+        let full = rows(&full_text);
+        let keep: Vec<_> = full
+            .iter()
+            .filter(|r| r["block"] == "2" || r["block"] == "5")
+            .cloned()
+            .collect();
+        succeeded(&s.warm(
+            "normal",
+            true,
+            &[&common[..], &["--only-blocks", "2,5"]].concat(),
+        ));
+        let sparse_text = s.result("plan.tsv");
+        assert_eq!(rows(&sparse_text), keep, "seed {seed}");
+        let runs_text = s.result("runs.tsv");
+        assert_eq!(
+            rows(&runs_text)
+                .iter()
+                .map(|r| r["run"])
+                .collect::<Vec<_>>(),
+            keep.iter().map(|r| r["run"]).collect::<Vec<_>>()
+        );
+        let arms = |b: &str| {
+            full.iter()
+                .filter(|r| r["block"] == b)
+                .map(|r| r["arm"])
+                .collect::<Vec<_>>()
+        };
+        fresh_differs |= arms("1") != arms("2") || arms("2") != arms("5");
+    }
+    assert!(
+        fresh_differs,
+        "a fresh-draw replay must differ on some seed"
+    );
+    let s = Scratch::new("only-usage");
+    for bad in ["7", "2,2", "0"] {
+        let output = s.warm("normal", true, &["--blocks", "6", "--only-blocks", bad]);
+        assert_eq!(output.status.code(), Some(2), "--only-blocks {bad}");
+    }
+}

@@ -4,6 +4,7 @@ mod engine;
 mod level;
 mod number;
 pub mod orchestrator;
+mod peak;
 pub mod program;
 pub mod query;
 mod slice;

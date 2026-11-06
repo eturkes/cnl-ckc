@@ -30,9 +30,12 @@ queries=(--query q-all --query q-one --query q-patient)
 paired=()
 if (( $# == 9 )); then
   [[ "$8" == --r-pair ]] || { printf 'sb-campaign-chunk: expected --r-pair\n' >&2; exit 2; }
-  paired=(--paired "$(readlink -f -- "$9")")
+  # R pairs start 30 s apart after both servers are ready (contract sb § Carried rulings).
+  paired=(--paired "$(readlink -f -- "$9")" --block-spacing-ms 30000)
   queries=(--query q-one)
 fi
+# SB1_ONLY_BLOCKS=<b>,… = a replacement replay: the full plan's draws, those blocks alone.
+[[ -z ${SB1_ONLY_BLOCKS:-} ]] || paired+=(--only-blocks "$SB1_ONLY_BLOCKS")
 # Settings = the run manifest's frozen values (call + load deadline 1,800,000 ms, kill cap
 # 48 GB, RSS sample 50 ms, size cap 8 GB); SWI limits live in the server's producer call.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 RAYON_NUM_THREADS=1 CKC_JOBS=1

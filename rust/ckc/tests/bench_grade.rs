@@ -39,14 +39,18 @@ struct Chunk {
     name: &'static str,
     blocks: i64,
     paired: bool,
-    foreign: fn(&Chunk, i64) -> f64,           // foreign CPUs at t
-    swap: fn(&Chunk, i64) -> Option<i64>,      // the unit's swap bytes at t (None = NA)
-    sampled: fn(&Chunk, i64) -> bool,          // a sample exists at t
-    sampler: bool,                             // host-samples.tsv written
+    foreign: fn(&Chunk, i64) -> f64, // foreign CPUs on the campaign's CPUs 2 3 6 7 at t
+    host_extra: fn(&Chunk, i64) -> f64, // foreign CPUs on the other CPUs at t
+    pinned_column: bool,             // host-samples.tsv carries pinned_busy_jiffies
+    swap: fn(&Chunk, i64) -> Option<i64>, // the unit's swap bytes at t (None = NA)
+    sampled: fn(&Chunk, i64) -> bool, // a sample exists at t
+    sampler: bool,                   // host-samples.tsv written
     after: (&'static str, u32, bool), // after-record governor, scaling MHz %, every key present
-    cpus: Option<&'static str>,       // the unit's Cpus_allowed_list
+    cpus: Option<&'static str>,      // the unit's Cpus_allowed_list
     score: fn(i64, &str, &str) -> u64, // ns per (block, arm, query)
     memory: fn(i64, &str, &str) -> (u64, u64), // (peak RSS, HWM sum) per call
+    bound: fn(i64, &str, &str) -> Option<u64>, // the harness's memory bound per call (None = empty)
+    bound_column: bool,              // runs.tsv carries memory_bound_bytes
     output: fn(i64, &str, &str) -> Option<String>, // a planted output digest
     expected: fn(&str, &str) -> bool, // the manifest carries an expected output per (instance, query)
     identity: fn(&str, &str, String) -> Option<String>, // a planted identities.tsv digest per path
@@ -61,6 +65,8 @@ fn clean(name: &'static str) -> Chunk {
         blocks: 2,
         paired: false,
         foreign: |_, _| 0.0,
+        host_extra: |_, _| 0.0,
+        pinned_column: true,
         swap: |_, _| Some(0),
         sampled: |_, _| true,
         sampler: true,
@@ -68,6 +74,8 @@ fn clean(name: &'static str) -> Chunk {
         cpus: Some("2-3,6-7"),
         score: |_, _, _| 1_500_000_000,
         memory: |_, _, _| (1_000_000_000, 1_200_000_000),
+        bound: |_, _, _| Some(1_300_000_000),
+        bound_column: true,
         output: |_, _, _| None,
         expected: |_, _| true,
         identity: |_, _, _| None,
@@ -246,7 +254,14 @@ fn grade(c: &Chunk) -> Graded {
     fs::write(&manifest_path, manifest).unwrap();
 
     let mut plan = "run\tblock\torder\tarm\tcomposition\tquery\n".to_owned();
-    let mut runs = "run\tblock\torder\tarm\toutcome\tscored_ns\tpeak_rss_bytes\tobserved_hwm_sum_bytes\toutput_sha256\n".to_owned();
+    let mut runs = format!(
+        "run\tblock\torder\tarm\toutcome\tscored_ns\tpeak_rss_bytes\tobserved_hwm_sum_bytes\toutput_sha256{}\n",
+        if c.bound_column {
+            "\tmemory_bound_bytes"
+        } else {
+            ""
+        }
+    );
     let mut n = 0;
     for b in 1..=c.blocks {
         for (k, (arm, query, _, end)) in calls(c, b).into_iter().enumerate() {
@@ -261,8 +276,16 @@ fn grade(c: &Chunk) -> Graded {
             let output = (c.output)(b, arm, query)
                 .unwrap_or_else(|| sha(format!("output {iid} {query}\n").as_bytes()));
             let (peak, hwm) = (c.memory)(b, arm, query);
+            let bound = if c.bound_column {
+                format!(
+                    "\t{}",
+                    (c.bound)(b, arm, query).map_or(String::new(), |v| v.to_string())
+                )
+            } else {
+                String::new()
+            };
             runs.push_str(&format!(
-                "{n}\t{b}\t{}\t{arm}\tverified\t{}\t{peak}\t{hwm}\t{output}\n",
+                "{n}\t{b}\t{}\t{arm}\tverified\t{}\t{peak}\t{hwm}\t{output}{bound}\n",
                 k + 1,
                 (c.score)(b, arm, query)
             ));
@@ -309,19 +332,34 @@ fn grade(c: &Chunk) -> Graded {
         .unwrap();
     }
     if c.sampler {
-        let mut rows = "epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc\n".to_owned();
+        let pinned_head = if c.pinned_column {
+            "\tpinned_busy_jiffies"
+        } else {
+            ""
+        };
+        let mut rows = format!(
+            "epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc{pinned_head}\n"
+        );
         let end = block_span(c, c.blocks).1 + 30_000_000;
-        let (mut t, mut busy, mut cpu) = (T0 - 30_000_000, 1_000_i64, 0_i64);
+        let (mut t, mut busy, mut pinned, mut cpu) = (T0 - 30_000_000, 1_000_i64, 400_i64, 0_i64);
         while t <= end {
             if (c.sampled)(c, t) {
                 let swap = (c.swap)(c, t).map_or("NA".into(), |b| b.to_string());
                 let (core, package) = (c.throttle)(c, t);
+                let pinned_cell = if c.pinned_column {
+                    format!("\t{pinned}")
+                } else {
+                    String::new()
+                };
                 rows.push_str(&format!(
-                    "{t}\t{busy}\t5000\t{cpu}\t{swap}\t0\t0\t{core}\t{package}\t50000\n"
+                    "{t}\t{busy}\t5000\t{cpu}\t{swap}\t0\t0\t{core}\t{package}\t50000{pinned_cell}\n"
                 ));
             }
-            // The next second: the campaign holds 2 CPUs, foreign work the rest (USER_HZ 100).
-            busy += ((2.0 + (c.foreign)(c, t)) * 100.0).round() as i64;
+            // The next second: the campaign holds 2 of its CPUs, foreign work the rest of them +
+            // the host's other CPUs (USER_HZ 100).
+            let own = ((2.0 + (c.foreign)(c, t)) * 100.0).round() as i64;
+            pinned += own;
+            busy += own + ((c.host_extra)(c, t) * 100.0).round() as i64;
             cpu += 2_000_000;
             t += 1_000_000;
         }
@@ -680,6 +718,9 @@ fn a_call_without_an_expected_output_refuses() {
 fn budget_boundaries_hold_at_300_s_and_32_gb() {
     let mut c = clean("budget");
     c.blocks = 1;
+    // The HWM-sum fallback's line (a run without the bound column; the bound's own line =
+    // the_memory_bound_grades_each_call_and_its_absence_is_counted).
+    c.bound_column = false;
     c.score = |_, _, q| {
         if q == "q-all" {
             300_000_000_000
@@ -876,4 +917,252 @@ fn the_bootstrap_draws_every_pair_with_equal_chance() {
             "{name}"
         );
     }
+}
+
+// X1 reads the campaign's CPUs alone: shielded work on the host's other CPUs (≈ 0.9 CPU, as the
+// user's own jobs) never rejects, and stays reported as host-wide foreign CPU (the last column).
+#[test]
+fn host_foreign_off_the_pinned_cpus_never_rejects() {
+    let mut c = clean("x1-host");
+    c.host_extra = |_, _| 0.9;
+    c.foreign = |_, _| 0.2;
+    let g = grade(&c);
+    assert_eq!(g.blocks(), accepted(2), "{}", g.stdout);
+    for row in g.rows("block") {
+        assert_eq!((row[6], row[12]), ("0.200", "1.100"));
+    }
+}
+
+// A sampler that predates the pinned column cannot assess X1: its blocks read unassessed, never
+// accepted; X2 + X4 still reject on their own.
+#[test]
+fn a_sampler_without_the_pinned_column_leaves_x1_unassessed() {
+    let mut c = clean("x1-unpinned");
+    c.pinned_column = false;
+    let g = grade(&c);
+    assert_eq!(
+        g.blocks(),
+        vec![("unassessed".to_owned(), "X1-unpinned".to_owned()); 2]
+    );
+    assert_eq!(g.rows("block")[0][6], "NA");
+    c.name = "x1-unpinned-x4";
+    // No sample inside block 2 (whole seconds from T0 − 30 s): its bracket spans > 5 s.
+    c.sampled = |c, t| !within(c, 2, t);
+    let g = grade(&c);
+    assert_eq!(
+        g.blocks()[1],
+        ("rejected".into(), "X4".into()),
+        "{}",
+        g.stdout
+    );
+}
+
+// Contract sb P8: a run's memory bound grades each call (bound > 32 GB = uncertain = a budget
+// fail, however small the sampled peak); a run without the bound column falls back to the HWM
+// sum, each such call counted in `memory_unbounded`.
+#[test]
+fn the_memory_bound_grades_each_call_and_its_absence_is_counted() {
+    let mut c = clean("bound");
+    c.bound = |b, _, q| {
+        Some(if b == 1 && q == "q-all" {
+            32_000_000_001
+        } else {
+            32_000_000_000
+        })
+    };
+    let g = grade(&c);
+    assert_eq!(g.rc, 0, "{}", g.stdout);
+    let calls = g.rows("call");
+    assert_eq!(
+        (calls[0][10], calls[0][11], calls[0][12]),
+        ("fail:uncertain", "bound", "32.00")
+    );
+    assert!(calls[1..].iter().all(|r| r[10] == "ok" && r[11] == "bound"));
+    let s = g.summary();
+    assert_eq!(
+        (&s["budget_fail"][..], &s["memory_unbounded"][..]),
+        ("1", "0")
+    );
+    c.name = "bound-absent";
+    c.bound_column = false;
+    let g = grade(&c);
+    assert!(
+        g.rows("call")
+            .iter()
+            .all(|r| r[10] == "ok" && r[11] == "hwm-sum" && r[12] == "NA")
+    );
+    assert_eq!(&g.summary()["memory_unbounded"][..], "6");
+}
+
+// Contract sb § Carried rulings (preflight): `ckc bench preflight` over synthetic samples. Marks
+// (seconds after P0): campaign-control 20–80, pinned-control 100–160, host-control 180–240,
+// quiet 260 → 260 + quiet; samples every second, USER_HZ 100.
+const P0: i64 = 1_900_000_000_000_000;
+struct Preflight {
+    name: &'static str,
+    campaign: f64,         // the sampled unit's CPUs during campaign-control
+    misattributed: bool,   // its burner runs on a pinned CPU outside the unit's accounting
+    pinned_control: f64,   // foreign CPUs on 2 3 6 7 during pinned-control
+    host_control: f64,     // foreign CPUs on the other CPUs during host-control
+    background: f64,       // the shielded jobs' CPUs off the pinned set, throughout
+    quiet: fn(i64) -> f64, // foreign CPUs on 2 3 6 7 at second s of the quiet stretch
+    quiet_s: i64,
+    pinned_column: bool,
+}
+fn calm(name: &'static str) -> Preflight {
+    Preflight {
+        name,
+        campaign: 1.0,
+        misattributed: false,
+        pinned_control: 1.0,
+        host_control: 1.0,
+        background: 0.85,
+        quiet: |_| 0.1,
+        quiet_s: 600,
+        pinned_column: true,
+    }
+}
+fn preflight(p: &Preflight) -> Graded {
+    let dir = root().join(format!(
+        "rust/target/bench-grade/{}-pf-{}",
+        std::process::id(),
+        p.name
+    ));
+    let _ = fs::remove_dir_all(&dir);
+    fs::create_dir_all(&dir).unwrap();
+    let fixture = Fixture { dir: dir.clone() };
+    let at = |s: i64| P0 + s * 1_000_000;
+    let quiet_end = 260 + p.quiet_s;
+    let mut marks = String::new();
+    for (name, s, e) in [
+        ("campaign-control", 20, 80),
+        ("pinned-control", 100, 160),
+        ("host-control", 180, 240),
+        ("quiet", 260, quiet_end),
+    ] {
+        marks.push_str(&format!("{name}-start\t{}\n{name}-end\t{}\n", at(s), at(e)));
+    }
+    fs::write(dir.join("preflight.tsv"), marks).unwrap();
+    fs::write(dir.join("host-before.txt"), host("performance", 77, true)).unwrap();
+    let head = if p.pinned_column {
+        "\tpinned_busy_jiffies"
+    } else {
+        ""
+    };
+    let mut rows = format!(
+        "epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc{head}\n"
+    );
+    let (mut busy, mut pinned, mut cpu) = (1_000_i64, 400_i64, 0_i64);
+    for s in -5..=quiet_end + 5 {
+        let cell = if p.pinned_column {
+            format!("\t{pinned}")
+        } else {
+            String::new()
+        };
+        rows.push_str(&format!(
+            "{}\t{busy}\t5000\t{cpu}\t0\t0\t0\t0\t0\t50000{cell}\n",
+            at(s)
+        ));
+        // Second s → s + 1.
+        let burning = (20..80).contains(&s);
+        let own = if burning && !p.misattributed {
+            p.campaign
+        } else {
+            0.0
+        };
+        let foreign = if burning && p.misattributed {
+            p.campaign
+        } else if (100..160).contains(&s) {
+            p.pinned_control
+        } else if (260..quiet_end).contains(&s) {
+            (p.quiet)(s - 260)
+        } else {
+            0.0
+        };
+        let other = p.background
+            + if (180..240).contains(&s) {
+                p.host_control
+            } else {
+                0.0
+            };
+        let pinned_step = ((own + foreign) * 100.0).round() as i64;
+        pinned += pinned_step;
+        busy += pinned_step + (other * 100.0).round() as i64;
+        cpu += (own * 1e6).round() as i64;
+    }
+    fs::write(dir.join("host-samples.tsv"), rows).unwrap();
+    let out = Command::new(program())
+        .args(["bench", "preflight"])
+        .arg(&dir)
+        .output()
+        .unwrap();
+    Graded {
+        rc: out.status.code().unwrap(),
+        stdout: String::from_utf8(out.stdout).unwrap(),
+        _fixture: fixture,
+    }
+}
+fn windows(g: &Graded) -> Vec<(String, String)> {
+    g.rows("window")
+        .iter()
+        .map(|r| (r[1].to_owned(), r[8].to_owned()))
+        .collect()
+}
+fn verdicts(bad: &[&str], quiet: usize) -> Vec<(String, String)> {
+    ["campaign-control", "pinned-control", "host-control"]
+        .into_iter()
+        .map(str::to_owned)
+        .chain((1..=quiet).map(|k| format!("quiet-{k}")))
+        .map(|n| {
+            let v = if bad.contains(&n.as_str()) {
+                "bad"
+            } else {
+                "ok"
+            };
+            (n, v.to_owned())
+        })
+        .collect()
+}
+
+#[test]
+fn a_calm_preflight_reads_its_controls_and_goes() {
+    let g = preflight(&calm("calm"));
+    assert_eq!(g.rc, 0, "{}", g.stdout);
+    assert_eq!(windows(&g), verdicts(&[], 4));
+    assert_eq!(
+        g.rows("preflight")[0][1..],
+        ["quiet_windows=4", "verdict=go"]
+    );
+}
+
+// Each control's planted failure (an accounting that misses foreign work on the pinned CPUs, one
+// that books the unit's own burner as foreign, a host-only burner the host column misses) and a
+// busy or short quiet stretch hold the campaign; a sampler without the pinned column is no input.
+#[test]
+fn preflight_plants_hold() {
+    let mut p = calm("pinned-blind");
+    p.pinned_control = 0.0;
+    let g = preflight(&p);
+    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["pinned-control"], 4)));
+    let mut p = calm("misattributed");
+    p.misattributed = true;
+    let g = preflight(&p);
+    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["campaign-control"], 4)));
+    let mut p = calm("host-blind");
+    (p.host_control, p.background) = (0.0, 0.0);
+    let g = preflight(&p);
+    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["host-control"], 4)));
+    let mut p = calm("busy-quiet");
+    // 0.6 CPU through the third window alone (quiet seconds 300–449).
+    p.quiet = |s| if (300..450).contains(&s) { 0.6 } else { 0.1 };
+    let g = preflight(&p);
+    assert_eq!((g.rc, windows(&g)), (1, verdicts(&["quiet-3"], 4)));
+    let mut p = calm("short-quiet");
+    p.quiet_s = 450;
+    let g = preflight(&p);
+    assert_eq!((g.rc, windows(&g)), (1, verdicts(&[], 3)));
+    assert_eq!(g.rows("preflight")[0][2], "verdict=hold");
+    let mut p = calm("unpinned");
+    p.pinned_column = false;
+    assert_eq!(preflight(&p).rc, 2);
 }

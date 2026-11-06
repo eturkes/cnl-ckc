@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # Mock warm server for `ckc bench run --serve` (contract sb § Carried rulings): the
 # checker's `serve` protocol — load, `ready`, then one call per stdin line
-# `<id>\t<query>\t<new dir>` answered by `done\t<id>\t<rc>` once the call's files exist.
+# `<id>\t<query>\t<new dir>` answered by `done\t<id>\t<rc>` once the call's files exist. Each call
+# records its request's arrival (`request.tsv`) and, except in mode `unreported`, a producer report
+# in `checker-counters.tsv` (contract sb P8): mode `producer-self` names the server's own pid with
+# a 1 GiB peak; otherwise a pid no process holds with a 1,000,000,000 B peak.
 import hashlib
 import mmap
 import os
@@ -40,6 +43,7 @@ def main():
         ident, query, directory = line.rstrip("\n").split("\t")
         out = Path(directory)
         out.mkdir()
+        (out / "request.tsv").write_text(f"received_unix_ns\t{time.time_ns()}\n")
         calls += 1
         assert Path(query).is_file()
         if mode == "slow" and calls == 1:
@@ -65,6 +69,11 @@ def main():
             tmp.write_text(f"sb1-sink 1\nclosed_unix_ns\t{closed}\nbytes\t{len(answer)}\n"
                            f"sha256\t{hashlib.sha256(answer).hexdigest()}\ncpu_ticks\t{ticks()}\n")
             tmp.rename(out / "sink-complete.tsv")
+        if mode != "unreported":
+            pid, peak = (os.getpid(), 1 << 30) if mode == "producer-self" else (4294967295, 10**9)
+            (out / "checker-counters.tsv").write_text(
+                f"kind\tcounter\tvalue\nruntime\tproducer_pid\t{pid}\n"
+                f"runtime\tproducer_maxrss_bytes\t{peak}\n")
         (out / "call-done.tsv").write_text(f"rc\t{rc}\n")
         print(f"done\t{ident}\t{rc}", flush=True)
         print(os.getpid(), file=sys.stderr, flush=True)
