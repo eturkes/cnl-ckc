@@ -919,6 +919,81 @@ fn warm_memory_bound_adds_the_producer_peak_to_the_other_processes() {
     );
 }
 
+// Contract sb § Carried rulings Replacement round (scientist-8 S6): every attempted call records
+// its request write + its answer or failure in UNIX ns, whatever the outcome (the server's own
+// arrival stamp lies between them); a lost server's later calls, never written, record neither.
+#[test]
+fn warm_calls_record_their_request_and_end_times() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("times-refused");
+    s.warm("refuse-first", false, &[]);
+    let text = s.result("runs.tsv");
+    for run in rows(&text) {
+        let n: usize = run["run"].parse().unwrap();
+        let request = s.result(&format!("run-{n:06}/request.tsv"));
+        let arrived: u64 = request.trim().rsplit('\t').next().unwrap().parse().unwrap();
+        let (sent, ended) = (number(&run, "request_unix_ns"), number(&run, "end_unix_ns"));
+        assert!(
+            sent <= arrived && arrived <= ended,
+            "run {n}: {sent} {arrived} {ended}"
+        );
+    }
+    let s = Scratch::new("times-lost");
+    s.warm("slow", false, &["--deadline-ms", "300"]);
+    let text = s.result("runs.tsv");
+    let runs = rows(&text);
+    assert!(number(&runs[0], "request_unix_ns") < number(&runs[0], "end_unix_ns"));
+    for run in &runs[1..] {
+        assert_eq!((run["request_unix_ns"], run["end_unix_ns"]), ("", ""));
+    }
+}
+
+// Contract sb § Carried rulings Memory bound (scientist-8 S7): the bound reads every process at the
+// post-response boundary — a call shorter than the sampler period still counts the harness + the
+// server (here 48 MiB the server touched after its last periodic sample), both R servers count,
+// and a process the call's window saw that is gone by the boundary leaves that call unbounded.
+#[test]
+fn warm_memory_bound_reads_the_roster_at_the_response() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let others = |s: &Scratch, n: usize| -> u64 {
+        let text = s.result(&format!("run-{n:06}/processes.tsv"));
+        rows(&text).iter().map(|p| number(p, "hwm_bytes")).sum()
+    };
+    let s = Scratch::new("bound-grow");
+    succeeded(&s.warm("grow", false, &["--sample-ms", "60000"]));
+    let text = s.result("runs.tsv");
+    for run in rows(&text) {
+        let n: usize = run["run"].parse().unwrap();
+        let bound = number(&run, "memory_bound_bytes");
+        assert!(
+            bound >= 1_000_000_000 + (48 << 20),
+            "run {n}: bound {bound}"
+        );
+        assert_eq!(bound, others(&s, n) + 1_000_000_000, "run {n}");
+    }
+    let s = Scratch::new("bound-paired");
+    succeeded(&s.warm("normal", true, &["--sample-ms", "60000"]));
+    let text = s.result("runs.tsv");
+    for run in rows(&text) {
+        let n: usize = run["run"].parse().unwrap();
+        assert_eq!(server_pids(&s, n).len(), 2, "run {n}");
+        assert_eq!(
+            number(&run, "memory_bound_bytes"),
+            others(&s, n) + 1_000_000_000
+        );
+    }
+    let s = Scratch::new("bound-transient");
+    succeeded(&s.warm("transient", false, &[]));
+    let text = s.result("runs.tsv");
+    let runs = rows(&text);
+    assert_eq!(runs[0]["memory_bound_bytes"], "", "{text}");
+    assert!(
+        runs[1..]
+            .iter()
+            .all(|r| !r["memory_bound_bytes"].is_empty())
+    );
+}
+
 // Contract sb § Carried rulings (R pair offsets): block b's first call starts at the servers'
 // ready line + (b − 1) × the spacing, read on the server's own arrival clock.
 #[test]

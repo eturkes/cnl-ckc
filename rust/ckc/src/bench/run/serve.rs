@@ -7,6 +7,7 @@ use super::config::Config;
 use super::execute::{self, Interval, Ledger, Phase, Stage};
 use super::procfs::{self, Sampler, State};
 use super::{Plan, Result, RunRow, field, ns, private_directory, report, sink};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::process::CommandExt;
@@ -141,10 +142,20 @@ fn line(
         }
     }
 }
-// Contract sb P8: a producer child that lives between two RSS samples leaves no reading, so the
-// orchestrator reports its exact wait4 peak; bound = Σ HWM of every other observed process + that
-// peak ≥ the call's simultaneous peak (one producer per call). None = no producer report.
-fn memory_bound(directory: &Path, window: &State) -> Option<u64> {
+// Contract sb § Carried rulings Memory bound (scientist-7 P8 + scientist-8 S7): a producer child
+// can live between two RSS samples, so the orchestrator reports its exact wait4 peak; every other
+// process counts with its terminal VmHWM, read at the post-response boundary sample — the roster
+// (the harness + every server live at the request, both R arms) + every other process the call's
+// window saw. Σ of those lifetime maxima + the peak ≥ the call's simultaneous peak (one producer per
+// call) only while every one of them is still resident there under its identity (pid + start
+// time): one gone could have peaked unseen ⇒ no bound. None = that, a roster process unreadable at
+// the request, or no producer report.
+fn memory_bound(
+    directory: &Path,
+    window: &State,
+    resident: &[procfs::Process],
+    roster: Option<&[(u32, u64)]>,
+) -> Option<u64> {
     let text = fs::read_to_string(directory.join("checker-counters.tsv")).ok()?;
     let value = |name: &str| {
         let prefix = format!("runtime\t{name}\t");
@@ -152,13 +163,19 @@ fn memory_bound(directory: &Path, window: &State) -> Option<u64> {
             .find_map(|l| l.strip_prefix(prefix.as_str())?.parse::<u64>().ok())
     };
     let (pid, peak) = (value("producer_pid")?, value("producer_maxrss_bytes")?);
-    let others: u64 = window
-        .processes
-        .values()
-        .filter(|p| u64::from(p.process.pid) != pid)
-        .map(|p| p.hwm)
-        .sum();
-    Some(others.saturating_add(peak))
+    let terminal: BTreeMap<(u32, u64), u64> = resident.iter().map(|p| (p.key(), p.hwm)).collect();
+    let mut sum = peak;
+    for key in roster?
+        .iter()
+        .chain(window.processes.keys())
+        .filter(|k| u64::from(k.0) != pid)
+        .collect::<BTreeSet<_>>()
+    {
+        // A window sample after the boundary can read a higher HWM: the larger reading counts.
+        let seen = window.processes.get(key).map_or(0, |p| p.hwm);
+        sum = sum.saturating_add((*terminal.get(key)?).max(seen));
+    }
+    Some(sum)
 }
 // Call-relative window: every timestamp minus the call's request time.
 fn rebase(mut window: State, start: u64) -> State {
@@ -237,6 +254,8 @@ fn empty_row(entry: &Plan) -> RunRow {
         peak_rss: 0,
         hwm_sum: 0,
         memory_bound: None,
+        request_unix: None,
+        end_unix: None,
         producer_rc: None,
         checker_rc: None,
         output_bytes: None,
@@ -253,12 +272,22 @@ struct Call {
 fn call(
     config: &Config,
     entry: &Plan,
-    server: &mut Server,
+    servers: &mut [Server],
     directory: &Path,
     origin: Instant,
     sampler: &Sampler,
     ticks: f64,
 ) -> Result<Call> {
+    // The resident roster at the request: the harness + every server not yet lost; one
+    // unreadable = no roster (no bound).
+    let roster: Option<Vec<(u32, u64)>> = std::iter::once(std::process::id())
+        .chain(servers.iter().filter(|s| s.lost.is_none()).map(Server::pid))
+        .map(|pid| procfs::stat(pid).map(|p| p.key()))
+        .collect();
+    let server = servers
+        .iter_mut()
+        .find(|s| s.arm == entry.arm)
+        .ok_or("plan arm without a server")?;
     let mut row = empty_row(entry);
     let mut ledger = Ledger::new(ticks);
     let mut phases = Vec::new();
@@ -307,6 +336,10 @@ fn call(
     };
     let end = ns(origin.elapsed());
     let cpu_after = server.ticks();
+    // The boundary sample after the answer: each process's terminal HWM for the bound (a failed
+    // scan = no resident process = no bound for this call, never a lost campaign).
+    let resident = sampler.boundary().unwrap_or_default();
+    (row.request_unix, row.end_unix) = (Some(clock.unix_at(start)), Some(clock.unix_at(end)));
     row.wall = end - start;
     row.cpu = cpu_after.saturating_sub(cpu_before) as f64 / ticks;
     let mut sink_at = None;
@@ -404,7 +437,7 @@ fn call(
     let window = rebase(sampler.drain(), start);
     row.peak_rss = window.peak_rss;
     row.hwm_sum = window.processes.values().map(|p| p.hwm).sum();
-    row.memory_bound = memory_bound(directory, &window);
+    row.memory_bound = memory_bound(directory, &window, &resident, roster.as_deref());
     Ok(Call {
         row,
         ledger,
@@ -523,17 +556,21 @@ pub(super) fn campaign(config: &Config, plan: &[Plan]) -> Result<Vec<RunRow>> {
             &sampler.drain(),
         )?;
         let directory = config.out.join(format!("run-{:06}", entry.run));
-        let server = servers
-            .iter_mut()
-            .find(|s| s.arm == entry.arm)
-            .ok_or("plan arm without a server")?;
         let Call {
             row,
             ledger,
             phases,
             window,
             detail,
-        } = call(config, entry, server, &directory, origin, &sampler, ticks)?;
+        } = call(
+            config,
+            entry,
+            &mut servers,
+            &directory,
+            origin,
+            &sampler,
+            ticks,
+        )?;
         report::per_run(&directory, &ledger, &phases, &window)?;
         if !detail.is_empty() {
             report::write(

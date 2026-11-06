@@ -90,7 +90,7 @@ pub(super) fn ticks() -> Result<f64> {
 pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()> {
     let mut settings = "key\tvalue\n".to_owned();
     for (key, value) in [
-        ("format", "sb1-harness-2".to_owned()),
+        ("format", "sb1-harness-3".to_owned()),
         ("root", config.root.display().to_string()),
         ("producer", config.producer.clone()), ("checker", config.checker.clone()),
         ("orchestrator", config.orchestrator.clone().unwrap_or_default()),
@@ -111,6 +111,8 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         ("sampler_start", "before-first-spawn".to_owned()),
         ("sampler_end", "after-process-teardown;before-publication;final-boundary-sample".to_owned()),
         ("sampler_schedule", "fixed-period;boundary-samples;overrun-skips-catch-up".to_owned()),
+        ("call_times", "request_unix_ns=request-write;end_unix_ns=answer-or-failure;empty=never-attempted(lost-server)".to_owned()),
+        ("memory_bound", "roster=harness+every-live-server-at-the-request;post-response-boundary-sample;every-roster-and-other-window-process-resident-there-with-its-pid+start-else-none;sum-of-their-terminal-HWM+producer-wait4-peak".to_owned()),
         ("process_identity", "pid+proc-stat-starttime;parent-closure+owned-process-groups+previously-observed-lives".to_owned()),
         ("rss_scope", "harness+owned-descendants;live-RSS-summed-per-scan;loaded-RSS-included".to_owned()),
         ("rss_units", "bytes;proc-kB-times-1024;budget-GB-times-1000000000".to_owned()),
@@ -394,7 +396,7 @@ pub(super) fn per_run(path: &Path, ledger: &Ledger, phases: &[Phase], state: &St
     }
     write(&path.join("executables.tsv"), executables)
 }
-pub(super) const RUN_HEADER: &str = "run\tblock\torder\tarm\toutcome\treason\twall_ns\tload_ns\tscored_ns\tcpu_seconds\tpeak_rss_bytes\tobserved_hwm_sum_bytes\tsample_period_ns\tmax_sample_gap_ns\tmemory_uncertainty\tproducer_rc\tchecker_rc\toutput_bytes\toutput_sha256\tphase_intervals\tprocess_high_water_marks\tsink_end_ns\tteardown_ns\tsink_clock_uncertainty_ns\tmemory_bound_bytes\n";
+pub(super) const RUN_HEADER: &str = "run\tblock\torder\tarm\toutcome\treason\twall_ns\tload_ns\tscored_ns\tcpu_seconds\tpeak_rss_bytes\tobserved_hwm_sum_bytes\tsample_period_ns\tmax_sample_gap_ns\tmemory_uncertainty\tproducer_rc\tchecker_rc\toutput_bytes\toutput_sha256\tphase_intervals\tprocess_high_water_marks\tsink_end_ns\tteardown_ns\tsink_clock_uncertainty_ns\tmemory_bound_bytes\trequest_unix_ns\tend_unix_ns\n";
 pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64) -> String {
     let intervals = ledger
         .intervals
@@ -409,7 +411,7 @@ pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64)
         .collect::<Vec<_>>()
         .join(";");
     format!(
-        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.9}\t{}\t{}\t{}\t{}\tpossibly-missed-subperiod-spike\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.9}\t{}\t{}\t{}\t{}\tpossibly-missed-subperiod-spike\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
         row.run,
         row.block,
         row.order,
@@ -435,7 +437,9 @@ pub(super) fn run_row(row: &RunRow, ledger: &Ledger, state: &State, period: u64)
         row.sink_uncertainty
             .map(|n| n.to_string())
             .unwrap_or_default(),
-        row.memory_bound.map(|n| n.to_string()).unwrap_or_default()
+        row.memory_bound.map(|n| n.to_string()).unwrap_or_default(),
+        row.request_unix.map(|n| n.to_string()).unwrap_or_default(),
+        row.end_unix.map(|n| n.to_string()).unwrap_or_default()
     )
 }
 pub(super) fn summary(config: &Config, runs: &[RunRow]) -> Result<()> {

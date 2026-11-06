@@ -4,11 +4,14 @@
 # `<id>\t<query>\t<new dir>` answered by `done\t<id>\t<rc>` once the call's files exist. Each call
 # records its request's arrival (`request.tsv`) and, except in mode `unreported`, a producer report
 # in `checker-counters.tsv` (contract sb P8): mode `producer-self` names the server's own pid with
-# a 1 GiB peak; otherwise a pid no process holds with a 1,000,000,000 B peak.
+# a 1 GiB peak; otherwise a pid no process holds with a 1,000,000,000 B peak. Mode `grow` touches
+# 48 MiB per call before answering (the server's VmHWM rises after the last periodic sample); mode
+# `transient` runs a 0.3 s child in the first call, gone before the answer (scientist-8 S7).
 import hashlib
 import mmap
 import os
 from pathlib import Path
+import subprocess
 import sys
 import time
 
@@ -53,6 +56,13 @@ def main():
             for offset in range(0, len(memory), 4096):
                 memory[offset] = 1
             time.sleep(1)
+        if mode == "grow":
+            grown = mmap.mmap(-1, 48 * 1024 * 1024)
+            for offset in range(0, len(grown), 4096):
+                grown[offset] = 1
+            grown.close()
+        if mode == "transient" and calls == 1:
+            subprocess.run(["sleep", "0.3"], check=True)
         if mode == "protocol":
             print(f"done\t{int(ident) + 1}\t0", flush=True)
             continue

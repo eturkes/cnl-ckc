@@ -35,6 +35,11 @@ impl Clock {
             after,
         })
     }
+    // UNIX ns of a controller-relative instant at or after the capture.
+    pub fn unix_at(&self, rel: u64) -> u128 {
+        self.unix
+            .saturating_add(u128::from(rel.saturating_sub(self.before)))
+    }
     fn validate(&self, unix: u128, before: u64, after: u64) -> Result<()> {
         let delta = u64::try_from(
             unix.checked_sub(self.unix)

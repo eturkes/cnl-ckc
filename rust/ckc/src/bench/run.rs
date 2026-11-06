@@ -55,8 +55,13 @@ struct RunRow {
     cpu: f64,
     peak_rss: u64,
     hwm_sum: u64,
-    // Warm calls: Σ HWM of the non-producer processes + the producer's exact peak (serve.rs).
+    // Warm calls: Σ terminal HWM of the resident roster + the call's other processes + the
+    // producer's exact peak (serve.rs); None = a process absent at the boundary or no report.
     memory_bound: Option<u64>,
+    // Warm calls: the request write + the answer or failure, UNIX ns; None = never attempted
+    // (a lost server's later calls) or cold mode.
+    request_unix: Option<u128>,
+    end_unix: Option<u128>,
     producer_rc: Option<i32>,
     checker_rc: Option<i32>,
     output_bytes: Option<u64>,
@@ -188,6 +193,8 @@ fn run_one(config: &Config, entry: &Plan, ticks: f64) -> Result<(RunRow, Ledger,
         peak_rss: 0,
         hwm_sum: 0,
         memory_bound: None,
+        request_unix: None,
+        end_unix: None,
         producer_rc: None,
         checker_rc: None,
         output_bytes: None,

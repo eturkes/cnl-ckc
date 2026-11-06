@@ -1,19 +1,26 @@
 // Contract sb § Carried rulings (decision tool, replacement round, R pairs, typed analysis at load):
-// the confirmation's decision over the frozen plan + every attempt's `runs/<id>` + `state/<id>`
-// under one base (a chunk's replacement = `<chunk>-r`). Every attempt must be sound: the harness
-// finished (rc 0 | 1), inputs match the manifest, verified outputs match their expected digests,
-// every (instance, query) has one, every verified call carries a memory bound, and the plan's sealed
-// executables ran under its settings (seed, blocks, queries, spacing, the replayed blocks + the
-// original's draws for them). A block is valid where X1–X4 accept it on a pinned unit; its selected
-// attempt = the first valid one in attempt order (latency, memory + output never consulted). Each
-// chunk needs every planned block selected, every selected call verified within 300 s + 32 GB (its
-// bound included); R + UB95 over the gating R chunk's selected pairs (`stats::ratio`, the chunk
-// seed) ≤ 2, the reported R beside it; every measured knowledge identity joins an admitted direct
-// receipt of the final census (full load ≤ 1,800 s; charged memory = the analysis VmHWM + the
-// server's RSS at ready ≤ 32 GB). rc 0 = go, 1 = hold (one `hold` line per failed condition), 2 =
-// usage or an unreadable input.
+// the confirmation's decision over the frozen plan + its frozen closure + every attempt's
+// `runs/<id>` + `state/<id>` under one base (a chunk's replacement = `<chunk>-r`). The closure's
+// named preflight must go. Every attempt must be sound: the harness finished (rc 0 | 1), inputs
+// match the manifest (every planned query's identity included), runs.tsv holds each planned call
+// once, verified outputs match their expected digests, every (instance, query) has one, every
+// verified call carries a memory bound, every block's calls were timed (an untimed call = protocol-
+// incomplete, never a replaceable block: scientist-8 S6), the lifecycle peak is recorded + ≤ 32 GB,
+// each arm has one measured ready load, the policy held, the closure's settings, host keys +
+// identity files match, and the plan's sealed executables ran under its settings (seed, blocks,
+// queries, spacing, the replayed blocks + the original's draws for them) on its schedule (planned
+// on one epoch, no early start, actual requests ascending + spaced). A block is valid where X1–X4
+// accept it on a pinned unit; its selected attempt = the first valid one in attempt order
+// (latency, memory + output never consulted). Each chunk needs every planned block selected, every
+// selected call verified within 300 s + 32 GB (its bound included); R + UB95 over the gating R
+// chunk's selected pairs (`stats::ratio`, the chunk seed) ≤ 2, the reported R beside it; every
+// measured knowledge identity joins an admitted direct receipt of the final census (full load ≤
+// 1,800 s; charged memory = max(the analysis VmHWM + the server's RSS at ready, the attempt's
+// lifecycle peak) ≤ 32 GB). rc 0 = go, 1 = hold (one `hold` line per failed condition), 2 = usage
+// or an unreadable input.
 use super::grade::{
-    BUDGET_BYTES, Manifest, Result, Row, assess, cell, exit, manifest, number, table, text,
+    BUDGET_BYTES, Call, Manifest, Result, Row, assess, cell, exit, manifest, number, policy,
+    preflight_assess, table, text,
 };
 use super::stats::ratio;
 use std::collections::{BTreeMap, BTreeSet};
@@ -21,11 +28,14 @@ use std::fs;
 use std::path::Path;
 use std::process::ExitCode;
 
-const HELP: &str = "usage: ckc bench decide <plan.tsv> <base> <frozen-root> <run-manifest> [--receipts <dir> --census <sha256> --host <label> --overhead-ms <n>]";
+const HELP: &str = "usage: ckc bench decide <plan.tsv> <closure.tsv> <base> <frozen-root> <run-manifest> [--receipts <dir> --census <sha256> --host <label> --overhead-ms <n>]";
 // The receipt flags come together, in this order (all four or none).
 const LOAD_NS: f64 = 1.8e12;
 const SPACING_NS: u64 = 30_000_000_000;
 const UB95_MAX: f64 = 2.0;
+// Block b's first request trails the first held block's by ≥ spacing × Δb less this (the epoch's own
+// wait before the first block).
+const SLACK_NS: i128 = 1_000_000_000;
 
 pub fn run(args: &[String]) -> ExitCode {
     exit("decide", decide(args))
@@ -117,8 +127,47 @@ struct Receipts<'a> {
     host: &'a str,
     overhead_ns: f64,
 }
-// A measured prepared load: (attempt, arm, load_ns, rss_at_ready_bytes).
-type Load = (String, String, u64, u64);
+// A measured prepared load: (attempt, arm, load_ns, rss_at_ready_bytes, the attempt's lifecycle
+// summed-RSS peak).
+type Load = (String, String, u64, u64, u64);
+// The frozen closure (scientist-8 S8 + S9; `bench/sb/confirmation-closure.tsv`, rows `source key
+// value`): settings.tsv + host.tsv keys every attempt carries verbatim, identity files (a path
+// suffix → its sha256 in identities.tsv), each planned instance's knowledge identity (the 64-hex
+// `kb_identity` its server must report: the receipt join's key), the preflight state(s) whose grade
+// must go.
+#[derive(Default)]
+struct Closure {
+    settings: Vec<(String, String)>,
+    host: Vec<(String, String)>,
+    identity: Vec<(String, String)>,
+    kb: BTreeMap<String, String>,
+    preflight: Vec<String>,
+}
+fn closure(path: &Path) -> Result<Closure> {
+    let mut c = Closure::default();
+    for row in table(path)? {
+        let (key, value) = (
+            cell(&row, "key")?.to_owned(),
+            cell(&row, "value")?.to_owned(),
+        );
+        match cell(&row, "source")? {
+            "settings" => c.settings.push((key, value)),
+            "host" => c.host.push((key, value)),
+            "identity" => c.identity.push((key, value)),
+            "kb" => {
+                if c.kb.insert(key.clone(), value).is_some() {
+                    return Err(format!("closure: kb {key} twice"));
+                }
+            }
+            "preflight" if value == "go" => c.preflight.push(key),
+            source => return Err(format!("closure: {source} {key}")),
+        }
+    }
+    if c.preflight.is_empty() {
+        return Err("closure: no preflight row".into());
+    }
+    Ok(c)
+}
 #[derive(Default)]
 struct Decision {
     out: Vec<String>,
@@ -127,8 +176,8 @@ struct Decision {
 }
 
 fn decide(args: &[String]) -> Result<bool> {
-    let (positional, flags) = args.split_at(args.len().min(4));
-    let [plan, base, frozen, manifest_path] = positional else {
+    let (positional, flags) = args.split_at(args.len().min(5));
+    let [plan, closure_path, base, frozen, manifest_path] = positional else {
         return Err(HELP.into());
     };
     let receipts = match flags {
@@ -151,7 +200,21 @@ fn decide(args: &[String]) -> Result<bool> {
     let (base, frozen) = (Path::new(base), Path::new(frozen));
     let m = manifest(Path::new(manifest_path))?;
     let plan = chunks(Path::new(plan))?;
+    let frozen_closure = closure(Path::new(closure_path))?;
     let mut d = Decision::default();
+    for id in &frozen_closure.preflight {
+        match preflight_assess(&base.join("state").join(id)) {
+            Ok((go, report)) => {
+                let line = report.last().map_or("", String::as_str);
+                let line = line.strip_prefix("preflight\t").unwrap_or(line);
+                d.out.push(format!("preflight\t{id}\t{line}"));
+                if !go {
+                    d.holds.push(format!("preflight {id}: hold"));
+                }
+            }
+            Err(why) => d.holds.push(format!("preflight {id}: {why}")),
+        }
+    }
     d.out.push(
         "#attempt\tchunk\tattempt\trc\tidentity\tsha_bad\tsha_unchecked\tmemory_unbounded\tpinned\tvalid_blocks"
             .into(),
@@ -174,7 +237,7 @@ fn decide(args: &[String]) -> Result<bool> {
         }
     }
     for c in &plan {
-        chunk(c, base, frozen, &m, &mut d)?;
+        chunk(c, base, frozen, &m, &frozen_closure, &mut d)?;
     }
     match &receipts {
         None => {
@@ -203,10 +266,41 @@ fn conform(
     run: &Path,
     plan: &[Row],
     original: Option<&[Row]>,
+    frozen: &Closure,
 ) -> Result<(BTreeSet<u64>, Vec<String>)> {
     let mut bad = Vec::new();
     let settings = keyed(&run.join("settings.tsv"))?;
     let host = keyed(&run.join("host.tsv"))?;
+    for (source, rows, keys) in [
+        ("settings", &settings, &frozen.settings),
+        ("host", &host, &frozen.host),
+    ] {
+        for (key, want) in keys {
+            if rows.get(key) != Some(want) {
+                bad.push(format!("closure {source} {key}"));
+            }
+        }
+    }
+    // identities.tsv: (path, sha256) per recorded file, every arm's.
+    let recorded: Vec<(String, String)> = text(&run.join("identities.tsv"))?
+        .lines()
+        .skip(1)
+        .filter_map(|l| match l.split('\t').collect::<Vec<_>>()[..] {
+            [_, path, _, sha] => Some((path.to_owned(), sha.to_owned())),
+            _ => None,
+        })
+        .collect();
+    for (suffix, want) in &frozen.identity {
+        let tail = format!("/{suffix}");
+        let hits: Vec<&String> = recorded
+            .iter()
+            .filter(|(p, _)| p.ends_with(&tail))
+            .map(|(_, h)| h)
+            .collect();
+        if hits.is_empty() || hits.iter().any(|h| *h != want) {
+            bad.push(format!("closure identity {suffix}"));
+        }
+    }
     let (queries, spacing) = match c.pair {
         Some(_) => ("q-one", SPACING_NS),
         None => ("q-all,q-one,q-patient", 0),
@@ -229,15 +323,12 @@ fn conform(
         .get("serve")
         .and_then(|s| s.split_whitespace().next())
         .unwrap_or("");
-    let hashes: Vec<String> = text(&run.join("identities.tsv"))?
-        .lines()
-        .skip(1)
-        .filter_map(|l| match l.split('\t').collect::<Vec<_>>()[..] {
-            [_, path, _, sha] if path == served => Some(sha.to_owned()),
-            _ => None,
-        })
+    let hashes: Vec<&String> = recorded
+        .iter()
+        .filter(|(p, _)| p == served)
+        .map(|(_, h)| h)
         .collect();
-    if hashes.is_empty() || hashes.iter().any(|h| *h != c.checker) {
+    if hashes.is_empty() || hashes.iter().any(|h| **h != c.checker) {
         bad.push("checker executable".into());
     }
     let listed = settings.get("only_blocks").map_or("", String::as_str);
@@ -289,7 +380,72 @@ fn conform(
     Ok((held, bad))
 }
 
-fn chunk(c: &Chunk, base: &Path, frozen: &Path, m: &Manifest, d: &mut Decision) -> Result<()> {
+// The actual schedule (scientist-8 S8): schedule.tsv = one row per held block, ascending, each
+// planned on one epoch (planned = epoch + spacing × (block − 1)) + started no earlier; the calls'
+// request writes ascend in run order, and each block's first request trails the first held block's
+// by ≥ spacing × Δblock − SLACK_NS. Each failed item, by name.
+fn schedule(run: &Path, held: &BTreeSet<u64>, spacing: u64, calls: &[Call]) -> Vec<String> {
+    let mut bad = Vec::new();
+    let Ok(rows) = table(&run.join("schedule.tsv")) else {
+        return vec!["schedule.tsv unreadable".into()];
+    };
+    let (mut blocks, mut epoch) = (Vec::new(), None);
+    for row in &rows {
+        let get = |key: &str| number(row, key).ok().flatten().map(i128::from);
+        let (Some(b), Some(planned), Some(started)) =
+            (get("block"), get("planned_ns"), get("started_ns"))
+        else {
+            bad.push("schedule.tsv row unreadable".into());
+            continue;
+        };
+        blocks.push(b as u64);
+        let e = planned - i128::from(spacing) * (b - 1);
+        if *epoch.get_or_insert(e) != e {
+            bad.push(format!("schedule: block {b} planned off the epoch"));
+        }
+        if started < planned {
+            bad.push(format!("schedule: block {b} started early"));
+        }
+    }
+    if blocks != held.iter().copied().collect::<Vec<_>>() {
+        bad.push("schedule: blocks differ from the held blocks".into());
+    }
+    let mut ordered: Vec<&Call> = calls.iter().collect();
+    ordered.sort_by_key(|x| x.run);
+    let (mut last, mut first) = (None, BTreeMap::new());
+    for x in ordered {
+        let Some(at) = x.request else { continue };
+        if last.is_some_and(|l| at <= l) {
+            bad.push(format!(
+                "run {}: requested before the call ahead of it",
+                x.run
+            ));
+        }
+        last = Some(at);
+        first.entry(x.block).or_insert(at);
+    }
+    if let Some((&b0, &r0)) = first.iter().next() {
+        for (&b, &at) in &first {
+            let gap = i128::from(at) - i128::from(r0);
+            let due = i128::from(spacing) * (i128::from(b) - i128::from(b0)) - SLACK_NS;
+            if b > b0 && gap < due {
+                bad.push(format!(
+                    "block {b}: first request {:.1} s after block {b0}'s",
+                    gap as f64 / 1e9
+                ));
+            }
+        }
+    }
+    bad
+}
+fn chunk(
+    c: &Chunk,
+    base: &Path,
+    frozen: &Path,
+    m: &Manifest,
+    sealed: &Closure,
+    d: &mut Decision,
+) -> Result<()> {
     let mut attempts = Vec::new();
     for id in [c.id.clone(), format!("{}-r", c.id)] {
         let run = base.join("runs").join(&id);
@@ -305,9 +461,46 @@ fn chunk(c: &Chunk, base: &Path, frozen: &Path, m: &Manifest, d: &mut Decision) 
     let mut invalid = BTreeSet::new();
     let mut chosen: BTreeMap<u64, usize> = BTreeMap::new();
     for (k, (id, a)) in attempts.iter().enumerate() {
-        let run = base.join("runs").join(id);
+        let (run, state) = (base.join("runs").join(id), base.join("state").join(id));
         let original = (k > 0).then(|| attempts[0].1.plan.as_slice());
-        let (held, mut bad) = conform(c, &run, &a.plan, original)?;
+        let (held, mut bad) = conform(c, &run, &a.plan, original, sealed)?;
+        let spacing = if c.pair.is_some() { SPACING_NS } else { 0 };
+        bad.extend(schedule(&run, &held, spacing, &a.calls));
+        let applied = policy(&state)?;
+        if !applied.is_empty() {
+            bad.push(format!("policy {}", applied.join("+")));
+        }
+        if !a.bijective {
+            bad.push("runs.tsv ≠ plan.tsv (a planned call missing, repeated or moved)".into());
+        }
+        let untimed: Vec<String> = held
+            .iter()
+            .filter(|b| a.verdicts.get(b).map(String::as_str) == Some("incomplete"))
+            .map(u64::to_string)
+            .collect();
+        if !untimed.is_empty() {
+            bad.push(format!(
+                "protocol-incomplete: block {} holds a call never timed",
+                untimed.join(",")
+            ));
+        }
+        // The campaign-wide summed-RSS peak (loads, calls, idle, teardown) = memory too (scientist-8
+        // S7): recorded, the sampler error-free, ≤ 32 GB.
+        let memory = keyed(&run.join("memory.tsv")).unwrap_or_default();
+        let lifecycle = memory
+            .get("peak_summed_rss_bytes")
+            .and_then(|v| v.parse::<u64>().ok());
+        if memory.get("sampler_error").map(String::as_str) != Some("none") {
+            bad.push("lifecycle memory: sampler error or no record".into());
+        }
+        match lifecycle {
+            None => bad.push("lifecycle peak unrecorded".into()),
+            Some(p) if p > BUDGET_BYTES => bad.push(format!(
+                "lifecycle peak {:.2} GB above 32 GB",
+                p as f64 / 1e9
+            )),
+            Some(_) => {}
+        }
         if k > 0 && !held.is_subset(&invalid) {
             bad.push("replaces a valid block".into());
         }
@@ -326,21 +519,29 @@ fn chunk(c: &Chunk, base: &Path, frozen: &Path, m: &Manifest, d: &mut Decision) 
                 bad.push(format!("{count} {what}"));
             }
         }
+        // One ready load per arm, measured (an empty cell is no free load or RSS: scientist-8 S8).
         for arm in c.arms().keys() {
-            let load = a.loads.iter().find(|l| l.get("arm") == Some(arm));
-            match (load, a.kb.get(arm)) {
-                (Some(l), Some(kb)) if l.get("outcome").map(String::as_str) == Some("ready") => {
-                    let at = |key: &str| number(l, key).map(Option::unwrap_or_default);
-                    let load = (
-                        id.clone(),
-                        arm.clone(),
-                        at("load_ns")?,
-                        at("rss_at_ready_bytes")?,
-                    );
-                    d.loads.entry(kb.clone()).or_default().push(load);
+            let loads: Vec<&Row> = a
+                .loads
+                .iter()
+                .filter(|l| l.get("arm") == Some(arm))
+                .collect();
+            match (&loads[..], a.kb.get(arm)) {
+                ([l], Some(kb)) if l.get("outcome").map(String::as_str) == Some("ready") => {
+                    let instance = &c.arms()[arm];
+                    if sealed.kb.get(instance) != Some(kb) {
+                        bad.push(format!("arm {arm}: knowledge identity off the closure's"));
+                    }
+                    match (number(l, "load_ns")?, number(l, "rss_at_ready_bytes")?) {
+                        (Some(ns), Some(rss)) if rss > 0 => {
+                            let load = (id.clone(), arm.clone(), ns, rss, lifecycle.unwrap_or(0));
+                            d.loads.entry(kb.clone()).or_default().push(load);
+                        }
+                        _ => bad.push(format!("arm {arm}: ready load unmeasured")),
+                    }
                 }
                 _ => bad.push(format!(
-                    "arm {arm}: no ready load with a knowledge identity"
+                    "arm {arm}: no single ready load with a knowledge identity"
                 )),
             }
         }
@@ -505,9 +706,11 @@ fn receipt(r: &Receipts, kb: &str, loads: &[Load]) -> std::result::Result<(f64, 
         .iter()
         .map(|l| l.2 as f64 + analysis * 1e9 + r.overhead_ns)
         .fold(0.0, f64::max);
+    // The record's charge: max(the analysis VmHWM + the server's RSS at ready, the attempt's
+    // measured summed-RSS peak).
     let charged = loads
         .iter()
-        .map(|l| hwm.saturating_add(l.3))
+        .map(|l| hwm.saturating_add(l.3).max(l.4))
         .max()
         .unwrap_or(hwm);
     Ok((full, charged))

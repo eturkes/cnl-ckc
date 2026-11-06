@@ -2,14 +2,16 @@
 // one campaign chunk = a `ckc bench run` directory + the state directory `tools/sb-campaign-unit`
 // writes (rc, host records, 1 s host samples, the unit's CPU list) against the frozen instances + the
 // run manifest. Report (TSV on stdout): input identity per arm, each call's output digest against the
-// manifest's union (×100) or recipe oracle row, the 300 s + 32 GB budget per call, X1–X4 per block,
-// R over every block + over the accepted ones. rc 1 = an identity mismatch, a wrong output or a call
-// whose (instance, query) the manifest gives no expected output (`sha_unchecked`: its correctness is
-// unestablished) — the chunk is no evidence; rc 2 = usage or an unreadable input. A call that ended
-// short of verified printed no output: its digest reads `NA` (a budget fail, never a wrong output).
-// `preflight` grades the host-only preflight of the same contract section: its synthetic controls
-// read as planted + every 150 s quiet window passes X1 + X4 (rc 0 = go, 1 = hold). `assess` = one
-// chunk's grade as data, shared with `ckc bench decide`.
+// manifest's union (×100) or recipe oracle row, the 300 s + 32 GB budget per call, X1–X4 per block
+// over its attempted calls' interval (a call never timed = an `incomplete` block), R over every block
+// + over the accepted ones. rc 1 = an identity mismatch, a wrong output, a call whose (instance,
+// query) the manifest gives no expected output (`sha_unchecked`: its correctness is unestablished) or
+// a runs.tsv that does not hold each planned call once, as planned — the chunk is no evidence; rc 2 =
+// usage or an unreadable input. A call that ended short of verified printed no output: its digest
+// reads `NA` (a budget fail, never a wrong output). `preflight` grades the host-only preflight of the
+// same contract section: its synthetic controls read as planted, every 150 s quiet window passes X1 +
+// X4, X3 + the policy hold (rc 0 = go, 1 = hold). `assess` = one chunk's grade as data, shared with
+// `ckc bench decide`.
 use super::generate::identity_frame;
 use super::stats::{ratio, stats};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -159,12 +161,16 @@ fn identities(run: &Path) -> Result<Identities> {
 }
 // The composition identity recomputed from the arm's recorded sizes + digests (composition lines are
 // root-relative; the run root = the schema row's prefix ⇒ one lookup per line) + each frozen query's
-// digest. Pass = the manifest's identity, ≥ 1 query checked, none differing.
+// digest: every query the arm's plan calls (its file stem) needs exactly one identity row with the
+// manifest's bytes + digest (scientist-8 S8: an unrecorded planned query proves nothing), and any
+// other recorded frozen query must match too. Pass = the manifest's identity, ≥ 1 query checked,
+// none differing or missing.
 fn identity(
     rows: &HashMap<String, (String, String)>,
     instance: &Path,
     iid: &str,
     m: &Manifest,
+    planned: &BTreeSet<String>,
 ) -> Result<(bool, String)> {
     let roots: Vec<&str> = rows
         .keys()
@@ -185,7 +191,7 @@ fn identity(
     }
     let got = identity_frame((size(schema)?, &schema.1), files);
     let mut bad = usize::from(m.composition.get(iid) != Some(&got));
-    let mut checked = 0;
+    let (mut checked, mut found) = (0, BTreeSet::new());
     for (path, sha, bytes) in m.queries.get(iid).into_iter().flatten() {
         let suffix = format!("/{path}");
         let hits: Vec<_> = rows
@@ -193,11 +199,21 @@ fn identity(
             .filter(|(p, _)| p.ends_with(&suffix))
             .map(|(_, v)| v)
             .collect();
-        if !hits.is_empty() {
+        let stem = Path::new(path)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("");
+        let wanted = planned.contains(stem);
+        if wanted {
+            found.insert(stem);
+        }
+        if wanted || !hits.is_empty() {
             checked += 1;
             bad += usize::from(hits.len() != 1 || hits[0].0 != *bytes || hits[0].1 != *sha);
         }
     }
+    // A planned query the manifest freezes no file for.
+    bad += planned.len() - found.len();
     let verdict = if bad == 0 { "MATCH" } else { "MISMATCH" };
     Ok((
         bad == 0 && checked > 0,
@@ -493,6 +509,7 @@ fn closed_us(run: &Path, n: u64) -> Result<Option<i64>> {
 }
 
 pub(super) struct Call {
+    pub run: u64,
     pub block: u64,
     pub arm: String,
     pub query: String,
@@ -501,6 +518,8 @@ pub(super) struct Call {
     // Verified within 300 s, sampled peak + bound (or the HWM-sum fallback) within 32 GB.
     pub budget: bool,
     pub bound: Option<u64>,
+    // The request write, UNIX ns (None = never attempted or a run before the column).
+    pub request: Option<u64>,
 }
 // One chunk's grade: the report `ckc bench grade` prints + the facts `ckc bench decide` selects on.
 pub(super) struct Assessment {
@@ -508,6 +527,8 @@ pub(super) struct Assessment {
     pub rc: String,
     pub plan: Vec<Row>,
     pub matched: bool,
+    // runs.tsv holds each plan.tsv call once, at its planned block, order + arm.
+    pub bijective: bool,
     // arm → its server's knowledge identity (`arm-<arm>/load.tsv`)
     pub kb: BTreeMap<String, String>,
     pub loads: Vec<Row>,
@@ -526,7 +547,7 @@ fn grade(args: &[String]) -> Result<bool> {
     let m = manifest(Path::new(manifest_path))?;
     let a = assess(Path::new(run), Path::new(state), Path::new(frozen), &m)?;
     println!("{}", a.report.join("\n"));
-    Ok(a.matched && a.wrong == 0 && a.unchecked == 0)
+    Ok(a.matched && a.bijective && a.wrong == 0 && a.unchecked == 0)
 }
 pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> Result<Assessment> {
     let mut out = Vec::new();
@@ -539,6 +560,10 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
     let plan = table(&run.join("plan.tsv"))?;
     let mut arms: BTreeMap<String, String> = BTreeMap::new();
     let mut queries: HashMap<u64, String> = HashMap::new();
+    // run → (block, order, arm): runs.tsv must hold each planned call once, as planned.
+    let mut slots: BTreeMap<u64, (u64, u64, String)> = BTreeMap::new();
+    let mut planned: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    let mut bijective = true;
     for row in &plan {
         let composition = Path::new(cell(row, "composition")?);
         let iid = composition
@@ -553,13 +578,30 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
             .ok_or("plan query path")?;
         let n = number(row, "run")?.ok_or("plan run")?;
         queries.insert(n, query.into());
+        let arm = cell(row, "arm")?;
+        let slot = (
+            number(row, "block")?.ok_or("plan block")?,
+            number(row, "order")?.ok_or("plan order")?,
+            arm.to_owned(),
+        );
+        bijective &= slots.insert(n, slot).is_none();
+        planned
+            .entry(arm.to_owned())
+            .or_default()
+            .insert(query.to_owned());
     }
     let ids = identities(run)?;
     let mut matched = true;
     let mut kb = BTreeMap::new();
     let empty = HashMap::new();
     for (arm, iid) in &arms {
-        let (pass, detail) = identity(ids.get(arm).unwrap_or(&empty), &frozen.join(iid), iid, m)?;
+        let (pass, detail) = identity(
+            ids.get(arm).unwrap_or(&empty),
+            &frozen.join(iid),
+            iid,
+            m,
+            planned.get(arm).unwrap_or(&BTreeSet::new()),
+        )?;
         matched &= pass;
         out.push(format!("identity\t{arm}\t{iid}\t{detail}"));
         let load = run.join(format!("arm-{arm}/load.tsv"));
@@ -605,6 +647,8 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
     let mut per: BTreeMap<(String, String), Vec<(f64, u64)>> = BTreeMap::new();
     let mut blocks: BTreeMap<u64, (i64, i64)> = BTreeMap::new();
     let mut unsunk: BTreeMap<u64, usize> = BTreeMap::new();
+    let mut untimed: BTreeMap<u64, usize> = BTreeMap::new();
+    let mut seen = BTreeSet::new();
     let mut scored: BTreeMap<(u64, String, String), u64> = BTreeMap::new();
     let mut calls = Vec::new();
     for row in &runs {
@@ -612,6 +656,8 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
         let block = number(row, "block")?.ok_or("runs.tsv block")?;
         let arm = cell(row, "arm")?;
         let query = queries.get(&n).ok_or("runs.tsv run outside plan.tsv")?;
+        let order = number(row, "order")?.ok_or("runs.tsv order")?;
+        bijective &= seen.insert(n) && slots.get(&n) == Some(&(block, order, arm.to_owned()));
         let outcome = cell(row, "outcome")?;
         let score = number(row, "scored_ns")?;
         let peak = number(row, "peak_rss_bytes")?.unwrap_or(0);
@@ -655,6 +701,7 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
             format!("fail:{memory}")
         };
         calls.push(Call {
+            run: n,
             block,
             arm: arm.into(),
             query: query.clone(),
@@ -662,6 +709,7 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
             scored: score,
             budget: budget == "ok",
             bound,
+            request: optional(row, "request_unix_ns")?,
         });
         out.push(format!(
             "call\t{n}\t{block}\t{arm}\t{query}\t{outcome}\t{}\t{:.2}\t{:.2}\t{sha}\t{budget}\t{basis}\t{}",
@@ -678,16 +726,37 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
                 scored.insert((block, arm.into(), query.clone()), s);
             }
         }
-        match (score, closed_us(run, n)?) {
-            (Some(s), Some(end)) => {
-                let start = end - (s / 1000) as i64;
+        // The call's interval (scientist-8 S6): its request write → its answer or failure (the
+        // closed sink when later), whatever the outcome; a run written before those columns falls
+        // back to closed sink − score, which a call short of verified lacks. A call never timed =
+        // a block the protocol left incomplete, never a host verdict.
+        let closed = closed_us(run, n)?;
+        let timed = if row.contains_key("request_unix_ns") {
+            match (number(row, "request_unix_ns")?, number(row, "end_unix_ns")?) {
+                (Some(r), Some(f)) => Some((
+                    (r / 1000) as i64,
+                    ((f / 1000) as i64).max(closed.unwrap_or(i64::MIN)),
+                )),
+                _ => None,
+            }
+        } else {
+            score
+                .zip(closed)
+                .map(|(s, end)| (end - (s / 1000) as i64, end))
+        };
+        if score.is_none() || closed.is_none() {
+            *unsunk.entry(block).or_default() += 1;
+        }
+        match timed {
+            Some((start, end)) => {
                 let b = blocks.entry(block).or_insert((start, end));
                 *b = (b.0.min(start), b.1.max(end));
             }
-            _ => *unsunk.entry(block).or_default() += 1,
+            None => *untimed.entry(block).or_default() += 1,
         }
     }
 
+    bijective &= seen.len() == slots.len();
     out.push("#stat\tarm\tquery\tn\tmedian_s\tiqr_s\tmax_s\tmax_peak_rss_gb".into());
     for ((arm, query), v) in &per {
         let (median, iqr, max) = stats(v.iter().map(|x| x.0).collect());
@@ -714,15 +783,16 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
     }
 
     let host = samples(&state.join("host-samples.tsv"))?;
-    out.push("#block\tn\tstart_us\tend_us\tverdict\twhy\tforeign_cpus\tmax_gap_s\tthrottle_core\tthrottle_package\tmax_temp_c\tcalls_without_sink\thost_foreign_cpus".into());
+    out.push("#block\tn\tstart_us\tend_us\tverdict\twhy\tforeign_cpus\tmax_gap_s\tthrottle_core\tthrottle_package\tmax_temp_c\tcalls_without_sink\thost_foreign_cpus\tcalls_untimed".into());
     let all: BTreeSet<u64> = runs
         .iter()
         .filter_map(|r| number(r, "block").ok().flatten())
         .collect();
-    let (mut accepted, mut rejected, mut unassessed) = (BTreeSet::new(), 0, 0);
+    let (mut accepted, mut rejected, mut unassessed, mut incomplete) = (BTreeSet::new(), 0, 0, 0);
     let mut verdicts = BTreeMap::new();
     for &n in &all {
         let missing = unsunk.get(&n).copied().unwrap_or(0);
+        let lacking = untimed.get(&n).copied().unwrap_or(0);
         let mut v = match blocks.get(&n) {
             Some(&(s, e)) => interference(host.as_deref(), s, e, hz),
             None => [
@@ -750,11 +820,17 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
             v[0] = "unassessed".into();
             v[1] = "X3-missing".into();
         }
+        // A call never timed leaves the block's interval unknown: incomplete, never replaceable.
+        if lacking > 0 {
+            v[0] = "incomplete".into();
+            v[1] = "untimed".into();
+        }
         match v[0].as_str() {
             "accepted" => {
                 accepted.insert(n);
             }
             "rejected" => rejected += 1,
+            "incomplete" => incomplete += 1,
             _ => unassessed += 1,
         }
         verdicts.insert(n, v[0].clone());
@@ -762,7 +838,7 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
             (b.0.to_string(), b.1.to_string())
         });
         out.push(format!(
-            "block\t{n}\t{s}\t{e}\t{}\t{missing}\t{}",
+            "block\t{n}\t{s}\t{e}\t{}\t{missing}\t{}\t{lacking}",
             v[..7].join("\t"),
             v[7]
         ));
@@ -822,16 +898,18 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
         }
     }
     out.push(format!(
-        "summary\tidentity={}\tsha_bad={wrong}\tsha_unchecked={unchecked}\tbudget_fail={over}\tblocks={}\taccepted={}\trejected={rejected}\tunassessed={unassessed}\tx3={x3}\tpinned={pinned}\tmemory_unbounded={unbounded}",
+        "summary\tidentity={}\tsha_bad={wrong}\tsha_unchecked={unchecked}\tbudget_fail={over}\tblocks={}\taccepted={}\trejected={rejected}\tunassessed={unassessed}\tincomplete={incomplete}\tx3={x3}\tpinned={pinned}\tmemory_unbounded={unbounded}\truns_plan={}",
         if matched { "ok" } else { "bad" },
         all.len(),
-        accepted.len()
+        accepted.len(),
+        if bijective { "ok" } else { "bad" }
     ));
     Ok(Assessment {
         report: out,
         rc,
         plan,
         matched,
+        bijective,
         kb,
         loads,
         pinned: pinned == "ok",
@@ -865,7 +943,13 @@ fn preflight_check(args: &[String]) -> Result<bool> {
     let [state] = args else {
         return Err(PREFLIGHT_HELP.into());
     };
-    let state = Path::new(state);
+    let (go, out) = preflight_assess(Path::new(state))?;
+    println!("{}", out.join("\n"));
+    Ok(go)
+}
+// The preflight's verdict + report lines, shared with `ckc bench decide` (the closure's named
+// preflight).
+pub(super) fn preflight_assess(state: &Path) -> Result<(bool, Vec<String>)> {
     let hz = clock_ticks(&state.join("host-before.txt"))?;
     let rows = samples(&state.join("host-samples.tsv"))?.ok_or("no host-samples.tsv")?;
     let (mut marks, mut usage) = (HashMap::new(), HashMap::new());
@@ -958,6 +1042,5 @@ fn preflight_check(args: &[String]) -> Result<bool> {
         },
         if go { "go" } else { "hold" }
     ));
-    println!("{}", out.join("\n"));
-    Ok(go)
+    Ok((go, out))
 }

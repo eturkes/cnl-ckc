@@ -38,6 +38,11 @@ const CHECKER: &str = "c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c
 const CENSUS: &str = "3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c";
 const OTHER: &str = "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f";
 const CHECKER_PATH: &str = "/pool/bin/checker";
+const PRODUCER: &str = "9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d";
+const SERVE: &str =
+    "/pool/bin/checker serve --provider static --ta-receipts none --producer /pool/p";
+// schedule.tsv's epoch (ns after the harness's origin): block b is planned at EPOCH + spacing × (b − 1).
+const EPOCH_NS: i64 = 5_000_000_000;
 const SCHEMA: &[u8] = b"schema bytes\n";
 
 #[derive(Clone)]
@@ -73,6 +78,17 @@ struct Chunk {
     settings: fn(&str, String) -> String, // a planted settings.tsv value per key
     harness: &'static str,                // host.tsv harness_sha256
     checker: &'static str,                // the served checker's identities.tsv digest
+    times: bool,                          // runs.tsv carries request_unix_ns + end_unix_ns
+    attempted: fn(i64, &str, &str) -> bool, // a call the harness wrote (false = a lost server's later call)
+    block_start: fn(&Chunk, i64) -> i64,    // block b's first request (µs)
+    lifecycle: Option<u64>,                 // memory.tsv's summed-RSS peak (None = no memory.tsv)
+    ready: (&'static str, &'static str),    // loads.tsv load_ns + rss_at_ready_bytes, every arm
+    started: fn(i64) -> i64,                // schedule.tsv started − planned (ns) per block
+    state_files: &'static [(&'static str, &'static str)], // state files replacing the policy ones
+    host_keys: fn(&str, String) -> String,  // a planted host.tsv value per key
+    producer: &'static str,                 // the producer identity file's digest
+    runs_edit: fn(String) -> String,        // runs.tsv as written, then edited
+    kb: fn(&str) -> String,                 // the knowledge identity a server reports per instance
 }
 fn clean(name: &'static str) -> Chunk {
     Chunk {
@@ -106,6 +122,17 @@ fn clean(name: &'static str) -> Chunk {
         settings: |_, value| value,
         harness: HARNESS,
         checker: CHECKER,
+        times: true,
+        attempted: |_, _, _| true,
+        block_start: |c, b| c.t0 + (b - 1) * BLOCK_US,
+        lifecycle: Some(8_000_000_000),
+        ready: ("120000000000", "6000000000"),
+        started: |_| 1_000,
+        state_files: &[],
+        host_keys: |_, value| value,
+        producer: PRODUCER,
+        runs_edit: |runs| runs,
+        kb: kb_of,
     }
 }
 // Block b's calls, in order: (arm, query, start µs, end µs).
@@ -119,7 +146,7 @@ fn calls(c: &Chunk, b: i64) -> Vec<(&'static str, &'static str, i64, i64)> {
             ("target", "q-patient"),
         ]
     };
-    let mut t = c.t0 + (b - 1) * BLOCK_US;
+    let mut t = (c.block_start)(c, b);
     order
         .into_iter()
         .map(|(arm, query)| {
@@ -302,28 +329,37 @@ fn attempt(c: &Chunk, run: &Path, state: &Path) {
         fs::create_dir_all(run.join(format!("arm-{arm}"))).unwrap();
         fs::write(
             run.join(format!("arm-{arm}/load.tsv")),
-            format!("kb_identity\t{}\nreceipt\tunchecked\n", kb_of(iid)),
+            format!("kb_identity\t{}\nreceipt\tunchecked\n", (c.kb)(iid)),
         )
         .unwrap();
     }
-    // The served checker's identity file (`--identity-file`), hashed per arm.
+    // The served checker's + the producer's identity files (`--identity-file`), hashed per arm.
     for (arm, _) in &arms {
         identities.push_str(&format!("{arm}\t{CHECKER_PATH}\t1000\t{}\n", c.checker));
+        identities.push_str(&format!(
+            "{arm}\t/pool/prototype/sb1/producer.prolog\t2000\t{}\n",
+            c.producer
+        ));
     }
     fs::write(run.join("identities.tsv"), identities).unwrap();
 
     let mut plan = "run\tblock\torder\tarm\tcomposition\tquery\n".to_owned();
     let mut runs = format!(
-        "run\tblock\torder\tarm\toutcome\tscored_ns\tpeak_rss_bytes\tobserved_hwm_sum_bytes\toutput_sha256{}\n",
+        "run\tblock\torder\tarm\toutcome\tscored_ns\tpeak_rss_bytes\tobserved_hwm_sum_bytes\toutput_sha256{}{}\n",
         if c.bound_column {
             "\tmemory_bound_bytes"
+        } else {
+            ""
+        },
+        if c.times {
+            "\trequest_unix_ns\tend_unix_ns"
         } else {
             ""
         }
     );
     let mut n = 0;
     for b in 1..=c.blocks {
-        for (k, (arm, query, _, end)) in calls(c, b).into_iter().enumerate() {
+        for (k, (arm, query, start, end)) in calls(c, b).into_iter().enumerate() {
             // A replacement keeps the full plan's run numbers for the blocks it replays.
             n += 1;
             if !c.only.is_empty() && !c.only.contains(&b) {
@@ -354,8 +390,13 @@ fn attempt(c: &Chunk, run: &Path, state: &Path) {
             } else {
                 String::new()
             };
+            let times = match (c.times, (c.attempted)(b, arm, query)) {
+                (false, _) => String::new(),
+                (true, true) => format!("\t{}\t{}", start * 1000, end * 1000),
+                (true, false) => "\t\t".to_owned(),
+            };
             runs.push_str(&format!(
-                "{n}\t{b}\t{}\t{arm}\t{outcome}\t{score}\t{peak}\t{hwm}\t{output}{bound}\n",
+                "{n}\t{b}\t{}\t{arm}\t{outcome}\t{score}\t{peak}\t{hwm}\t{output}{bound}{times}\n",
                 k + 1
             ));
             let sink = run.join(format!("run-{n:06}"));
@@ -370,13 +411,36 @@ fn attempt(c: &Chunk, run: &Path, state: &Path) {
         }
     }
     fs::write(run.join("plan.tsv"), plan).unwrap();
-    fs::write(run.join("runs.tsv"), runs).unwrap();
+    fs::write(run.join("runs.tsv"), (c.runs_edit)(runs)).unwrap();
     let mut loads =
         "arm\tstart_ns\tready_ns\tload_ns\trss_at_ready_bytes\toutcome\tdetail\n".to_owned();
     for (arm, _) in &arms {
-        loads.push_str(&format!("{arm}\t0\t1\t120000000000\t6000000000\tready\t\n"));
+        loads.push_str(&format!(
+            "{arm}\t0\t1\t{}\t{}\tready\t\n",
+            c.ready.0, c.ready.1
+        ));
     }
     fs::write(run.join("loads.tsv"), loads).unwrap();
+    if let Some(peak) = c.lifecycle {
+        fs::write(
+            run.join("memory.tsv"),
+            format!("key\tvalue\npeak_summed_rss_bytes\t{peak}\npeak_single_hwm_bytes\t1\nsampler_error\tnone\n"),
+        )
+        .unwrap();
+    }
+    let spacing: i64 = if c.paired { 30_000_000_000 } else { 0 };
+    let held: Vec<i64> = if c.only.is_empty() {
+        (1..=c.blocks).collect()
+    } else {
+        c.only.to_vec()
+    };
+    let mut schedule = "block\tplanned_ns\tstarted_ns\twaited_ns\n".to_owned();
+    for b in held {
+        let planned = EPOCH_NS + spacing * (b - 1);
+        let started = planned + (c.started)(b);
+        schedule.push_str(&format!("{b}\t{planned}\t{started}\t0\n"));
+    }
+    fs::write(run.join("schedule.tsv"), schedule).unwrap();
     if c.paired {
         // The harness's spelling (`run/report.rs`): the query column holds the query file name.
         fs::write(
@@ -393,24 +457,35 @@ fn attempt(c: &Chunk, run: &Path, state: &Path) {
     let only: Vec<String> = c.only.iter().map(i64::to_string).collect();
     let mut settings = "key\tvalue\n".to_owned();
     for (key, value) in [
+        ("format", "sb1-harness-3".to_owned()),
+        ("sample_period_ns", "50000000".to_owned()),
         ("seed", c.seed.to_string()),
         ("blocks", c.blocks.to_string()),
         ("queries", queries.to_owned()),
         ("spacing_ns", spacing.to_owned()),
         ("only_blocks", only.join(",")),
-        (
-            "serve",
-            format!("{CHECKER_PATH} serve --provider static --ta-receipts none --producer /pool/p"),
-        ),
+        ("serve", SERVE.to_owned()),
     ] {
         settings.push_str(&format!("{key}\t{}\n", (c.settings)(key, value)));
     }
     fs::write(run.join("settings.tsv"), settings).unwrap();
-    fs::write(
-        run.join("host.tsv"),
-        format!("key\tvalue\nharness_sha256\t{}\n", c.harness),
-    )
-    .unwrap();
+    let mut host_keys = "key\tvalue\n".to_owned();
+    for (key, value) in [
+        ("harness_sha256", c.harness.to_owned()),
+        ("OMP_NUM_THREADS", "1".to_owned()),
+    ] {
+        host_keys.push_str(&format!("{key}\t{}\n", (c.host_keys)(key, value)));
+    }
+    fs::write(run.join("host.tsv"), host_keys).unwrap();
+    // The applied policy (the unit's CPU list from `c.cpus` below), then the planted replacements.
+    for (file, body) in policy_files() {
+        if file != "unit-cpus.txt" {
+            fs::write(state.join(file), body).unwrap();
+        }
+    }
+    for (file, body) in c.state_files {
+        fs::write(state.join(file), body).unwrap();
+    }
 
     fs::write(state.join("rc"), format!("{}\n", c.rc)).unwrap();
     fs::write(state.join("host-before.txt"), host("performance", 77, true)).unwrap();
@@ -503,6 +578,21 @@ struct Campaign {
     attempts: Vec<(&'static str, Chunk)>,
     receipts: Option<fn(&str) -> Option<String>>,
     extra: &'static [&'static str],
+    // The frozen closure's rows (source, key, value) + the named preflight's planted state.
+    closure: Vec<(&'static str, &'static str, String)>,
+    preflight: fn(&mut Preflight),
+}
+fn closure_rows() -> Vec<(&'static str, &'static str, String)> {
+    vec![
+        ("settings", "format", "sb1-harness-3".into()),
+        ("settings", "sample_period_ns", "50000000".into()),
+        ("settings", "serve", SERVE.into()),
+        ("host", "OMP_NUM_THREADS", "1".into()),
+        ("identity", "prototype/sb1/producer.prolog", PRODUCER.into()),
+        ("kb", TARGET, kb_of(TARGET)),
+        ("kb", BASELINE, kb_of(BASELINE)),
+        ("preflight", "pf", "go".into()),
+    ]
 }
 fn plan_row(chunk: &str, paired: bool, blocks: i64, seed: u64, ratio: &str) -> String {
     let pair = if paired { BASELINE } else { "-" };
@@ -547,6 +637,8 @@ fn campaign(name: &'static str) -> Campaign {
         attempts: vec![("r01", r01), ("c01", c01)],
         receipts: Some(|kb| Some(receipt_body(kb, &[]))),
         extra: &[],
+        closure: closure_rows(),
+        preflight: |_| {},
     }
 }
 // A replacement of chunk `of`: its blocks, seed + plan size, one hour after the original.
@@ -557,6 +649,10 @@ fn replacement(of: &Chunk, only: &'static [i64]) -> Chunk {
     r
 }
 fn decide(k: &Campaign) -> Graded {
+    let (out, fixture) = decide_run(k);
+    graded(out, fixture)
+}
+fn decide_run(k: &Campaign) -> (std::process::Output, Fixture) {
     let fixture = scratch(k.name);
     let dir = fixture.dir.clone();
     let (frozen, manifest) = freeze(&k.attempts[0].1, &dir);
@@ -576,9 +672,19 @@ fn decide(k: &Campaign) -> Graded {
         ),
     )
     .unwrap();
+    let closure = dir.join("closure.tsv");
+    let rows: String = k
+        .closure
+        .iter()
+        .map(|(source, key, value)| format!("{source}\t{key}\t{value}\n"))
+        .collect();
+    fs::write(&closure, format!("source\tkey\tvalue\n{rows}")).unwrap();
+    let mut pf = calm("pf");
+    (k.preflight)(&mut pf);
+    preflight_files(&pf, &dir.join("state/pf"));
     let mut command = Command::new(program());
     command.args(["bench", "decide"]);
-    command.args([&plan, &dir, &frozen, &manifest]);
+    command.args([&plan, &closure, &dir, &frozen, &manifest]);
     if let Some(receipt) = k.receipts {
         let receipts = dir.join("receipts");
         fs::create_dir_all(&receipts).unwrap();
@@ -598,7 +704,7 @@ fn decide(k: &Campaign) -> Graded {
             "10000",
         ]);
     }
-    graded(command.output().unwrap(), fixture)
+    (command.output().unwrap(), fixture)
 }
 fn within(c: &Chunk, b: i64, t: i64) -> bool {
     let (s, e) = block_span(c, b);
@@ -647,7 +753,7 @@ fn clean_chunk_matches_identity_and_accepts_every_block() {
         ["2", "2", "0", "0", "0", "0", "0"]
     );
     assert_eq!(g.rows("kb")[0][2], kb_of(TARGET));
-    // A block's interval = its first call's request write (closed sink − score) → its last sink.
+    // A block's interval = its first call's request write → its last call's end (or closed sink).
     let (start, end) = block_span(&c, 1);
     assert_eq!(
         g.rows("block")[0][2..4],
@@ -874,13 +980,14 @@ fn identity_mismatches_refuse() {
     c.identity = |_, rel, _| rel.ends_with("q-one.pl").then(|| "1".repeat(64));
     let g = grade(&c);
     assert_eq!((g.rc, g.rows("identity")[0][5]), (1, "bad=1"));
-    // A run that recorded no frozen query proves no query identity.
+    // A run that recorded no frozen query proves no query identity: each planned query unrecorded
+    // = bad (scientist-8 S8).
     let mut c = clean("identity-no-query");
     c.drop = |rel| rel.contains("/queries/");
     let g = grade(&c);
     assert_eq!(
         (g.rc, &g.rows("identity")[0][3..6]),
-        (1, &["MATCH", "queries-checked=0", "bad=0"][..])
+        (1, &["MISMATCH", "queries-checked=3", "bad=3"][..])
     );
     assert_eq!(g.summary()["identity"], "bad");
     // One frozen query recorded under two roots (same bytes + digest) is ambiguous.
@@ -986,6 +1093,9 @@ fn throttle_counts_are_recorded_and_never_exclude() {
     assert_eq!(rows[1][8..10], ["0", "0"]);
 }
 
+// A call without a closed sink counts in its block; its own request → end still bounds the block
+// (scientist-8 S6). A run without the call-time columns falls back to closed sink − score, which
+// that call lacks: never timed ⇒ the block is incomplete.
 #[test]
 fn a_call_without_a_closed_sink_counts_in_its_block() {
     let mut c = clean("unsunk");
@@ -993,8 +1103,91 @@ fn a_call_without_a_closed_sink_counts_in_its_block() {
     let g = grade(&c);
     let rows = g.rows("block");
     assert_eq!([rows[0][11], rows[1][11]], ["0", "1"]);
-    // Block 2's interval ends at its last closed sink (the q-one call's).
-    assert_eq!(rows[1][3], calls(&c, 2)[1].3.to_string());
+    assert_eq!(rows[1][3], calls(&c, 2)[2].3.to_string());
+    assert_eq!((rows[1][4], rows[1][13]), ("accepted", "0"));
+    c.times = false;
+    let g = grade(&c);
+    let rows = g.rows("block");
+    assert_eq!(
+        [rows[1][4], rows[1][5], rows[1][11], rows[1][13]],
+        ["incomplete", "untimed", "1", "1"]
+    );
+    assert_eq!(rows[0][4], "accepted");
+    assert_eq!(&g.summary()["incomplete"][..], "1");
+}
+
+// Contract sb § Carried rulings Replacement round (scientist-8 S6): a failed call's own time bounds
+// its block — interference during it rejects the block, whatever the surviving calls saw — and a
+// call the harness never wrote (a lost server's later call) leaves its block incomplete.
+#[test]
+fn a_failed_calls_time_stays_in_its_blocks_interval() {
+    let mut c = clean("failed-head");
+    c.outcome = |b, _, q| {
+        if b == 2 && q == "q-all" {
+            "indeterminate"
+        } else {
+            "verified"
+        }
+    };
+    // 2 foreign CPUs through block 2's failed first call alone.
+    c.foreign = |c, t| {
+        let (_, _, s, e) = calls(c, 2)[0];
+        if (s..e).contains(&t) { 2.0 } else { 0.0 }
+    };
+    let g = grade(&c);
+    let rows = g.rows("block");
+    assert_eq!(rows[1][2], calls(&c, 2)[0].2.to_string(), "{}", g.stdout);
+    assert_eq!((rows[1][4], rows[1][5]), ("rejected", "X1"));
+    let mut c = clean("never-written");
+    c.outcome = |b, _, q| {
+        if b == 2 && q != "q-all" {
+            "indeterminate"
+        } else {
+            "verified"
+        }
+    };
+    c.attempted = |b, _, q| !(b == 2 && q != "q-all");
+    let g = grade(&c);
+    let rows = g.rows("block");
+    assert_eq!(
+        [rows[1][4], rows[1][5], rows[1][13]],
+        ["incomplete", "untimed", "2"]
+    );
+}
+
+// Contract sb § Carried rulings Decision tool (scientist-8 S8): every planned query needs its own
+// identity record, and runs.tsv holds each planned call once, as planned (rc 1 otherwise).
+#[test]
+fn every_planned_query_and_call_is_recorded_once() {
+    let mut c = clean("no-q-all-identity");
+    c.drop = |rel| rel.ends_with("q-all.txt");
+    let g = grade(&c);
+    assert_eq!(g.rc, 1, "{}", g.stdout);
+    assert_eq!(
+        (g.rows("identity")[0][3], g.rows("identity")[0][5]),
+        ("MISMATCH", "bad=1")
+    );
+    for (name, edit) in [
+        (
+            "repeated-call",
+            (|runs: String| {
+                // run 2's row in place of run 1's (the required q-all).
+                let lines: Vec<&str> = runs.lines().collect();
+                let mut out = vec![lines[0], lines[2]];
+                out.extend(&lines[2..]);
+                out.join("\n") + "\n"
+            }) as fn(String) -> String,
+        ),
+        ("extra-call", |runs| {
+            runs + "2\t999\t1\ttarget\tindeterminate\t\t0\t0\t\t\t\t\n"
+        }),
+    ] {
+        let mut c = clean(name);
+        c.runs_edit = edit;
+        let g = grade(&c);
+        assert_eq!(g.rc, 1, "{name}: {}", g.stdout);
+        assert_eq!(&g.summary()["runs_plan"][..], "bad", "{name}");
+    }
 }
 
 #[test]
@@ -1280,8 +1473,22 @@ fn preflight(p: &Preflight) -> Graded {
         p.name
     ));
     let _ = fs::remove_dir_all(&dir);
-    fs::create_dir_all(&dir).unwrap();
     let fixture = Fixture { dir: dir.clone() };
+    preflight_files(p, &dir);
+    let out = Command::new(program())
+        .args(["bench", "preflight"])
+        .arg(&dir)
+        .output()
+        .unwrap();
+    Graded {
+        rc: out.status.code().unwrap(),
+        stdout: String::from_utf8(out.stdout).unwrap(),
+        _fixture: fixture,
+    }
+}
+// A preflight's state directory, as `tools/sb-campaign-unit preflight` writes it.
+fn preflight_files(p: &Preflight, dir: &Path) {
+    fs::create_dir_all(dir).unwrap();
     let at = |s: i64| P0 + s * 1_000_000;
     let quiet_end = 260 + p.quiet_s;
     let [campaign_span, pinned_span, host_span] = p.spans;
@@ -1359,16 +1566,6 @@ fn preflight(p: &Preflight) -> Graded {
         cpu += (own * 1e6).round() as i64;
     }
     fs::write(dir.join("host-samples.tsv"), rows).unwrap();
-    let out = Command::new(program())
-        .args(["bench", "preflight"])
-        .arg(&dir)
-        .output()
-        .unwrap();
-    Graded {
-        rc: out.status.code().unwrap(),
-        stdout: String::from_utf8(out.stdout).unwrap(),
-        _fixture: fixture,
-    }
 }
 // (window, verdict): the verdict = each row's last field.
 fn windows(g: &Graded) -> Vec<(String, String)> {
@@ -1896,6 +2093,203 @@ fn the_receipt_join_fails_closed() {
         g.rows("receipt")
             .iter()
             .all(|r| r[3..] == ["1800.0", "32.00", "ok"])
+    );
+}
+
+// Contract sb § Carried rulings Replacement round (scientist-8 S6-F2): a block whose every call
+// failed on a calm host is a result — its calls' own times bound it, so it stays valid, selected +
+// held, and a replacement may not take it over.
+#[test]
+fn an_all_failed_block_is_a_result_not_a_replacement_entitlement() {
+    let mut k = campaign("decide-all-failed");
+    let c01 = &mut k.attempts[1].1;
+    c01.outcome = |b, _, _| if b == 2 { "indeterminate" } else { "verified" };
+    c01.rc = "1";
+    let r = replacement(&k.attempts[1].1, &[2]);
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (1, "hold"), "{}", g.stdout);
+    let fail = |q: &str| format!("c01: block 2: target {q} indeterminate outside the budget");
+    assert_eq!(
+        g.holds(),
+        [
+            "c01: attempt c01-r: replaces a valid block".to_owned(),
+            fail("q-all"),
+            fail("q-one"),
+            fail("q-patient")
+        ],
+        "{}",
+        g.stdout
+    );
+}
+
+// Contract sb § Carried rulings Decision tool (scientist-8 S7 + S8): every evidence gap holds — a
+// call never timed, the lifecycle peak above 32 GB or unrecorded, an unmeasured ready load, unspaced
+// or early R blocks, a closure drift (producer bytes, serve provider, RSS period, threads), an
+// unapplied policy item, runs.tsv off plan.tsv, a planned query without its identity record.
+#[test]
+fn every_evidence_gap_holds() {
+    type Plant = fn(&mut Chunk);
+    let plants: [(&'static str, usize, Plant, &str); 14] = [
+        (
+            "decide-untimed",
+            1,
+            |c| {
+                c.outcome = |b, _, q| {
+                    if b == 2 && q != "q-all" {
+                        "indeterminate"
+                    } else {
+                        "verified"
+                    }
+                };
+                c.attempted = |b, _, q| !(b == 2 && q != "q-all");
+            },
+            "c01: attempt c01: protocol-incomplete: block 2 holds a call never timed",
+        ),
+        (
+            "decide-lifecycle",
+            1,
+            |c| c.lifecycle = Some(40_000_000_000),
+            "c01: attempt c01: lifecycle peak 40.00 GB above 32 GB",
+        ),
+        (
+            "decide-no-memory",
+            1,
+            |c| c.lifecycle = None,
+            "c01: attempt c01: lifecycle peak unrecorded",
+        ),
+        (
+            "decide-ready",
+            1,
+            |c| c.ready = ("", ""),
+            "c01: attempt c01: arm target: ready load unmeasured",
+        ),
+        (
+            "decide-unspaced",
+            0,
+            |c| c.block_start = |c, b| c.t0 + (b - 1) * 3_500_000,
+            "r01: attempt r01: block 2: first request 3.5 s after block 1's",
+        ),
+        (
+            "decide-early",
+            0,
+            |c| c.started = |b| if b == 2 { -1 } else { 1_000 },
+            "r01: attempt r01: schedule: block 2 started early",
+        ),
+        (
+            "decide-producer",
+            1,
+            |c| c.producer = OTHER,
+            "c01: attempt c01: closure identity prototype/sb1/producer.prolog",
+        ),
+        (
+            "decide-provider",
+            1,
+            |c| {
+                c.settings = |k, v| {
+                    if k == "serve" {
+                        v.replace("static", "all")
+                    } else {
+                        v
+                    }
+                }
+            },
+            "c01: attempt c01: closure settings serve",
+        ),
+        (
+            "decide-period",
+            1,
+            |c| {
+                c.settings = |k, v| {
+                    if k == "sample_period_ns" {
+                        "5000000000".into()
+                    } else {
+                        v
+                    }
+                }
+            },
+            "c01: attempt c01: closure settings sample_period_ns",
+        ),
+        (
+            "decide-threads",
+            1,
+            |c| {
+                c.host_keys = |k, v| {
+                    if k == "OMP_NUM_THREADS" {
+                        "8".into()
+                    } else {
+                        v
+                    }
+                }
+            },
+            "c01: attempt c01: closure host OMP_NUM_THREADS",
+        ),
+        (
+            "decide-sleeper",
+            1,
+            |c| c.state_files = &[("sleeper.txt", "sleeper: none\n")],
+            "c01: attempt c01: policy sleeper",
+        ),
+        (
+            "decide-runs",
+            1,
+            |c| {
+                c.runs_edit = |runs| {
+                    let lines: Vec<&str> = runs.lines().collect();
+                    let mut out = vec![lines[0], lines[2]];
+                    out.extend(&lines[2..]);
+                    out.join("\n") + "\n"
+                }
+            },
+            "c01: attempt c01: runs.tsv ≠ plan.tsv (a planned call missing, repeated or moved)",
+        ),
+        (
+            "decide-q-all",
+            1,
+            |c| c.drop = |rel| rel.ends_with("q-all.txt"),
+            "c01: attempt c01: input identity",
+        ),
+        (
+            "decide-kb",
+            1,
+            |c| c.kb = |_| "e".repeat(64),
+            "c01: attempt c01: arm target: knowledge identity off the closure's",
+        ),
+    ];
+    let mut red = Vec::new();
+    for (name, index, plant, hold) in plants {
+        let mut k = campaign(name);
+        plant(&mut k.attempts[index].1);
+        let g = decide(&k);
+        if g.rc != 1 || !g.holds().contains(&hold) {
+            red.push(format!("{name}: rc {} holds {:?}", g.rc, g.holds()));
+        }
+    }
+    assert!(red.is_empty(), "{red:#?}");
+}
+
+// The closure's named preflight must go: a hold there holds the campaign; a closure naming none is
+// no input (rc 2).
+#[test]
+fn the_named_preflight_must_go() {
+    let mut k = campaign("decide-preflight");
+    k.preflight = |p| p.host_control = 0.0;
+    let g = decide(&k);
+    assert_eq!(g.holds(), ["preflight pf: hold"], "{}", g.stdout);
+    assert_eq!(
+        g.rows("preflight")[0][1..3],
+        ["pf", "quiet_windows=4"],
+        "{}",
+        g.stdout
+    );
+    assert_eq!(g.rows("preflight")[0].last(), Some(&"verdict=hold"));
+    let mut k = campaign("decide-no-preflight");
+    k.closure.retain(|r| r.0 != "preflight");
+    let (out, _fixture) = decide_run(&k);
+    assert_eq!(out.status.code(), Some(2));
+    assert_eq!(
+        String::from_utf8_lossy(&out.stderr),
+        "ckc: bench: decide: closure: no preflight row\n"
     );
 }
 
