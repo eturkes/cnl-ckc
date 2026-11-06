@@ -702,7 +702,8 @@ pub struct ServeRequest {
     // (the pilot's integrated check of the receipt-sum memory bound).
     pub ta_run: Option<PathBuf>,
 }
-// `ta --dc --patient last` over the whole composition; rc 0 = admitted.
+// `ta --dc --patient last --redesign` over the whole composition (the redesigned analysis
+// I2 measured; without the flag a census binary runs its old default); rc 0 = admitted.
 fn run_census(request: &ServeRequest, binary: &Path) -> Result<Vec<(String, String)>, Failure> {
     let out = request.base.output.join("ta");
     let status = Command::new(binary)
@@ -712,7 +713,7 @@ fn run_census(request: &ServeRequest, binary: &Path) -> Result<Vec<(String, Stri
         .arg(&request.base.composition)
         .arg("--out")
         .arg(&out)
-        .args(["--dc", "--patient", "last"])
+        .args(["--dc", "--patient", "last", "--redesign"])
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())

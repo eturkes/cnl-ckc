@@ -38,7 +38,7 @@ The orchestrator writes `orchestrator-phases.tsv` with explicit load/scored kind
 
 ### Warm server
 
-`checker serve [--provider all|static] [--producer <file>] [--swipl <file>] (--ta-receipts <dir>|none | --ta-run <census binary>) --root <repo> <composition.tsv> <arm-dir>` prepares once, verifies the knowledge base's census receipt by its knowledge identity (`--ta-receipts none` = an unchecked development load; `--ta-run` = the census runs in-process after the prepare), prints `ready`, then answers one stdin request `<id>\t<query>\t<new call dir>` at a time with `done\t<id>\t<rc>` after the call's files exist. Protocol + files: `bench/sb/interfaces.md` § Warm server. `ckc bench run --serve '<this command>'` drives it.
+`checker serve [--provider all|static] [--producer <file>] [--swipl <file>] (--ta-receipts <dir>|none | --ta-run <census binary>) --root <repo> <composition.tsv> <arm-dir>` prepares once, verifies the knowledge base's census receipt by its knowledge identity (`--ta-receipts none` = an unchecked development load; `--ta-run` = the census runs with `--dc --patient last --redesign` after the prepare, the prepared knowledge base resident), prints `ready`, then answers one stdin request `<id>\t<query>\t<new call dir>` at a time with `done\t<id>\t<rc>` after the call's files exist. Protocol + files: `bench/sb/interfaces.md` § Warm server. `ckc bench run --serve '<this command>'` drives it.
 
 ### Gap trace
 

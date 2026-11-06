@@ -41,6 +41,13 @@ fn root(name: &str) -> PathBuf {
     directory
 }
 fn load(directory: &Path, receipts: Option<PathBuf>) -> (Result<(), crate::Failure>, String) {
+    load_with(directory, receipts, None)
+}
+fn load_with(
+    directory: &Path,
+    receipts: Option<PathBuf>,
+    ta_run: Option<PathBuf>,
+) -> (Result<(), crate::Failure>, String) {
     let request = ServeRequest {
         base: OrchestratedRequest {
             root: directory.into(),
@@ -52,7 +59,7 @@ fn load(directory: &Path, receipts: Option<PathBuf>) -> (Result<(), crate::Failu
             swipl: "swipl".into(),
         },
         receipts,
-        ta_run: None,
+        ta_run,
     };
     let mut out = Vec::new();
     let result = serve(&request, SourceCodec::Parsed, std::io::empty(), &mut out);
@@ -117,5 +124,42 @@ fn a_load_needs_an_admitted_receipt_for_its_knowledge_identity() {
             .unwrap()
             .contains("receipt\tunchecked\n")
     );
+    fs::remove_dir_all(&directory).unwrap();
+}
+
+// `--ta-run` runs the census over the whole composition with the redesigned analysis
+// (the one I2 measured; without `--redesign` the census binary runs its old default);
+// rc 0 admits, rc 1 refuses, any other exit = rc 2. A committed stand-in, so no
+// executable is written while other test threads spawn children (ETXTBSY).
+#[test]
+fn an_integrated_load_runs_the_redesigned_census() {
+    let directory = root("ta-run");
+    let census = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fake-census.sh");
+    let arm = directory.join("arm");
+    fs::write(directory.join("census-rc"), "0\n").unwrap();
+    let (result, out) = load_with(&directory, None, Some(census.clone()));
+    result.unwrap();
+    assert_eq!(out, "ready\n");
+    assert_eq!(
+        fs::read_to_string(directory.join("census-argv")).unwrap(),
+        format!(
+            "--root\n{}\n--composition\n{}\n--out\n{}\n--dc\n--patient\nlast\n--redesign\n",
+            directory.display(),
+            directory.join("composition.tsv").display(),
+            arm.join("ta").display()
+        )
+    );
+    assert!(
+        fs::read_to_string(arm.join("load.tsv"))
+            .unwrap()
+            .contains("receipt\tintegrated\n")
+    );
+    for (code, rc) in [("1", 1), ("2", 2)] {
+        fs::remove_dir_all(&arm).unwrap();
+        fs::write(directory.join("census-rc"), format!("{code}\n")).unwrap();
+        let (result, out) = load_with(&directory, None, Some(census.clone()));
+        assert_eq!(result.unwrap_err().rc, rc);
+        assert!(out.is_empty());
+    }
     fs::remove_dir_all(&directory).unwrap();
 }
