@@ -994,6 +994,38 @@ fn warm_memory_bound_reads_the_roster_at_the_response() {
     );
 }
 
+// Contract sb § Carried rulings Decision tool (scientist-8 S8): host.tsv names the scored closure
+// beyond the identity files — the SWI-Prolog the producer resolves (the first `swipl` on PATH,
+// canonical, + its digest) and the campaign tools under the root — for the frozen closure to pin.
+#[test]
+fn host_record_names_the_resolved_swipl_and_the_campaign_tools() {
+    use sha2::{Digest, Sha256};
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let s = Scratch::new("host-closure");
+    succeeded(&s.warm("normal", false, &[]));
+    let text = s.result("host.tsv");
+    let host: BTreeMap<&str, &str> = text.lines().filter_map(|l| l.split_once('\t')).collect();
+    let digest = |path: &Path| -> String {
+        Sha256::digest(fs::read(path).unwrap())
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect()
+    };
+    let swipl = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+        .map(|d| d.join("swipl"))
+        .find(|f| f.is_file())
+        .map(|f| fs::canonicalize(f).unwrap())
+        .expect("a swipl on the test's PATH");
+    assert_eq!(host["swipl_path"], swipl.display().to_string());
+    assert_eq!(host["swipl_sha256"], digest(&swipl));
+    for (key, tool) in [
+        ("unit_tool_sha256", "tools/sb-campaign-unit"),
+        ("chunk_tool_sha256", "tools/sb-campaign-chunk"),
+    ] {
+        assert_eq!(host[key], digest(&root().join(tool)), "{key}");
+    }
+}
+
 // Contract sb § Carried rulings (R pair offsets): block b's first call starts at the servers'
 // ready line + (b − 1) × the spacing, read on the server's own arrival clock.
 #[test]

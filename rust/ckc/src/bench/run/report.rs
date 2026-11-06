@@ -215,6 +215,38 @@ pub(super) fn metadata(config: &Config, plan: &[Plan], ticks: f64) -> Result<()>
         "shell_sha256",
         executable_digest(Path::new("/bin/sh"))?.1,
     );
+    // The scored closure beyond the identity files (scientist-8 S8): the SWI-Prolog the producer
+    // resolves (the first `swipl` on PATH, canonical) + the campaign tools under the root.
+    let swipl = std::env::var_os("PATH").and_then(|dirs| {
+        std::env::split_paths(&dirs)
+            .map(|d| d.join("swipl"))
+            .find(|f| f.is_file())
+    });
+    let swipl = swipl.and_then(|p| fs::canonicalize(p).ok());
+    pair(
+        &mut host,
+        "swipl_path",
+        swipl
+            .as_ref()
+            .map_or("absent".to_owned(), |p| p.display().to_string()),
+    );
+    let swipl_digest = match &swipl {
+        Some(path) => executable_digest(path)?.1,
+        None => "absent".to_owned(),
+    };
+    pair(&mut host, "swipl_sha256", swipl_digest);
+    for (key, tool) in [
+        ("unit_tool_sha256", "tools/sb-campaign-unit"),
+        ("chunk_tool_sha256", "tools/sb-campaign-chunk"),
+    ] {
+        let path = config.root.join(tool);
+        let value = if path.is_file() {
+            digest(&path)?.1
+        } else {
+            "absent".to_owned()
+        };
+        pair(&mut host, key, value);
+    }
     pair(
         &mut host,
         "producer_command_sha256",
