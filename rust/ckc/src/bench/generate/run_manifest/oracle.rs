@@ -394,9 +394,10 @@ fn check_compose(c: &Config, p: &Point, recipe: &Path) -> Result<(), String> {
     }
     Ok(())
 }
-// Oracle points: G10 (whole composition + union, equal) and G100 (union).
+// Oracle points: G1 (the R pair's baseline arm: its scored calls need exact outputs too; one
+// group), G10 (whole composition + union, equal) and G100 (union).
 pub(super) fn oracle_point(p: &Point) -> bool {
-    p.scale == 10 || p.scale == 100
+    matches!(p.scale, 1 | 10 | 100)
 }
 fn whole(c: &Config, p: &Point, recipe: &Path, check_only: bool) -> Result<(), String> {
     let composition = p.dir(&c.root).join("composition.tsv");

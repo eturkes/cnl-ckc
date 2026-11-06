@@ -482,10 +482,11 @@ fn inventory(c: &Config) -> Result<String, String> {
 fn counts(c: &Config) -> String {
     let all = points(c);
     let contrasts = all.iter().filter(|p| p.contrast.is_some()).count();
+    let baselines = all.iter().filter(|p| p.scale == 1).count();
     let endpoints = all.iter().filter(|p| p.scale == 100).count();
     let crosses = all.iter().filter(|p| p.scale == 10).count();
     format!(
-        "{} instances ({contrasts} contrasts), {endpoints} endpoint union oracles, {crosses} whole = union cross-checks at G10",
+        "{} instances ({contrasts} contrasts), {baselines} G1 baseline oracles, {endpoints} endpoint union oracles, {crosses} whole = union cross-checks at G10",
         all.len()
     )
 }
