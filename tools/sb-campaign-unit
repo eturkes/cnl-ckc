@@ -245,8 +245,11 @@ if [[ $mode == preflight && -n $started ]]; then
   # blind to the loops reads below their own time, whatever the background).
   at() { local d=$((started + $1 - SECONDS)); (( d <= 0 )) || sleep "$d"; }
   mark() { printf '%s\t%s\n' "$1" "${2:-${EPOCHREALTIME/./}}" >>"$st/preflight.tsv"; }
+  # The burner's rc = its record's: awk exits 0 once it printed usage_usec (systemd-run --wait passes
+  # the unit's rc on, and a nonzero one discards the printed value: a `while read` ending on a failed
+  # test exits 1 ⇒ pf3's controls read NA).
   # shellcheck disable=SC2016  # expands inside the burner's shell
-  burner='for c in "$@"; do taskset -c "$c" timeout 60 bash -c "while :; do :; done" & done; wait; while read -r k v; do [[ $k == usage_usec ]] && printf "%s\n" "$v"; done </sys/fs/cgroup$(cut -d: -f3 /proc/self/cgroup)/cpu.stat'
+  burner='for c in "$@"; do taskset -c "$c" timeout 60 bash -c "while :; do :; done" & done; wait; awk '\''$1 == "usage_usec" { print $2; f = 1 } END { exit !f }'\'' "/sys/fs/cgroup$(cut -d: -f3 /proc/self/cgroup)/cpu.stat"'
   at 100; mark pinned-control-start
   usage=$(unit_run --wait --pipe -p CPUAffinity=3 bash -c "$burner" _ 3 2>/dev/null) || usage=NA
   mark pinned-control-end; mark pinned-control-usage_us "${usage:-NA}"
