@@ -1,478 +1,6 @@
 {
   "func-details": {
-    "vstd::array::lemma_array_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::Seq::empty": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::reach_edge": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::queries_agree": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::intersect": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::vector_membership": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::iset::impl&%0::finite": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::View::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%20::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::substitute": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::iset::lemma_iset_ext_equal": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::choose": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::support::lfp_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_new_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_contains_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::lemma_array_index_decreases": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_new_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_union": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::iset::impl&%0::new": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::substitution_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::local_stratification": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::function::axiom_fn_mut_call_requires": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::select": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Template::arrow_Constant_0": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::Set::remove": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::selection_stratifies": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_remove_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::rank": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::Seq::push": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::selected_wfm_queries": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::axiom_set_ext_equal_deep": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Template::arrow_0": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%1::flatten": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::iset::ISet::contains": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::function::axiom_fn_mut_call_ensures": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::node_rank_positive": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::std_specs::option::spec_unwrap": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::iteration_chain": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::axiom_array_decreases_to_seq": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::gamma_antitone": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::impl&%2::spec_index_range": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::axiom_array_ext_equal": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::certified_is_wfm": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::forward_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::difference": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_ext_equal_deep": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::reads": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq_lib::impl&%0::drop_last": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::false_atoms": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::maximum_bound": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_remove_different": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%5::in_range": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::signed_graph_rank": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%32::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Template::arrow_Variable_0": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::stratified_wfm": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_ext_equal": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::std_specs::option::impl&%0::arrow_0": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::axiom_set_decreases_to_member": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::stratum_inclusion": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::finite_alternation": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::equal_reduct": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::selected_source_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::mask": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::new": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::filter": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::lemma_set_is_empty": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::array_len_matches_n": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::cross_stratum_inclusion": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::maximum": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::stable_unique": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::Seq::len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::to_iset": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::wf": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::support::lfp_fixed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%4::in_range": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::Set::contains": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::goal_answers": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::output_member": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%0::lemma_subset_not_in_lt": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::reach": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq_lib::impl&%0::contains": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Template::arrow_Apply_1": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::signature_wf": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_difference": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::clause_coverage": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::mask_wf": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Template::arrow_1": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::atom_rank": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::agrees": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%4::range_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::Set::insert": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_subrange_decreases": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::same_rules_on": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::masks_same_reduct": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::mask_closed_equivalence": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::atom_slice": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::outputs": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::lfp": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::Seq::index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::impl&%2::spec_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%2::range": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::Set::empty": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::goal_holds": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::covered_wfm": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::clause_covered_unique_model": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::lower_fixed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::iteration_below_prefixed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::alternating_bounds": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::enumerate": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_new": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::vectors": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::controls::growth_loop_control": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Template::arrow_Apply_0": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_choose_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::universe_monotone": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::vector_ok": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::term_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%14::view": {
+    "sb1_spike::selection::selection_same_on_slice": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
@@ -480,15 +8,7 @@
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::afp::iteration_growth": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::controls::nested_identity_control": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::selection_wf": {
+    "vstd::set::Set::insert": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
@@ -496,199 +16,19 @@
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::origins::clause_coverage_stratifies": {
+    "vstd::set_lib::lemma_set_is_empty": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "vstd::set_lib::lemma_set_is_empty_len0": {
+    "sb1_spike::grounding::Template::arrow_1": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::selection::clause_selection_reduct": {
+    "vstd::set_lib::impl&%6::in_range": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::origins::maximum_member": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::finite_grounding": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::instantiate": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::axiom_set_ext_equal": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::copy_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_remove_insert": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::support::support_closure_lfp": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::ground_instances": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::reduct_projection": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%18::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::undefined_atoms": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::lemma_len_subset": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::controls::well_founded_controls": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq_lib::impl&%0::map_values": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::nested_mask": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::upper": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::support::least": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_insert_different": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_remove_same": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_push_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::stable_agreement": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_subrange_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::lower_least": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::height_bound": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%6::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::union": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::graph_wf": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::founded": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%5::range_set": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%0::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_empty": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Value::arrow_1": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_empty": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::Seq::subrange": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::no_negative_cycle": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Value::arrow_Identity_1": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%4::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq_lib::impl&%0::filter_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::view::impl&%50::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_two_subranges_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::universe": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::mask_retained": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::query_preservation": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::predecessor_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::impl&%0::len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq_lib::impl&%0::filter_index_domain": {
+    "vstd::view::impl&%8::view": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
@@ -696,55 +36,199 @@
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::grounding::global_values": {
+    "sb1_spike::afp::iteration_below_prefixed": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "vstd::seq::lemma_seq_index_decreases": {
+    "sb1_spike::controls::k1_shape": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::afp::retained_antitone": {
+    "sb1_spike::origins::clause_coverage": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::grounding::type_values": {
+    "vstd::set::axiom_set_decreases_to_member": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::selection::selection_same_on_slice": {
+    "vstd::iset::impl&%0::new": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::closed": {
+    "sb1_spike::grounding::instantiate": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::afp::cross_pair_total": {
+    "vstd::seq::impl&%2::spec_index_range_to": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::afp::iterate": {
+    "alloc::vec::impl&%1::pop": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "vstd::set::lemma_set_insert_same": {
+    "sb1_spike::flow::no_filter": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::selection::selected_reduct_queries": {
+    "sb1_spike::controls::k1_ty": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::slice::retained_agrees": {
+    "sb1_spike::support::lfp_closed": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::grounding::indices": {
+    "sb1_spike::rank::coverage_stratifies": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::stable": {
+    "sb1_spike::envelope::pruned_iterate": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::kept_witness": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_remove_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_choose_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%2::range": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::impl&%2::spec_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::goal_holds": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%0::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::graph_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::map_values": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::iset::lemma_iset_ext_equal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::lfp": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::same_rules_on": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::Seq::push": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::spec_vec_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::iteration_growth": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Template::arrow_Apply_1": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::filter_index_range": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::base_ct": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::term_has": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::construct_deps": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::same_pred": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::array_view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::option::spec_unwrap": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::head_var": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::count_false": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::predecessor_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selection_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::axiom_array_has_resolved": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::csr_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::queries_agree": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::impl&%0::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%18::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::signed_graph_rank": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::all_legal_instances": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::subset_agrees": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::goal_answers": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
@@ -752,23 +236,115 @@
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "vstd::set_lib::lemma_subset_equality": {
+    "sb1_spike::flow::growth_covered": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::grounding::type_bounded": {
+    "vstd::array::array_len_matches_n": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::slice::mask_rule": {
+    "vstd::seq::lemma_seq_update_same": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::rank::edge": {
+    "sb1_spike::rank::no_negative_cycle": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::filter_index_domain": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Value::arrow_1": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::ground": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::range_set_properties": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::csr_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::forward_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::stable_projection": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_push_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%6::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::is_construct": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
     "sb1_spike::controls::support_and_closure_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::lemma_subset_equality": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::Seq::last": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::VecAdditionalSpecFns::spec_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::lemma_array_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "alloc::vec::impl&%1::len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::pervasive::impl&%1::set": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::lemma_filter_contains_rev": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::FiniteRange::in_range": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_insert_different": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::drop_last": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::reads": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%0::map": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::difference": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
@@ -780,255 +356,23 @@
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::stratified::perfect": {
+    "sb1_spike::stratified::equal_reduct": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "sb1_spike::rank::coverage": {
+    "vstd::set::Set::empty": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "vstd::set_lib::range_set_properties": {
+    "sb1_spike::afp::covered_wfm": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "vstd::seq::lemma_seq_subrange_index": {
+    "vstd::set_lib::impl&%5::range_set": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
-    "vstd::view::impl&%2::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq_lib::impl&%0::filter_index_range": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::double_gamma": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::retained": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_intersect": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::all_legal_instances": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::negative_below": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_to_iset_finite": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%1::lemma_flatten_contains": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::selection_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::clause_coverage_slice": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%0::map": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::Value::arrow_Scalar_0": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::impl&%0::view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::axiom_array_has_resolved": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%6::range_set": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::nested_identity_substitution": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::subset_agrees": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq_lib::impl&%0::lemma_filter_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::perfect_stable": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::ArrayAdditionalSpecFns::spec_index": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::double_monotone": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::selection_exact": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::origins::producers": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::slice::stable_projection": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::selection::selected_stable_agrees": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%0::is_empty": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::FiniteRange::in_range": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::FiniteRange::range_set": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_push_index_different": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::clause_wf": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_filter": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_empty_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::controls::correlated_naf_control": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::seq::lemma_seq_push_index_same": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::cross_agreement": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::template_wf": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::negative_agrees": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::coverage_stratifies": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%4::range_set": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%6::range_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::stratified_unique_model": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::Set::subset_of": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%5::range_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%0::lemma_map_contains": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::impl&%6::in_range": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::immediate": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set::lemma_set_new_some": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::set_lib::FiniteRange::range_len": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::rank::coverage_slice": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::array::array_view": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::valuation_ok": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "vstd::std_specs::option::OptionAdditionalFns::arrow_0": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::height": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::support::founded_in_closed": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::grounding::identity_eval": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::afp::lower": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::controls::clause_selection_control": {
-      "obligation_proof_notes": [],
-      "failed_proof_notes": []
-    },
-    "sb1_spike::stratified::full_mask": {
+    "sb1_spike::afp::lower_least": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
@@ -1036,11 +380,1083 @@
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
+    "vstd::set::lemma_set_remove_same": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::lower_fixed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::value": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%0::is_empty": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%5::in_range": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::option::impl&%0::arrow_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::double_gamma": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::iset::ISet::contains": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_new_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::vector_ok": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::csr_edge": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::Term::arrow_Construct_1": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selected_wfm_queries": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::clause_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%14::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%5::range_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_push_index_same": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::prune_envelope": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::signature_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::node_rank_positive": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_empty": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::axiom_vec_index_decreases": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::vector_membership": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::atom_slice": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::axiom_set_ext_equal_deep": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_insert_same": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Template::arrow_Apply_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::pruned_wfm": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_contains_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%32::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::clause_selection_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::prune": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::growth_edge": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::stable_agreement": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_remove_insert": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%4::in_range": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::mask_rule": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::axiom_vec_has_resolved": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::type_values": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::maximum_bound": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::iteration_chain": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::Seq::subrange": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::lemma_array_index_decreases": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::scalar_goal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::cross_pair_total": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::new": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::atom_rank": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::full_mask": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::local_stratification": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_subrange_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::stratified_unique_model": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_ext_equal_deep": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::select_envelope": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::masks_same_reduct": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::derived": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_subrange_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::Term::arrow_Constant_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Template::arrow_Variable_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::alternating_bounds": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::producers": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::mask": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::Seq::index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::valuation_ok": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::View::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::k1_rules": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::select": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::FiniteRange::range_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::Term::arrow_Construct_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::k1_hint": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::k1_type": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::undefined_atoms": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::construct_has": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::maximum_member": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::universe": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::iterate": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::inside": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::identity_eval": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::fits_sound": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::to_iset": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::filter": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%4::range_set": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::prune_rule": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_push_index_different": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::pruned_selected_wfm_queries": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_index_decreases": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::enumerate": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::lemma_filter_pred": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::retained_agrees": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::bound": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::edge": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::k1_base_refuses": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::filter_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::cross_agreement": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::active_negative_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::intersect": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%6::range_set": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::hint_sound": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::var_goal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Value::arrow_Scalar_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Value::arrow_Identity_1": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::outputs": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::support::founded_in_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::lemma_filter_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::pruned_certified_is_wfm": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::done": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::filter_index_map": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::global_values": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::mask_retained": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::Seq::len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_new": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::count_false_update": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%1::flatten": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_new_some": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%6::range_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%2::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::Term::arrow_1": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_intersect": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::term_sound": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::impl&%2::spec_index_range": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::lemma_len_subset": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%0::lemma_map_contains": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::nested_identity_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::axiom_array_decreases_to_seq": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::stratified_wfm": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::maximum": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::function::axiom_fn_mut_call_requires": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_two_subranges_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "alloc::vec::impl&%0::new": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::closed_hint": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::correlated_naf_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::Seq::empty": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::upper": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::finite_alternation": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::vectors": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::support::support_closure_lfp": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::axiom_array_ext_equal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::substitution_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::support::least": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::axiom_vec_decreases_to_view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Template::arrow_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::reach_edge": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%54::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::nested_identity_substitution": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selection_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::envelope": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::coverage": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::retained": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::immediate": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::impl&%0::spec_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::filter": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::lemma_filter_contains": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::universe_monotone": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%50::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::impl&%2::take": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_subrange_decreases": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_filter": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::represents": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::base_origin": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::k1_ct": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::csr_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::substitute": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::clause_coverage_stratifies": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::clause_selection_reduct": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::stable_unique": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::indices": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_ext_equal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::Set::contains": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%20::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::lemma_filter_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::gamma_antitone": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_update_different": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selection_stratifies": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "alloc::vec::impl&%44::push": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::support::lfp_fixed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::height": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%0::lemma_subset_not_in_lt": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::nested_mask": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::Seq::update": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::pruned_gamma": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::output_member": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::cross_stratum_inclusion": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::ground_instances": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::first_goal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_to_iset_finite": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::represents_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::prune_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selection_exact": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::mask_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_new_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_empty": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "core::option::impl&%0::unwrap": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::union": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::certified_is_wfm": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::base_ty": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::double_monotone": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::term_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::retained_antitone": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::compositional": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::mask_closed_equivalence": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::clause_covered_unique_model": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selected_reduct_queries": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::marked": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::prune_retained": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::stratum_inclusion": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::pruned_covered_wfm": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::option::OptionAdditionalFns::arrow_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_remove_different": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::template_wf": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stable": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
     "vstd::iset::lemma_iset_new": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     },
+    "sb1_spike::csr::reach": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::may_sound": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::type_bounded": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::vec_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::build_goal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::csr::csr_selected_wfm_queries": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selected_stable_agrees": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::Set::remove": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::axiom_set_ext_equal": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::well_founded_controls": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::iset::impl&%0::finite": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_empty_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::k1_forwarding_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::false_atoms": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::perfect_stable": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::function::axiom_fn_mut_call_ensures": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_union": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::founded": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::selection::selected_source_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::rank": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::impl&%0::choose": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::inactive_negative_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::Template::arrow_Constant_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%1::lemma_flatten_contains": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::view::impl&%4::view": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::live": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::growth_loop_control": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::perfect": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::impl&%4::range_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::reach": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
     "vstd::iset::lemma_iset_ext_equal_deep": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::FiniteRange::range_set": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::select_prune": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::agrees": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::finite_grounding": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq_lib::impl&%0::contains": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::body_derived": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::array::ArrayAdditionalSpecFns::spec_index": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::negative_agrees": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::Term::arrow_Variable_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set_lib::lemma_set_is_empty_len0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::Term::arrow_0": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::reduct_projection": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::flow::mentions": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::Set::subset_of": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::grounding::copy_closed": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::seq::lemma_seq_update_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::controls::k1_rank": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::rank::coverage_slice": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::height_bound": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::afp::lower": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::slice::query_preservation": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::set::lemma_set_difference": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::stratified::negative_below": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "vstd::std_specs::vec::axiom_spec_len": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::origins::clause_coverage_slice": {
+      "obligation_proof_notes": [],
+      "failed_proof_notes": []
+    },
+    "sb1_spike::envelope::envelope_bounds": {
       "obligation_proof_notes": [],
       "failed_proof_notes": []
     }
@@ -1049,7 +1465,7 @@
     "encountered-error": false,
     "encountered-vir-error": false,
     "success": true,
-    "verified": 85,
+    "verified": 119,
     "errors": 0,
     "is-verifying-entire-crate": true
   },
@@ -1059,168 +1475,210 @@
       "version": "0.2026.10.26.d17fbd0"
     },
     "num-threads": 1,
-    "total": 4405,
-    "estimated-cpu-time": 4405,
+    "total": 39933,
+    "estimated-cpu-time": 39933,
     "rust": {
-      "total": 679,
-      "init-and-types": 412,
-      "trait-conflicts": 49,
-      "compile": 216
+      "total": 3821,
+      "init-and-types": 1880,
+      "trait-conflicts": 296,
+      "compile": 1644
     },
     "verification": {
-      "total": 3505,
+      "total": 33473,
       "vir": {
-        "total": 608,
-        "hir": 67,
-        "import": 302,
-        "rust-to-vir": 116
+        "total": 2806,
+        "hir": 365,
+        "import": 587,
+        "rust-to-vir": 890
       }
     },
-    "total-verify": 2798,
+    "total-verify": 29453,
     "total-verify-module-times": [
       {
         "module": "controls",
-        "time": 1106
+        "time": 13342
+      },
+      {
+        "module": "csr",
+        "time": 3016
       },
       {
         "module": "grounding",
-        "time": 315
-      },
-      {
-        "module": "selection",
-        "time": 289
-      },
-      {
-        "module": "origins",
-        "time": 269
-      },
-      {
-        "module": "stratified",
-        "time": 233
+        "time": 2148
       },
       {
         "module": "afp",
-        "time": 219
+        "time": 1939
+      },
+      {
+        "module": "selection",
+        "time": 1639
+      },
+      {
+        "module": "envelope",
+        "time": 1567
+      },
+      {
+        "module": "flow",
+        "time": 1532
+      },
+      {
+        "module": "stratified",
+        "time": 1456
       },
       {
         "module": "support",
-        "time": 123
+        "time": 906
+      },
+      {
+        "module": "origins",
+        "time": 723
       },
       {
         "module": "slice",
-        "time": 118
+        "time": 461
       },
       {
         "module": "rank",
-        "time": 103
+        "time": 429
       },
       {
         "module": "",
-        "time": 18
+        "time": 290
       }
     ],
     "air": {
-      "total": 586,
+      "total": 5219,
       "module-times": [
         {
           "module": "controls",
-          "time": 97
-        },
-        {
-          "module": "grounding",
-          "time": 87
-        },
-        {
-          "module": "selection",
-          "time": 85
+          "time": 904
         },
         {
           "module": "afp",
-          "time": 75
+          "time": 666
+        },
+        {
+          "module": "csr",
+          "time": 647
+        },
+        {
+          "module": "selection",
+          "time": 543
+        },
+        {
+          "module": "envelope",
+          "time": 509
+        },
+        {
+          "module": "grounding",
+          "time": 445
         },
         {
           "module": "stratified",
-          "time": 63
+          "time": 394
         },
         {
-          "module": "origins",
-          "time": 57
-        },
-        {
-          "module": "slice",
-          "time": 40
+          "module": "flow",
+          "time": 352
         },
         {
           "module": "rank",
-          "time": 39
+          "time": 206
         },
         {
           "module": "support",
-          "time": 33
+          "time": 198
+        },
+        {
+          "module": "origins",
+          "time": 141
+        },
+        {
+          "module": "slice",
+          "time": 132
         },
         {
           "module": "",
-          "time": 4
+          "time": 75
         }
       ]
     },
     "smt": {
-      "total": 1639,
-      "smt-init": 5,
-      "rlimit-init": 19483,
+      "total": 18784,
+      "smt-init": 124,
+      "rlimit-init": 35480,
       "smt-init-module-times": [
         {
-          "module": "stratified",
-          "time": 1,
-          "time-micros": 1095,
-          "rlimit": 2436
-        },
-        {
           "module": "afp",
-          "time": 1,
-          "time-micros": 1056,
+          "time": 31,
+          "time-micros": 31979,
           "rlimit": 2324
         },
         {
+          "module": "envelope",
+          "time": 23,
+          "time-micros": 23503,
+          "rlimit": 3524
+        },
+        {
           "module": "selection",
-          "time": 0,
-          "time-micros": 906,
+          "time": 22,
+          "time-micros": 22708,
           "rlimit": 3122
         },
         {
-          "module": "origins",
-          "time": 0,
-          "time-micros": 770,
-          "rlimit": 2093
+          "module": "stratified",
+          "time": 15,
+          "time-micros": 15687,
+          "rlimit": 2436
+        },
+        {
+          "module": "csr",
+          "time": 11,
+          "time-micros": 11057,
+          "rlimit": 5767
+        },
+        {
+          "module": "controls",
+          "time": 7,
+          "time-micros": 7422,
+          "rlimit": 7792
+        },
+        {
+          "module": "flow",
+          "time": 4,
+          "time-micros": 4762,
+          "rlimit": 2049
         },
         {
           "module": "grounding",
-          "time": 0,
-          "time-micros": 568,
+          "time": 3,
+          "time-micros": 3339,
           "rlimit": 3134
+        },
+        {
+          "module": "origins",
+          "time": 2,
+          "time-micros": 2426,
+          "rlimit": 2093
         },
         {
           "module": "slice",
           "time": 0,
-          "time-micros": 549,
+          "time-micros": 524,
           "rlimit": 1081
         },
         {
           "module": "support",
           "time": 0,
-          "time-micros": 253,
+          "time-micros": 342,
           "rlimit": 1123
-        },
-        {
-          "module": "controls",
-          "time": 0,
-          "time-micros": 248,
-          "rlimit": 3135
         },
         {
           "module": "rank",
           "time": 0,
-          "time-micros": 134,
+          "time-micros": 286,
           "rlimit": 1035
         },
         {
@@ -1230,757 +1688,1021 @@
           "rlimit": 0
         }
       ],
-      "smt-run": 1634,
-      "rlimit-run": 3872783,
+      "smt-run": 18660,
+      "rlimit-run": 6477343,
       "smt-run-module-times": [
         {
           "module": "controls",
-          "time": 896,
-          "time-micros": 896062,
-          "rlimit": 1904143,
+          "time": 11243,
+          "time-micros": 11243907,
+          "rlimit": 3099427,
           "function-breakdown": [
-            {
-              "function": "sb1_spike::controls::clause_selection_control",
-              "mode:": "proof",
-              "time": 585,
-              "time-micros": 585505,
-              "rlimit": 1280381,
-              "success": true
-            },
             {
               "function": "sb1_spike::controls::support_and_closure_control",
               "mode:": "proof",
-              "time": 24,
-              "time-micros": 24707,
-              "rlimit": 59342,
+              "time": 111,
+              "time-micros": 111085,
+              "rlimit": 59053,
               "success": true
             },
             {
-              "function": "sb1_spike::controls::growth_loop_control",
+              "function": "sb1_spike::controls::active_negative_control",
               "mode:": "proof",
-              "time": 5,
-              "time-micros": 5102,
-              "rlimit": 12008,
+              "time": 968,
+              "time-micros": 968603,
+              "rlimit": 258733,
               "success": true
             },
             {
-              "function": "sb1_spike::controls::correlated_naf_control",
+              "function": "sb1_spike::controls::k1_forwarding_control",
               "mode:": "proof",
-              "time": 23,
-              "time-micros": 23321,
-              "rlimit": 41075,
+              "time": 1940,
+              "time-micros": 1940648,
+              "rlimit": 499596,
               "success": true
             },
             {
               "function": "sb1_spike::controls::nested_identity_control",
               "mode:": "proof",
-              "time": 73,
-              "time-micros": 73604,
-              "rlimit": 138440,
+              "time": 424,
+              "time-micros": 424406,
+              "rlimit": 135042,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::controls::k1_base_refuses",
+              "mode:": "proof",
+              "time": 1392,
+              "time-micros": 1392517,
+              "rlimit": 286381,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::controls::correlated_naf_control",
+              "mode:": "proof",
+              "time": 162,
+              "time-micros": 162984,
+              "rlimit": 42682,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::controls::clause_selection_control",
+              "mode:": "proof",
+              "time": 4161,
+              "time-micros": 4161667,
+              "rlimit": 1225427,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::controls::k1_shape",
+              "mode:": "proof",
+              "time": 207,
+              "time-micros": 207199,
+              "rlimit": 60907,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::controls::inactive_negative_control",
+              "mode:": "proof",
+              "time": 633,
+              "time-micros": 633042,
+              "rlimit": 138441,
               "success": true
             },
             {
               "function": "sb1_spike::controls::well_founded_controls",
               "mode:": "proof",
-              "time": 183,
-              "time-micros": 183820,
-              "rlimit": 372897,
+              "time": 1215,
+              "time-micros": 1215089,
+              "rlimit": 379692,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::controls::growth_loop_control",
+              "mode:": "proof",
+              "time": 26,
+              "time-micros": 26663,
+              "rlimit": 13473,
+              "success": true
+            }
+          ]
+        },
+        {
+          "module": "csr",
+          "time": 1660,
+          "time-micros": 1660056,
+          "rlimit": 919952,
+          "function-breakdown": [
+            {
+              "function": "sb1_spike::csr::csr_selected_wfm_queries",
+              "mode:": "proof",
+              "time": 42,
+              "time-micros": 42336,
+              "rlimit": 15269,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::csr::count_false_update",
+              "mode:": "proof",
+              "time": 121,
+              "time-micros": 121512,
+              "rlimit": 52399,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::csr::represents_closed",
+              "mode:": "proof",
+              "time": 105,
+              "time-micros": 105325,
+              "rlimit": 36789,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::csr::count_false",
+              "mode:": "spec",
+              "time": 22,
+              "time-micros": 22218,
+              "rlimit": 6149,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::csr::reach",
+              "mode:": "exec",
+              "time": 1297,
+              "time-micros": 1297712,
+              "rlimit": 749024,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::csr::csr_control",
+              "mode:": "proof",
+              "time": 70,
+              "time-micros": 70950,
+              "rlimit": 60322,
               "success": true
             }
           ]
         },
         {
           "module": "grounding",
-          "time": 157,
-          "time-micros": 157366,
-          "rlimit": 399585,
+          "time": 1172,
+          "time-micros": 1172579,
+          "rlimit": 399690,
           "function-breakdown": [
             {
-              "function": "sb1_spike::grounding::finite_grounding",
+              "function": "sb1_spike::grounding::universe_monotone",
               "mode:": "proof",
-              "time": 73,
-              "time-micros": 73322,
-              "rlimit": 175553,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::grounding::universe",
-              "mode:": "spec",
-              "time": 0,
-              "time-micros": 984,
-              "rlimit": 1104,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::grounding::vector_membership",
-              "mode:": "proof",
-              "time": 29,
-              "time-micros": 29000,
-              "rlimit": 97766,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::grounding::copy_closed",
-              "mode:": "proof",
-              "time": 3,
-              "time-micros": 3713,
-              "rlimit": 7351,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::grounding::substitution_closed",
-              "mode:": "proof",
-              "time": 12,
-              "time-micros": 12545,
-              "rlimit": 31963,
+              "time": 21,
+              "time-micros": 21447,
+              "rlimit": 8314,
               "success": true
             },
             {
               "function": "sb1_spike::grounding::nested_identity_substitution",
               "mode:": "proof",
-              "time": 6,
-              "time-micros": 6488,
+              "time": 47,
+              "time-micros": 47549,
               "rlimit": 14153,
               "success": true
             },
             {
               "function": "sb1_spike::grounding::type_bounded",
               "mode:": "proof",
-              "time": 3,
-              "time-micros": 3047,
+              "time": 29,
+              "time-micros": 29722,
               "rlimit": 7176,
               "success": true
             },
             {
-              "function": "sb1_spike::grounding::universe_monotone",
+              "function": "sb1_spike::grounding::finite_grounding",
               "mode:": "proof",
-              "time": 5,
-              "time-micros": 5150,
-              "rlimit": 8314,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::grounding::output_member",
-              "mode:": "proof",
-              "time": 9,
-              "time-micros": 9838,
-              "rlimit": 24223,
+              "time": 603,
+              "time-micros": 603474,
+              "rlimit": 175558,
               "success": true
             },
             {
               "function": "sb1_spike::grounding::vectors",
               "mode:": "spec",
-              "time": 0,
-              "time-micros": 716,
+              "time": 1,
+              "time-micros": 1131,
               "rlimit": 1591,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::grounding::substitution_closed",
+              "mode:": "proof",
+              "time": 51,
+              "time-micros": 51581,
+              "rlimit": 31988,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::grounding::copy_closed",
+              "mode:": "proof",
+              "time": 26,
+              "time-micros": 26507,
+              "rlimit": 7355,
               "success": true
             },
             {
               "function": "sb1_spike::grounding::term_closed",
               "mode:": "proof",
-              "time": 12,
-              "time-micros": 12559,
-              "rlimit": 30391,
+              "time": 151,
+              "time-micros": 151760,
+              "rlimit": 30439,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::grounding::output_member",
+              "mode:": "proof",
+              "time": 35,
+              "time-micros": 35115,
+              "rlimit": 24250,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::grounding::universe",
+              "mode:": "spec",
+              "time": 2,
+              "time-micros": 2676,
+              "rlimit": 1104,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::grounding::vector_membership",
+              "mode:": "proof",
+              "time": 201,
+              "time-micros": 201611,
+              "rlimit": 97762,
               "success": true
             }
           ]
         },
         {
-          "module": "origins",
-          "time": 154,
-          "time-micros": 154244,
-          "rlimit": 397249,
+          "module": "envelope",
+          "time": 816,
+          "time-micros": 816571,
+          "rlimit": 315750,
           "function-breakdown": [
             {
-              "function": "sb1_spike::origins::clause_covered_unique_model",
+              "function": "sb1_spike::envelope::kept_witness",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4693,
-              "rlimit": 11008,
+              "time": 42,
+              "time-micros": 42398,
+              "rlimit": 16169,
               "success": true
             },
             {
-              "function": "sb1_spike::origins::maximum_bound",
-              "mode:": "proof",
-              "time": 4,
-              "time-micros": 4091,
-              "rlimit": 10646,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::origins::node_rank_positive",
-              "mode:": "proof",
-              "time": 1,
-              "time-micros": 1849,
-              "rlimit": 4648,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::origins::clause_coverage_slice",
+              "function": "sb1_spike::envelope::envelope_bounds",
               "mode:": "proof",
               "time": 14,
-              "time-micros": 14642,
-              "rlimit": 34772,
+              "time-micros": 14563,
+              "rlimit": 4883,
               "success": true
             },
             {
-              "function": "sb1_spike::origins::maximum",
+              "function": "sb1_spike::envelope::pruned_gamma",
+              "mode:": "proof",
+              "time": 130,
+              "time-micros": 130547,
+              "rlimit": 47303,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::select_envelope",
+              "mode:": "proof",
+              "time": 23,
+              "time-micros": 23356,
+              "rlimit": 8989,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::pruned_wfm",
+              "mode:": "proof",
+              "time": 36,
+              "time-micros": 36018,
+              "rlimit": 11760,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::filter_index_map",
+              "mode:": "proof",
+              "time": 103,
+              "time-micros": 103884,
+              "rlimit": 46308,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::select_prune",
+              "mode:": "proof",
+              "time": 15,
+              "time-micros": 15892,
+              "rlimit": 6845,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::prune_envelope",
+              "mode:": "proof",
+              "time": 29,
+              "time-micros": 29622,
+              "rlimit": 10695,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::prune_wf",
+              "mode:": "proof",
+              "time": 99,
+              "time-micros": 99960,
+              "rlimit": 42559,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::pruned_certified_is_wfm",
+              "mode:": "proof",
+              "time": 23,
+              "time-micros": 23179,
+              "rlimit": 10459,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::pruned_selected_wfm_queries",
+              "mode:": "proof",
+              "time": 74,
+              "time-micros": 74016,
+              "rlimit": 24348,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::pruned_iterate",
+              "mode:": "proof",
+              "time": 46,
+              "time-micros": 46581,
+              "rlimit": 11681,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::prune_retained",
+              "mode:": "proof",
+              "time": 147,
+              "time-micros": 147848,
+              "rlimit": 63996,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::envelope::pruned_covered_wfm",
+              "mode:": "proof",
+              "time": 28,
+              "time-micros": 28700,
+              "rlimit": 9755,
+              "success": true
+            }
+          ]
+        },
+        {
+          "module": "flow",
+          "time": 791,
+          "time-micros": 791228,
+          "rlimit": 173466,
+          "function-breakdown": [
+            {
+              "function": "sb1_spike::flow::growth_covered",
+              "mode:": "proof",
+              "time": 109,
+              "time-micros": 109572,
+              "rlimit": 23123,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::flow::hint_sound",
+              "mode:": "proof",
+              "time": 583,
+              "time-micros": 583463,
+              "rlimit": 124218,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::flow::term_sound",
+              "mode:": "proof",
+              "time": 68,
+              "time-micros": 68847,
+              "rlimit": 17996,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::flow::derived",
               "mode:": "spec",
-              "time": 1,
-              "time-micros": 1509,
-              "rlimit": 3347,
+              "time": 14,
+              "time-micros": 14261,
+              "rlimit": 3366,
               "success": true
             },
             {
-              "function": "sb1_spike::origins::maximum_member",
+              "function": "sb1_spike::flow::construct_has",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4137,
-              "rlimit": 11324,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::origins::clause_coverage_stratifies",
-              "mode:": "proof",
-              "time": 123,
-              "time-micros": 123321,
-              "rlimit": 321504,
+              "time": 15,
+              "time-micros": 15083,
+              "rlimit": 4763,
               "success": true
             }
           ]
         },
         {
           "module": "stratified",
-          "time": 114,
-          "time-micros": 114169,
+          "time": 736,
+          "time-micros": 736705,
           "rlimit": 256096,
           "function-breakdown": [
             {
-              "function": "sb1_spike::stratified::stratified_unique_model",
-              "mode:": "proof",
-              "time": 5,
-              "time-micros": 5093,
-              "rlimit": 11063,
-              "success": true
-            },
-            {
               "function": "sb1_spike::stratified::stratum_inclusion",
               "mode:": "proof",
-              "time": 20,
-              "time-micros": 20348,
+              "time": 93,
+              "time-micros": 93799,
               "rlimit": 37007,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::stratified::perfect_stable",
-              "mode:": "proof",
-              "time": 44,
-              "time-micros": 44315,
-              "rlimit": 104699,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::stratified::height",
-              "mode:": "spec",
-              "time": 1,
-              "time-micros": 1400,
-              "rlimit": 3183,
               "success": true
             },
             {
               "function": "sb1_spike::stratified::prefix_closed",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4193,
+              "time": 29,
+              "time-micros": 29539,
               "rlimit": 10784,
               "success": true
             },
             {
-              "function": "sb1_spike::stratified::stable_agreement",
-              "mode:": "proof",
-              "time": 5,
-              "time-micros": 5852,
-              "rlimit": 13844,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::stratified::negative_agrees",
-              "mode:": "proof",
-              "time": 3,
-              "time-micros": 3681,
-              "rlimit": 7589,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::stratified::covered_unique_model",
-              "mode:": "proof",
-              "time": 4,
-              "time-micros": 4290,
-              "rlimit": 10269,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::stratified::full_mask",
-              "mode:": "proof",
-              "time": 3,
-              "time-micros": 3424,
-              "rlimit": 6567,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::stratified::stable_unique",
-              "mode:": "proof",
-              "time": 4,
-              "time-micros": 4065,
-              "rlimit": 9325,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::stratified::equal_reduct",
-              "mode:": "proof",
-              "time": 4,
-              "time-micros": 4172,
-              "rlimit": 10860,
+              "function": "sb1_spike::stratified::height",
+              "mode:": "spec",
+              "time": 8,
+              "time-micros": 8871,
+              "rlimit": 3183,
               "success": true
             },
             {
               "function": "sb1_spike::stratified::perfect",
               "mode:": "spec",
-              "time": 0,
-              "time-micros": 750,
+              "time": 2,
+              "time-micros": 2671,
               "rlimit": 1261,
               "success": true
             },
             {
-              "function": "sb1_spike::stratified::height_bound",
+              "function": "sb1_spike::stratified::stable_unique",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4762,
-              "rlimit": 9896,
+              "time": 26,
+              "time-micros": 26427,
+              "rlimit": 9325,
               "success": true
             },
             {
               "function": "sb1_spike::stratified::nested_mask",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4363,
+              "time": 28,
+              "time-micros": 28661,
               "rlimit": 10678,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::equal_reduct",
+              "mode:": "proof",
+              "time": 27,
+              "time-micros": 27912,
+              "rlimit": 10860,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::height_bound",
+              "mode:": "proof",
+              "time": 22,
+              "time-micros": 22079,
+              "rlimit": 9896,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::stable_agreement",
+              "mode:": "proof",
+              "time": 28,
+              "time-micros": 28253,
+              "rlimit": 13844,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::covered_unique_model",
+              "mode:": "proof",
+              "time": 38,
+              "time-micros": 38770,
+              "rlimit": 10269,
               "success": true
             },
             {
               "function": "sb1_spike::stratified::negative_below",
               "mode:": "proof",
-              "time": 3,
-              "time-micros": 3456,
+              "time": 31,
+              "time-micros": 31602,
               "rlimit": 9071,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::full_mask",
+              "mode:": "proof",
+              "time": 16,
+              "time-micros": 16689,
+              "rlimit": 6567,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::negative_agrees",
+              "mode:": "proof",
+              "time": 16,
+              "time-micros": 16685,
+              "rlimit": 7589,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::perfect_stable",
+              "mode:": "proof",
+              "time": 340,
+              "time-micros": 340132,
+              "rlimit": 104699,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::stratified::stratified_unique_model",
+              "mode:": "proof",
+              "time": 24,
+              "time-micros": 24607,
+              "rlimit": 11063,
               "success": true
             }
           ]
         },
         {
           "module": "selection",
-          "time": 98,
-          "time-micros": 98277,
-          "rlimit": 241212,
+          "time": 599,
+          "time-micros": 599593,
+          "rlimit": 241215,
           "function-breakdown": [
             {
-              "function": "sb1_spike::selection::selection_closed",
+              "function": "sb1_spike::selection::selection_stratifies",
               "mode:": "proof",
-              "time": 5,
-              "time-micros": 5210,
-              "rlimit": 10923,
+              "time": 62,
+              "time-micros": 62709,
+              "rlimit": 25325,
               "success": true
             },
             {
-              "function": "sb1_spike::selection::selected_wfm_queries",
+              "function": "sb1_spike::selection::selection_closed",
               "mode:": "proof",
-              "time": 6,
-              "time-micros": 6626,
-              "rlimit": 16664,
+              "time": 26,
+              "time-micros": 26927,
+              "rlimit": 10923,
               "success": true
             },
             {
               "function": "sb1_spike::selection::selected_stable_agrees",
               "mode:": "proof",
-              "time": 19,
-              "time-micros": 19904,
+              "time": 103,
+              "time-micros": 103284,
               "rlimit": 42515,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::selection::mask_closed_equivalence",
-              "mode:": "proof",
-              "time": 7,
-              "time-micros": 7565,
-              "rlimit": 20785,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::selection::selection_exact",
-              "mode:": "proof",
-              "time": 4,
-              "time-micros": 4015,
-              "rlimit": 8064,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::selection::selection_same_on_slice",
-              "mode:": "proof",
-              "time": 6,
-              "time-micros": 6798,
-              "rlimit": 17436,
               "success": true
             },
             {
               "function": "sb1_spike::selection::clause_selection_reduct",
               "mode:": "proof",
-              "time": 8,
-              "time-micros": 8683,
+              "time": 57,
+              "time-micros": 57571,
               "rlimit": 21630,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::selection::selection_same_on_slice",
+              "mode:": "proof",
+              "time": 54,
+              "time-micros": 54240,
+              "rlimit": 17436,
               "success": true
             },
             {
               "function": "sb1_spike::selection::selection_wf",
               "mode:": "proof",
-              "time": 8,
-              "time-micros": 8665,
-              "rlimit": 20828,
+              "time": 51,
+              "time-micros": 51015,
+              "rlimit": 20831,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::selection::mask_closed_equivalence",
+              "mode:": "proof",
+              "time": 37,
+              "time-micros": 37763,
+              "rlimit": 20785,
               "success": true
             },
             {
               "function": "sb1_spike::selection::masks_same_reduct",
               "mode:": "proof",
-              "time": 6,
-              "time-micros": 6456,
+              "time": 29,
+              "time-micros": 29453,
               "rlimit": 15724,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::selection::selected_source_index",
-              "mode:": "proof",
-              "time": 3,
-              "time-micros": 3512,
-              "rlimit": 9248,
               "success": true
             },
             {
               "function": "sb1_spike::selection::queries_agree",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4441,
+              "time": 31,
+              "time-micros": 31403,
               "rlimit": 12454,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::selection::selected_wfm_queries",
+              "mode:": "proof",
+              "time": 54,
+              "time-micros": 54173,
+              "rlimit": 16664,
               "success": true
             },
             {
               "function": "sb1_spike::selection::selected_reduct_queries",
               "mode:": "proof",
-              "time": 7,
-              "time-micros": 7985,
+              "time": 39,
+              "time-micros": 39846,
               "rlimit": 19619,
               "success": true
             },
             {
-              "function": "sb1_spike::selection::selection_stratifies",
+              "function": "sb1_spike::selection::selected_source_index",
               "mode:": "proof",
-              "time": 8,
-              "time-micros": 8409,
-              "rlimit": 25322,
+              "time": 28,
+              "time-micros": 28778,
+              "rlimit": 9248,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::selection::selection_exact",
+              "mode:": "proof",
+              "time": 22,
+              "time-micros": 22427,
+              "rlimit": 8061,
               "success": true
             }
           ]
         },
         {
           "module": "afp",
-          "time": 87,
-          "time-micros": 87065,
+          "time": 575,
+          "time-micros": 575713,
           "rlimit": 190128,
           "function-breakdown": [
             {
-              "function": "sb1_spike::afp::double_monotone",
-              "mode:": "proof",
-              "time": 2,
-              "time-micros": 2227,
-              "rlimit": 5195,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::iterate",
-              "mode:": "spec",
-              "time": 0,
-              "time-micros": 538,
-              "rlimit": 1048,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::stratified_wfm",
-              "mode:": "proof",
-              "time": 4,
-              "time-micros": 4563,
-              "rlimit": 10863,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::lower_fixed",
-              "mode:": "proof",
-              "time": 7,
-              "time-micros": 7452,
-              "rlimit": 13700,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::iteration_chain",
-              "mode:": "proof",
-              "time": 5,
-              "time-micros": 5813,
-              "rlimit": 14794,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::finite_alternation",
-              "mode:": "proof",
-              "time": 8,
-              "time-micros": 8264,
-              "rlimit": 19815,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::cross_agreement",
-              "mode:": "proof",
-              "time": 6,
-              "time-micros": 6378,
-              "rlimit": 15078,
-              "success": true
-            },
-            {
               "function": "sb1_spike::afp::alternating_bounds",
               "mode:": "proof",
-              "time": 3,
-              "time-micros": 3170,
+              "time": 25,
+              "time-micros": 25632,
               "rlimit": 8368,
               "success": true
             },
             {
               "function": "sb1_spike::afp::covered_wfm",
               "mode:": "proof",
-              "time": 5,
-              "time-micros": 5486,
+              "time": 16,
+              "time-micros": 16630,
               "rlimit": 8959,
               "success": true
             },
             {
-              "function": "sb1_spike::afp::cross_pair_total",
+              "function": "sb1_spike::afp::double_monotone",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4962,
-              "rlimit": 10217,
+              "time": 19,
+              "time-micros": 19705,
+              "rlimit": 5195,
               "success": true
             },
             {
-              "function": "sb1_spike::afp::lower_least",
+              "function": "sb1_spike::afp::lower_fixed",
               "mode:": "proof",
+              "time": 48,
+              "time-micros": 48067,
+              "rlimit": 13700,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::stratified_wfm",
+              "mode:": "proof",
+              "time": 9,
+              "time-micros": 9595,
+              "rlimit": 10863,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::iteration_chain",
+              "mode:": "proof",
+              "time": 74,
+              "time-micros": 74631,
+              "rlimit": 14794,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::iterate",
+              "mode:": "spec",
               "time": 2,
-              "time-micros": 2076,
-              "rlimit": 5541,
+              "time-micros": 2896,
+              "rlimit": 1048,
               "success": true
             },
             {
-              "function": "sb1_spike::afp::gamma_antitone",
+              "function": "sb1_spike::afp::finite_alternation",
               "mode:": "proof",
-              "time": 5,
-              "time-micros": 5285,
-              "rlimit": 12672,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::iteration_growth",
-              "mode:": "proof",
-              "time": 5,
-              "time-micros": 5703,
-              "rlimit": 13654,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::afp::cross_stratum_inclusion",
-              "mode:": "proof",
-              "time": 17,
-              "time-micros": 17126,
-              "rlimit": 31134,
+              "time": 88,
+              "time-micros": 88861,
+              "rlimit": 19815,
               "success": true
             },
             {
               "function": "sb1_spike::afp::certified_is_wfm",
               "mode:": "proof",
-              "time": 2,
-              "time-micros": 2974,
+              "time": 19,
+              "time-micros": 19252,
               "rlimit": 7018,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::gamma_antitone",
+              "mode:": "proof",
+              "time": 45,
+              "time-micros": 45658,
+              "rlimit": 12672,
               "success": true
             },
             {
               "function": "sb1_spike::afp::retained_antitone",
               "mode:": "proof",
-              "time": 1,
-              "time-micros": 1782,
+              "time": 25,
+              "time-micros": 25637,
               "rlimit": 3525,
               "success": true
             },
             {
               "function": "sb1_spike::afp::iteration_below_prefixed",
               "mode:": "proof",
-              "time": 3,
-              "time-micros": 3258,
+              "time": 26,
+              "time-micros": 26435,
               "rlimit": 8547,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::cross_pair_total",
+              "mode:": "proof",
+              "time": 8,
+              "time-micros": 8561,
+              "rlimit": 10217,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::cross_stratum_inclusion",
+              "mode:": "proof",
+              "time": 73,
+              "time-micros": 73403,
+              "rlimit": 31134,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::iteration_growth",
+              "mode:": "proof",
+              "time": 45,
+              "time-micros": 45255,
+              "rlimit": 13654,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::lower_least",
+              "mode:": "proof",
+              "time": 26,
+              "time-micros": 26397,
+              "rlimit": 5541,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::afp::cross_agreement",
+              "mode:": "proof",
+              "time": 19,
+              "time-micros": 19089,
+              "rlimit": 15078,
               "success": true
             }
           ]
         },
         {
           "module": "support",
-          "time": 58,
-          "time-micros": 58827,
+          "time": 499,
+          "time-micros": 499657,
           "rlimit": 343151,
           "function-breakdown": [
             {
-              "function": "sb1_spike::support::founded_in_closed",
-              "mode:": "proof",
-              "time": 44,
-              "time-micros": 44011,
-              "rlimit": 306952,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::support::lfp_fixed",
-              "mode:": "proof",
-              "time": 6,
-              "time-micros": 6634,
-              "rlimit": 15395,
-              "success": true
-            },
-            {
               "function": "sb1_spike::support::support_closure_lfp",
               "mode:": "proof",
-              "time": 3,
-              "time-micros": 3196,
+              "time": 37,
+              "time-micros": 37633,
               "rlimit": 8403,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::support::least",
-              "mode:": "proof",
-              "time": 1,
-              "time-micros": 1151,
-              "rlimit": 2642,
               "success": true
             },
             {
               "function": "sb1_spike::support::lfp_closed",
               "mode:": "proof",
-              "time": 3,
-              "time-micros": 3833,
+              "time": 26,
+              "time-micros": 26143,
               "rlimit": 9759,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::support::lfp_fixed",
+              "mode:": "proof",
+              "time": 56,
+              "time-micros": 56665,
+              "rlimit": 15395,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::support::founded_in_closed",
+              "mode:": "proof",
+              "time": 367,
+              "time-micros": 367158,
+              "rlimit": 306952,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::support::least",
+              "mode:": "proof",
+              "time": 12,
+              "time-micros": 12056,
+              "rlimit": 2642,
               "success": true
             }
           ]
         },
         {
-          "module": "slice",
-          "time": 40,
-          "time-micros": 40504,
-          "rlimit": 88132,
+          "module": "origins",
+          "time": 319,
+          "time-micros": 319780,
+          "rlimit": 397249,
           "function-breakdown": [
             {
-              "function": "sb1_spike::slice::mask_retained",
+              "function": "sb1_spike::origins::clause_covered_unique_model",
               "mode:": "proof",
-              "time": 2,
-              "time-micros": 2013,
-              "rlimit": 4703,
+              "time": 10,
+              "time-micros": 10120,
+              "rlimit": 11008,
               "success": true
             },
             {
-              "function": "sb1_spike::slice::stable_projection",
-              "mode:": "proof",
-              "time": 1,
-              "time-micros": 1873,
-              "rlimit": 3612,
+              "function": "sb1_spike::origins::maximum",
+              "mode:": "spec",
+              "time": 6,
+              "time-micros": 6390,
+              "rlimit": 3347,
               "success": true
             },
             {
-              "function": "sb1_spike::slice::mask_wf",
+              "function": "sb1_spike::origins::clause_coverage_stratifies",
               "mode:": "proof",
-              "time": 4,
-              "time-micros": 4095,
-              "rlimit": 8782,
+              "time": 251,
+              "time-micros": 251589,
+              "rlimit": 321504,
               "success": true
             },
             {
-              "function": "sb1_spike::slice::query_preservation",
+              "function": "sb1_spike::origins::maximum_member",
               "mode:": "proof",
-              "time": 5,
-              "time-micros": 5977,
-              "rlimit": 14855,
+              "time": 9,
+              "time-micros": 9743,
+              "rlimit": 11324,
               "success": true
             },
             {
-              "function": "sb1_spike::slice::reduct_projection",
+              "function": "sb1_spike::origins::node_rank_positive",
               "mode:": "proof",
-              "time": 22,
-              "time-micros": 22464,
-              "rlimit": 46553,
+              "time": 6,
+              "time-micros": 6806,
+              "rlimit": 4648,
               "success": true
             },
             {
-              "function": "sb1_spike::slice::retained_agrees",
+              "function": "sb1_spike::origins::maximum_bound",
               "mode:": "proof",
-              "time": 2,
-              "time-micros": 2850,
-              "rlimit": 6965,
+              "time": 8,
+              "time-micros": 8245,
+              "rlimit": 10646,
               "success": true
             },
             {
-              "function": "sb1_spike::slice::subset_agrees",
+              "function": "sb1_spike::origins::clause_coverage_slice",
               "mode:": "proof",
-              "time": 1,
-              "time-micros": 1229,
-              "rlimit": 2662,
+              "time": 26,
+              "time-micros": 26885,
+              "rlimit": 34772,
               "success": true
             }
           ]
         },
         {
           "module": "rank",
-          "time": 28,
-          "time-micros": 28190,
+          "time": 131,
+          "time-micros": 131379,
           "rlimit": 53087,
           "function-breakdown": [
             {
               "function": "sb1_spike::rank::coverage_stratifies",
               "mode:": "proof",
-              "time": 8,
-              "time-micros": 8018,
+              "time": 37,
+              "time-micros": 37515,
               "rlimit": 14231,
-              "success": true
-            },
-            {
-              "function": "sb1_spike::rank::reach_edge",
-              "mode:": "proof",
-              "time": 3,
-              "time-micros": 3600,
-              "rlimit": 9567,
               "success": true
             },
             {
               "function": "sb1_spike::rank::signed_graph_rank",
               "mode:": "proof",
-              "time": 2,
-              "time-micros": 2854,
+              "time": 16,
+              "time-micros": 16117,
               "rlimit": 8052,
               "success": true
             },
             {
               "function": "sb1_spike::rank::coverage_slice",
               "mode:": "proof",
-              "time": 13,
-              "time-micros": 13716,
+              "time": 52,
+              "time-micros": 52262,
               "rlimit": 21237,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::rank::reach_edge",
+              "mode:": "proof",
+              "time": 25,
+              "time-micros": 25484,
+              "rlimit": 9567,
+              "success": true
+            }
+          ]
+        },
+        {
+          "module": "slice",
+          "time": 113,
+          "time-micros": 113050,
+          "rlimit": 88132,
+          "function-breakdown": [
+            {
+              "function": "sb1_spike::slice::query_preservation",
+              "mode:": "proof",
+              "time": 18,
+              "time-micros": 18181,
+              "rlimit": 14855,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::slice::subset_agrees",
+              "mode:": "proof",
+              "time": 4,
+              "time-micros": 4288,
+              "rlimit": 2662,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::slice::mask_wf",
+              "mode:": "proof",
+              "time": 10,
+              "time-micros": 10920,
+              "rlimit": 8782,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::slice::reduct_projection",
+              "mode:": "proof",
+              "time": 60,
+              "time-micros": 60164,
+              "rlimit": 46553,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::slice::mask_retained",
+              "mode:": "proof",
+              "time": 6,
+              "time-micros": 6007,
+              "rlimit": 4703,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::slice::retained_agrees",
+              "mode:": "proof",
+              "time": 7,
+              "time-micros": 7977,
+              "rlimit": 6965,
+              "success": true
+            },
+            {
+              "function": "sb1_spike::slice::stable_projection",
+              "mode:": "proof",
+              "time": 5,
+              "time-micros": 5510,
+              "rlimit": 3612,
               "success": true
             }
           ]

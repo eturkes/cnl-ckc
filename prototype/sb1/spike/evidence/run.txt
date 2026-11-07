@@ -1,21 +1,21 @@
-source_commit=503a3112c473dcb006fe2e1fa89f5435199ffaf3
+source_commit=f9a822e07e9b7fb750d93e6da9f1349b8a176d63
 checkout=clean detached sparse clone; complete prototype/sb1/spike/ + rust/verus.lock
 command=bash prototype/sb1/spike/verify.sh
 verifier=0.2026.10.26.d17fbd0; release vstd imported
 flags=--crate-name sb1_spike --crate-type lib --no-cheating --rlimit 10 --num-threads 1 --time --output-json --triggers-mode silent
 script_rc=0
-verified=85
+verified=119
 errors=0
 warnings=0
 entire_crate=true
-verifier_total_ms=4405
-smt_total_ms=1639
-smt_run_rlimit_count=3872783
+verifier_total_ms=39933
+smt_total_ms=18654
+smt_run_rlimit_count=6477343
 checkout_status_entries_before=0
 checkout_status_entries_after=0
-source_hashes=source.sha256; paths relative to repository root; 10 proof sources + script + verifier lock = 12
+source_hashes=source.sha256; paths relative to repository root; 13 proof sources + script + verifier lock = 15
 raw_verifier_output=verify.json
-auxiliary_checks=verusfmt --edition 2024 --check; ShellCheck; git diff --check; pinned verifier canary (32 cases, rc 0)
-script_guard_controls=missing pin -> rc 2 invalid verifier pin; valid-shaped mismatched pin -> rc 2 verifier pin mismatch
-semantic_controls=correlated NAF; support/closure; growth loop; nested Deps; stratified total AFP; odd-loop undefined AFP; selected extra head outside atom slice with both query shapes nonempty
-scope=abstract D9(a)-(f), not production verification or SB performance grading
+auxiliary_checks=verusfmt --edition 2024 --check (rc 0); verify.sh unchanged since the canary-checked 503a3112 run (pinned verifier canary not rerun: pin unchanged)
+semantic_controls=correlated NAF; support/closure; growth loop; nested Deps; stratified total AFP; odd-loop undefined AFP; selected extra head outside atom slice with both query shapes nonempty; inactive negative rule admitted (unpruned premise unsatisfiable); active negative cycle refused (undefined AFP atom); base-origin forwarding refused + k1 admitted with a descending rank; two-node CSR closure
+scope=abstract D9(a)-(f) + TAS seam (g)-(j), not production verification or SB performance grading
+host_note=shared workstation (fva's job + builder-19's oracle running): times are verifier diagnostics only
