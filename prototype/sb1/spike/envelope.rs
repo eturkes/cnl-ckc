@@ -408,3 +408,150 @@ pub proof fn pruned_selected_wfm_queries(
 }
 
 } // verus!
+verus! {
+
+// P' = P with NAF items added alone (the DC shape appends
+// `\+ guideline_exclusion(Key)`): same atoms, heads, positive bodies and
+// built-ins; every NAF item of P kept.
+pub open spec fn naf_extends(p: Program, q: Program) -> bool {
+    &&& p.atoms == q.atoms
+    &&& p.rules.len() == q.rules.len()
+    &&& forall|i: int|
+        #![trigger q.rules[i]]
+        0 <= i < p.rules.len() ==> {
+            &&& q.rules[i].head == p.rules[i].head
+            &&& q.rules[i].positive == p.rules[i].positive
+            &&& q.rules[i].builtins == p.rules[i].builtins
+            &&& forall|j: int|
+                0 <= j < p.rules[i].naf.len() ==> q.rules[i].naf.contains(
+                    #[trigger] p.rules[i].naf[j],
+                )
+        }
+}
+
+pub proof fn naf_extension_envelope(p: Program, q: Program, l: Set<Atom>)
+    requires
+        naf_extends(p, q),
+        envelope(q, l),
+    ensures
+        envelope(p, l),
+{
+    assert forall|i: int|
+        0 <= i < p.rules.len() && p.rules[i].builtins && p.rules[i].positive.subset_of(
+            l,
+        ) implies l.contains(p.rules[i].head) by {
+        assert(q.rules[i].head == p.rules[i].head);
+    }
+}
+
+// A graph covering the pruned extension covers the pruned original: every
+// kept witness of P is a kept witness of P'.
+pub proof fn naf_extension_coverage(
+    p: Program,
+    q: Program,
+    l: Set<Atom>,
+    g: rank::Graph,
+    origin: Seq<int>,
+)
+    requires
+        naf_extends(p, q),
+        origins::clause_coverage(prune(q, l), g, origin),
+    ensures
+        origins::clause_coverage(prune(p, l), g, origin),
+{
+    let pp = prune(p, l);
+    let pq = prune(q, l);
+    assert forall|i: int, j: int|
+        0 <= i < pp.rules.len() && 0 <= j < pp.rules.len() && pp.rules[i].positive.contains(
+            pp.rules[j].head,
+        ) implies g.positive.contains((origin[i], origin[j])) by {
+        assert(q.rules[i].head == p.rules[i].head);
+        assert(q.rules[j].head == p.rules[j].head);
+        assert(pq.rules[i].positive == pp.rules[i].positive);
+        assert(pq.rules[j].head == pp.rules[j].head);
+    }
+    assert forall|i: int, j: int, n: int, w: int|
+        0 <= i < pp.rules.len() && 0 <= j < pp.rules.len() && 0 <= n < pp.rules[i].naf.len() && 0
+            <= w < pp.rules[i].naf[n].len() && pp.rules[i].naf[n][w].contains(
+            pp.rules[j].head,
+        ) implies g.negative.contains((origin[i], origin[j])) by {
+        let r = p.rules[i];
+        let s = q.rules[i];
+        assert(q.rules[j].head == p.rules[j].head);
+        assert(s.head == r.head);
+        assert(live(r, l));
+        assert(live(s, l));
+        kept_witness(r, l, n);
+        let wit = pp.rules[i].naf[n][w];
+        assert(r.naf[n].contains(wit));
+        assert(s.naf.contains(r.naf[n]));
+        let n2 = choose|n2: int| 0 <= n2 < s.naf.len() && s.naf[n2] == r.naf[n];
+        kept_witness(s, l, n2);
+        let k0 = choose|k0: int| 0 <= k0 < r.naf[n].len() && r.naf[n][k0] == wit;
+        assert(s.naf[n2][k0] == wit);
+        assert(pq.rules[i].naf[n2].contains(wit));
+        let w2 = choose|w2: int|
+            0 <= w2 < pq.rules[i].naf[n2].len() && pq.rules[i].naf[n2][w2] == wit;
+        assert(pq.rules[j].head == pp.rules[j].head);
+    }
+}
+
+pub proof fn naf_extension_slice(
+    p: Program,
+    q: Program,
+    l: Set<Atom>,
+    origin: Seq<int>,
+    chosen: Set<int>,
+)
+    requires
+        naf_extends(p, q),
+    ensures
+        origins::atom_slice(prune(p, l), origin, chosen) == origins::atom_slice(
+            prune(q, l),
+            origin,
+            chosen,
+        ),
+{
+    assert forall|i: int| 0 <= i < p.rules.len() implies prune(q, l).rules[i].head == prune(
+        p,
+        l,
+    ).rules[i].head by {
+        assert(q.rules[i].head == p.rules[i].head);
+    }
+    assert(origins::atom_slice(prune(p, l), origin, chosen) =~= origins::atom_slice(
+        prune(q, l),
+        origin,
+        chosen,
+    ));
+}
+
+// TAS's composition: TA admission of the DC-shaped program (the census
+// baseline) certifies the original clauses the producer + model check run,
+// and its forward-closed slices answer as the original program.
+pub proof fn naf_extension_wfm(
+    p: Program,
+    q: Program,
+    l: Set<Atom>,
+    g: rank::Graph,
+    origin: Seq<int>,
+)
+    requires
+        wf(p),
+        naf_extends(p, q),
+        envelope(q, l),
+        rank::graph_wf(g),
+        rank::no_negative_cycle(g),
+        origins::clause_coverage(prune(q, l), g, origin),
+    ensures
+        afp::lower(p) == afp::upper(p),
+        stable(p, afp::lower(p)),
+        forall|m: Set<Atom>| stable(p, m) ==> m == afp::lower(p),
+        envelope(p, l),
+        origins::clause_coverage(prune(p, l), g, origin),
+{
+    naf_extension_envelope(p, q, l);
+    naf_extension_coverage(p, q, l, g, origin);
+    pruned_covered_wfm(p, l, g, origin);
+}
+
+} // verus!

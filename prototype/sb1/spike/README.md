@@ -1,6 +1,6 @@
 # SB1 D9 proof spike
 
-Standalone Verus source crate; entry = `lib.rs`. Scope = contract `sb` § Census + spike freeze, D9(a)–(f), + row TAS's seam (g)–(j) (`.scratch/imp/tas-check.md` T8). Abstract finite domains; no production parser, checker or producer code imported.
+Standalone Verus source crate; entry = `lib.rs`. Scope = contract `sb` § Census + spike freeze, D9(a)–(f), + row TAS's seam (g)–(k) (`.scratch/imp/tas-check.md` T8). Abstract finite domains; no production parser, checker or producer code imported.
 
 ## Run
 
@@ -29,6 +29,7 @@ bash prototype/sb1/spike/verify.sh
 | (h) closed source hint → every concrete growth dependency is an enumerated refined edge | `flow::hint_sound`, `growth_covered` | Compositional typing (base, k = 1, per-symbol mix); one binder per head variable; may-match soundness over derivable instances; the hint closed over every may-producer of each binder; flat bodies (constants + variables). |
 | (i) pruned program's covered graph + forward-closed choice → the SOURCE program's answers | `envelope::pruned_selected_wfm_queries`, `select_prune` | (g)'s envelope; coverage + no negative cycle on `prune(p, l)`; forward-closed choice; operators + every goal's reads inside the pruned program's atom slice. |
 | (j) executable CSR reachability → forward-closed selection → (i) | `csr::reach` (exec), `represents_closed`, `csr_selected_wfm_queries` | CSR well-formed; every graph edge stored (`represents`, the checker's build obligation); roots below the node count. |
+| (k) a NAF-only extension's coverage covers the original (TAS: the DC-shaped program certifies the original clauses) | `envelope::naf_extension_wfm`, `naf_extension_coverage`, `naf_extension_slice` | `naf_extends(p, q)`: same atoms, heads, positive bodies + built-ins, every NAF item of p kept in q; q's envelope; coverage + no negative cycle on `prune(q, l)`. |
 
 ### (a) Semantics
 
@@ -90,9 +91,13 @@ The forward-closed selection induces `origins::atom_slice`: all producers of eac
 
 `csr::reach` = exec code over `Vec<usize>` offsets/targets + a `Vec<bool>` mark: worklist reachability from the roots, each node pushed once (marked first), termination by unmarked count + stack length. Postconditions: roots marked, mark CSR-closed. `represents_closed` lifts a CSR-closed mark to `rank::forward_closed` for any graph whose every edge the CSR stores; `csr_selected_wfm_queries` composes it with (i).
 
+### (k) NAF-only extension
+
+The census's DC shape appends `\+ guideline_exclusion(Key)` goals alone, so its program extends the original by NAF items. Both share the positive program (`naf_extension_envelope`), every kept witness of the original is a kept witness of the extension (`naf_extension_coverage`), and the pruned atom slices coincide (`naf_extension_slice`): a graph certifying the extension certifies the original's WFM and its forward-closed selections.
+
 ## Controls
 
-`controls.rs` verifies: correlated NAF with incompatible witnesses; empty witness/list meanings; independently necessary support + closure; a rejected one-node growth loop; an inhabited two-constructor chain that generates a nested identity and a legal ground clause instance; total WFM for stratified NAF; genuinely undefined WFM for an odd negative self-loop; nonempty enumeration + NAF goal-list answers under proper clause selection, despite an extra selected fact outside the atom slice making global mask/model equality false. `inactive_negative_control`: a rule whose positive body has no producer and whose NAF loops on its own head admits through the pruned program (two-valued WFM), while no graph without a negative cycle covers the unpruned program; `active_negative_control`: its live twin forces a negative self-loop in every envelope's pruned program and leaves the atom undefined in the AFP WFM, so refusal is necessary. `k1_base_refuses`: every closed base-origin hint of a forwarding program forces the growth cycle P → O → P; `k1_forwarding_control`: the k = 1 hint of the same program instantiates every `growth_covered` premise, its refined edges descend a rank, and every concrete Deps dependency descends it. `csr_control`: a two-node CSR satisfying every premise of `represents_closed` + `reach`'s precondition.
+`controls.rs` verifies: correlated NAF with incompatible witnesses; empty witness/list meanings; independently necessary support + closure; a rejected one-node growth loop; an inhabited two-constructor chain that generates a nested identity and a legal ground clause instance; total WFM for stratified NAF; genuinely undefined WFM for an odd negative self-loop; nonempty enumeration + NAF goal-list answers under proper clause selection, despite an extra selected fact outside the atom slice making global mask/model equality false. `inactive_negative_control`: a rule whose positive body has no producer and whose NAF loops on its own head admits through the pruned program (two-valued WFM), while no graph without a negative cycle covers the unpruned program; `active_negative_control`: its live twin forces a negative self-loop in every envelope's pruned program and leaves the atom undefined in the AFP WFM, so refusal is necessary. `k1_base_refuses`: every closed base-origin hint of a forwarding program forces the growth cycle P → O → P; `k1_forwarding_control`: the k = 1 hint of the same program instantiates every `growth_covered` premise, its refined edges descend a rank, and every concrete Deps dependency descends it. `csr_control`: a two-node CSR satisfying every premise of `represents_closed` + `reach`'s precondition. `naf_extension_control`: a shaped twin whose added guard keeps its witness (a real negative edge) certifies the original program's two-valued WFM.
 
 ## Production obligations outside the spike
 

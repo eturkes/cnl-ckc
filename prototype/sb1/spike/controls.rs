@@ -725,3 +725,54 @@ pub proof fn k1_forwarding_control() {
 }
 
 } // verus!
+verus! {
+
+// The DC-shaped twin adds `\+ a` to `b :- a.`: its pruned program keeps the
+// witness (a negative edge), the covering graph has no negative cycle, and the
+// ORIGINAL program's WFM is two-valued (b true there, blocked in the twin).
+pub proof fn naf_extension_control() {
+    hide(afp::lower);
+    hide(afp::upper);
+    let fact = Instance { head: 0, positive: Set::empty(), naf: Seq::empty(), builtins: true };
+    let plain = Instance { head: 1, positive: set![0int], naf: Seq::empty(), builtins: true };
+    let shaped = Instance {
+        head: 1,
+        positive: set![0int],
+        naf: seq![seq![set![0int]]],
+        builtins: true,
+    };
+    let p = Program { atoms: set![0int, 1int], rules: seq![fact, plain] };
+    let q = Program { atoms: set![0int, 1int], rules: seq![fact, shaped] };
+    let l = set![0int, 1int];
+    assert(wf(p));
+    assert(envelope::naf_extends(p, q));
+    assert(envelope::envelope(q, l));
+    let pq = envelope::prune(q, l);
+    assert(q.rules[1] == shaped);
+    assert(pq.rules[1] == envelope::prune_rule(shaped, l));
+    envelope::kept_witness(shaped, l, 0);
+    assert(shaped.naf[0][0] == set![0int]);
+    assert(set![0int].subset_of(l));
+    assert(pq.rules[1].naf[0].contains(shaped.naf[0][0]));
+    let g = rank::Graph {
+        nodes: set![0int, 1int],
+        positive: set![(1int, 0int)],
+        negative: set![(1int, 0int)],
+    };
+    let origin = seq![0int, 1int];
+    assert(rank::graph_wf(g));
+    assert(rank::forward_closed(g, set![0int]));
+    assert(!rank::reach(g, 0).contains(1));
+    assert(rank::no_negative_cycle(g));
+    assert forall|n: int, w: int|
+        0 <= n < pq.rules[1].naf.len() && 0 <= w
+            < pq.rules[1].naf[n].len() implies pq.rules[1].naf[n][w] == set![0int] by {
+        assert(n == 0);
+        assert(shaped.naf[0].contains(pq.rules[1].naf[0][w]));
+    }
+    assert(origins::clause_coverage(pq, g, origin));
+    envelope::naf_extension_wfm(p, q, l, g, origin);
+    assert(afp::lower(p) == afp::upper(p));
+}
+
+} // verus!
