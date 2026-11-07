@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""Measure reachable vs retained intern versions on the frozen G1/G10 matrix."""
+import argparse
+import csv
+import hashlib
+import json
+from pathlib import Path
+import runpy
+import subprocess
+import time
+
+
+def validate(rows):
+    for row in rows:
+        assert int(row['rc']) == 0
+        for kind in ['entries', 'bytes']:
+            assert int(row['live_' + kind]) > 0
+            assert int(row['retained_' + kind]) == int(row['live_' + kind]), row
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ['ta', 'root', 'instances', 'run-manifest', 'out']:
+        p.add_argument('--' + name, type=Path, required=True)
+    a = p.parse_args()
+    a.out.mkdir(parents=True, exist_ok=False)
+    base = runpy.run_path(str(Path(__file__).with_name('structure-census')))
+    families, scales = base['FAMILIES'], [1, 10]
+    base['check_inputs'](a.root, a.instances, a.run_manifest, a.out, families, scales)
+    rows, commands = [], []
+    fields = ['instance', 'family', 'G', 'rc', 'wall_seconds', 'retained_entries', 'live_entries',
+              'retained_bytes', 'live_bytes', 'entry_ratio', 'byte_ratio', 'before_final_retained_entries',
+              'before_final_live_entries', 'before_final_retained_bytes', 'before_final_live_bytes',
+              'collections', 'allocation_charge', 'peak_rss_bytes']
+    for family in families:
+        for scale in scales:
+            name = f'{family}-g{scale:03}-s0'
+            out = a.out / name
+            out.mkdir()
+            cmd = [str(a.ta), '--root', str(a.root), '--composition', str(a.instances / name / 'composition.tsv'),
+                   '--dc', '--out', str(out), '--redesign-front', '--features-only', '--skip-audit']
+            commands.append(dict(instance=name, binary_sha256=hashlib.sha256(a.ta.read_bytes()).hexdigest(), command=json.dumps(cmd)))
+            base['table'](a.out / 'commands.tsv', ['instance', 'binary_sha256', 'command'], commands)
+            started = time.monotonic()
+            print(f'start\t{name}', flush=True)
+            with (out / 'stdout.txt').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
+                result = subprocess.run(cmd, stdout=stdout, stderr=stderr, check=False, timeout=43200)
+            assert result.returncode == 0, (name, result.returncode)
+            metrics = {r['key']: r['value'] for r in base['rows'](out / 'front-stats.tsv')}
+            row = dict(instance=name, family=family, G=scale, rc=result.returncode, wall_seconds=time.monotonic() - started)
+            for key in fields[5:]:
+                if key not in ['entry_ratio', 'byte_ratio']:
+                    row[key] = metrics[key]
+            row['entry_ratio'] = int(row['retained_entries']) / int(row['live_entries'])
+            row['byte_ratio'] = int(row['retained_bytes']) / int(row['live_bytes'])
+            rows.append(row)
+            validate(rows)
+            base['table'](a.out / 'retention.tsv', fields, rows)
+            print(f'finish\t{name}\trc=0\tentries={row["entry_ratio"]}\tbytes={row["byte_ratio"]}', flush=True)
+    validate(rows)
+    planted = [dict(row) for row in rows]
+    planted[1]['retained_bytes'] = int(planted[1]['retained_bytes']) + 1
+    try:
+        validate(planted)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError('retention validator accepted an unreferenced byte')
+    validate(rows)
+    print('retention-census\t12/12\tflat ratios; one-byte leak plant rejected', flush=True)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

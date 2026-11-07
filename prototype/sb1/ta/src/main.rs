@@ -1,3 +1,4 @@
+mod candidate_cli;
 use sb1_ta::Analysis;
 use sb1_ta::graph::{Graph, Question};
 use sb1_ta::growth::Growth;
@@ -106,6 +107,16 @@ fn run() -> Result<i32, String> {
     let mut shape_only = false;
     let mut features_only = false;
     let mut compare_reference = false;
+    let mut redesign_front = false;
+    let mut redesign = false;
+    let mut dump_analysis = false;
+    let mut front_only = false;
+    let mut dump_front = false;
+    let mut skip_audit = false;
+    let mut header_audit = false;
+    let mut dump_graph = false;
+    let mut census = false;
+    let mut candidate_census = false;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -118,8 +129,28 @@ fn run() -> Result<i32, String> {
             "--reference" => mode = Mode::Reference,
             "--shape-only" => shape_only = true,
             "--features-only" => features_only = true,
+            "--redesign-front" => {
+                redesign_front = true;
+                front_only = true;
+            }
+            "--redesign" => redesign = true,
+            "--candidate-census" => candidate_census = true,
+            "--dump-analysis" => dump_analysis = true,
+            "--front-only" => front_only = true,
+            "--dump-front" => dump_front = true,
+            "--skip-audit" => skip_audit = true,
+            "--header-audit" => header_audit = true,
+            "--dump-graph" => dump_graph = true,
             "--compare-reference" => compare_reference = true,
             "--edges" => emit_edges = true,
+            "--census" => {
+                census = true;
+                sb1_ta::census::enable();
+            }
+            "--failure-census" => {
+                census = true;
+                sb1_ta::detail::enable();
+            }
             "--patient" => {
                 patient_last = match args.next().as_deref() {
                     Some("none") => false,
@@ -145,10 +176,57 @@ fn run() -> Result<i32, String> {
     if compare_reference && mode == Mode::Reference {
         return Err("--compare-reference requires refined mode".into());
     }
+    if sb1_ta::detail::enabled()
+        && (mode == Mode::Reference
+            || shape_only
+            || features_only
+            || compare_reference
+            || !queries.is_empty())
+    {
+        return Err("--failure-census requires a full refined load without queries".into());
+    }
+    if candidate_census && (!redesign || !queries.is_empty()) {
+        return Err("--candidate-census requires full --redesign without queries".into());
+    }
+    if redesign
+        && (front_only
+            || features_only
+            || mode == Mode::Reference
+            || shape_only
+            || compare_reference
+            || census)
+    {
+        return Err(
+            "--redesign requires a full refined analysis without census/reference modes".into(),
+        );
+    }
+    if dump_analysis
+        && (front_only
+            || features_only
+            || mode == Mode::Reference
+            || shape_only
+            || compare_reference)
+    {
+        return Err("--dump-analysis requires a full refined analysis".into());
+    }
+    if (front_only || dump_front || skip_audit || header_audit || dump_graph)
+        && (mode == Mode::Reference
+            || shape_only
+            || compare_reference
+            || !redesign && !dump_analysis && !queries.is_empty())
+    {
+        return Err(
+            "front diagnostics require refined mode without shapes/reference/queries".into(),
+        );
+    }
     let root = root.ok_or("--root required")?;
     let composition = composition.ok_or("--composition required")?;
     let out = out.ok_or("--out required")?;
     fs::create_dir_all(&out).map_err(|e| e.to_string())?;
+    if candidate_census {
+        sb1_ta::exact_heads::enable_census(out.join("candidate-census"));
+    }
+    sb1_ta::work::phase("parse_shape");
     let start = Instant::now();
     let mut program = Program::load(&root, &composition, patient_last)?;
     let guard_goals = if dc { program.dc_shape()? } else { 0 };
@@ -179,7 +257,92 @@ fn run() -> Result<i32, String> {
         );
         return Ok(0);
     }
+    if redesign {
+        return candidate_cli::run(
+            &program,
+            &out,
+            &mut phases,
+            &questions,
+            candidate_cli::Options {
+                dump_front,
+                dump_graph,
+                dump_analysis,
+                emit_edges,
+                skip_audit,
+                header_audit,
+                emit,
+                slice_dir,
+            },
+        );
+    }
+    if redesign_front {
+        let start = Instant::now();
+        let mut model = sb1_ta::exact::Model::build(&program, None, true, None, skip_audit);
+        phase(
+            &out,
+            &mut phases,
+            "may_fixpoint",
+            start.elapsed().as_secs_f64(),
+        )?;
+        if dump_front {
+            sb1_ta::front::features(&program, &model.abs, model.dump(), &out)?;
+        }
+        let mut graph_metrics = String::new();
+        if !features_only {
+            let start = Instant::now();
+            let graph = sb1_ta::exact_graph::build_compressed(&program, &mut model, header_audit);
+            phase(
+                &out,
+                &mut phases,
+                "graph_scc",
+                start.elapsed().as_secs_f64(),
+            )?;
+            if dump_front || dump_graph {
+                sb1_ta::front::graph_rows(&program, |i| graph.row(i), &graph.components, &out)?;
+            }
+            graph_metrics = format!(
+                "edges\t{}\nscc\t{}\nnegative_components\t{}\n",
+                graph.edge_count(),
+                graph.sizes.len(),
+                graph.witnesses.len()
+            );
+            for (key, value) in graph.metrics() {
+                graph_metrics.push_str(&format!("{key}\t{value}\n"));
+            }
+        }
+        let stats = model.stats.borrow();
+        let mut metrics = format!(
+            "key\tvalue\nevaluations\t{}\nskipped\t{}\naudited\t{}\nlink_groups\t{}\nlink_rectangles\t{}\npeak_rss_bytes\t{}\n",
+            stats.evaluations,
+            stats.skipped,
+            stats.audited,
+            stats.link_groups,
+            stats.link_rectangles,
+            rss()
+        );
+        for (key, value) in model.sets.metrics().into_iter().chain(model.retention()) {
+            metrics.push_str(&format!("{key}\t{value}\n"));
+        }
+        for (key, value) in &stats.retention_before_final {
+            metrics.push_str(&format!("before_final_{key}\t{value}\n"));
+        }
+        metrics.push_str(&format!(
+            "collections\t{}\nallocation_charge\t{}\n",
+            stats.collections,
+            model.sets.allocation_charge()
+        ));
+        metrics.push_str(&graph_metrics);
+        metrics.push_str(&format!("header_candidates\t{}\nheader_survivors\t{}\nheader_audits\t{}\nbody_solves\t{}\nstate_cells_copied\t{}\n", stats.header_candidates, stats.header_survivors, stats.header_audits, stats.body_solves, stats.state_cells_copied));
+        metrics.push_str(&format!(
+            "header_column_targets\t{}\nheader_point_checks\t{}\n",
+            stats.header_column_targets, stats.header_point_checks
+        ));
+        write(&out.join("front-stats.tsv"), &metrics)?;
+        println!("redesign-front\tno-full-admission");
+        return Ok(0);
+    }
     let start = Instant::now();
+    sb1_ta::work::phase("may_fixpoint");
     let model = Model::build_mode(&program, None, true, None, mode);
     let may_seconds = start.elapsed().as_secs_f64();
     phase(&out, &mut phases, "may_fixpoint", may_seconds)?;
@@ -211,6 +374,9 @@ fn run() -> Result<i32, String> {
         )?;
         println!("features\trefined-subset-reference");
     }
+    if dump_front {
+        sb1_ta::front::features(&program, &model.abs, model.exact_dump(), &out)?;
+    }
     if features_only {
         println!(
             "features-only\tno-admission\tincidences={}",
@@ -219,11 +385,32 @@ fn run() -> Result<i32, String> {
         return Ok(0);
     }
     let start = Instant::now();
+    model.census_phase("clause");
+    sb1_ta::work::phase("graph_scc");
     let graph = Graph::build(&program, &model, None);
     let graph_seconds = start.elapsed().as_secs_f64();
     phase(&out, &mut phases, "graph_scc", graph_seconds)?;
     graph.record_memory("graph_scc");
+    if dump_front || dump_graph {
+        sb1_ta::front::graph(&program, &graph, &out)?;
+    }
+    if front_only {
+        write(
+            &out.join("front-stats.tsv"),
+            &format!(
+                "key\tvalue\ncandidate_pairs\t{}\nedges\t{}\nscc\t{}\npeak_rss_bytes\t{}\n",
+                graph.counters.candidate_pairs,
+                graph.edge_count(),
+                graph.sizes.len(),
+                rss()
+            ),
+        )?;
+        println!("oracle-front\tno-full-admission");
+        return Ok(0);
+    }
     let start = Instant::now();
+    model.census_phase("growth");
+    sb1_ta::work::phase("origin_growth");
     let growth = Growth::build(&program, &model, None);
     let growth_seconds = start.elapsed().as_secs_f64();
     phase(&out, &mut phases, "origin_growth", growth_seconds)?;
@@ -237,6 +424,29 @@ fn run() -> Result<i32, String> {
         r.model.record_memory("k1-features");
         r.growth.record_memory("k1-growth");
     }
+    if dump_analysis {
+        sb1_ta::complete::oracle_dump(&program, &analysis, &out)?;
+    }
+    sb1_ta::work::phase("census_posthoc");
+    analysis.model.write_census(&out, "base-model")?;
+    sb1_ta::census::graph(&out, "clause", &analysis.graph)?;
+    analysis.growth.write_census(&out, "base-growth")?;
+    if let Some(r) = &analysis.refined {
+        r.model.write_census(&out, "k1-model")?;
+        r.growth.write_census(&out, "k1-growth")?;
+    }
+    analysis.model.write_detail(&program, &out, "base")?;
+    if let Some(r) = &analysis.refined {
+        r.model.write_detail(&r.program, &out, "k1")?;
+    }
+    sb1_ta::detail::write_edges(
+        &out,
+        &program,
+        &analysis.model,
+        &analysis.graph,
+        &analysis.growth,
+    )?;
+    sb1_ta::work::write(&out)?;
     write(
         &out.join("analysis.tsv"),
         &report(
@@ -294,6 +504,9 @@ fn run() -> Result<i32, String> {
             .ok_or("query name")?
             .to_string_lossy()
             .replace(['.', '-'], "_");
+        if dump_analysis {
+            sb1_ta::complete::slice_dump(&program, &slice.clauses, &out, &name)?;
+        }
         let documents = slice
             .clauses
             .iter()

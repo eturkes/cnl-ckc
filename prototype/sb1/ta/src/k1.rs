@@ -258,6 +258,7 @@ impl Refined {
                 base.precision_fallbacks
             ));
         }
+        crate::work::phase("k1_expand");
         let progress = std::env::var_os("SB1_K1_PROGRESS").is_some();
         let cyclic = base
             .graph
@@ -437,9 +438,22 @@ impl Refined {
                 registry.keys.len()
             );
         }
+        if crate::census::enabled() {
+            crate::work::peak("k1_registry_keys", registry.keys.len());
+            crate::work::peak(
+                "k1_registry_tag_cells",
+                registry.keys.iter().map(|k| k.deps.len()).sum(),
+            );
+            crate::work::peak("k1_variants", variants.len());
+            crate::work::peak(
+                "k1_variant_tag_cells",
+                variants.iter().map(|v| v.tags.len()).sum(),
+            );
+        }
         registry.positions = BTreeMap::new();
         registry.refine = None;
         ir.record_memory("k1-parse");
+        crate::work::phase("k1_may");
         let model = Model::build_mode(&ir, None, m.generic_patient(), None, m.mode);
         if progress {
             eprintln!(
@@ -478,6 +492,8 @@ impl Refined {
             .collect::<HashMap<_, _>>();
         // A refined cycle projects inside one cyclic base SCC. Other source
         // rows inherit the base condensation rank; their features remain closed.
+        model.census_phase("growth");
+        crate::work::phase("k1_growth");
         let mut growth = if restricted {
             Growth::for_sources(&ir, &model, |origin| match origin {
                 Origin::Skolem(o) => {
@@ -497,6 +513,7 @@ impl Refined {
                 growth.graph.edge_count()
             );
         }
+        crate::work::phase("k1_filter");
         let mut edges = std::mem::take(&mut growth.graph.edges);
         for (from, row) in edges.iter_mut().enumerate() {
             row.retain(|edge| {
@@ -644,6 +661,20 @@ impl Refined {
                 )
             }
         }
+    }
+    pub fn canonical_nodes(&self, p: &Program, m: &Model) -> Vec<String> {
+        (0..self.growth.nodes.len())
+            .map(|n| self.node_label(p, m, n))
+            .collect()
+    }
+    pub fn canonical_edges(&self, p: &Program, m: &Model) -> Vec<(String, String)> {
+        let mut out = Vec::new();
+        for (from, row) in self.growth.graph.edges.iter().enumerate() {
+            for edge in row {
+                out.push((self.node_label(p, m, from), self.node_label(p, m, edge.to)));
+            }
+        }
+        out
     }
     pub fn admitted(&self) -> bool {
         self.growth.admitted()

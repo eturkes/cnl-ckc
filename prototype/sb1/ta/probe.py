@@ -163,6 +163,13 @@ def service_cap(unit, membership=None, root=Path('/sys/fs/cgroup')):
     return group
 
 
+def ta_flags(args):
+    return ['--' + key.replace('_', '-') for key in
+            ['reference', 'features_only', 'compare_reference', 'front_only',
+             'redesign_front', 'redesign', 'dump_graph', 'dump_front', 'dump_analysis']
+            if getattr(args, key)]
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--ta', required=True, type=Path)
@@ -173,6 +180,12 @@ def main():
     p.add_argument('--reference', action='store_true')
     p.add_argument('--features-only', action='store_true')
     p.add_argument('--compare-reference', action='store_true')
+    p.add_argument('--front-only', action='store_true')
+    p.add_argument('--redesign-front', action='store_true')
+    p.add_argument('--redesign', action='store_true')
+    p.add_argument('--dump-graph', action='store_true')
+    p.add_argument('--dump-front', action='store_true')
+    p.add_argument('--dump-analysis', action='store_true')
     p.add_argument('--query', action='append', default=[], type=Path)
     p.add_argument('--emit', type=Path)
     p.add_argument('--seconds', type=int, default=7200)
@@ -181,8 +194,12 @@ def main():
     p.add_argument('--receipt-host', choices=['pool', 'workstation'])
     p.add_argument('--service-unit', help='run inside this already-capped detached user service')
     a = p.parse_args()
+    if a.redesign and (a.reference or a.features_only or a.compare_reference
+                       or a.front_only or a.redesign_front):
+        p.error('--redesign requires a full analysis without reference/partial modes')
     if a.receipt_dir and (not a.ta_source_commit or not a.receipt_host
-                          or a.reference or a.features_only or a.compare_reference):
+                          or a.reference or a.features_only or a.compare_reference
+                          or a.front_only or a.redesign_front or a.dump_graph and not a.redesign):
         p.error('receipts require a refined full analysis, --ta-source-commit + --receipt-host')
     a.out.mkdir(parents=True, exist_ok=False)
     binary_sha = sha(a.ta)
@@ -206,9 +223,7 @@ def main():
         cmd = ['systemd-run', '--user', '--scope', '--unit', unit, '-q', '-p',
                'MemoryMax=28G', '-p', 'MemorySwapMax=0', '-p', 'OOMPolicy=continue', *cmd]
         journal_unit = unit + '.scope'
-    for key in ['reference', 'features_only', 'compare_reference']:
-        if getattr(a, key):
-            cmd += ['--' + key.replace('_', '-')]
+    cmd += ta_flags(a)
     for q in a.query:
         cmd += ['--query', str(q)]
     if a.emit:

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 
 HERE = Path(__file__).resolve().parent
 MODULE = runpy.run_path(str(HERE / 'probe.py'))
@@ -128,8 +129,30 @@ class Receipts(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.write()
 
+    def test_complete_redesign_flags_are_forwarded(self):
+        flags = ['reference', 'features_only', 'compare_reference', 'front_only',
+                 'redesign_front', 'redesign', 'dump_graph', 'dump_front', 'dump_analysis']
+        forward = MODULE['ta_flags']
+        for mask in range(1 << len(flags)):
+            args = SimpleNamespace(**{key: bool(mask & (1 << i)) for i, key in enumerate(flags)})
+            expected = ['--' + key.replace('_', '-') for i, key in enumerate(flags) if mask & (1 << i)]
+            self.assertEqual(forward(args), expected)
+        self.assertEqual(forward(SimpleNamespace(**{key: key == 'redesign' for key in flags})), ['--redesign'])
+
+    def test_redesign_rejects_partial_or_reference_modes_before_io(self):
+        for mode in ['--reference', '--features-only', '--compare-reference', '--front-only', '--redesign-front']:
+            out = self.root / ('bad-' + mode[2:])
+            result = subprocess.run([sys.executable, '-I', str(HERE / 'probe.py'),
+                                     '--ta', '/missing', '--root', str(self.root),
+                                     '--composition', '/missing', '--out', str(out),
+                                     '--redesign', mode], capture_output=True, check=False)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(b'--redesign requires a full analysis', result.stderr)
+            self.assertFalse(out.exists())
+
     def test_reference_and_partial_modes_cannot_issue_receipts(self):
-        for mode in ['--reference', '--features-only', '--compare-reference']:
+        for mode in ['--reference', '--features-only', '--compare-reference',
+                     '--front-only', '--redesign-front', '--dump-graph']:
             result = subprocess.run([sys.executable, '-I', str(HERE / 'probe.py'),
                                      '--ta', '/missing', '--root', str(self.root),
                                      '--composition', '/missing', '--out', str(self.root / 'unused'),

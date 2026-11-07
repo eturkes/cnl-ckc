@@ -146,6 +146,7 @@ fn body_targets(
     clause: usize,
     counters: &mut Counters,
 ) -> Vec<Vec<usize>> {
+    model.census_caller(program, clause);
     let c = &program.clauses[clause];
     let pattern = Pattern::body(&program.arena, &model.abs, &c.body, c.names.len(), None);
     let base = model.state(&program.arena, &pattern, counters);
@@ -258,6 +259,7 @@ impl Graph {
                     })
                 })
                 .collect::<Vec<_>>();
+            crate::work::visit("clause_edge_expansions", row.len());
             row.sort_unstable();
             row.dedup_by_key(|e| (e.to, e.negative, e.growth));
             row.shrink_to_fit();
@@ -294,6 +296,14 @@ impl Graph {
                         "buffer-capacity",
                     ),
                 ],
+            );
+        }
+        if crate::census::enabled() {
+            crate::work::peak("body_cache_key_cells", cache.keys().map(Vec::len).sum());
+            crate::work::peak("body_cache_value_rows", cache.values().map(Vec::len).sum());
+            crate::work::peak(
+                "body_cache_target_memberships",
+                cache.values().flat_map(|v| v.iter()).map(Vec::len).sum(),
             );
         }
         drop(cache);
@@ -389,6 +399,23 @@ impl Graph {
                     ),
                 ],
             );
+        }
+        if crate::census::enabled() {
+            let memberships = edges.iter().map(Vec::len).sum::<usize>();
+            crate::work::peak("scc_forward_memberships", memberships);
+            crate::work::peak(
+                "scc_reverse_memberships",
+                reverse.iter().map(Vec::len).sum(),
+            );
+            crate::work::peak(
+                "scc_live_edge_memberships",
+                memberships + reverse.iter().map(Vec::len).sum::<usize>(),
+            );
+            crate::work::peak(
+                "scc_scratch_cells",
+                reverse.len() + seen.len() + order.len() + components.len() + sizes.len(),
+            );
+            crate::work::visit("scc_edge_member_visits", memberships * 4);
         }
         drop(reverse);
         drop(seen);

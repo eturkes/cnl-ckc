@@ -856,3 +856,169 @@ fn cyclic_source_rows_keep_every_cycle_on_three_node_graphs() {
         );
     }
 }
+
+#[test]
+fn failure_census_covers_every_forced_exit_and_separates_copy_from_document() {
+    struct Probe {
+        name: &'static str,
+        body: &'static str,
+        producer: usize,
+        raw: bool,
+        outcome: &'static str,
+        same_copy: bool,
+    }
+    let data = concat!(
+        "guideline_entity(actual,'$guideline_id'(product,diag,1,ref(1),[]),left,countable).\n",
+        "guideline_entity(actual,'$guideline_id'(product,diag,1,ref(2),[]),right,countable).\n",
+        "guideline_event(actual,'$guideline_id'(product,diag,1,ref(3),[]),go).\n",
+        "guideline_arg(actual,'$guideline_id'(product,diag,1,ref(3),[]),1,'$guideline_id'(product,diag,1,ref(1),[])).\n",
+    );
+    let probes = [
+        Probe {
+            name: "edge-cross",
+            body: "guideline_entity(actual,A,left,countable)",
+            producer: 1,
+            raw: false,
+            outcome: "edge",
+            same_copy: false,
+        },
+        Probe {
+            name: "edge-same-copy",
+            body: "guideline_entity(actual,A,left,countable)",
+            producer: 1,
+            raw: false,
+            outcome: "edge",
+            same_copy: true,
+        },
+        Probe {
+            name: "head",
+            body: "guideline_entity(other,A,left,countable)",
+            producer: 1,
+            raw: false,
+            outcome: "head-arg-unify-fails",
+            same_copy: false,
+        },
+        Probe {
+            name: "unary",
+            body: "guideline_entity(actual,A,left,countable), guideline_property(actual,A,needed,pos)",
+            producer: 1,
+            raw: true,
+            outcome: "unary-constraint-empties",
+            same_copy: false,
+        },
+        Probe {
+            name: "link",
+            body: "guideline_event(actual,E,go), guideline_entity(actual,A,right,countable), guideline_arg(actual,E,1,A)",
+            producer: 3,
+            raw: true,
+            outcome: "link-propagation-empties",
+            same_copy: false,
+        },
+    ];
+    for probe in probes {
+        let mut p = Program::new();
+        p.add(
+            "copies/0001/caller".into(),
+            format!(
+                "guideline_entity(actual,A,derived,countable) :- {}.\n",
+                probe.body
+            ),
+            false,
+        )
+        .unwrap();
+        p.add(
+            format!(
+                "copies/{}/producer",
+                if probe.same_copy { "0001" } else { "0002" }
+            )
+            .into(),
+            data.into(),
+            false,
+        )
+        .unwrap();
+        let mut model = may::Model::build(&p, None, true);
+        model.detail_for_test(&p);
+        model.census_phase("clause");
+        model.census_caller(&p, 0);
+        let clause = &p.clauses[0];
+        let pattern =
+            may::Pattern::body(&p.arena, &model.abs, &clause.body, clause.names.len(), None);
+        let base = if probe.raw {
+            may::State::new(pattern.vars)
+        } else {
+            model
+                .state(&p.arena, &pattern, &mut Counters::default())
+                .unwrap()
+        };
+        let program::Goal::Positive(goal) = clause.body[0] else {
+            unreachable!()
+        };
+        let result = model.forced(
+            &p,
+            &pattern,
+            goal,
+            probe.producer,
+            &base,
+            &mut Counters::default(),
+        );
+        assert_eq!(result.is_some(), probe.outcome == "edge", "{}", probe.name);
+        let dir = directory(probe.name);
+        model.write_detail(&p, &dir.0, "probe").unwrap();
+        let text = std::fs::read_to_string(dir.0.join("failures-probe.tsv")).unwrap();
+        let rows = text
+            .lines()
+            .skip(1)
+            .map(|line| line.split('\t').collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        assert_eq!(rows.len(), 1, "{text}");
+        assert_eq!(rows[0][1], probe.outcome, "{text}");
+        assert_eq!(
+            rows[0][3],
+            if probe.same_copy { "same" } else { "cross" },
+            "{text}"
+        );
+        assert_eq!(rows[0][4], "cross", "{text}");
+        assert_eq!(rows[0][5], "1", "{text}");
+    }
+}
+
+#[test]
+fn failure_census_witness_failure_does_not_change_marginal_head_writes() {
+    let mut p = Program::new();
+    p.add("copies/0001/caller".into(), "guideline_entity(actual,A,derived,countable) :- guideline_entity(actual,A,anchor,countable), '$sb1_origin'(X,known), '$sb1_origin'(Y,known), '$sb1_origin'(Z,known), guideline_arg(actual,X,1,Y), guideline_arg(actual,Y,1,Z), guideline_arg(actual,Z,1,X).\n".into(), false).unwrap();
+    p.add("copies/0002/data".into(), concat!(
+        "'$sb1_origin'('$guideline_id'(product,diag,1,ref(1),[]),known).\n",
+        "'$sb1_origin'('$guideline_id'(product,diag,1,ref(2),[]),known).\n",
+        "guideline_arg(actual,'$guideline_id'(product,diag,1,ref(1),[]),1,'$guideline_id'(product,diag,1,ref(2),[])).\n",
+        "guideline_arg(actual,'$guideline_id'(product,diag,1,ref(2),[]),1,'$guideline_id'(product,diag,1,ref(1),[])).\n",
+        "guideline_entity(actual,'$guideline_id'(product,diag,1,ref(3),[]),anchor,countable).\n",
+    ).into(), false).unwrap();
+    let mut model = may::Model::build(&p, None, true);
+    let (_, args) = p.arena.call(p.clauses[5].head).unwrap();
+    assert!(
+        model.noun_at(&p.arena, args[1], "derived"),
+        "head transfer keeps GAC marginals, not joint witnesses"
+    );
+    model.detail_for_test(&p);
+    model.census_phase("clause");
+    model.census_caller(&p, 0);
+    let clause = &p.clauses[0];
+    let pattern = may::Pattern::body(&p.arena, &model.abs, &clause.body, clause.names.len(), None);
+    let base = model
+        .state(&p.arena, &pattern, &mut Counters::default())
+        .unwrap();
+    let program::Goal::Positive(goal) = clause.body[0] else {
+        unreachable!()
+    };
+    assert!(
+        model
+            .forced(&p, &pattern, goal, 5, &base, &mut Counters::default())
+            .is_none()
+    );
+    let dir = directory("witness-class");
+    model.write_detail(&p, &dir.0, "probe").unwrap();
+    let text = std::fs::read_to_string(dir.0.join("failures-probe.tsv")).unwrap();
+    let rows = text.lines().skip(1).collect::<Vec<_>>();
+    assert_eq!(rows.len(), 1);
+    assert!(rows[0].contains("\twitness-search-fails\t"), "{text}");
+}

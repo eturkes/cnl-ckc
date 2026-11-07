@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+"""Full growth + k1 + query-slice differential matrix (S1g)."""
+import argparse
+import csv
+import hashlib
+import json
+from pathlib import Path
+import runpy
+import subprocess
+import time
+
+FRONT = ['front-' + k + '.tsv' for k in ['values', 'unary', 'links', 'nodes', 'edges', 'scc']]
+FLOW = ['flow-' + k + '.tsv' for k in ['base-nodes', 'base-edges', 'final-nodes', 'final-edges', 'outcome']]
+SLICES = ['slice-q_all_txt.tsv', 'slice-q_one_pl.tsv', 'slice-q_patient_pl.tsv']
+NAMES = FRONT + FLOW + SLICES
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        while data := stream.read(1024 * 1024):
+            digest.update(data)
+    return digest.hexdigest()
+
+
+def table(path, rows):
+    if not rows:
+        return
+    with path.open('w', newline='') as stream:
+        writer = csv.DictWriter(stream, rows[0].keys(), delimiter='\t', lineterminator='\n')
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def compare(left, right):
+    return subprocess.run(['cmp', '-s', str(left), str(right)], check=False).returncode
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ['ta', 'root', 'instances', 'run-manifest', 'out']:
+        parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--family', action='append', choices=['F1a', 'F1b', 'F2', 'F3', 'F4', 'MX'])
+    parser.add_argument('--scale', action='append', type=int, choices=[1, 10])
+    parser.add_argument('--permuted', action='store_true')
+    parser.add_argument('--oracle-cache', type=Path)
+    a = parser.parse_args()
+    a.out.mkdir(parents=True, exist_ok=False)
+    families = a.family or ['F1a', 'F1b', 'F2', 'F3', 'F4', 'MX']
+    scales = a.scale or [1, 10]
+    helpers = runpy.run_path(str(Path(__file__).with_name('structure-census')))
+    helpers['check_inputs'](a.root, a.instances, a.run_manifest, a.out, families, scales)
+    assert a.ta.name == 'ta-' + sha(a.ta), 'executable must be SHA-named'
+    manifest_queries = {(r['instance'], r['name']): r for r in helpers['rows'](a.run_manifest) if r['kind'] == 'query'}
+    query_identities = []
+    for family in families:
+        for scale in scales:
+            instance = f'{family}-g{scale:03}-s0'
+            for name in ['q-all.txt', 'q-one.pl', 'q-patient.pl']:
+                path = a.instances / instance / 'queries' / name
+                data = path.read_bytes()
+                expected = manifest_queries[(instance, name)]
+                assert (a.root / expected['path']).resolve() == path.resolve()
+                assert (sha(path), len(data), len(data.splitlines())) == (expected['sha256'], int(expected['bytes']), int(expected['count'])), (instance, name)
+                query_identities.append(dict(instance=instance, name=name, path=str(path), sha256=sha(path), bytes=len(data)))
+    table(a.out / 'query-identities.tsv', query_identities)
+    if a.oracle_cache:
+        current = helpers['rows'](a.out / 'query-identities.tsv')
+        cached = helpers['rows'](a.oracle_cache / 'query-identities.tsv')
+        assert current == cached, 'cached query identities'
+        planted = [dict(r) for r in current]
+        planted[0]['sha256'] = '0' * 64
+        assert planted != cached, 'changed query identity control'
+        expected = {r['instance']: r for r in helpers['rows'](a.oracle_cache / 'input-identities.tsv')}
+        for row in helpers['rows'](a.out / 'input-identities.tsv'):
+            assert row == expected[row['instance']], row
+    control = a.out / 'control'
+    control.mkdir()
+    left, right = control / 'left', control / 'right'
+    left.write_bytes(b'a\nb\n')
+    for payload, rc in [(b'a\nb\n', 0), (b'a\n', 1), (b'a\nb\nc\n', 1)]:
+        right.write_bytes(payload)
+        assert compare(left, right) == rc
+    commands, cases, comparisons = [], [], []
+    work = [(f'{f}-g{g:03}-s0', False) for f in families for g in scales]
+    if a.permuted:
+        work.append(('F1a-g010-s0', True))
+    for instance, permuted in work:
+        key = instance + ('-permuted' if permuted else '')
+        original = a.instances / instance / 'composition.tsv'
+        composition = original
+        if permuted:
+            text = original.read_text()
+            paths = [l for l in text.splitlines() if l and not l.startswith('#')]
+            counts = [int(l.split('\t')[1]) for l in text.splitlines() if l.startswith('# patient_documents\t')]
+            counts += [int(l.split('\t')[1]) for l in original.with_name('manifest.tsv').read_text().splitlines() if l.startswith('patient_documents\t')]
+            assert not counts or len(set(counts)) == 1
+            n = counts[0] if counts else 1
+            assert 0 < n < len(paths)
+            reordered = list(reversed(paths[:-n])) + paths[-n:]
+            assert reordered != paths and sorted(reordered) == sorted(paths)
+            composition = a.out / 'permuted-composition.tsv'
+            composition.write_text(f'# patient_documents\t{n}\n' + '\n'.join(reordered) + '\n')
+            table(a.out / 'permutation.tsv', [dict(original_sha256=sha(original), permuted_sha256=sha(composition), patient_documents=n, knowledge_documents=len(paths)-n)])
+        for mode in ['oracle', 'candidate']:
+            out = a.out / key / mode
+            if a.oracle_cache and mode == 'oracle' and not permuted:
+                assert (a.oracle_cache / key / mode).is_dir()
+                continue
+            out.mkdir(parents=True)
+            cmd = [str(a.ta), '--root', str(a.root), '--composition', str(composition), '--out', str(out), '--dc', '--dump-front', '--dump-analysis']
+            for name in ['q-all.txt', 'q-one.pl', 'q-patient.pl']:
+                cmd += ['--query', str(a.instances / instance / 'queries' / name)]
+            if mode == 'candidate':
+                cmd += ['--redesign', '--skip-audit', '--header-audit']
+            commands.append(dict(instance=key, mode=mode, binary_sha256=sha(a.ta), composition_sha256=sha(composition), command=json.dumps(cmd)))
+            table(a.out / 'commands.tsv', commands)
+            print(f'start\t{key}\t{mode}', flush=True)
+            start = time.monotonic()
+            with (out / 'stdout.txt').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
+                try:
+                    result = subprocess.run(cmd, stdout=stdout, stderr=stderr, check=False, timeout=43200)
+                    rc = result.returncode
+                except subprocess.TimeoutExpired:
+                    rc = 124
+            (out / 'rc.txt').write_text(str(rc) + '\n')
+            cases.append(dict(instance=key, mode=mode, rc=rc, wall_seconds=time.monotonic()-start))
+            table(a.out / 'cases.tsv', cases)
+            assert rc == 0, (key, mode, rc)
+        bases = [('oracle', (a.oracle_cache or a.out) / key / 'oracle')]
+        if permuted:
+            bases = [('permuted-oracle', a.out / key / 'oracle'), ('original-oracle', (a.oracle_cache or a.out) / instance / 'oracle')]
+        for basis, lhs in bases:
+            for name in NAMES:
+                left, right = lhs / name, a.out / key / 'candidate' / name
+                rc = compare(left, right)
+                with right.open('rb') as stream:
+                    count = sum(1 for _ in stream)
+                comparisons.append(dict(instance=key, basis=basis, component=name, rows=count, oracle_sha256=sha(left), candidate_sha256=sha(right), cmp_rc=rc))
+                table(a.out / 'comparisons.tsv', comparisons)
+                assert rc == 0, (key, basis, name)
+        print(f'equal\t{key}\t{len(NAMES)} objects x {len(bases)}', flush=True)
+    print(f'complete-matrix\t{len(work)} cases\t{len(comparisons)} comparisons equal', flush=True)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

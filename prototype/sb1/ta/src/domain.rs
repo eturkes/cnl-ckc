@@ -131,6 +131,7 @@ impl Domain {
     }
     fn normalized(mut self, arena: &Arena) -> Self {
         if let Self::Set(values) = &mut self {
+            crate::work::visit("domain_normalize_member_visits", values.len());
             let patient = values.contains(&Value::Patient);
             let number = values.contains(&Value::Number);
             values.retain(|v| match v {
@@ -151,15 +152,19 @@ impl Domain {
         match (self, other) {
             (Self::All, x) | (x, Self::All) => x.clone().normalized(arena),
             (Self::Set(a), Self::Set(b)) => {
+                crate::work::visit("meet_operand_memberships", a.len() + b.len());
                 let mut out = a.intersection(b).copied().collect::<BTreeSet<_>>();
+                crate::work::visit("meet_intersection_yields", out.len());
                 for wild in [Value::Patient, Value::Number] {
                     if a.contains(&wild) {
+                        crate::work::visit("meet_wildcard_member_visits", b.len());
                         out.extend(
                             b.iter()
                                 .filter_map(|b| Abstraction::intersect(arena, wild, *b)),
                         );
                     }
                     if b.contains(&wild) {
+                        crate::work::visit("meet_wildcard_member_visits", a.len());
                         out.extend(
                             a.iter()
                                 .filter_map(|a| Abstraction::intersect(arena, *a, wild)),
@@ -174,7 +179,9 @@ impl Domain {
         match (self, other) {
             (Self::All, x) | (x, Self::All) => x.clone().normalized(arena),
             (Self::Set(a), Self::Set(b)) => {
+                crate::work::visit("meet_operand_memberships", a.len() + b.len());
                 let mut out = a.intersection(b).copied().collect::<BTreeSet<_>>();
+                crate::work::visit("meet_intersection_yields", out.len());
                 for wild in [Value::Patient, Value::Number] {
                     // The shared wildcard already covers every scalar another
                     // scan could contribute. Keep only non-subsumed choices.
@@ -184,12 +191,14 @@ impl Domain {
                         continue;
                     }
                     if a.contains(&wild) {
+                        crate::work::visit("meet_wildcard_member_visits", b.len());
                         out.extend(
                             b.iter()
                                 .filter_map(|b| Abstraction::intersect(arena, wild, *b)),
                         );
                     }
                     if b.contains(&wild) {
+                        crate::work::visit("meet_wildcard_member_visits", a.len());
                         out.extend(
                             a.iter()
                                 .filter_map(|a| Abstraction::intersect(arena, *a, wild)),
@@ -212,6 +221,7 @@ impl Domain {
             Self::Set(b) => {
                 let Self::Set(a) = self else { unreachable!() };
                 let before = a.len();
+                crate::work::visit("union_member_visits", b.len());
                 a.extend(b);
                 before != a.len()
             }

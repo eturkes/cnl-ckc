@@ -1,0 +1,355 @@
+#!/usr/bin/env python3
+"""D6/D7 fixed count-ratio projection; baseline errors precede any lever saving."""
+import argparse
+import csv
+from fractions import Fraction as F
+import hashlib
+import json
+from pathlib import Path
+
+PHASES = {'graph': 'graph_scc', 'base_growth': 'origin_growth', 'k1_growth': 'k1_growth'}
+INDEX_CATEGORIES = {'native_tree', 'index_wrapper_unresolved', 'point_check', 'small_prefix'}
+FAMILIES = ('F1a', 'F1b', 'F3', 'F4')
+
+
+def rows(path):
+    with path.open() as source:
+        return list(csv.DictReader(source, delimiter='\t'))
+
+
+def table(path, records):
+    assert records
+    with path.open('w', newline='') as sink:
+        writer = csv.DictWriter(sink, records[0].keys(), delimiter='\t', lineterminator='\n')
+        writer.writeheader()
+        writer.writerows(records)
+
+
+def fit(values):
+    """aG+bG² through G4/G10; negative coefficient alone is not invalid."""
+    b = (F(values[10], 10) - F(values[4], 4)) / 6
+    a = F(values[4], 4) - 4*b
+    return a, b, a*100 + b*10000, values[1] - a - b, values[2] - 2*a - 4*b
+
+
+def ratio(numerator, denominator):
+    if denominator == 0:
+        if numerator == 0:
+            return F(0)
+        raise ValueError('nonzero cost with no work units')
+    return numerator / denominator
+
+
+def fields(path, key, value):
+    return {r[key]: F(r[value]) for r in rows(path)}
+
+
+def measured_phases(path):
+    return fields(path / 'phases.tsv', 'phase', 'seconds')
+
+
+class Projection:
+    def __init__(self, acquisition, profiles, controls, predecessor, i2, wall_source):
+        self.acquisition, self.controls, self.i2 = acquisition, controls, i2
+        self.data = {}
+        for r in rows(acquisition / 'counts.tsv'):
+            family, g, phase, metric = r['family'], int(r['G']), r['phase'], r['metric']
+            self.data.setdefault((family, phase, metric), {})[g] = int(r['value'])
+        self.fit_rows = []
+        self.predicted = {}
+        for (family, phase, metric), values in sorted(self.data.items()):
+            if metric.endswith('_ns'):
+                continue
+            a, b, predicted, r1, r2 = fit(values)
+            self.predicted[family, phase, metric] = predicted
+            self.fit_rows.append(dict(family=family, phase=phase, metric=metric,
+                                     G1=values[1], G2=values[2], G4=values[4], G10=values[10],
+                                     a=str(a), b=str(b), G100=str(predicted),
+                                     residual_G1=str(r1), residual_G2=str(r2),
+                                     status='non-estimable' if predicted < 0 else 'estimated'))
+        self.case_counts = {}
+        for r in rows(acquisition / 'cases.tsv'):
+            family, tail = r['instance'].split('-g')
+            g = int(tail[:3])
+            path = predecessor / r['instance']
+            self.case_counts[family, g, 'incidences'] = int(r['incidence'])
+            current = controls.parent / f'builder-17-l0-{family}' / r['instance']
+            self.case_counts[family, g, 'clauses'] = int(rows(current / 'analysis.tsv')[0]['clauses'])
+        self.profile_rows = [r for r in rows(profiles) if r['method'] == 'lbr']
+        self.costs, self.cost_units, self.budgets = {}, {}, []
+        for family in ('F1a', 'F1b'):
+            assert wall_source == 'control', 'D9 wall source is the unprofiled sealed-I2 control'
+            phase_wall = measured_phases(self.control(family))
+            for phase, stage in PHASES.items():
+                pr = [r for r in self.profile_rows if r['family'] == family and
+                      r['phase'] in (('k1_growth', 'k1_other') if phase == 'k1_growth' else (phase,))]
+                total = sum(int(r['period']) for r in pr)
+                index = phase_wall[stage] * F(sum(int(r['period']) for r in pr
+                                                  if r['phase'] == phase and r['category'] in INDEX_CATEGORIES), total)
+                survivor = phase_wall[stage] * F(sum(int(r['period']) for r in pr
+                                                     if r['phase'] == phase and r['category'] == 'survivor_solve'), total)
+                d = lambda metric: F(self.data[family, phase, metric][10])
+                ns = d('index_total_ns')
+                convert = ratio(index, ns)
+                native, point, prefix = (d(k) for k in ('native_ns', 'point_ns', 'prefix_ns'))
+                other = ns - native - point - prefix
+                assert other >= 0
+                c = {
+                    'native': ratio(convert * native, d('native_union')),
+                    'point': ratio(convert * point, d('point_checks')),
+                    'prefix': ratio(convert * prefix, d('point_pass')),
+                    'wrapper': ratio(convert * other, d('calls')),
+                    'forced': ratio(survivor, d('forced')),
+                    'plan': ratio(convert * d('plan_ns'), d('plan_units')),
+                    'merge': ratio(convert * d('merged_ns'), d('native_union')),
+                    'groups': ratio(convert * d('composite_ns'), d('composite_groups')),
+                    'composite_merge': ratio(convert * d('composite_merge_ns'), d('composite_members')),
+                    'build': ratio(convert * d('composite_build_ns'), d('composite_memberships')),
+                    'key': ratio(convert * d('key_ns'), d('key_cells')),
+                    'store': ratio(convert * d('cache_store_ns'), d('survivors') + d('calls')),
+                    'hit': ratio(convert * d('cache_hit_ns'), d('calls')),
+                }
+                # Repeat-specific G10 costs, not an assumption that repeat work
+                # costs the same as every request. Target families reuse these
+                # F1a per-unit costs, exactly as the frozen law requires.
+                for component, ns_metric, units in (
+                        ('native', 'native_ns', 'native_union'),
+                        ('point', 'point_ns', 'point_checks'),
+                        ('prefix', 'prefix_ns', 'point_pass'),
+                        ('wrapper', 'index_total_ns', 'calls')):
+                    time = d('candidate_skip_' + ns_metric)
+                    if component == 'wrapper':
+                        time -= sum(d('candidate_skip_' + k) for k in ('native_ns', 'point_ns', 'prefix_ns'))
+                    c['skip_' + component] = ratio(convert * time, d('candidate_skip_' + units))
+                c['skip_forced'] = ratio(ratio(survivor, d('forced_ns')) * d('full_skip_forced_ns'), d('full_skip_forced'))
+                self.costs[family, phase] = c
+                self.cost_units[family, phase] = {
+                    'native': d('native_union'), 'point': d('point_checks'),
+                    'prefix': d('point_pass'), 'wrapper': d('calls'), 'forced': d('forced'),
+                    'plan': d('plan_units'), 'merge': d('native_union'),
+                    'groups': d('composite_groups'), 'composite_merge': d('composite_members'),
+                    'build': d('composite_memberships'), 'key': d('key_cells'),
+                    'store': d('survivors') + d('calls'), 'hit': d('calls'),
+                    'skip_native': d('candidate_skip_native_union'),
+                    'skip_point': d('candidate_skip_point_checks'),
+                    'skip_prefix': d('candidate_skip_point_pass'),
+                    'skip_wrapper': d('candidate_skip_calls'),
+                    'skip_forced': d('full_skip_forced'),
+                }
+                self.budgets.append(dict(family=family, phase=phase, wall_source=wall_source,
+                                         stage_seconds=str(phase_wall[stage]), index_seconds=str(index),
+                                         survivor_seconds=str(survivor), residue_seconds=str(phase_wall[stage]-index-survivor),
+                                         primitive_seconds_per_ns=str(convert)))
+
+    def control(self, family):
+        return self.controls.parent / f'builder-17-l0-unprofiled-{family}/metrics'
+
+    def cost(self, family, phase):
+        return self.costs['F1b' if family == 'F1b' else 'F1a', phase]
+
+    def p(self, family, phase, metric):
+        value = self.predicted[family, phase, metric]
+        if value < 0:
+            raise ValueError(f'negative extrapolation {phase}.{metric}={value}')
+        return value
+
+    def old(self, family, phase, g=None):
+        c = self.cost(family, phase)
+        p = (lambda metric: F(self.data[family, phase, metric][g])) if g else (lambda metric: self.p(family, phase, metric))
+        return (c['native']*p('native_union') + c['point']*p('point_checks') +
+                c['prefix']*p('point_pass') + c['wrapper']*p('calls') + c['forced']*p('forced'))
+
+    def baseline(self, out):
+        table(out / 'count-fits.tsv', self.fit_rows)
+        table(out / 'g10-calibration.tsv', self.budgets)
+        counts, stages = [], []
+        for family in ('F1a', 'F1b'):
+            measured = self.i2 / family / 'metrics'
+            for metric in ('clauses',):
+                values = {g: self.case_counts[family, g, metric] for g in (1, 2, 4, 10)}
+                predicted = fit(values)[2]
+                actual = int(rows(measured / 'analysis.tsv')[0][metric])
+                counts.append(dict(family=family, model='program', metric=metric,
+                                   predicted=str(predicted), measured=actual, signed_error=str(predicted-actual)))
+            for model, phases in (('base', ('graph', 'base_growth')), ('k1', ('k1_growth',))):
+                actuals = fields(measured / (model+'-stats.tsv'), 'key', 'value')
+                for metric, name in (('native', 'header_candidates'), ('point_checks', 'header_point_checks'),
+                                     ('survivors', 'header_survivors'), ('forced', 'body_solves')):
+                    predicted = sum(self.predicted[family, phase, metric] for phase in phases)
+                    actual = actuals[name]
+                    counts.append(dict(family=family, model=model, metric=name, predicted=str(predicted),
+                                       measured=str(actual), signed_error=str(predicted-actual)))
+            measured_wall = measured_phases(measured)
+            control_wall = measured_phases(self.control(family))
+            total = F(0)
+            for stage, metric in (('parse_shape', 'clauses'), ('may_fixpoint', 'incidences')):
+                values = {g: self.case_counts[family, g, metric] for g in (1, 2, 4, 10)}
+                predicted = control_wall[stage] * ratio(fit(values)[2], F(values[10]))
+                total += predicted
+                stages.append(dict(family=family, stage=stage, method='residue: count-ratio',
+                                   predicted_seconds=str(predicted), measured_seconds=str(measured_wall[stage]),
+                                   signed_error_seconds=str(predicted-measured_wall[stage])))
+            for phase, stage in PHASES.items():
+                residue = control_wall[stage] - self.old(family, phase, 10)
+                assert residue >= 0
+                predicted = self.old(family, phase) + residue * ratio(self.p(family, phase, 'calls'),
+                                                                     F(self.data[family, phase, 'calls'][10]))
+                total += predicted
+                stages.append(dict(family=family, stage=stage, method='residue: count-ratio',
+                                   predicted_seconds=str(predicted), measured_seconds=str(measured_wall[stage]),
+                                   signed_error_seconds=str(predicted-measured_wall[stage])))
+            actual_total = sum(measured_wall.values())
+            stages.append(dict(family=family, stage='complete', method='residue: count-ratio',
+                               predicted_seconds=str(total), measured_seconds=str(actual_total),
+                               signed_error_seconds=str(total-actual_total)))
+        table(out / 'x100-count-errors.tsv', counts)
+        table(out / 'unmodified-baseline-errors.tsv', stages)
+        overhead = []
+        for family in ('F1a', 'F1b'):
+            profiled = measured_phases(self.controls.parent / f'builder-17-l0-lbr-{family}/metrics')
+            control = measured_phases(self.control(family))
+            for stage in (*control, 'complete'):
+                left = sum(profiled.values()) if stage == 'complete' else profiled[stage]
+                right = sum(control.values()) if stage == 'complete' else control[stage]
+                overhead.append(dict(family=family, stage=stage, profiled_seconds=str(left),
+                                     control_seconds=str(right), profiler_ratio=str(ratio(left, right))))
+        table(out / 'profiler-overhead.tsv', overhead)
+        (out / 'baseline-complete').write_text('baseline and count errors published; read before savings\n')
+        return stages
+
+    def check_subsets(self, family, phase, metrics):
+        p = lambda metric: self.p(family, phase, metric)
+        for small, big in metrics:
+            if p(small) > p(big):
+                raise ValueError(f'subset violation {phase}.{small}>{big}: {p(small)}>{p(big)}')
+
+    def saving(self, family, phase, mechanism, cache):
+        c = self.cost(family, phase)
+        calibration_units = self.cost_units['F1b' if family == 'F1b' else 'F1a', phase]
+        def charge(rate, count):
+            if count != 0 and calibration_units[rate] == 0:
+                raise ValueError(f'no G10 calibration units for {phase}.{rate}')
+            return c[rate]*count
+        p = lambda metric: self.p(family, phase, metric)
+        self.check_subsets(family, phase, [('point_pass', 'native'), ('survivors', 'point_pass'),
+                                         ('composite_points', 'point_checks')])
+        saved = F(0)
+        if cache:
+            self.check_subsets(family, phase, [('candidate_hits', 'calls'), ('full_hits', 'candidate_hits'),
+                                             ('full_skip_forced', 'forced')])
+            for prefix, total in (('candidate_hit_', 'candidate_hits'), ('full_hit_', 'full_hits')):
+                members = [prefix+kind for kind in ('same', 'cross', 'unclassified')]
+                self.check_subsets(family, phase, [(part, total) for part in members])
+                if sum(p(part) for part in members) != p(total):
+                    raise ValueError(f'hit subclass partition {phase}.{total}')
+            for units in ('native_union', 'point_checks', 'point_pass', 'calls'):
+                self.check_subsets(family, phase, [('candidate_skip_'+units, units)])
+                if p('candidate_skip_'+units) + p('candidate_miss_'+units) != p(units):
+                    raise ValueError('cache miss/hit partition')
+            saved = sum(charge('skip_'+component, p('candidate_skip_'+work))
+                        for component, work in (('native', 'native_union'), ('point', 'point_checks'),
+                                                ('prefix', 'point_pass'), ('wrapper', 'calls')))
+            saved += charge('skip_forced', p('full_skip_forced'))
+            saved -= charge('key', p('key_cells')) + charge('store', p('cache_store_units'))
+            saved -= charge('hit', p('candidate_hits') + p('full_hits'))
+        prefix = 'candidate_miss_' if cache else ''
+        n = lambda metric: p(prefix+metric)
+        if mechanism == 'a1':
+            saved += charge('native', n('native_union')) - charge('plan', n('plan_units')) - charge('merge', n('native_union'))
+        elif mechanism == 'a2':
+            saved += charge('native', n('native_union')) + charge('point', n('point_checks'))
+            saved -= charge('plan', n('plan_units')) + charge('groups', n('composite_groups'))
+            saved -= charge('composite_merge', n('composite_members')) + charge('point', n('composite_points'))
+            saved -= charge('build', p('composite_memberships'))
+        return saved
+
+    def levers(self, out):
+        phase_rows, total_rows, shares = [], [], []
+        for family in FAMILIES:
+            for label, mechanism, cache in (('a1', 'a1', False), ('a2', 'a2', False), ('b', None, True),
+                                             ('a1+b', 'a1', True), ('a2+b', 'a2', True)):
+                total, reasons = F(0), []
+                for phase in PHASES:
+                    try:
+                        saving = self.saving(family, phase, mechanism, cache)
+                    except ValueError as error:
+                        saving = None
+                        reasons.append(str(error))
+                    phase_rows.append(dict(family=family, lever=label, phase=phase,
+                                           saving_seconds='' if saving is None else str(saving),
+                                           status='non-estimable' if saving is None else 'estimated',
+                                           reason=reasons[-1] if saving is None else ''))
+                    if saving is not None:
+                        total += saving
+                total_rows.append(dict(family=family, lever=label,
+                                       saving_seconds='' if reasons else str(total),
+                                       status='non-estimable' if reasons else 'estimated', reason='; '.join(reasons)))
+            for phase in PHASES:
+                for g in (1, 2, 4, 10, 100):
+                    p = (lambda metric: self.predicted[family, phase, metric]) if g == 100 else (
+                        lambda metric: F(self.data[family, phase, metric][g]))
+                    shares.append(dict(family=family, phase=phase, G=g, calls=str(p('calls')),
+                                       candidate_hits=str(p('candidate_hits')), full_hits=str(p('full_hits')),
+                                       candidate_same=str(p('candidate_hit_same')), candidate_cross=str(p('candidate_hit_cross')),
+                                       candidate_unclassified=str(p('candidate_hit_unclassified')),
+                                       full_same=str(p('full_hit_same')), full_cross=str(p('full_hit_cross')),
+                                       full_unclassified=str(p('full_hit_unclassified')),
+                                       composite_memberships=str(p('composite_memberships')),
+                                       cache_store_units=str(p('cache_store_units')), key_cells=str(p('key_cells'))))
+        table(out / 'lever-stage-savings.tsv', phase_rows)
+        table(out / 'lever-savings.tsv', total_rows)
+        table(out / 'repeat-and-memory-units.tsv', shares)
+        return total_rows
+
+
+def select(records):
+    data = {(r['family'], r['lever']): r for r in records}
+    singles, combinations = ('a1', 'a2', 'b'), ('a1+b', 'a2+b')
+    # An unestimable single could change both eligibility and the winner.
+    if any(data[f, m]['status'] != 'estimated' for f in ('F1a', 'F3', 'F4') for m in singles):
+        return {'decision': 'stop', 'reason': 'winner-changing non-estimable single; MAIN rules'}
+    eligible = list(singles)
+    if all(F(data['F1a', m]['saving_seconds']) < F('602.4488') for m in singles):
+        if any(data[f, m]['status'] != 'estimated' for f in ('F1a', 'F3', 'F4') for m in combinations):
+            return {'decision': 'stop', 'reason': 'eligible combination non-estimable; MAIN rules'}
+        eligible += list(combinations)
+    sums = {m: sum(F(data[f, m]['saving_seconds']) for f in ('F1a', 'F3', 'F4')) for m in eligible}
+    winner = max(eligible, key=sums.__getitem__)
+    near = [m for m in ('a1', 'a2') if m in eligible and sums[m] >= sums[winner]*F(9, 10)]
+    if near:
+        winner = max(near, key=sums.__getitem__)
+    return {'decision': 'implement', 'lever': winner, 'eligible': eligible,
+            'sum_savings': {m: str(v) for m, v in sums.items()},
+            'redundant': 'a1+a2 = a2; a1+a2+b = a2+b'}
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ('acquisition', 'profiles', 'controls', 'predecessor', 'i2', 'out'):
+        p.add_argument('--'+name, required=True, type=Path)
+    p.add_argument('--wall-source', choices=('control',), required=True)
+    p.add_argument('--stage', choices=('baseline', 'levers'), required=True)
+    a = p.parse_args()
+    config = {name: str(getattr(a, name)) for name in ('acquisition', 'profiles', 'controls', 'predecessor', 'i2', 'wall_source')}
+    config['input_sha256'] = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in
+                              (Path(__file__), a.acquisition / 'counts.tsv', a.acquisition / 'cases.tsv', a.profiles)}
+    if a.stage == 'levers':
+        assert json.loads((a.out / 'configuration.json').read_text()) == config, 'baseline closure changed'
+        acknowledgement = json.loads((a.out / 'baseline-read.json').read_text())
+        assert acknowledgement == {name: hashlib.sha256((a.out / name).read_bytes()).hexdigest()
+                                    for name in ('x100-count-errors.tsv', 'unmodified-baseline-errors.tsv')}, 'baseline read acknowledgement changed'
+    model = Projection(a.acquisition, a.profiles, a.controls, a.predecessor, a.i2, a.wall_source)
+    if a.stage == 'baseline':
+        a.out.mkdir(parents=True, exist_ok=False)
+        (a.out / 'configuration.json').write_text(json.dumps(config, indent=2)+'\n')
+        model.baseline(a.out)
+        print('baseline/count errors published; no savings evaluated')
+    else:
+        result = select(model.levers(a.out))
+        (a.out / 'selection.json').write_text(json.dumps(result, indent=2)+'\n')
+        print(json.dumps(result, sort_keys=True))
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

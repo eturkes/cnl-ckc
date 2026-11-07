@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+"""D5 I2: complete exact analysis, F1b x100 then F1a x100; caller holds lock + heavy."""
+import argparse
+import csv
+from decimal import Decimal
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+PHASES = ['parse_shape', 'may_fixpoint', 'graph_scc', 'origin_growth', 'k1_growth']
+LIMIT = Decimal('1650')
+FIELDS = ['run', 'rc', 'verdict', *PHASES, 'complete_seconds', 'analysis_seconds',
+          'vmhwm_bytes', 'kb_identity', 'wrapper_seconds']
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with path.open('rb') as stream:
+        while data := stream.read(1024 * 1024):
+            h.update(data)
+    return h.hexdigest()
+
+
+def rows(path):
+    with path.open() as stream:
+        return list(csv.DictReader(stream, delimiter='\t'))
+
+
+def table(path, fields, data):
+    with path.open('w', newline='') as stream:
+        writer = csv.DictWriter(stream, fields, delimiter='\t', lineterminator='\n')
+        writer.writeheader(); writer.writerows(data)
+
+
+def complete_seconds(phases):
+    if set(phases) != set(PHASES):
+        raise ValueError('complete phase evidence required')
+    try:
+        values = [Decimal(phases[p]) for p in PHASES]
+    except ArithmeticError as error:
+        raise ValueError('invalid phase measurement') from error
+    if any(not v.is_finite() or v < 0 for v in values):
+        raise ValueError('invalid phase measurement')
+    return sum(values, Decimal(0))
+
+
+def decision(measured, graph_ok):
+    if [r['run'] for r in measured] != ['F1b', 'F1a']:
+        return 'stop'
+    if not graph_ok:
+        return 'stop'
+    try:
+        for row in measured:
+            if int(row['rc']) != 0 or row['verdict'] != 'admitted':
+                return 'stop'
+            if complete_seconds({p: row[p] for p in PHASES}) > LIMIT:
+                return 'stop'
+    except (KeyError, ValueError):
+        return 'stop'
+    return 'continue'
+
+
+def compare_graph(left, right):
+    comparisons = []
+    for kind in ['nodes', 'edges', 'scc']:
+        name = f'front-{kind}.tsv'
+        lhs, rhs = left / name, right / name
+        if not lhs.is_file() or not rhs.is_file():
+            raise ValueError(f'missing canonical graph evidence: {name}')
+        rc = subprocess.run(['cmp', '-s', str(lhs), str(rhs)], check=False).returncode
+        with rhs.open('rb') as stream:
+            count = sum(1 for _ in stream)
+        comparisons.append(dict(component=kind, rows=count, oracle_sha256=sha(lhs),
+                                candidate_sha256=sha(rhs), cmp_rc=rc))
+    return comparisons
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ['ta', 'root', 'instances', 'oracle-dumps', 'out']:
+        p.add_argument('--' + name, type=Path, required=True)
+    p.add_argument('--source-commit', required=True)
+    a = p.parse_args()
+    if not re.fullmatch('[0-9a-f]{40}', a.source_commit):
+        p.error('full source commit required')
+    cwd = Path(__file__).resolve().parent
+    head = subprocess.check_output(['git', '-C', str(cwd), 'rev-parse', 'HEAD']).decode().strip()
+    dirty = subprocess.check_output(['git', '-C', str(cwd), 'status', '--porcelain=v1']).decode()
+    if head != a.source_commit or dirty:
+        p.error('source commit must equal clean HEAD')
+    binary_sha = sha(a.ta)
+    if a.ta.name != 'ta-' + binary_sha:
+        p.error('immutable SHA-named TA required')
+    a.out.mkdir(parents=True, exist_ok=False)
+    (a.out / 'rule.txt').write_text('D5 I2; fixed before the first run\n'
+        'order = F1b-g100-s0, F1a-g100-s0, serial\n'
+        'complete_seconds = parse_shape + may_fixpoint + graph_scc + origin_growth + k1_growth\n'
+        'continue iff both admit and both complete_seconds <=1650\n'
+        'censor/OOM/refusal/missing evidence/F1b dump mismatch = stop\n'
+        '28 GiB, swap 0, 43200 s censor per child; caller holds timing lock + heavy\n'
+        'workstation diagnostic, not C4t/C4m; receipt evidence private, provenance unadopted\n')
+    (a.out / 'source.txt').write_text(a.source_commit + '\n')
+    (a.out / 'binary.sha256').write_text(binary_sha + '\n')
+    (a.out / 'invocation.json').write_text(json.dumps(sys.argv) + '\n')
+    commands, measured = [], []
+    graph_ok = False
+    def save(outcome, reason):
+        table(a.out / 'measurements.tsv', FIELDS, measured)
+        (a.out / 'decision.tsv').write_text(f'key\tvalue\noutcome\t{outcome}\nreason\t{reason}\n')
+    for family in ['F1b', 'F1a']:
+        out = a.out / family
+        cmd = [sys.executable, '-I', str(cwd / 'probe.py'), '--ta', str(a.ta),
+               '--root', str(a.root), '--composition', str(a.instances / f'{family}-g100-s0/composition.tsv'),
+               '--out', str(out), '--seconds', '43200', '--redesign',
+               '--receipt-dir', str(a.out / 'private-receipts'), '--ta-source-commit', a.source_commit,
+               '--receipt-host', 'workstation']
+        if family == 'F1b':
+            cmd += ['--dump-graph']
+        commands.append(dict(run=family, binary_sha256=binary_sha, source_commit=a.source_commit, command=cmd))
+        (a.out / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
+        print(f'start\t{family}', flush=True)
+        with (a.out / f'{family}.log').open('w') as stream:
+            result = subprocess.run(cmd, stdout=stream, stderr=subprocess.STDOUT, check=False)
+        rc = result.returncode
+        row = {key: 'unavailable' for key in FIELDS}
+        row.update(run=family, rc=rc)
+        measured.append(row)
+        try:
+            phases = {r['phase']: r['seconds'] for r in rows(out / 'metrics/phases.tsv')}
+            report = rows(out / 'metrics/analysis.tsv')
+            if len(report) != 1:
+                raise ValueError('one completed analysis required')
+            report = report[0]
+            row.update({key: phases[key] for key in PHASES})
+            row.update(verdict=report['verdict'], complete_seconds=str(complete_seconds(phases)),
+                       analysis_seconds=report['wall_seconds'], vmhwm_bytes=report['peak_rss_bytes'],
+                       kb_identity=(out / 'knowledge-identity.txt').read_text().strip(),
+                       wrapper_seconds=(out / 'scope-wall.txt').read_text().strip())
+            analysis_sum = sum((Decimal(phases[key]) for key in PHASES[1:]), Decimal(0))
+            if abs(analysis_sum - Decimal(report['wall_seconds'])) > Decimal('0.000000005'):
+                raise ValueError('analysis wall does not equal four phase walls')
+            receipt_file = a.out / 'private-receipts' / (row['kb_identity'] + '.tsv')
+            with receipt_file.open() as stream:
+                receipt = dict(csv.reader(stream, delimiter='\t'))
+            expected = dict(format='sb1-ta-receipt 1', kb_identity=row['kb_identity'], ta_source_commit=a.source_commit,
+                            ta_binary_sha256=binary_sha, verdict=row['verdict'], dc='1',
+                            cap_bytes=str(28 * 2**30), host='workstation',
+                            vmhwm_bytes=row['vmhwm_bytes'], parse_seconds=phases['parse_shape'],
+                            analysis_seconds=report['wall_seconds'])
+            if any(receipt.get(k) != v for k, v in expected.items()) or int(row['vmhwm_bytes']) <= 0:
+                raise ValueError('receipt evidence mismatch')
+        except (OSError, KeyError, ValueError) as error:
+            save('stop', f'{family}: incomplete or inconsistent evidence: {error}')
+            return 1
+        save('pending', f'{family} completed')
+        print(f'finish\t{family}\trc={rc}\t{row["verdict"]}\tcomplete_seconds={row["complete_seconds"]}', flush=True)
+        if rc != 0 or row['verdict'] != 'admitted':
+            save('stop', f'{family}: refused, failed or censored')
+            return 1
+        if family == 'F1b':
+            try:
+                identity = (a.oracle_dumps.parent / 'knowledge-identity.txt').read_text().strip()
+                if identity != row['kb_identity']:
+                    raise ValueError('oracle knowledge identity mismatch')
+                comparisons = compare_graph(a.oracle_dumps, out / 'metrics')
+            except (OSError, ValueError) as error:
+                save('stop', f'F1b: {error}')
+                return 1
+            table(a.out / 'graph-comparisons.tsv', comparisons[0].keys(), comparisons)
+            graph_ok = all(int(r['cmp_rc']) == 0 and r['oracle_sha256'] == r['candidate_sha256'] for r in comparisons)
+            if not graph_ok:
+                save('stop', 'F1b canonical dump mismatch')
+                return 1
+    outcome = decision(measured, graph_ok)
+    save(outcome, 'D5 frozen rule: both admitted + both complete walls <=1650 + F1b dumps equal')
+    print(f'I2\t{outcome}', flush=True)
+    return 0 if outcome == 'continue' else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

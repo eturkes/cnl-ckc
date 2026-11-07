@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""Check baseline counters, retain instrumentation ratios and label scale mechanisms."""
+import argparse
+import csv
+from pathlib import Path
+import sys
+
+
+def rows(path):
+    with path.open(newline="") as source:
+        return list(csv.DictReader(source, delimiter="\t"))
+
+
+def write(path, fields, data):
+    with path.open("w", newline="") as sink:
+        writer = csv.DictWriter(sink, fields, delimiter="\t", lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(data)
+
+
+def differences(before, after):
+    return [(key, value, after.get(key, "missing")) for key, value in before.items()
+            if after.get(key) != value]
+
+
+def counter_map(directory):
+    return {(r["family"], r["G"], r["metric"]): r["value"]
+            for r in rows(directory / "counts.tsv") if r["metric"].startswith("census-")}
+
+
+def statuses(directory):
+    result = rows(directory / "case-status.tsv")
+    assert len(result) == 24 and len({r["instance"] for r in result}) == 24
+    assert all(r["rc"] == "0" and r["verdict"] == "admitted" for r in result)
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--before", type=Path, required=True)
+    parser.add_argument("--after", type=Path, required=True)
+    parser.add_argument("--oracle", type=Path, required=True)
+    parser.add_argument("--instances", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    args = parser.parse_args()
+    args.out.mkdir(parents=True, exist_ok=False)
+    positive = {("F1a", "1", "known-counter"): "7"}
+    assert differences(positive, positive) == []
+    assert len(differences(positive, {("F1a", "1", "known-counter"): "8"})) == 1
+    assert len(differences(positive, {})) == 1
+    print("comparator-controls\tpositive=0-deltas\tchanged=1-delta\tmissing=1-delta", flush=True)
+    statuses(args.before)
+    after_status = statuses(args.after)
+    before = counter_map(args.before)
+    delta = differences(before, counter_map(args.after))
+    write(args.out / "baseline-deltas.tsv", ("family", "G", "metric", "before", "after"),
+          [dict(family=k[0], G=k[1], metric=k[2], before=a, after=b) for k, a, b in delta])
+    print(f"baseline-counters\tchecked={len(before)}\tdeltas={len(delta)}", flush=True)
+    oracle_status = rows(args.oracle / "case-status.tsv")
+    assert len(oracle_status) == 6 and all(r["G"] == "10" and r["rc"] == "0" for r in oracle_status)
+    oracle = {r["family"]: float(r["wall_seconds"]) for r in oracle_status}
+    ratios, metadata = [], []
+    for row in after_status:
+        if row["G"] == "10":
+            wall = float(row["wall_seconds"])
+            ratio = wall / oracle[row["family"]]
+            ratios.append(dict(family=row["family"], oracle_seconds=oracle[row["family"]],
+                               census_seconds=wall, ratio=ratio, above_2x=ratio > 2))
+        with (args.instances / row["instance"] / "manifest.tsv").open(newline="") as source:
+            manifest = {r[0]: r[1] for r in csv.reader(source, delimiter="\t") if len(r) >= 2}
+        metadata.append(dict(instance=row["instance"], G=row["G"], k=manifest.get("k", "unavailable"),
+                             active_shards=manifest.get("active_shards", "unavailable"),
+                             smoke_only=manifest.get("smoke_only", "unavailable")))
+    write(args.out / "instrumentation-ratios.tsv", ("family", "oracle_seconds", "census_seconds", "ratio", "above_2x"), ratios)
+    write(args.out / "point-metadata.tsv", ("instance", "G", "k", "active_shards", "smoke_only"), metadata)
+    print(f"instrumentation-guard\tG10-cases={len(ratios)}\tabove-2x={sum(r['above_2x'] for r in ratios)}\tdiagnostic-only", flush=True)
+    return int(bool(delta))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

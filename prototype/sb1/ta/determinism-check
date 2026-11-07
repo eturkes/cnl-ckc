@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""C6: two fresh F1a G10 processes, every load + slice C3 object byte-equal."""
+import argparse
+import json
+from pathlib import Path
+import runpy
+import subprocess
+
+T = Path(__file__).resolve().parent
+HELPERS = runpy.run_path(str(T / 'structure-census'))
+MATRIX = runpy.run_path(str(T / 'complete-matrix'))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ('ta', 'root', 'instances', 'manifest', 'out'):
+        parser.add_argument('--'+name, required=True, type=Path)
+    a = parser.parse_args()
+    a.out.mkdir(parents=True, exist_ok=False)
+    HELPERS['check_inputs'](a.root, a.instances, a.manifest, a.out, ['F1a'], [10])
+    instance = 'F1a-g010-s0'
+    query_rows = {(r['instance'], r['name']): r for r in HELPERS['rows'](a.manifest) if r['kind'] == 'query'}
+    queries = []
+    for name in ('q-all.txt', 'q-one.pl', 'q-patient.pl'):
+        path = a.instances / instance / 'queries' / name
+        data = path.read_bytes()
+        row = query_rows[instance, name]
+        assert (MATRIX['sha'](path), len(data), len(data.splitlines())) == (row['sha256'], int(row['bytes']), int(row['count']))
+        queries += ['--query', str(path)]
+    elf = MATRIX['sha'](a.ta)
+    assert a.ta.name == 'ta-'+elf
+    commands = []
+    for number in (1, 2):
+        out = a.out / f'run-{number}'
+        cmd = [str(a.ta), '--root', str(a.root), '--composition', str(a.instances / instance / 'composition.tsv'),
+               '--out', str(out), '--dc', '--redesign', '--skip-audit', '--header-audit', '--dump-front', '--dump-analysis', *queries]
+        commands.append(dict(run=number, binary_sha256=elf, argv=json.dumps(cmd)))
+        MATRIX['table'](a.out / 'commands.tsv', commands)
+        with (a.out / f'run-{number}.log').open('w') as stream:
+            result = subprocess.run(cmd, stdout=stream, stderr=subprocess.STDOUT, check=False, timeout=43200)
+        (a.out / f'run-{number}.rc').write_text(str(result.returncode)+'\n')
+        assert result.returncode == 0
+    comparisons = []
+    for name in MATRIX['NAMES']:
+        left, right = a.out / 'run-1' / name, a.out / 'run-2' / name
+        result = subprocess.run(['cmp', '-s', str(left), str(right)], check=False)
+        comparisons.append(dict(component=name, left_sha256=MATRIX['sha'](left), right_sha256=MATRIX['sha'](right), cmp_rc=result.returncode))
+        assert result.returncode == 0
+    MATRIX['table'](a.out / 'comparisons.tsv', comparisons)
+    print('C6: two fresh admitted F1a G10 processes, 14/14 complete C3 objects byte-equal')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

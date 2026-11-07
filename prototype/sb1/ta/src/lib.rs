@@ -1,11 +1,24 @@
+pub mod census;
+pub mod complete;
+pub mod detail;
 pub mod domain;
+pub mod exact;
+pub mod exact_graph;
+pub mod exact_growth;
+pub mod exact_heads;
+pub mod exact_k1;
+pub mod exact_scc;
+pub mod exact_sets;
 pub mod features;
+pub mod front;
 pub mod graph;
 pub mod growth;
 pub mod k1;
 pub mod memory;
 pub use features as may;
 pub mod source;
+mod witness;
+pub mod work;
 
 use graph::{Graph, Question};
 use may::{Counters, Model};
@@ -137,5 +150,9 @@ impl Slice {
     }
 }
 
+#[cfg(test)]
+mod faults;
+#[cfg(test)]
+mod qualification;
 #[cfg(test)]
 mod tests;

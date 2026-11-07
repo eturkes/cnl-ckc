@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""D4 I1: paired full oracle, two redesigned fronts, and an explicit-oracle C3 dump.
+Caller holds the shared timing lock + heavy for this whole window. Probe supplies
+the unchanged 28 GiB/swap-0 construction fence and 12 h censor for each run.
+"""
+import argparse
+import csv
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with path.open('rb') as source:
+        while data := source.read(1024 * 1024):
+            h.update(data)
+    return h.hexdigest()
+
+
+def rows(path):
+    with path.open() as source:
+        return list(csv.DictReader(source, delimiter='\t'))
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ['ta', 'oracle', 'root', 'instances', 'out']:
+        p.add_argument('--' + name, required=True, type=Path)
+    p.add_argument('--source-commit', required=True)
+    a = p.parse_args()
+    a.out.mkdir(parents=True, exist_ok=False)
+    (a.out / 'rule.txt').write_text('continue iff both projections <=1650 seconds; any censored run = stop\n'
+        's = paired oracle F1b (may + graph_scc) / redesigned F1b (may + graph_scc)\n'
+        'projection(f) = redesigned parse(f) + redesigned may(f) + redesigned graph_scc(f) + paired oracle back(F1b)/s\n'
+        'back = origin_growth + k1_growth; workstation diagnostic, not C4t/C4m\n')
+    (a.out / 'source.txt').write_text(a.source_commit + '\n')
+    commands, measured = [], []
+    plan = [('oracle-pair', a.oracle, 'F1b', []),
+            ('front-F1b', a.ta, 'F1b', ['--redesign-front', '--dump-graph']),
+            ('front-F1a', a.ta, 'F1a', ['--redesign-front', '--dump-graph']),
+            ('oracle-dump', a.ta, 'F1b', ['--front-only', '--dump-graph'])]
+    for name, binary, family, flags in plan:
+        cmd = [sys.executable, '-I', str(Path(__file__).with_name('probe.py')), '--ta', str(binary),
+               '--root', str(a.root), '--composition', str(a.instances / f'{family}-g100-s0/composition.tsv'),
+               '--out', str(a.out / name), '--seconds', '43200', *flags]
+        commands.append(dict(run=name, source_commit=a.source_commit if binary == a.ta else '822ffa102ce6cb4ce42bafea589d917f7ae494fd',
+                             binary_sha256=sha(binary), command=cmd))
+        (a.out / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
+        print(f'start\t{name}', flush=True)
+        with (a.out / f'{name}.log').open('w') as log:
+            result = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=False)
+        rc = result.returncode
+        metrics = a.out / name / 'metrics'
+        phase_file = metrics / 'phases.tsv'
+        phases = {r['phase']: r['seconds'] for r in rows(phase_file)} if phase_file.exists() else {}
+        stats_file = metrics / ('analysis.tsv' if name == 'oracle-pair' else 'front-stats.tsv')
+        stats = (rows(stats_file)[0] if name == 'oracle-pair' else {r['key']: r['value'] for r in rows(stats_file)}) if stats_file.exists() else {}
+        measured.append(dict(run=name, rc=rc, **phases, vmhwm_bytes=stats.get('peak_rss_bytes', 'unavailable'),
+                             edges=stats.get('edges', 'unavailable'), body_solves=stats.get('body_solves', 'unavailable'),
+                             header_candidates=stats.get('header_candidates', 'unavailable'),
+                             header_survivors=stats.get('header_survivors', 'unavailable'),
+                             negative_components=stats.get('negative_components', 'unavailable'),
+                             wrapper_seconds=(a.out / name / 'scope-wall.txt').read_text().strip() if (a.out / name / 'scope-wall.txt').exists() else 'unavailable'))
+        fields = ['run', 'rc', 'parse_shape', 'may_fixpoint', 'graph_scc', 'origin_growth', 'k1_growth',
+                  'vmhwm_bytes', 'edges', 'body_solves', 'header_candidates', 'header_survivors', 'negative_components', 'wrapper_seconds']
+        with (a.out / 'measurements.tsv').open('w', newline='') as source:
+            writer = csv.DictWriter(source, fields, delimiter='\t', lineterminator='\n')
+            writer.writeheader(); writer.writerows(measured)
+        print(f'finish\t{name}\trc={rc}', flush=True)
+        if (rc != 0 or not stats_file.exists()
+                or name == 'oracle-pair' and stats.get('verdict') != 'admitted'
+                or name.startswith('front-') and stats.get('negative_components') != '0'):
+            (a.out / 'decision.tsv').write_text(f'key\tvalue\noutcome\tstop\nreason\t{name} censored, failed, missing evidence or front-negative (rc={rc})\n')
+            return 1
+    oracle, fb, fa, dump = measured
+    speed = (float(oracle['may_fixpoint']) + float(oracle['graph_scc'])) / (float(fb['may_fixpoint']) + float(fb['graph_scc']))
+    back = float(oracle['origin_growth']) + float(oracle['k1_growth'])
+    projections = {r['run']: float(r['parse_shape']) + float(r['may_fixpoint']) + float(r['graph_scc']) + back / speed for r in [fb, fa]}
+    left = a.out / 'oracle-dump/metrics/front-edges.tsv'
+    right = a.out / 'front-F1b/metrics/front-edges.tsv'
+    cmp_rc = subprocess.run(['cmp', '-s', left, right], check=False).returncode
+    with right.open('rb') as source:
+        count = sum(1 for _ in source)
+    assert count == int(fb['edges']) == int(dump['edges'])
+    decision = dict(s=speed, oracle_back_seconds=back, projection_F1b=projections['front-F1b'],
+                    projection_F1a=projections['front-F1a'], oracle_edges_sha256=sha(left),
+                    redesign_edges_sha256=sha(right), edges=count, cmp_rc=cmp_rc,
+                    outcome='continue' if cmp_rc == 0 and max(projections.values()) <= 1650 else 'stop')
+    (a.out / 'decision.tsv').write_text('key\tvalue\n' + ''.join(f'{k}\t{v}\n' for k, v in decision.items()))
+    print(json.dumps(decision, sort_keys=True), flush=True)
+    return int(cmp_rc != 0)
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

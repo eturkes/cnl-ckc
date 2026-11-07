@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+"""Run S1a's six frozen failure-point cases; validate conservation and premise dumps."""
+import argparse
+import csv
+import hashlib
+import json
+from pathlib import Path
+import runpy
+import subprocess
+import sys
+import time
+
+CASES = (("F1a", 2), ("F1a", 4), ("F1a", 10), ("F3", 10), ("MX", 10), ("F1b", 10))
+KINDS = {"edge", "head-arg-unify-fails", "unary-constraint-empties", "link-propagation-empties", "witness-search-fails"}
+
+
+def rows(path):
+    with path.open(newline="") as source:
+        return list(csv.DictReader(source, delimiter="\t"))
+
+
+def table(path, fields, data):
+    with path.open("w", newline="") as sink:
+        writer = csv.DictWriter(sink, fields, delimiter="\t", lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(data)
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def metrics(path):
+    return {r["metric"]: int(r["value"]) for r in rows(path)}
+
+
+def validate(case):
+    work = metrics(case / "census-work.tsv")
+    validations = []
+    for model, phases in (("base", (("clause", "graph_scc"), ("growth", "origin_growth"))),
+                          ("k1", (("growth", "k1_growth"),))):
+        native = metrics(case / f"census-{model}-model.tsv")
+        outcomes = rows(case / f"failures-{model}.tsv")
+        assert all(r["outcome"] in KINDS and r["guideline_relation"] in ("same", "cross") for r in outcomes)
+        for phase, global_phase in phases:
+            part = [r for r in outcomes if r["phase"] == phase]
+            total = sum(int(r["checks"]) for r in part)
+            assert total == native[f"probes.{phase}.total"], (model, phase, total)
+            for local, counter in (("state_clone_memberships", "state_clone_member_visits"),
+                                   ("domain_clone_memberships", "domain_clone_member_visits"),
+                                   ("meet_operand_memberships", "meet_operand_memberships"),
+                                   ("meet_intersection_yields", "meet_intersection_yields"),
+                                   ("meet_wildcard_visits", "meet_wildcard_member_visits"),
+                                   ("owner_row_visits", "owner_row_visits")):
+                charged = sum(int(r[local]) for r in part)
+                assert charged <= work.get(f"{global_phase}.{counter}", 0), (model, phase, local, charged)
+            validations.append(dict(model=model, phase=phase, checks=total, status="conserved"))
+        access = rows(case / f"access-{model}.tsv")
+        assert len(access) == native["evaluations.distinct"]
+        assert sum(int(r["occurrences"]) for r in access) == native["evaluations.total"]
+        assert sum(int(r["input_memberships"]) for r in access) == native["evaluations.distinct_input_memberships"]
+        assert sum(int(r["inputs"]) for r in access) == native["evaluations.key_cells"]
+        for row in access:
+            n = {k: int(v) for k, v in row.items() if k not in ("widest_enumerated_or_operand", "widest_explicit_enumerated")}
+            assert n["enumerated_or_operand_width"] + n["membership_tested_width"] - n["overlap_width"] + n["identity_only_width"] == n["input_memberships"]
+            assert max(n["explicit_enumerated_width"], n["set_operand_width"]) <= n["enumerated_or_operand_width"] <= n["explicit_enumerated_width"] + n["set_operand_width"]
+            assert n["widest_explicit_enumerated_width"] <= n["explicit_enumerated_width"]
+            assert n["widest_enumerated_or_operand_width"] <= n["enumerated_or_operand_width"]
+        validations.append(dict(model=model, phase="may-access", checks=len(access), status="conserved"))
+    table(case / "conservation.tsv", ("model", "phase", "checks", "status"), validations)
+
+
+def premise(out):
+    a, b = out / "F1a-g010-s0", out / "F1b-g010-s0"
+    checks = []
+    for name in ("canonical-clause-edges.tsv", "canonical-base-flow-edges.tsv", "canonical-clause-nodes.tsv"):
+        left, right = a / name, b / name
+        result = subprocess.run(["cmp", "-s", str(left), str(right)], check=False)
+        assert result.returncode in (0, 1), name
+        checks.append(dict(file=name, left_sha256=digest(left), right_sha256=digest(right),
+                           left_rows=sum(1 for _ in left.open()) - 1,
+                           right_rows=sum(1 for _ in right.open()) - 1,
+                           cmp_rc=result.returncode, kind="premise"))
+        if name.endswith("-edges.tsv"):
+            plant = out / ("drop-one-" + name)
+            data = left.read_bytes()
+            header, _, body = data.partition(b"\n")
+            dropped, separator, remainder = body.partition(b"\n")
+            assert dropped and separator
+            plant.write_bytes(header + b"\n" + remainder)
+            bad = subprocess.run(["cmp", "-s", str(left), str(plant)], check=False)
+            assert bad.returncode == 1
+            checks.append(dict(file=plant.name, left_sha256=digest(left), right_sha256=digest(plant),
+                               left_rows=sum(1 for _ in left.open()) - 1,
+                               right_rows=sum(1 for _ in plant.open()) - 1,
+                               cmp_rc=bad.returncode, kind="one-edge-drop-control"))
+    table(out / "premise.tsv", ("file", "left_sha256", "right_sha256", "left_rows", "right_rows", "cmp_rc", "kind"), checks)
+    equal = all(r["cmp_rc"] == 0 for r in checks if r["kind"] == "premise")
+    print(f"premise\tequal={equal}\tplants=2/2 detected", flush=True)
+    return equal
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--ta", type=Path, required=True)
+    parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--instances", type=Path, required=True)
+    parser.add_argument("--run-manifest", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    args = parser.parse_args()
+    assert all(getattr(args, name).is_absolute() for name in ("ta", "root", "instances", "run_manifest", "out"))
+    args.out.mkdir(parents=True, exist_ok=False)
+    helpers = runpy.run_path(str(Path(__file__).resolve().with_name("structure-census")))
+    results, commands = [], []
+    for family, scale in CASES:
+        instance = f"{family}-g{scale:03}-s0"
+        composition = args.instances / instance / "composition.tsv"
+        case = args.out / instance
+        case.mkdir()
+        helpers["check_inputs"](args.root, args.instances, args.run_manifest, case, [family], [scale])
+        command = [str(args.ta), "--root", str(args.root), "--composition", str(composition),
+                   "--out", str(case), "--dc", "--failure-census"]
+        commands.append(dict(instance=instance, binary_sha256=digest(args.ta), command=json.dumps(command)))
+        table(args.out / "commands.tsv", ("instance", "binary_sha256", "command"), commands)
+        print(f"start\t{instance}", flush=True)
+        start = time.monotonic()
+        with (case / "stdout.txt").open("w") as stdout, (case / "stderr.txt").open("w") as stderr:
+            try:
+                result = subprocess.run(command, stdout=stdout, stderr=stderr, check=False, timeout=43200)
+                rc = result.returncode
+            except subprocess.TimeoutExpired:
+                rc = 124
+        verdict = rows(case / "analysis.tsv")[0]["verdict"] if (case / "analysis.tsv").exists() else "unavailable"
+        results.append(dict(instance=instance, family=family, G=scale, rc=rc, verdict=verdict, wall_seconds=time.monotonic() - start))
+        table(args.out / "case-status.tsv", ("instance", "family", "G", "rc", "verdict", "wall_seconds"), results)
+        print(f"finish\t{instance}\trc={rc}\tverdict={verdict}", flush=True)
+        if rc != 0 or verdict != "admitted":
+            return 1
+        validate(case)
+        helpers["collect"](args.out, results)
+        print(f"conservation\t{instance}\tpass", flush=True)
+    equal = premise(args.out)
+    print(f"failure-census\tcases={len(results)}/6\tpremise={equal}", flush=True)
+    return int(not equal)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

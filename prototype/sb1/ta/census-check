@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+"""Compare census-on behavior with a sealed, uninstrumented oracle."""
+import argparse
+import csv
+import hashlib
+from pathlib import Path
+import subprocess
+import sys
+
+PLANTS = ("L1", "L2", "L3", "L4", "L5", "G1", "G2", "P3", "P4", "P5", "P6")
+
+
+def stable_table(path, excluded):
+    with path.open(newline="") as source:
+        return [{k: v for k, v in row.items() if k not in excluded}
+                for row in csv.DictReader(source, delimiter="\t")]
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--oracle", type=Path, required=True)
+    parser.add_argument("--ta", type=Path, required=True)
+    parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--composition", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--failure-census", action="store_true")
+    args = parser.parse_args()
+    args.out.mkdir(parents=True, exist_ok=False)
+    cases = [(name, args.root / "prototype/sb1/ta/plants" / f"{name}.pl.in", False) for name in PLANTS]
+    cases.append(("F1a-G1", args.composition, True))
+    report = []
+    for name, path, patient in cases:
+        case = args.out / name
+        case.mkdir()
+        composition = path
+        if not patient:
+            composition = case / "composition.tsv"
+            composition.write_text(f"{path}\n")
+        results = []
+        for mode, binary in (("oracle", args.oracle), ("census", args.ta)):
+            out = case / mode
+            command = [str(binary), "--root", str(args.root), "--composition", str(composition),
+                       "--out", str(out), "--edges", "--emit", str(out / "emitted")]
+            if patient:
+                command.append("--dc")
+            if mode == "census":
+                command.append("--failure-census" if args.failure_census else "--census")
+            if not patient:
+                command.extend(("--patient", "none"))
+            result = subprocess.run(command, capture_output=True, check=False, timeout=43200)
+            (case / f"{mode}-stdout.txt").write_bytes(result.stdout)
+            (case / f"{mode}-stderr.txt").write_bytes(result.stderr)
+            results.append(result)
+        assert results[0].returncode == results[1].returncode, (name, results)
+        expected = 1 if name.startswith(("L", "G")) else 0
+        assert results[0].returncode == expected, (name, results)
+        assert results[0].stderr == results[1].stderr, name
+        a, b = case / "oracle", case / "census"
+        assert results[0].stdout.replace(str(a).encode(), b"OUT") == results[1].stdout.replace(str(b).encode(), b"OUT"), name
+        for filename in ("transform.tsv", "witnesses.tsv", "growth-edges.tsv", "slices.tsv"):
+            assert (a / filename).exists() == (b / filename).exists(), (name, filename)
+            if (a / filename).exists():
+                assert (a / filename).read_bytes() == (b / filename).read_bytes(), (name, filename)
+        for filename, excluded in (("analysis.tsv", {"wall_seconds", "peak_rss_bytes"}),
+                                   ("features.tsv", {"seconds", "peak_rss_bytes"})):
+            assert stable_table(a / filename, excluded) == stable_table(b / filename, excluded), (name, filename)
+        emitted = []
+        if (a / "emitted").exists():
+            files = sorted(p.name for p in (a / "emitted").iterdir())
+            assert files == sorted(p.name for p in (b / "emitted").iterdir()), name
+            for filename in files:
+                left = (a / "emitted" / filename).read_bytes()
+                right = (b / "emitted" / filename).read_bytes()
+                if filename == "composition.tsv":
+                    left = left.replace(str(a).encode(), b"OUT")
+                    right = right.replace(str(b).encode(), b"OUT")
+                assert left == right, (name, filename)
+                emitted.append(left)
+        sha = hashlib.sha256(b"".join(emitted)).hexdigest()
+        report.append((name, results[0].returncode, results[1].returncode, "equal", len(emitted), sha))
+        with (args.out / "comparisons.tsv").open("w", newline="") as sink:
+            writer = csv.writer(sink, delimiter="\t", lineterminator="\n")
+            writer.writerow(("case", "oracle_rc", "census_rc", "stable_outputs", "emitted_files", "emitted_sha256"))
+            writer.writerows(report)
+        print(f"{name}\t{results[0].returncode}\tstable-outputs=equal", flush=True)
+    print(f"census-check\t{len(report)}/{len(cases)} equal", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

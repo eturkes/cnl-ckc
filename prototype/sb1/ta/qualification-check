@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""C5 code-path plants: green -> expected C3 delta/red -> switch-off green."""
+import argparse
+import csv
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+
+CASES = {
+    'hub': 'front-edges.tsv', 'rectangle': 'front-links.tsv', 'unary': 'front-unary.tsv',
+    'sign': 'front-edges.tsv', 'owner': 'front-links.tsv', 'notification': 'front-unary.tsv',
+    'memo': 'front-edges.tsv', 'k1-restricted': 'flow-final-edges.tsv',
+    'k1-fallback': 'flow-final-edges.tsv', 'collision': None,
+}
+
+
+def rows(path):
+    with path.open() as stream:
+        return list(csv.DictReader(stream, delimiter='\t'))
+
+
+def table(path, data):
+    with path.open('w', newline='') as stream:
+        writer = csv.DictWriter(stream, data[0].keys(), delimiter='\t', lineterminator='\n')
+        writer.writeheader()
+        writer.writerows(data)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--tests', type=Path, required=True)
+    parser.add_argument('--out', type=Path, required=True)
+    args = parser.parse_args()
+    digest = hashlib.sha256(args.tests.read_bytes()).hexdigest()
+    assert args.tests.name == 'tests-'+digest, 'immutable SHA-named test executable required'
+    args.out.mkdir(parents=True, exist_ok=False)
+    commands, results = [], []
+    for name, expected in CASES.items():
+        observed = []
+        for stage, planted in (('normal', False), ('planted', True), ('restored', False)):
+            out = args.out / name / stage
+            out.mkdir(parents=True)
+            command = [str(args.tests), '--exact', 'qualification::plant_case', '--nocapture', '--test-threads=1']
+            env = dict(os.environ)
+            env.pop('SB1_TA_Q_PLANT', None)
+            env.update(SB1_TA_Q_CASE=name, SB1_TA_Q_OUT=str(out / 'objects'))
+            if planted:
+                env['SB1_TA_Q_PLANT'] = '1'
+            commands.append(dict(case=name, stage=stage, test_binary_sha256=digest, argv=json.dumps(command), planted=planted))
+            table(args.out / 'commands.tsv', commands)
+            with (out / 'stdout.txt').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
+                result = subprocess.run(command, env=env, stdout=stdout, stderr=stderr, check=False, timeout=120)
+            (out / 'rc.txt').write_text(str(result.returncode)+'\n')
+            wanted = 101 if planted and expected is not None else 0
+            assert result.returncode == wanted, (name, stage, 'wrong test outcome', result.returncode)
+            delta = rows(out / 'objects/deltas.tsv')
+            if planted and expected is not None:
+                matches = [r for r in delta if r['component'] == expected]
+                assert matches and int(matches[0]['plant_hits']) > 0, (name, 'expected C3 component did not fire')
+                assert (out / 'objects' / ('delta-'+expected)).stat().st_size > 0
+            else:
+                assert not delta, (name, stage, 'unmutated/collision control changed C3')
+            observed.append(dict(case=name, stage=stage, rc=result.returncode, expected_component=expected or 'none: exact-key collision',
+                                 deltas=','.join(r['component'] for r in delta), nonempty_delta=bool(delta)))
+            results.extend(observed[-1:])
+            table(args.out / 'plants.tsv', results)
+            print(f'{name}\t{stage}\trc={result.returncode}\tdeltas={len(delta)}', flush=True)
+        assert len(observed) == 3
+    print('qualification-check: eight plant classes (nine red cases), collision control, all restored green')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

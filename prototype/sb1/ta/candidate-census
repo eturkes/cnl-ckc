@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""D6 per-candidates census. Caller holds the timing lock + 8 GiB/swap-0/nice scope."""
+import argparse
+import csv
+import hashlib
+import json
+from pathlib import Path
+import runpy
+import subprocess
+import time
+
+NUMERIC = ['native', 'point_checks', 'point_pass', 'survivors', 'native_ns', 'point_ns', 'prefix_ns',
+           'merged_ns', 'composite_ns', 'composite_heads', 'composite_groups', 'forced', 'forced_ns',
+           'successes', 'plan_ns', 'key_ns', 'composite_merge_ns', 'composite_members',
+           'composite_points', 'index_total_ns', 'key_cells', 'cache_store_ns', 'cache_hit_ns']
+
+
+def rows(path):
+    with path.open() as stream:
+        yield from csv.DictReader(stream, delimiter='\t')
+
+
+def kv(path):
+    return {r['key']: int(r['value']) for r in rows(path)}
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with path.open('rb') as stream:
+        while data := stream.read(1024 * 1024): h.update(data)
+    return h.hexdigest()
+
+
+def table(path, data):
+    with path.open('w', newline='') as stream:
+        writer = csv.DictWriter(stream, data[0].keys(), delimiter='\t', lineterminator='\n')
+        writer.writeheader(); writer.writerows(data)
+
+
+def collect(out):
+    totals = {}
+    files = sorted((out / 'candidate-census').glob('index-*-calls.tsv'))
+    assert files, 'missing per-call census'
+    for path in files:
+        key_groups, full_groups = {}, {}
+        dictionaries = {}
+        for stem in ['keys', 'full-keys']:
+            entries = list(rows(path.with_name(path.name.replace('-calls.tsv', '-' + stem + '.tsv'))))
+            assert [int(r['key']) for r in entries] == list(range(len(entries)))
+            signatures = [tuple(v for k, v in r.items() if k != 'key') for r in entries]
+            assert len(set(signatures)) == len(signatures), 'duplicate exact key under different ids'
+            dictionaries[stem] = entries
+        count = 0
+        phases = set()
+        for row in rows(path):
+            assert None not in row and all(v is not None for v in row.values()), path
+            assert int(row['call']) == count
+            count += 1
+            p = row['phase']; phases.add(p)
+            t = totals.setdefault(p, {'calls': 0, **{k: 0 for k in NUMERIC}, 'native_union': 0, 'plan_units': 0,
+                                      'candidate_hits': 0, 'full_hits': 0, 'cache_store_units': 0, 'cache_hit_returns': 0,
+                                      **{prefix + key: 0 for prefix in ['candidate_hit_', 'full_hit_'] for key in ['same', 'cross', 'unclassified']},
+                                      **{prefix + k: 0 for prefix in ['candidate_skip_', 'candidate_miss_', 'full_skip_'] for k in ['native_union', 'plan_units', 'point_checks', 'point_pass', 'forced', 'forced_ns', 'index_total_ns', 'native_ns', 'point_ns', 'prefix_ns', 'plan_ns', 'merged_ns', 'composite_ns', 'composite_merge_ns', 'composite_groups', 'composite_members', 'composite_points', 'calls']}})
+            n = {k: int(row[k]) for k in NUMERIC}
+            rejects = [int(v) for v in row['rejects'].split(',')]
+            unions = [None if v == 'all' else int(v) for v in row['column_unions'].split(',')]
+            cards = [None if v == 'all' else int(v) for v in row['domain_cards'].split(',')]
+            assert len(rejects) == len(unions) == len(cards)
+            assert sum(rejects) == n['native'] - n['point_pass']
+            assert 0 <= n['survivors'] <= n['point_pass'] <= n['native']
+            assert n['forced'] == n['survivors'] and n['successes'] <= n['forced']
+            assert n['native'] <= n['point_checks'] <= n['native'] * len(cards)
+            assert n['composite_heads'] <= n['native'] and n['composite_points'] <= n['point_checks']
+            assert n['index_total_ns'] >= n['native_ns'] + n['point_ns'] + n['prefix_ns']
+            chosen = None if row['chosen'] == 'none' else int(row['chosen'])
+            finite = [(v, i) for i, v in enumerate(unions) if v is not None]
+            assert chosen == (min(finite)[1] if finite else None)
+            native_union = unions[chosen] if chosen is not None else n['native']
+            assert native_union >= n['native']
+            for label, store, field in [('hit', key_groups, 'key'), ('full_hit', full_groups, 'full_key')]:
+                key = int(row[field]); group = row['group']
+                expected = ('new' if key not in store else 'unclassified' if group == 'none' or store[key] == 'none' else 'same' if store[key] == group else 'cross')
+                assert row[label] == expected, (path, count, label)
+                store.setdefault(key, group)
+            key = dictionaries['keys'][int(row['key'])]
+            full = dictionaries['full-keys'][int(row['full_key'])]
+            for field in ['phase', 'epoch', 'goal']:
+                assert row[field] == key[field] == full[field], (path, count, field)
+            assert key['domains'] == full['argument_domains'] and key['aliases'] == full['aliases'] and key['naf'] == full['naf']
+            assert row['full_hit'] == 'new' or row['hit'] != 'new'
+            t['calls'] += 1; t['native_union'] += native_union
+            t['plan_units'] += len(cards) + sum(c for c in cards if c is not None)
+            for k, value in n.items(): t[k] += value
+            data = dict(n, native_union=native_union, plan_units=len(cards) + sum(c for c in cards if c is not None), calls=1)
+            hit = row['hit'] != 'new'
+            t['cache_store_units'] += (n['survivors'] + 1) * (int(not hit) + int(row['full_hit'] == 'new'))
+            t['cache_hit_returns'] += int(hit)
+            for prefix, enabled in [('candidate_skip_', hit), ('candidate_miss_', not hit), ('full_skip_', row['full_hit'] != 'new')]:
+                if enabled:
+                    for k in [k for k in data if prefix + k in t]: t[prefix + k] += data[k]
+            if hit:
+                t['candidate_hits'] += 1; t['candidate_hit_' + row['hit']] += 1
+            if row['full_hit'] != 'new':
+                t['full_hits'] += 1; t['full_hit_' + row['full_hit']] += 1
+        assert count > 0 and len(phases) == 1
+        p = phases.pop()
+        build = {r['metric']: int(r['value']) for r in rows(path.with_name(path.name.replace('-calls.tsv', '-build.tsv')))}
+        for k, value in build.items(): totals[p][k] = totals[p].get(k, 0) + value
+        for stem, expected in [('keys', len(key_groups)), ('full-keys', len(full_groups))]:
+            entries = list(rows(path.with_name(path.name.replace('-calls.tsv', '-' + stem + '.tsv'))))
+            assert [int(r['key']) for r in entries] == list(range(expected))
+            signatures = [tuple(v for k, v in r.items() if k != 'key') for r in entries]
+            assert len(set(signatures)) == len(signatures), 'duplicate exact key under different ids'
+    for model, phases in [('base', ['graph', 'base_growth']), ('k1', ['k1_growth'])]:
+        stats = kv(out / (model + '-stats.tsv'))
+        def total(key): return sum(totals[p][key] for p in phases)
+        for key, metric in [('native', 'header_candidates'), ('point_checks', 'header_point_checks'), ('survivors', 'header_survivors'), ('forced', 'body_solves')]:
+            assert total(key) == stats[metric], (model, key, total(key), stats[metric])
+        assert total('calls') == stats['header_requests'], (model, 'requests')
+    return totals
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    for key in ['ta', 'root', 'instances', 'run-manifest', 'out']:
+        parser.add_argument('--' + key, required=True, type=Path)
+    parser.add_argument('--family', action='append')
+    parser.add_argument('--scale', type=int, action='append')
+    parser.add_argument('--baseline', type=Path, help='also compare 11 load C3 objects to this sealed executable')
+    a = parser.parse_args()
+    a.out.mkdir(parents=True, exist_ok=False)
+    helpers = runpy.run_path(str(Path(__file__).with_name('structure-census')))
+    families, scales = a.family or helpers['FAMILIES'], a.scale or helpers['SCALES']
+    helpers['check_inputs'](a.root, a.instances, a.run_manifest, a.out, families, scales)
+    assert a.ta.name == 'ta-' + sha(a.ta)
+    commands, cases, counts, comparisons = [], [], [], []
+    names = runpy.run_path(str(Path(__file__).with_name('complete-matrix')))['NAMES'][:11]
+    for family in families:
+        for scale in scales:
+            instance = f'{family}-g{scale:03}-s0'
+            out = a.out / instance
+            cmd = [str(a.ta), '--root', str(a.root), '--composition', str(a.instances / instance / 'composition.tsv'), '--out', str(out), '--dc', '--redesign', '--candidate-census']
+            if a.baseline: cmd += ['--dump-front', '--dump-analysis']
+            commands.append(dict(instance=instance, elf=sha(a.ta), command=json.dumps(cmd)))
+            table(a.out / 'commands.tsv', commands)
+            out.mkdir()
+            print(f'start\t{instance}', flush=True)
+            start = time.monotonic()
+            with (out / 'stdout.txt').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
+                result = subprocess.run(cmd, stdout=stdout, stderr=stderr, timeout=43200, check=False)
+            cases.append(dict(instance=instance, rc=result.returncode, wall_seconds=time.monotonic()-start))
+            table(a.out / 'cases.tsv', cases)
+            assert result.returncode == 0, instance
+            totals = collect(out)
+            for phase, metrics in totals.items():
+                for metric, value in metrics.items(): counts.append(dict(family=family, G=scale, phase=phase, metric=metric, value=value))
+            table(a.out / 'counts.tsv', counts)
+            if a.baseline:
+                baseline = out / 'baseline'
+                basecmd = [str(a.baseline), '--root', str(a.root), '--composition', str(a.instances / instance / 'composition.tsv'), '--out', str(baseline), '--dc', '--redesign', '--dump-front', '--dump-analysis']
+                with (out / 'baseline-stdout.txt').open('w') as stdout, (out / 'baseline-stderr.txt').open('w') as stderr:
+                    result = subprocess.run(basecmd, stdout=stdout, stderr=stderr, timeout=43200, check=False)
+                assert result.returncode == 0
+                for name in names:
+                    left, right = baseline / name, out / name
+                    rc = subprocess.run(['cmp', '-s', str(left), str(right)], check=False).returncode
+                    comparisons.append(dict(instance=instance, component=name, cmp_rc=rc, baseline_sha256=sha(left), census_sha256=sha(right)))
+                    table(a.out / 'comparisons.tsv', comparisons)
+                    assert rc == 0, (instance, name)
+            print(f'finish\t{instance}\tcalls={sum(t["calls"] for t in totals.values())}', flush=True)
+    print(f'candidate-census\t{len(cases)} cases\tvalidated', flush=True)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

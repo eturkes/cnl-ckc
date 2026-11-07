@@ -146,6 +146,7 @@ impl Growth {
                 continue;
             }
             let (i, var) = site;
+            model.census_caller(program, i);
             let c = &program.clauses[i];
             let (signature, order) = clause_signatures.entry(i).or_insert_with(|| {
                 let (key, order) = body_signature(arena, &c.body);
@@ -263,9 +264,15 @@ impl Growth {
                 .iter()
                 .map(|(k, (s, _))| (*k, s.clone()))
                 .collect::<HashMap<_, _>>();
+            if crate::census::enabled() {
+                let cloned = snapshot.values().map(BTreeSet::len).sum::<usize>();
+                crate::work::visit("growth_snapshot_member_visits", cloned);
+                crate::work::peak("growth_snapshot_memberships", cloned);
+            }
             for (site, (sources, forwards)) in &mut sites {
                 for target in forwards.iter() {
                     if let Some(next) = snapshot.get(target) {
+                        crate::work::visit("growth_forward_member_visits", next.len());
                         for source in next {
                             let good = *allowed
                                 .entry((site_signatures[site], *source))
@@ -298,6 +305,18 @@ impl Growth {
                         }
                     }
                 }
+            }
+            if crate::census::enabled() {
+                crate::work::peak(
+                    "growth_live_root_versions",
+                    sites.len() + snapshot.len() + bindings.len(),
+                );
+                crate::work::peak(
+                    "growth_live_root_memberships",
+                    sites.values().map(|(s, _)| s.len()).sum::<usize>()
+                        + snapshot.values().map(BTreeSet::len).sum::<usize>()
+                        + bindings.values().map(|b| b.roots.len()).sum::<usize>(),
+                );
             }
             if !changed {
                 break;
@@ -381,6 +400,32 @@ impl Growth {
                 ],
             );
         }
+        if crate::census::enabled() {
+            crate::work::peak("growth_constraint_states", states.len());
+            crate::work::peak(
+                "growth_constraint_memberships",
+                states
+                    .values()
+                    .flatten()
+                    .flat_map(|s| s.census_parts().1.iter())
+                    .map(|d| d.values().map_or(1, BTreeSet::len))
+                    .sum(),
+            );
+            crate::work::peak("growth_binding_cache_entries", bindings.len());
+            crate::work::peak(
+                "growth_binding_cache_memberships",
+                bindings
+                    .values()
+                    .map(|b| b.roots.len() + b.forwards.len())
+                    .sum(),
+            );
+            crate::work::peak("growth_allowed_memo_keys", allowed.len());
+            crate::work::peak("growth_allowed_memo_cells", allowed.len() * 4);
+            crate::work::peak(
+                "growth_signature_key_cells",
+                signatures.keys().map(Vec::len).sum(),
+            );
+        }
         drop(patterns);
         drop(states);
         drop(bindings);
@@ -404,6 +449,7 @@ impl Growth {
                     .iter()
                     .flat_map(|site| sites[site].0.iter().copied())
                     .collect::<Vec<_>>();
+                crate::work::visit("growth_edge_expansion_memberships", targets.len());
                 targets.sort_unstable();
                 targets.dedup();
                 let mut edges = Vec::with_capacity(targets.len());
@@ -430,6 +476,23 @@ impl Growth {
     }
     pub fn admitted(&self) -> bool {
         self.graph.admitted()
+    }
+    pub fn write_census(&self, out: &std::path::Path, name: &str) -> Result<(), String> {
+        if !crate::census::enabled() {
+            return Ok(());
+        }
+        crate::census::graph(out, name, &self.graph)?;
+        let mut metrics = crate::census::Metrics::default();
+        metrics.sets(
+            "variable_sources",
+            self.var_sources
+                .values()
+                .map(|s| s.iter().copied().collect()),
+        );
+        metrics.sets("incidences", self.incidences.iter().cloned());
+        metrics.add("source_patterns", self.source_patterns);
+        metrics.add("source_cache_hits", self.source_cache_hits);
+        metrics.write(out, &format!("{name}-sources"))
     }
     pub fn record_memory(&self, stage: &str) {
         if !crate::memory::enabled() {

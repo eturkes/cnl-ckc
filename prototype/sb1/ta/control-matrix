@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""C1: sixteen DC controls, independent oracle bytes + original-edge provenance."""
+import argparse
+from collections import defaultdict
+import csv
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import time
+
+NAMES = ['front-'+s+'.tsv' for s in ('values', 'unary', 'links', 'nodes', 'edges', 'scc')]
+NAMES += ['flow-'+s+'.tsv' for s in ('base-nodes', 'base-edges', 'final-nodes', 'final-edges', 'outcome')]
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with path.open('rb') as stream:
+        while data := stream.read(1 << 20):
+            h.update(data)
+    return h.hexdigest()
+
+
+def rows(path):
+    with path.open() as stream:
+        return list(csv.DictReader(stream, delimiter='\t'))
+
+
+def raw(path):
+    with path.open() as stream:
+        return list(csv.reader(stream, delimiter='\t'))
+
+
+def table(path, records):
+    assert records
+    with path.open('w', newline='') as stream:
+        writer = csv.DictWriter(stream, records[0].keys(), delimiter='\t', lineterminator='\n')
+        writer.writeheader()
+        writer.writerows(records)
+
+
+def source_label(label, allowed):
+    path, line, ordinal = label.rsplit(':', 2)
+    if path not in allowed or not (int(line) > 0 and int(ordinal) > 0):
+        raise ValueError('witness source label')
+    return path, int(ordinal)
+
+
+def validate_witnesses(actual, expected, oracle, allowed):
+    nodes = {(r[1], int(r[2])): int(r[0]) for r in raw(oracle / 'front-nodes.tsv')}
+    edges = {(int(r[0]), int(r[1]), r[2], r[3]) for r in raw(oracle / 'front-edges.tsv')}
+    base = {tuple(r) for r in raw(oracle / 'flow-base-edges.tsv')}
+    final = {tuple(r) for r in raw(oracle / 'flow-final-edges.tsv')}
+    supports = {(r['from'], r['to'], r['clause'], r['variable']) for r in rows(oracle / 'growth-edges.tsv')}
+    cycles = defaultdict(list)
+    for row in actual:
+        if set(row) != {'kind', 'component', 'step', 'from', 'sign', 'growth', 'to', 'goal', 'matched_features'}:
+            raise ValueError('witness columns')
+        if not row['goal'] or not row['matched_features'] or 'unconfirmed' in row['goal']+row['matched_features']:
+            raise ValueError('unconfirmed witness reconstruction')
+        is_growth = row['component'].startswith(('origin-', 'k1-'))
+        if is_growth:
+            graph = final if row['component'].startswith('k1-') else base
+            if row['kind'] != 'growth' or row['sign'] != '+' or row['growth'] != 'true' or (row['from'], row['to']) not in graph:
+                raise ValueError('growth witness edge')
+            head, label = row['goal'].split(' @ ', 1)
+            variable = head[head.index('(')+1:head.rindex(')')]
+            source_label(label, allowed)
+            if (row['from'], row['to'], label, variable) not in supports:
+                raise ValueError('growth witness supporting clause')
+        else:
+            start, end = source_label(row['from'], allowed), source_label(row['to'], allowed)
+            edge = (nodes[start], nodes[end], 'true' if row['sign'] == '-' else 'false', row['growth'])
+            if row['kind'] != 'negative' or row['sign'] not in ('+', '-') or edge not in edges:
+                raise ValueError('clause witness edge/sign')
+        cycles[row['kind'], row['component']].append(row)
+    for (kind, _), cycle in cycles.items():
+        if [int(r['step']) for r in cycle] != list(range(1, len(cycle)+1)):
+            raise ValueError('witness step sequence')
+        if any(a['to'] != b['from'] for a, b in zip(cycle, cycle[1:]+cycle[:1])):
+            raise ValueError('witness cycle not closed')
+        if not any(r['sign'] == '-' if kind == 'negative' else r['growth'] == 'true' for r in cycle):
+            raise ValueError('cycle has no violating edge')
+    # The oracle fixes the original-edge shortest-cycle rule and tie-break;
+    # exact rows also bind goals, whole-pattern feature bindings + support sites.
+    if actual != expected:
+        raise ValueError('witness differs from reference minimality/provenance')
+    return len(cycles)
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ('ta', 'root', 'out'):
+        p.add_argument('--'+name, type=Path, required=True)
+    a = p.parse_args()
+    assert a.ta.name == 'ta-'+sha(a.ta)
+    a.out.mkdir(parents=True, exist_ok=False)
+    cdc = sorted((a.root / 'guidelines/cdc-2022-opioid/pl').glob('*.pl'))
+    assert cdc, 'CDC inventory empty'
+    inputs = a.out / 'inputs'
+    inputs.mkdir()
+    source = inputs / 'cdc-original.tsv'
+    source.write_text(''.join(str(path)+'\n' for path in cdc))
+    shape = [str(a.ta), '--root', str(a.root), '--composition', str(source), '--patient', 'none',
+             '--dc', '--shape-only', '--emit', str(inputs / 'cdc-shaped'), '--out', str(a.out / 'shape')]
+    with (a.out / 'shape.log').open('w') as stream:
+        result = subprocess.run(shape, stdout=stream, stderr=subprocess.STDOUT, check=False)
+    (a.out / 'shape-command.json').write_text(json.dumps(dict(argv=shape, rc=result.returncode), indent=2)+'\n')
+    assert result.returncode == 0, 'DC shape preparation'
+    shaped = [line for line in (inputs / 'cdc-shaped/composition.tsv').read_text().splitlines() if line and not line.startswith('#')]
+    cases = [('cdc', shaped, 'none', 'admitted')]
+    for name in ('adult', 'minor', 'cancer', 'dose'):
+        path = a.root / ('tests/queries/green/dose-arithmetic/tree/guidelines/fx/pl/world.pl' if name == 'dose' else f'tests/consumer/{name}.pl.in')
+        cases.append((name, shaped+[str(path)], 'last', 'admitted'))
+    plants = a.root / 'prototype/sb1/ta/plants'
+    for name in ('L1', 'L2', 'L3', 'L4', 'L5', 'G1', 'G2', 'P3', 'P4', 'P5', 'P6'):
+        files = [plants / f'{name}.pl.in'] if name not in ('L5', 'P5') else [plants / f'{name}-{side}.pl.in' for side in ('A', 'B')]
+        expected = 'negative' if name.startswith('L') else 'growth' if name.startswith('G') else 'admitted'
+        cases.append((name, shaped+[str(path) for path in files], 'none', expected))
+    assert len(cases) == 16
+    commands, outcomes, comparisons, inventories = [], [], [], []
+    for name, paths, patient, expected in cases:
+        composition = inputs / (name+'.tsv')
+        composition.write_text(''.join(path+'\n' for path in paths))
+        allowed = set(paths)
+        for ordinal, path in enumerate(paths):
+            target = Path(path)
+            inventories.append(dict(case=name, ordinal=ordinal, path=path, bytes=target.stat().st_size, sha256=sha(target)))
+        table(a.out / 'input-members.tsv', inventories)
+        for mode in ('oracle', 'candidate'):
+            out = a.out / name / mode
+            out.mkdir(parents=True)
+            cmd = [str(a.ta), '--root', str(a.root), '--composition', str(composition), '--patient', patient,
+                   '--out', str(out), '--edges', '--dump-front', '--dump-analysis']
+            if mode == 'candidate':
+                cmd += ['--redesign', '--skip-audit', '--header-audit']
+            commands.append(dict(case=name, mode=mode, elf=sha(a.ta), composition=sha(composition), argv=json.dumps(cmd)))
+            table(a.out / 'commands.tsv', commands)
+            start = time.monotonic()
+            with (out / 'stdout.txt').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
+                result = subprocess.run(cmd, stdout=stdout, stderr=stderr, check=False, timeout=43200)
+            (out / 'rc.txt').write_text(str(result.returncode)+'\n')
+            report = rows(out / 'analysis.tsv')
+            assert len(report) == 1
+            witnesses = rows(out / 'witnesses.tsv')
+            kinds = sorted({r['kind'] for r in witnesses})
+            wanted = 0 if expected == 'admitted' else 1
+            assert result.returncode == wanted, (name, mode, result.returncode)
+            assert report[0]['verdict'] == ('admitted' if wanted == 0 else 'refused')
+            assert (not kinds) if wanted == 0 else expected in kinds
+            outcomes.append(dict(case=name, mode=mode, rc=result.returncode, verdict=report[0]['verdict'], kinds=','.join(kinds), witness_rows=len(witnesses), wall_seconds=time.monotonic()-start))
+            table(a.out / 'cases.tsv', outcomes)
+            print(f'{name}\t{mode}\trc={result.returncode}\twitnesses={len(witnesses)}', flush=True)
+        oracle, candidate = a.out / name / 'oracle', a.out / name / 'candidate'
+        for component in (*NAMES, 'witnesses.tsv', 'growth-edges.tsv'):
+            left, right = oracle / component, candidate / component
+            rc = subprocess.run(['cmp', '-s', str(left), str(right)], check=False).returncode
+            comparisons.append(dict(case=name, component=component, oracle=sha(left), candidate=sha(right), cmp_rc=rc))
+            table(a.out / 'comparisons.tsv', comparisons)
+            assert rc == 0, (name, component)
+        cycles = validate_witnesses(rows(candidate / 'witnesses.tsv'), rows(oracle / 'witnesses.tsv'), oracle, allowed)
+        print(f'{name}\tvalidated\tcycles={cycles}\t13 byte-equal objects', flush=True)
+    print('control-matrix: 16/16 controls, original-edge cycles + minimality/provenance matched')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

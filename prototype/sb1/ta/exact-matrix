@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""Compare front-stage canonical objects on the frozen development inputs."""
+import argparse
+import csv
+import hashlib
+import json
+from pathlib import Path
+import runpy
+import subprocess
+import time
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with path.open('rb') as source:
+        while data := source.read(1024 * 1024):
+            h.update(data)
+    return h.hexdigest()
+
+
+def table(path, fields, rows):
+    with path.open('w', newline='') as sink:
+        writer = csv.DictWriter(sink, fields, delimiter='\t', lineterminator='\n')
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ['ta', 'root', 'instances', 'out', 'run-manifest']:
+        p.add_argument('--' + name, type=Path, required=True)
+    p.add_argument('--stage', choices=['features', 'graph', 'compressed'], required=True)
+    p.add_argument('--family', action='append')
+    p.add_argument('--scale', action='append', type=int)
+    p.add_argument('--oracle-cache', type=Path)
+    a = p.parse_args()
+    a.out.mkdir(parents=True, exist_ok=False)
+    families = a.family or ['F1a', 'F1b', 'F2', 'F3', 'F4', 'MX']
+    scales = a.scale or [1, 10]
+    original = runpy.run_path(str(Path(__file__).with_name('structure-census')))
+    original['check_inputs'](a.root, a.instances, a.run_manifest, a.out, families, scales)
+    if a.oracle_cache:
+        current = original['rows'](a.out / 'input-identities.tsv')
+        cached = {r['instance']: r for r in original['rows'](a.oracle_cache / 'input-identities.tsv')}
+        def binding(rows):
+            for row in rows:
+                assert row == cached[row['instance']], row['instance']
+        binding(current)
+        planted = [dict(r) for r in current]
+        planted[0]['composition_identity'] = '0' * 64
+        try:
+            binding(planted)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError('cache binding accepted a changed source identity')
+        binding(current)
+        print(f'cached-oracle-identities\t{len(current)} match; changed-identity plant refused', flush=True)
+    cases, commands, comparisons = [], [], []
+    names = ['values', 'unary', 'links']
+    if a.stage != 'features':
+        names += ['nodes', 'edges']
+    if a.stage == 'compressed':
+        names += ['scc']
+    # Positive + missing + extra controls exercise the same byte comparator.
+    control = a.out / 'control'
+    control.mkdir()
+    expected = control / 'expected'
+    actual = control / 'actual'
+    expected.write_bytes(b'first\nsecond\n')
+    for payload, rc in [(b'first\nsecond\n', 0), (b'first\n', 1), (b'first\nsecond\nextra\n', 1)]:
+        actual.write_bytes(payload)
+        assert subprocess.run(['cmp', '-s', expected, actual], check=False).returncode == rc
+    for family in families:
+        for scale in scales:
+            name = f'{family}-g{scale:03}-s0'
+            composition = a.instances / name / 'composition.tsv'
+            for mode in ['oracle', 'candidate']:
+                out = a.out / name / mode
+                if mode == 'oracle' and a.oracle_cache:
+                    out = a.oracle_cache / name / 'oracle'
+                    assert out.is_dir(), out
+                    continue
+                out.mkdir(parents=True)
+                cmd = [str(a.ta), '--root', str(a.root), '--composition', str(composition),
+                       '--dc', '--out', str(out), '--dump-front']
+                if mode == 'candidate':
+                    cmd += ['--redesign-front', '--skip-audit']
+                    if a.stage != 'features':
+                        cmd += ['--header-audit']
+                else:
+                    cmd += ['--front-only']
+                if a.stage == 'features':
+                    cmd += ['--features-only']
+                commands.append(dict(instance=name, mode=mode, binary_sha256=sha(a.ta), command=json.dumps(cmd)))
+                table(a.out / 'commands.tsv', ['instance', 'mode', 'binary_sha256', 'command'], commands)
+                print(f'start\t{name}\t{mode}', flush=True)
+                started = time.monotonic()
+                with (out / 'stdout.txt').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
+                    result = subprocess.run(cmd, stdout=stdout, stderr=stderr, check=False, timeout=43200)
+                cases.append(dict(instance=name, mode=mode, rc=result.returncode, wall_seconds=time.monotonic() - started))
+                table(a.out / 'cases.tsv', ['instance', 'mode', 'rc', 'wall_seconds'], cases)
+                assert result.returncode == 0, (name, mode, result.returncode)
+            for kind in names:
+                left = (a.oracle_cache or a.out) / name / 'oracle' / f'front-{kind}.tsv'
+                right = a.out / name / 'candidate' / f'front-{kind}.tsv'
+                rc = subprocess.run(['cmp', '-s', left, right], check=False).returncode
+                with right.open('rb') as source:
+                    count = sum(1 for _ in source)
+                comparisons.append(dict(instance=name, component=kind, rows=count, oracle_sha256=sha(left),
+                                        candidate_sha256=sha(right), cmp_rc=rc))
+                table(a.out / 'comparisons.tsv', ['instance', 'component', 'rows', 'oracle_sha256', 'candidate_sha256', 'cmp_rc'], comparisons)
+                assert rc == 0, (name, kind)
+            print(f'equal\t{name}\t{len(names)} components', flush=True)
+    print(f'exact-matrix\t{len(families) * len(scales)} cases equal', flush=True)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

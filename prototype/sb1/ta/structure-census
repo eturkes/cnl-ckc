@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Run the oracle's optional structure census on the frozen development matrix."""
+import argparse
+import csv
+import hashlib
+import json
+import math
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+FAMILIES = ("F1a", "F1b", "F2", "F3", "F4", "MX")
+SCALES = (1, 2, 4, 10)
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def rows(path):
+    with path.open(newline="") as source:
+        return list(csv.DictReader(source, delimiter="\t"))
+
+
+def table(path, fields, data):
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("w", newline="") as sink:
+        writer = csv.DictWriter(sink, fields, delimiter="\t", lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(data)
+    temporary.replace(path)
+
+
+def check_inputs(root, instances, manifest, out, families, scales):
+    expected = {r["instance"]: r for r in rows(manifest) if r["kind"] == "instance"}
+    checked = []
+    schema = root / "guidelines/schema.pl"
+    schema_bytes = schema.read_bytes()
+    for family in families:
+        for scale in scales:
+            instance = f"{family}-g{scale:03}-s0"
+            composition = instances / instance / "composition.tsv"
+            digest = hashlib.sha256(f"schema\0{len(schema_bytes)}\0{hashlib.sha256(schema_bytes).hexdigest()}\n".encode())
+            byte_count, count = 0, 0
+            for line in composition.read_text().splitlines():
+                if not line or line.startswith("#"):
+                    continue
+                data = (root / line).read_bytes()
+                digest.update(f"file\0{line}\0{len(data)}\0{hashlib.sha256(data).hexdigest()}\n".encode())
+                byte_count += len(data)
+                count += 1
+            row = expected[instance]
+            assert (digest.hexdigest(), byte_count, count) == (row["sha256"], int(row["bytes"]), int(row["count"])), instance
+            checked.append(dict(instance=instance, composition_identity=digest.hexdigest(), bytes=byte_count, documents=count))
+    table(out / "input-identities.tsv", ("instance", "composition_identity", "bytes", "documents"), checked)
+    print(f"input-identities\t{len(checked)}/{len(families) * len(scales)} match", flush=True)
+
+
+def collect(out, statuses):
+    counts = []
+    for status in statuses:
+        case = out / status["instance"]
+        for path in sorted(case.glob("census-*.tsv")):
+            for row in rows(path):
+                counts.append(dict(family=status["family"], G=status["G"],
+                                   metric=f"{path.stem}.{row['metric']}", value=row["value"]))
+        phase = case / "phases.tsv"
+        if phase.exists():
+            for row in rows(phase):
+                counts.append(dict(family=status["family"], G=status["G"],
+                                   metric=f"phase.{row['phase']}", value=row["seconds"]))
+        analysis = case / "analysis.tsv"
+        if analysis.exists():
+            for key, value in rows(analysis)[0].items():
+                try:
+                    float(value)
+                except ValueError:
+                    continue
+                counts.append(dict(family=status["family"], G=status["G"],
+                                   metric=f"analysis.{key}", value=value))
+    table(out / "counts.tsv", ("family", "G", "metric", "value"), counts)
+    groups = {}
+    for row in counts:
+        groups.setdefault((row["family"], row["metric"]), {})[int(row["G"])] = float(row["value"])
+    slopes = []
+    for (family, metric), values in sorted(groups.items()):
+        for lo, hi in ((1, 2), (2, 4), (4, 10), (1, 10)):
+            if lo not in values or hi not in values:
+                continue
+            slope = (math.log(values[hi] / values[lo]) / math.log(hi / lo)
+                     if values[lo] > 0 and values[hi] > 0 else "undefined-zero")
+            slopes.append(dict(family=family, metric=metric, low=lo, high=hi,
+                               low_value=values[lo], high_value=values[hi], slope=slope))
+    table(out / "slopes.tsv", ("family", "metric", "low", "high", "low_value", "high_value", "slope"), slopes)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--ta", type=Path, required=True)
+    parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--instances", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--run-manifest", type=Path)
+    parser.add_argument("--inputs-only", action="store_true")
+    parser.add_argument("--without-census", action="store_true")
+    parser.add_argument("--family", action="append", choices=FAMILIES)
+    parser.add_argument("--scale", action="append", type=int, choices=SCALES)
+    args = parser.parse_args()
+    for name in ("ta", "root", "instances", "out"):
+        if not getattr(args, name).is_absolute():
+            parser.error(f"--{name} must be absolute")
+    args.out.mkdir(parents=True, exist_ok=False)
+    families = args.family or FAMILIES
+    scales = args.scale or SCALES
+    if args.inputs_only and args.run_manifest is None:
+        parser.error("--inputs-only requires --run-manifest")
+    if args.run_manifest:
+        check_inputs(args.root, args.instances, args.run_manifest, args.out, families, scales)
+    if args.inputs_only:
+        return 0
+    statuses, commands = [], []
+    for family in families:
+        for scale in scales:
+            instance = f"{family}-g{scale:03}-s0"
+            composition = args.instances / instance / "composition.tsv"
+            out = args.out / instance
+            command = [str(args.ta), "--root", str(args.root), "--composition", str(composition),
+                       "--out", str(out), "--dc"]
+            if not args.without_census:
+                command.append("--census")
+            commands.append(dict(instance=instance, binary_sha256=digest(args.ta),
+                                 composition_sha256=digest(composition), command=json.dumps(command)))
+            table(args.out / "commands.tsv", ("instance", "binary_sha256", "composition_sha256", "command"), commands)
+            out.mkdir()
+            print(f"start\t{instance}", flush=True)
+            start = time.monotonic()
+            with (out / "stdout.txt").open("w") as stdout, (out / "stderr.txt").open("w") as stderr:
+                try:
+                    result = subprocess.run(command, stdout=stdout, stderr=stderr, timeout=43200, check=False)
+                    rc = result.returncode
+                except subprocess.TimeoutExpired:
+                    rc = 124
+            analysis = out / "analysis.tsv"
+            verdict = rows(analysis)[0]["verdict"] if analysis.exists() else "unavailable"
+            statuses.append(dict(instance=instance, family=family, G=scale, rc=rc, verdict=verdict,
+                                 wall_seconds=f"{time.monotonic() - start:.9f}"))
+            table(args.out / "case-status.tsv", ("instance", "family", "G", "rc", "verdict", "wall_seconds"), statuses)
+            collect(args.out, statuses)
+            print(f"finish\t{instance}\trc={rc}\t{verdict}", flush=True)
+    expected = len(families) * len(scales)
+    failed = sum(row["rc"] != 0 or row["verdict"] != "admitted" for row in statuses)
+    print(f"structure-census\tcases={len(statuses)}/{expected}\tfailed={failed}", flush=True)
+    return int(failed != 0)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

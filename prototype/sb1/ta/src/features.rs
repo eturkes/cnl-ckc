@@ -1,7 +1,10 @@
+use crate::detail::{Outcome, Role};
 pub use crate::domain::{Abstraction, Counters, Domain, Value};
 use crate::source::Program;
+use crate::work::{AccessKind, Resource, visit};
 use sb1_checker::program::{Goal, builtin};
 use sb1_checker::term::{Arena, Id, Node, Symbol};
+use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::rc::Rc;
 
@@ -15,7 +18,7 @@ pub enum Feature {
     Tag(Value),
 }
 impl Feature {
-    fn wildcard(self) -> Self {
+    pub(crate) fn wildcard(self) -> Self {
         match self {
             Self::Noun(_) => Self::Noun(Value::Any),
             Self::Lemma(_) => Self::Lemma(Value::Any),
@@ -25,7 +28,7 @@ impl Feature {
             Self::Tag(_) => Self::Tag(Value::Any),
         }
     }
-    fn selector(self) -> Value {
+    pub(crate) fn selector(self) -> Value {
         match self {
             Self::Noun(v)
             | Self::Lemma(v)
@@ -69,7 +72,7 @@ fn expr(arena: &Arena, abs: &Abstraction, t: Id) -> Expr {
         _ => Expr::Constant(abs.value(t)),
     }
 }
-fn literal_features(arena: &Arena, abs: &Abstraction, t: Id) -> (Vec<Unary>, Vec<Link>) {
+pub(crate) fn literal_features(arena: &Arena, abs: &Abstraction, t: Id) -> (Vec<Unary>, Vec<Link>) {
     if builtin(arena, t) {
         return (Vec::new(), Vec::new());
     }
@@ -168,17 +171,88 @@ impl Pattern {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Debug)]
 pub struct State {
     parent: Vec<usize>,
     domains: Vec<Domain>,
+    census_key: RefCell<Option<(usize, usize)>>,
 }
+impl Clone for State {
+    fn clone(&self) -> Self {
+        if crate::census::enabled() {
+            visit(
+                "state_clone_member_visits",
+                self.domains
+                    .iter()
+                    .map(|d| d.values().map_or(1, BTreeSet::len))
+                    .sum(),
+            );
+        }
+        Self {
+            parent: self.parent.clone(),
+            domains: self.domains.clone(),
+            census_key: self.census_key.clone(),
+        }
+    }
+}
+impl PartialEq for State {
+    fn eq(&self, other: &Self) -> bool {
+        self.parent == other.parent && self.domains == other.domains
+    }
+}
+impl Eq for State {}
 impl State {
     pub(crate) fn new(vars: usize) -> Self {
         Self {
             parent: (0..vars).collect(),
             domains: vec![Domain::All; vars],
+            census_key: RefCell::new(None),
         }
+    }
+    pub fn audit_state(parent: Vec<usize>, domains: Vec<Domain>) -> Self {
+        assert_eq!(parent.len(), domains.len());
+        Self {
+            parent,
+            domains,
+            census_key: RefCell::new(None),
+        }
+    }
+    pub fn audit_header_prefix(
+        &self,
+        arena: &Arena,
+        goal: &[Expr],
+        head: &[Expr],
+        head_vars: usize,
+    ) -> bool {
+        let mut state = self.clone();
+        let offset = state.parent.len();
+        state.parent.extend(offset..offset + head_vars);
+        state.domains.extend(vec![Domain::All; head_vars]);
+        for (g, h) in goal.iter().zip(head) {
+            let h = match h {
+                Expr::Var(v) => Expr::Var(offset + v),
+                x => *x,
+            };
+            if !state.unify(*g, h, arena) {
+                return false;
+            }
+        }
+        true
+    }
+    pub(crate) fn census_parts(&self) -> (&[usize], &[Domain]) {
+        (&self.parent, &self.domains)
+    }
+    pub(crate) fn census_cached(&self, token: usize) -> Option<usize> {
+        self.census_key
+            .borrow()
+            .filter(|(t, _)| *t == token)
+            .map(|(_, id)| id)
+    }
+    pub(crate) fn census_cache(&self, token: usize, id: usize) {
+        *self.census_key.borrow_mut() = Some((token, id));
+    }
+    fn census_invalidate(&mut self) {
+        *self.census_key.get_mut() = None;
     }
     pub(crate) fn memory_bytes(&self) -> usize {
         use crate::memory::bytes;
@@ -198,7 +272,14 @@ impl State {
     }
     pub fn domain(&self, e: Expr) -> Domain {
         match e {
-            Expr::Var(v) => self.domains[self.root(v)].clone(),
+            Expr::Var(v) => {
+                let domain = &self.domains[self.root(v)];
+                visit(
+                    "domain_clone_member_visits",
+                    domain.values().map_or(1, BTreeSet::len),
+                );
+                domain.clone()
+            }
             Expr::Constant(v) => Domain::one(v),
         }
     }
@@ -206,6 +287,7 @@ impl State {
         let Expr::Var(v) = e else {
             return !self.domain(e).meet(d, arena).is_empty();
         };
+        self.census_invalidate();
         let r = self.root(v);
         self.domains[r] = self.domains[r].meet(d, arena);
         !self.domains[r].is_empty()
@@ -220,6 +302,7 @@ impl State {
                     if d.is_empty() {
                         return false;
                     }
+                    self.census_invalidate();
                     self.parent[b] = a;
                     self.domains[a] = d;
                 }
@@ -245,13 +328,13 @@ impl State {
 }
 
 #[derive(Default)]
-struct Heads {
+pub(crate) struct Heads {
     rows: Vec<usize>,
     columns: Vec<HashMap<Value, Vec<usize>>>,
     atomic: Vec<Vec<usize>>,
 }
 impl Heads {
-    fn insert(&mut self, clause: usize, args: &[Id], arena: &Arena, abs: &Abstraction) {
+    pub(crate) fn insert(&mut self, clause: usize, args: &[Id], arena: &Arena, abs: &Abstraction) {
         self.rows.push(clause);
         self.columns.resize_with(args.len(), HashMap::new);
         self.atomic.resize_with(args.len(), Vec::new);
@@ -266,12 +349,13 @@ impl Heads {
             }
         }
     }
-    fn candidates(
+    pub(crate) fn candidates(
         &self,
         args: &[Id],
         state: &State,
         arena: &Arena,
         abs: &Abstraction,
+        scanned: &mut usize,
     ) -> Vec<usize> {
         let mut best: Option<(usize, Vec<&[usize]>)> = None;
         for (at, (arg, column)) in args.iter().zip(&self.columns).enumerate() {
@@ -279,6 +363,7 @@ impl Heads {
             let Some(values) = domain.values() else {
                 continue;
             };
+            visit("head_index_value_visits", values.len());
             let mut buckets = Vec::new();
             if let Some(wild) = column.get(&Value::Any) {
                 buckets.push(wild.as_slice());
@@ -296,6 +381,8 @@ impl Heads {
                 best = Some((size, buckets));
             }
         }
+        *scanned = best.as_ref().map_or(self.rows.len(), |(size, _)| *size);
+        visit("head_posting_member_visits", *scanned);
         match best {
             None => self.rows.clone(),
             Some((_, buckets)) => buckets
@@ -327,6 +414,7 @@ pub struct Model {
     predicates: HashSet<Symbol>,
     generic: bool,
     heads: HashMap<Symbol, Heads>,
+    census: Option<RefCell<crate::census::Trace>>,
 }
 impl Model {
     fn new(program: &Program, generic: bool, abs: Option<Rc<Abstraction>>, mode: Mode) -> Self {
@@ -341,6 +429,8 @@ impl Model {
             predicates: HashSet::new(),
             generic,
             heads: HashMap::new(),
+            census: crate::census::enabled()
+                .then(|| RefCell::new(crate::census::Trace::new(program))),
         }
     }
     fn top(&self, arena: &Arena, v: Value) -> bool {
@@ -360,20 +450,101 @@ impl Model {
         }
         None
     }
+    pub fn census_caller(&self, program: &Program, clause: usize) {
+        if let Some(census) = &self.census {
+            census.borrow_mut().caller(program, clause);
+        }
+    }
+    fn census_fail(&self, outcome: Outcome) {
+        if let Some(census) = &self.census {
+            census.borrow_mut().fail(outcome);
+        }
+    }
+    fn census_forced_end(&self, outcome: Option<Outcome>) {
+        if let Some(census) = &self.census {
+            census.borrow_mut().finish_forced(outcome);
+        }
+    }
+    fn census_access(&self, key: Resource, kind: AccessKind, visits: usize) {
+        if !crate::detail::enabled() {
+            return;
+        }
+        if let Some(census) = &self.census {
+            census.borrow_mut().work.access(key, kind, visits);
+        }
+    }
+    fn census_postings(&self, feature: Feature) -> Vec<(Resource, Option<&BTreeSet<Value>>)> {
+        if feature.selector() == Value::Any {
+            vec![(Resource::Family(feature), self.families.get(&feature))]
+        } else {
+            vec![
+                (Resource::Unary(feature), self.unary.get(&feature)),
+                (
+                    Resource::Unary(feature.wildcard()),
+                    self.unary.get(&feature.wildcard()),
+                ),
+            ]
+        }
+    }
+    #[cfg(test)]
+    pub(crate) fn detail_for_test(&mut self, program: &Program) {
+        let mut trace = crate::census::Trace::new(program);
+        trace.details = Some(crate::detail::Details::new(program));
+        self.census = Some(RefCell::new(trace));
+    }
+    pub fn write_detail(
+        &self,
+        program: &Program,
+        out: &std::path::Path,
+        name: &str,
+    ) -> Result<(), String> {
+        if let Some(census) = &self.census {
+            let census = census.borrow();
+            if let Some(details) = &census.details {
+                details.write(out, name, &program.arena, &self.abs)?;
+            }
+            census
+                .work
+                .write_access(out, name, &program.arena, &self.abs)?;
+        }
+        Ok(())
+    }
+    fn census_unary_inputs(&self, feature: Feature) {
+        if let Some(census) = &self.census {
+            let mut census = census.borrow_mut();
+            if feature.selector() == Value::Any {
+                census.work.read(Resource::Family(feature), || {
+                    self.families
+                        .get(&feature)
+                        .map_or_else(Vec::new, |s| s.iter().copied().collect())
+                });
+            } else {
+                for f in [feature, feature.wildcard()] {
+                    census.work.read(Resource::Unary(f), || {
+                        self.unary
+                            .get(&f)
+                            .map_or_else(Vec::new, |s| s.iter().copied().collect())
+                    });
+                }
+            }
+        }
+    }
     fn sources(&self, arena: &Arena, f: Feature) -> Domain {
         if let Some(domain) = Self::tag_domain(arena, f) {
             return domain;
         }
+        self.census_unary_inputs(f);
         let mut out = BTreeSet::new();
-        let sources = if f.selector() == Value::Any {
-            vec![self.families.get(&f)]
-        } else {
-            vec![self.unary.get(&f), self.unary.get(&f.wildcard())]
-        };
-        for sources in sources.into_iter().flatten() {
+        for (key, sources) in self.census_postings(f) {
+            let Some(sources) = sources else {
+                continue;
+            };
+            self.census_access(key, AccessKind::Membership, 1);
             if sources.contains(&Value::Any) {
                 return Domain::All;
             }
+            self.census_access(key, AccessKind::Enumerated, sources.len());
+            visit("unary_source_member_visits", sources.len());
             out.extend(sources);
         }
         if self.generic && !matches!(f, Feature::Tag(_)) {
@@ -388,15 +559,19 @@ impl Model {
         if !matches!(f, Feature::Tag(_)) && self.top(arena, v) {
             return true;
         }
-        let sources = if f.selector() == Value::Any {
-            vec![self.families.get(&f)]
-        } else {
-            vec![self.unary.get(&f), self.unary.get(&f.wildcard())]
-        };
-        sources
-            .into_iter()
-            .flatten()
-            .any(|s| s.contains(&v) || s.contains(&Value::Any))
+        self.census_unary_inputs(f);
+        visit("unary_membership_queries", 1);
+        self.census_postings(f).into_iter().any(|(key, sources)| {
+            let Some(sources) = sources else {
+                return false;
+            };
+            self.census_access(key, AccessKind::Membership, 1);
+            if sources.contains(&v) {
+                return true;
+            }
+            self.census_access(key, AccessKind::Membership, 1);
+            sources.contains(&Value::Any)
+        })
     }
     fn targets(&self, arena: &Arena, owner: Value, source: Value, label: Label) -> Domain {
         self.targets_limited(arena, owner, source, label, None)
@@ -436,7 +611,20 @@ impl Model {
             }
             if matches!(source, Value::Patient | Value::Number) {
                 for l in [label, Label(label.0, Value::Any)] {
+                    if let Some(census) = &self.census {
+                        census.borrow_mut().work.read(Resource::Scalars(l), || {
+                            self.scalar_sources
+                                .get(&l)
+                                .map_or_else(Vec::new, |s| s.iter().copied().collect())
+                        });
+                    }
                     if let Some(values) = self.scalar_sources.get(&l) {
+                        self.census_access(
+                            Resource::Scalars(l),
+                            AccessKind::Enumerated,
+                            values.len(),
+                        );
+                        visit("scalar_source_member_visits", values.len());
                         sources.extend(
                             values
                                 .iter()
@@ -448,14 +636,48 @@ impl Model {
         }
         sources.sort_unstable();
         sources.dedup();
-        let mut include = |owners: &Owners| {
+        let mut include = |source: Value, label: Label, owners: &Owners| {
+            visit("owner_row_visits", owners.len());
+            if let Some(census) = &self.census {
+                census
+                    .borrow_mut()
+                    .work
+                    .read(Resource::Owners(source, label), || {
+                        owners.keys().copied().collect()
+                    });
+            }
+            self.census_access(
+                Resource::Owners(source, label),
+                AccessKind::Enumerated,
+                owners.len(),
+            );
             for (o, targets) in owners {
                 if self.mode == Mode::Reference
                     || Abstraction::intersect(arena, owner, *o).is_some()
                 {
+                    if let Some(census) = &self.census {
+                        census
+                            .borrow_mut()
+                            .work
+                            .read(Resource::Targets(source, label, *o), || {
+                                crate::census::domain_values(targets)
+                            });
+                    }
                     if let Some(target) = limit {
+                        self.census_access(
+                            Resource::Targets(source, label, *o),
+                            AccessKind::SetOperand,
+                            1,
+                        );
                         out.union(&targets.meet(target, arena));
                     } else {
+                        if out != Domain::All {
+                            self.census_access(
+                                Resource::Targets(source, label, *o),
+                                AccessKind::Enumerated,
+                                targets.values().map_or(1, BTreeSet::len),
+                            );
+                        }
                         out.union(targets);
                     }
                 }
@@ -463,19 +685,29 @@ impl Model {
         };
         for s in &sources {
             for l in [label, Label(label.0, Value::Any)] {
+                visit("link_index_lookups", 1);
                 if let Some(owners) = self.links.get(&(*s, l)) {
-                    include(owners);
+                    include(*s, l, owners);
+                } else if let Some(census) = &self.census {
+                    census
+                        .borrow_mut()
+                        .work
+                        .read(Resource::Owners(*s, l), Vec::new);
                 }
             }
         }
         if label.1 == Value::Any {
+            if let Some(census) = &self.census {
+                census.borrow_mut().work.read_link_rows(self.links.keys());
+            }
+            visit("link_wildcard_row_visits", self.links.len());
             for ((s, l), owners) in &self.links {
                 if l.0 == label.0
                     && (sources.contains(s)
                         || self.mode == Mode::Refined
                             && Abstraction::intersect(arena, source, *s).is_some())
                 {
-                    include(owners);
+                    include(*s, *l, owners);
                 }
             }
         }
@@ -489,17 +721,19 @@ impl Model {
         if Self::tag_domain(arena, f).is_some() {
             return 1;
         }
-        let sources = if f.selector() == Value::Any {
-            vec![self.families.get(&f)]
-        } else {
-            vec![self.unary.get(&f), self.unary.get(&f.wildcard())]
-        };
-        if sources.iter().flatten().any(|s| s.contains(&Value::Any)) {
+        self.census_unary_inputs(f);
+        let sources = self.census_postings(f);
+        if sources.iter().any(|(key, sources)| {
+            sources.is_some_and(|s| {
+                self.census_access(*key, AccessKind::Membership, 1);
+                s.contains(&Value::Any)
+            })
+        }) {
             usize::MAX
         } else {
             sources
                 .into_iter()
-                .flatten()
+                .filter_map(|(_, s)| s)
                 .map(BTreeSet::len)
                 .sum::<usize>()
                 .saturating_add(1)
@@ -525,6 +759,21 @@ impl Model {
     ) -> Option<State> {
         self.solve_mode(arena, pattern, state, true, false, counters)
     }
+    fn limit_link(
+        &self,
+        state: &mut State,
+        expr: Expr,
+        domain: &Domain,
+        arena: &Arena,
+        link: &Link,
+        role: Role,
+    ) -> Option<bool> {
+        let result = state.limit(expr, domain, arena);
+        if result.is_none() {
+            self.census_fail(Outcome::Link(link.label, role));
+        }
+        result
+    }
     fn solve_mode(
         &self,
         arena: &Arena,
@@ -541,6 +790,7 @@ impl Model {
                 && !self.generic
                 && !self.predicates.contains(&p)
             {
+                self.census_fail(Outcome::Predicate(p));
                 return None;
             }
         }
@@ -555,6 +805,7 @@ impl Model {
             match u.term {
                 Expr::Constant(v) => {
                     if !self.has(arena, v, u.feature) {
+                        self.census_fail(Outcome::Unary(u.feature));
                         return None;
                     }
                 }
@@ -580,6 +831,7 @@ impl Model {
                         self.sources(arena, u.feature)
                     };
                     if !state.constrain(e, &allowed, arena) {
+                        self.census_fail(Outcome::Unary(u.feature));
                         return None;
                     }
                 }
@@ -620,10 +872,31 @@ impl Model {
                             }
                         }
                     }
-                    changed |= state.limit(link.source, &Domain::Set(allowed_sources), arena)?;
-                    changed |= state.limit(link.target, &allowed_targets, arena)?;
+                    changed |= self.limit_link(
+                        &mut state,
+                        link.source,
+                        &Domain::Set(allowed_sources),
+                        arena,
+                        link,
+                        Role::Source,
+                    )?;
+                    changed |= self.limit_link(
+                        &mut state,
+                        link.target,
+                        &allowed_targets,
+                        arena,
+                        link,
+                        Role::Target,
+                    )?;
                     if self.mode == Mode::Refined {
-                        changed |= state.limit(link.owner, &allowed_owners, arena)?;
+                        changed |= self.limit_link(
+                            &mut state,
+                            link.owner,
+                            &allowed_owners,
+                            arena,
+                            link,
+                            Role::Owner,
+                        )?;
                     }
                 }
             }
@@ -685,10 +958,18 @@ impl Model {
     fn add_unary(&mut self, feature: Feature, source: Value) -> bool {
         let changed = self.unary.entry(feature).or_default().insert(source);
         if changed {
-            self.families
+            let family_changed = self
+                .families
                 .entry(feature.wildcard())
                 .or_default()
                 .insert(source);
+            if let Some(census) = &mut self.census {
+                let work = &mut census.get_mut().work;
+                work.changed(Resource::Unary(feature));
+                if family_changed {
+                    work.changed(Resource::Family(feature.wildcard()));
+                }
+            }
             self.counters.feature_insertions += 1;
             self.counters.writer_insertions += 1;
         }
@@ -696,16 +977,39 @@ impl Model {
     }
     fn add_link(&mut self, owner: Value, source: Value, label: Label, target: &Domain) -> bool {
         if matches!(source, Value::Exact(_)) {
-            self.scalar_sources.entry(label).or_default().insert(source);
+            let changed = self.scalar_sources.entry(label).or_default().insert(source);
+            if changed && let Some(census) = &mut self.census {
+                census.get_mut().work.changed(Resource::Scalars(label));
+            }
         }
+        let mut new_row = false;
+        let mut new_owner = false;
         let d = self
             .links
             .entry((source, label))
-            .or_default()
+            .or_insert_with(|| {
+                new_row = true;
+                HashMap::new()
+            })
             .entry(owner)
-            .or_insert_with(Domain::empty);
+            .or_insert_with(|| {
+                new_owner = true;
+                Domain::empty()
+            });
         let before = d.values().map_or(1, BTreeSet::len);
         let changed = d.union(target);
+        if let Some(census) = &mut self.census {
+            let work = &mut census.get_mut().work;
+            if new_row {
+                work.changed(Resource::LinkRows);
+            }
+            if new_owner {
+                work.changed(Resource::Owners(source, label));
+            }
+            if changed || new_owner {
+                work.changed(Resource::Targets(source, label, owner));
+            }
+        }
         if changed {
             let after = d.values().map_or(1, BTreeSet::len);
             self.counters.feature_insertions += after.saturating_sub(before).max(1) as u64;
@@ -762,7 +1066,18 @@ impl Model {
             } else {
                 domain(l.owner)
             });
-            for s in values(domain(l.source)) {
+            let sources = values(domain(l.source));
+            if let Some(census) = &mut self.census {
+                census.get_mut().links.record(
+                    index,
+                    constant_only,
+                    owners.clone(),
+                    sources.clone(),
+                    l.label,
+                    &target,
+                );
+            }
+            for s in sources {
                 for o in &owners {
                     changed |= self.add_link(*o, s, l.label, &target);
                 }
@@ -821,13 +1136,20 @@ impl Model {
             let mut changed = false;
             for (i, pattern) in &rules {
                 model.counters.worklist_steps += 1;
-                if let Some(state) = model.solve(
+                if let Some(census) = &model.census {
+                    census.borrow_mut().work.begin(arena, &model.abs, pattern);
+                }
+                let state = model.solve(
                     arena,
                     pattern,
                     State::new(pattern.vars),
                     !generic || mode == Mode::Refined,
                     &mut counters,
-                ) {
+                );
+                if let Some(census) = &model.census {
+                    census.borrow_mut().work.end(state.as_ref());
+                }
+                if let Some(state) = state {
                     changed |= model.head(program, *i, Some(&state), false);
                 }
             }
@@ -840,9 +1162,17 @@ impl Model {
     }
     pub fn candidates(&self, arena: &Arena, goal: Id, state: &State) -> Vec<usize> {
         let (p, args) = arena.call(goal).unwrap();
-        self.heads
-            .get(&p)
-            .map_or_else(Vec::new, |h| h.candidates(args, state, arena, &self.abs))
+        let mut scanned = 0;
+        let result = self.heads.get(&p).map_or_else(Vec::new, |h| {
+            h.candidates(args, state, arena, &self.abs, &mut scanned)
+        });
+        if let Some(census) = &self.census {
+            census
+                .borrow_mut()
+                .work
+                .candidates(goal, state, scanned, result.len());
+        }
+        result
     }
     pub fn forced(
         &self,
@@ -856,24 +1186,41 @@ impl Model {
         counters.candidate_pairs += 1;
         let arena = &program.arena;
         let c = &program.clauses[clause];
+        if let Some(census) = &self.census {
+            let mut census = census.borrow_mut();
+            census.begin_forced(program, clause);
+            census.probe(arena, &self.abs, pattern, goal, c.head, base);
+        }
         let (_, ga) = arena.call(goal).unwrap();
         let (_, ha) = arena.call(c.head).unwrap();
         let mut state = base.clone();
+        state.census_invalidate();
         let offset = state.parent.len();
         state.parent.extend(offset..offset + c.names.len());
         state.domains.extend(vec![Domain::All; c.names.len()]);
-        for (g, h) in ga.iter().zip(ha) {
+        for (at, (g, h)) in ga.iter().zip(ha).enumerate() {
             let g = expr(arena, &self.abs, *g);
             let h = match expr(arena, &self.abs, *h) {
                 Expr::Var(v) => Expr::Var(offset + v),
                 x => x,
             };
             if !state.unify(g, h, arena) {
+                self.census_forced_end(Some(Outcome::HeadArg(at, matches!(h, Expr::Var(_)))));
                 return None;
             }
         }
-        let state = self.solve(arena, pattern, state, true, counters)?;
-        self.feature_witness(arena, pattern, state.clone(), counters)?;
+        let Some(state) = self.solve(arena, pattern, state, true, counters) else {
+            self.census_forced_end(None);
+            return None;
+        };
+        if self
+            .feature_witness(arena, pattern, state.clone(), counters)
+            .is_none()
+        {
+            self.census_forced_end(Some(Outcome::Witness));
+            return None;
+        }
+        self.census_forced_end(Some(Outcome::Edge));
         Some(state)
     }
     pub fn noun_at(&self, arena: &Arena, origin: Id, noun: &str) -> bool {
@@ -980,6 +1327,117 @@ impl Model {
         ];
         rows.extend(self.abs.memory_rows());
         record(stage, &rows);
+    }
+    pub fn census_phase(&self, phase: &'static str) {
+        if let Some(census) = &self.census {
+            census.borrow_mut().phase(phase);
+        }
+    }
+    pub fn write_census(&self, out: &std::path::Path, name: &str) -> Result<(), String> {
+        let Some(census) = &self.census else {
+            return Ok(());
+        };
+        let mut metrics = crate::census::Metrics::default();
+        for (key, value) in [
+            (
+                "index.head_rows",
+                self.heads.values().map(|h| h.rows.len()).sum(),
+            ),
+            (
+                "index.head_postings",
+                self.heads
+                    .values()
+                    .flat_map(|h| h.columns.iter())
+                    .flat_map(HashMap::values)
+                    .map(Vec::len)
+                    .sum(),
+            ),
+            (
+                "index.atomic_postings",
+                self.heads
+                    .values()
+                    .flat_map(|h| h.atomic.iter())
+                    .map(Vec::len)
+                    .sum(),
+            ),
+            (
+                "index.keys",
+                self.heads
+                    .values()
+                    .flat_map(|h| h.columns.iter())
+                    .map(HashMap::len)
+                    .sum(),
+            ),
+            (
+                "index.scalar_source_memberships",
+                self.scalar_sources.values().map(BTreeSet::len).sum(),
+            ),
+            (
+                "storage.current_set_versions",
+                self.unary.len()
+                    + self.families.len()
+                    + self.links.values().map(HashMap::len).sum::<usize>()
+                    + self.links.len()
+                    + self.scalar_sources.len(),
+            ),
+            (
+                "storage.current_memberships",
+                self.unary
+                    .values()
+                    .chain(self.families.values())
+                    .map(BTreeSet::len)
+                    .sum::<usize>()
+                    + self
+                        .links
+                        .values()
+                        .flat_map(HashMap::values)
+                        .map(|d| d.values().map_or(1, BTreeSet::len))
+                        .sum::<usize>()
+                    + self.links.values().map(HashMap::len).sum::<usize>()
+                    + self
+                        .scalar_sources
+                        .values()
+                        .map(BTreeSet::len)
+                        .sum::<usize>(),
+            ),
+        ] {
+            metrics.add(key, value);
+        }
+        metrics.sets(
+            "unary",
+            self.unary.values().map(|s| s.iter().copied().collect()),
+        );
+        metrics.sets(
+            "families",
+            self.families.values().map(|s| s.iter().copied().collect()),
+        );
+        metrics.sets(
+            "unary_all",
+            self.unary
+                .values()
+                .chain(self.families.values())
+                .map(|s| s.iter().copied().collect()),
+        );
+        metrics.sets(
+            "links.targets",
+            self.links
+                .values()
+                .flat_map(HashMap::values)
+                .map(crate::census::domain_values),
+        );
+        census.borrow().metrics(&self.links, &mut metrics)?;
+        metrics.write(out, name)
+    }
+    pub fn exact_dump(&self) -> crate::front::Dump {
+        (
+            self.unary.iter().map(|(f, s)| (*f, s.clone())).collect(),
+            self.links
+                .iter()
+                .flat_map(|((s, l), owners)| {
+                    owners.iter().map(move |(o, t)| ((*o, *s, *l), t.clone()))
+                })
+                .collect(),
+        )
     }
     pub fn feature_counts(&self) -> (usize, usize) {
         (
