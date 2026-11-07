@@ -303,3 +303,108 @@ pub proof fn pruned_certified_is_wfm(
 }
 
 } // verus!
+verus! {
+
+pub proof fn filter_index_map<A, B>(s: Seq<A>, f: spec_fn(A) -> B, pred: spec_fn(int) -> bool)
+    ensures
+        s.map_values(f).filter_index(pred) == s.filter_index(pred).map_values(f),
+    decreases s.len(),
+{
+    reveal(Seq::filter_index);
+    if s.len() == 0 {
+        assert(s.map_values(f) =~= Seq::<B>::empty());
+        assert(s.filter_index(pred).map_values(f) =~= Seq::<B>::empty());
+    } else {
+        let t = s.drop_last();
+        filter_index_map(t, f, pred);
+        assert(s.map_values(f).drop_last() =~= t.map_values(f));
+        assert(s.map_values(f).last() == f(s.last()));
+        if pred(s.len() - 1) {
+            assert(t.filter_index(pred).push(s.last()).map_values(f) =~= t.filter_index(
+                pred,
+            ).map_values(f).push(f(s.last())));
+        }
+    }
+}
+
+// Pruning commutes with clause selection: both keep source indices aligned.
+pub proof fn select_prune(p: Program, l: Set<Atom>, origin: Seq<int>, chosen: Set<int>)
+    ensures
+        selection::select(prune(p, l), origin, chosen) == prune(
+            selection::select(p, origin, chosen),
+            l,
+        ),
+{
+    let pred = |i: int| chosen.contains(origin[i]);
+    filter_index_map(p.rules, |r: Instance| prune_rule(r, l), pred);
+}
+
+pub proof fn select_envelope(p: Program, l: Set<Atom>, origin: Seq<int>, chosen: Set<int>)
+    requires
+        envelope(p, l),
+        origin.len() == p.rules.len(),
+    ensures
+        envelope(selection::select(p, origin, chosen), l),
+{
+    let q = selection::select(p, origin, chosen);
+    assert forall|j: int|
+        0 <= j < q.rules.len() && q.rules[j].builtins && q.rules[j].positive.subset_of(
+            l,
+        ) implies l.contains(q.rules[j].head) by {
+        let i = selection::selected_source_index(p, origin, chosen, j);
+    }
+}
+
+// (c) with TA-T0: query roots inside the atom slice of the PRUNED program's
+// covered graph + a forward-closed choice => the selected SOURCE clauses give
+// the source program's q-all + goal answers, both WFMs two-valued.
+pub proof fn pruned_selected_wfm_queries(
+    p: Program,
+    l: Set<Atom>,
+    g: rank::Graph,
+    origin: Seq<int>,
+    chosen: Set<int>,
+    operators: Set<Atom>,
+    valuations: Set<int>,
+    goals: spec_fn(int) -> Instance,
+)
+    requires
+        wf(p),
+        envelope(p, l),
+        rank::graph_wf(g),
+        rank::no_negative_cycle(g),
+        origins::clause_coverage(prune(p, l), g, origin),
+        rank::forward_closed(g, chosen),
+        operators.subset_of(origins::atom_slice(prune(p, l), origin, chosen)),
+        forall|id: int|
+            valuations.contains(id) ==> slice::reads(
+                goals(id),
+                origins::atom_slice(prune(p, l), origin, chosen),
+            ),
+    ensures
+        afp::lower(p) == afp::upper(p),
+        afp::lower(selection::select(p, origin, chosen)) == afp::upper(
+            selection::select(p, origin, chosen),
+        ),
+        slice::enumerate(afp::lower(p), operators) == slice::enumerate(
+            afp::lower(selection::select(p, origin, chosen)),
+            operators,
+        ),
+        slice::goal_answers(afp::lower(p), valuations, goals) == slice::goal_answers(
+            afp::lower(selection::select(p, origin, chosen)),
+            valuations,
+            goals,
+        ),
+{
+    let q = prune(p, l);
+    let s = selection::select(p, origin, chosen);
+    prune_wf(p, l);
+    selection::selected_wfm_queries(q, g, origin, chosen, operators, valuations, goals);
+    pruned_wfm(p, l);
+    selection::selection_wf(p, origin, chosen);
+    select_envelope(p, l, origin, chosen);
+    pruned_wfm(s, l);
+    select_prune(p, l, origin, chosen);
+}
+
+} // verus!

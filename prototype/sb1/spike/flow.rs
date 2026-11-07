@@ -149,8 +149,8 @@ pub open spec fn may_sound(rules: Seq<Rule>, may: spec_fn(int, int, int) -> bool
             ==> may(i, j, q)
 }
 
-// The checker's closure test over every may-producer of each binder (a
-// post-fixpoint check: leastness never needed).
+// The checker's closure test over every may-producer of each binder, after
+// the consumer-pattern filter (a post-fixpoint check: leastness never needed).
 pub open spec fn closed_hint<T>(
     rules: Seq<Rule>,
     types: spec_fn(int, nat) -> Set<T>,
@@ -158,6 +158,7 @@ pub open spec fn closed_hint<T>(
     may: spec_fn(int, int, int) -> bool,
     ty: spec_fn(Value) -> T,
     ctor: spec_fn(int, Seq<T>) -> T,
+    fits: spec_fn(int, nat, T) -> bool,
 ) -> bool {
     forall|i: int, x: nat, q: int, c: T|
         #![trigger may(i, binder(i, x).0, q), term_has(types, ty, ctor, q, rules[q].head.args[binder(i, x).1], c)]
@@ -172,7 +173,28 @@ pub open spec fn closed_hint<T>(
             q,
             rules[q].head.args[binder(i, x).1],
             c,
-        ) ==> types(i, x).contains(c)
+        ) && fits(i, x, c) ==> types(i, x).contains(c)
+}
+
+// The consumer-pattern filter (whole-conjunction constraints over the feature
+// model): every derivable instance's head variable value fits. `no_filter`
+// recovers the unfiltered closure.
+pub open spec fn fits_sound<T>(
+    rules: Seq<Rule>,
+    fits: spec_fn(int, nat, T) -> bool,
+    ty: spec_fn(Value) -> T,
+) -> bool {
+    forall|i: int, val: Seq<Value>, x: nat, d: nat|
+        #![trigger body_derived(rules, i, val, d), fits(i, x, ty(val[x as int]))]
+        0 <= i < rules.len() && body_derived(rules, i, val, d) && head_var(rules[i], x) ==> fits(
+            i,
+            x,
+            ty(val[x as int]),
+        )
+}
+
+pub open spec fn no_filter<T>() -> spec_fn(int, nat, T) -> bool {
+    |i: int, x: nat, c: T| true
 }
 
 // The refined growth edges the checker enumerates from the hint: constructor
@@ -239,13 +261,15 @@ pub proof fn hint_sound<T>(
     may: spec_fn(int, int, int) -> bool,
     ty: spec_fn(Value) -> T,
     ctor: spec_fn(int, Seq<T>) -> T,
+    fits: spec_fn(int, nat, T) -> bool,
     depth: nat,
 )
     requires
         compositional(ty, ctor),
         bound(rules, binder),
         may_sound(rules, may),
-        closed_hint(rules, types, binder, may, ty, ctor),
+        fits_sound(rules, fits, ty),
+        closed_hint(rules, types, binder, may, ty, ctor, fits),
     ensures
         forall|i: int, val: Seq<Value>, x: nat|
             0 <= i < rules.len() && body_derived(rules, i, val, depth) && head_var(rules[i], x)
@@ -272,7 +296,7 @@ pub proof fn hint_sound<T>(
                 );
         let previous = (depth - 1) as nat;
         assert(body_derived(rules, q, val2, previous));
-        hint_sound(rules, types, binder, may, ty, ctor, previous);
+        hint_sound(rules, types, binder, may, ty, ctor, fits, previous);
         let t = rules[q].head.args[k];
         assert(a.args.len() == rules[i].body[j].args.len());
         assert(ground(rules[q].head, val2).args.len() == rules[q].head.args.len());
@@ -286,6 +310,7 @@ pub proof fn hint_sound<T>(
         assert(a.args[k] == value(rules[i].body[j].args[k], val));
         assert(value(t, val2) == val[x as int]);
         assert(may(i, j, q));
+        assert(fits(i, x, ty(val[x as int])));
     }
 }
 
@@ -299,6 +324,7 @@ pub proof fn growth_covered<T>(
     may: spec_fn(int, int, int) -> bool,
     ty: spec_fn(Value) -> T,
     ctor: spec_fn(int, Seq<T>) -> T,
+    fits: spec_fn(int, nat, T) -> bool,
     i: int,
     val: Seq<Value>,
     depth: nat,
@@ -311,7 +337,8 @@ pub proof fn growth_covered<T>(
         compositional(ty, ctor),
         bound(rules, binder),
         may_sound(rules, may),
-        closed_hint(rules, types, binder, may, ty, ctor),
+        fits_sound(rules, fits, ty),
+        closed_hint(rules, types, binder, may, ty, ctor, fits),
         0 <= i < rules.len(),
         body_derived(rules, i, val, depth),
         0 <= k < rules[i].head.args.len(),
@@ -326,7 +353,7 @@ pub proof fn growth_covered<T>(
             ty(val[deps[e] as int]),
         ),
 {
-    hint_sound(rules, types, binder, may, ty, ctor, depth);
+    hint_sound(rules, types, binder, may, ty, ctor, fits, depth);
     let args = deps.map_values(|x: nat| val[x as int]);
     let ts = args.map_values(ty);
     assert forall|d: int| 0 <= d < deps.len() implies types(i, deps[d]).contains(ts[d]) by {

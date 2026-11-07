@@ -541,7 +541,15 @@ pub proof fn k1_shape(i: int, x: nat)
 // growth edges P -> O and O -> P, so no rank descends them.
 pub proof fn k1_base_refuses(types: spec_fn(int, nat) -> Set<int>, g: spec_fn(int) -> nat)
     requires
-        flow::closed_hint(k1_rules(), types, first_goal(), same_pred(), base_ty(), base_ct()),
+        flow::closed_hint(
+            k1_rules(),
+            types,
+            first_goal(),
+            same_pred(),
+            base_ty(),
+            base_ct(),
+            flow::no_filter(),
+        ),
         forall|u: int, v: int|
             flow::growth_edge(k1_rules(), types, base_ct(), u, v) ==> #[trigger] g(v)
                 < #[trigger] g(u),
@@ -641,7 +649,7 @@ pub proof fn k1_forwarding_control() {
             q,
             rules[q].head.args[binder(i, x).1],
             c,
-        ) implies types(i, x).contains(c) by {
+        ) && flow::no_filter()(i, x, c) implies types(i, x).contains(c) by {
         k1_shape(i, x);
         k1_shape(q, x);
         if q == 1 || q == 2 || q == 4 || q == 5 {
@@ -658,7 +666,8 @@ pub proof fn k1_forwarding_control() {
             assert(ts.map_values(|t: (int, Seq<int>)| t.0) =~= seq![ts[0].0]);
         }
     }
-    assert(flow::closed_hint(rules, types, binder, may, ty, ct));
+    assert(flow::closed_hint(rules, types, binder, may, ty, ct, flow::no_filter()));
+    assert(flow::fits_sound(rules, flow::no_filter(), ty));
     assert forall|u: (int, Seq<int>), v: (int, Seq<int>)|
         flow::growth_edge(rules, types, ct, u, v) implies #[trigger] k1_rank(v)
         < #[trigger] k1_rank(u) by {
@@ -696,7 +705,22 @@ pub proof fn k1_forwarding_control() {
             _ => (0, Seq::empty()),
         };
         assert(t == flow::Term::Construct(sym, deps));
-        flow::growth_covered(rules, types, binder, may, ty, ct, i, val, depth, k, sym, deps, e);
+        flow::growth_covered(
+            rules,
+            types,
+            binder,
+            may,
+            ty,
+            ct,
+            flow::no_filter(),
+            i,
+            val,
+            depth,
+            k,
+            sym,
+            deps,
+            e,
+        );
     }
 }
 
