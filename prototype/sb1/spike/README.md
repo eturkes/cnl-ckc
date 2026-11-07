@@ -1,6 +1,6 @@
 # SB1 D9 proof spike
 
-Standalone Verus source crate; entry = `lib.rs`. Scope = contract `sb` § Census + spike freeze, D9(a)–(f). Abstract finite domains; no production parser, checker or producer code imported.
+Standalone Verus source crate; entry = `lib.rs`. Scope = contract `sb` § Census + spike freeze, D9(a)–(f), + row TAS's seam (g)–(h) (`.scratch/imp/tas-check.md` T8). Abstract finite domains; no production parser, checker or producer code imported.
 
 ## Run
 
@@ -25,6 +25,8 @@ bash prototype/sb1/spike/verify.sh
 | (d) no growth cycle → finite substitution-closed ground instances | `grounding::substitution_closed`, `finite_grounding`, `nested_identity_substitution` | Finite base + operation templates + type graph; every constructor/arithmetic input is a growth dependency; positive copy edges; no growth cycle; well-typed clause templates whose Deps are variable lists. |
 | (e) unique stable model = two-valued alternating-fixpoint WFM | `afp::stratified_wfm`, `covered_wfm`, `certified_is_wfm` | Well-formed finite ground program; (b)'s local stratification. AFP definition + finite iteration are proved independently of rank. |
 | (f) actual clause selection → atom-slice reduct + query equivalence | `selection::clause_selection_reduct`, `selected_reduct_queries`, `selected_wfm_queries` | Forward-closed selected clause nodes + all-producer coverage; query roots + positive/NAF reads inside the induced slice. WFM query equivalence additionally uses (b)'s no-negative-cycle rank. |
+| (g) envelope pruning (TA-T0) → equal WFM + stable models; coverage of the pruned program suffices | `envelope::pruned_wfm`, `pruned_covered_wfm`, `pruned_certified_is_wfm` | Well-formed finite ground program; L closed under every rule whose built-ins hold, NAF dropped (lfp(P⁺) or any post-fixpoint); signed coverage + no negative cycle on `prune(p, l)` alone. |
+| (h) closed source hint → every concrete growth dependency is an enumerated refined edge | `flow::hint_sound`, `growth_covered` | Compositional typing (base, k = 1, per-symbol mix); one binder per head variable; may-match soundness over derivable instances; the hint closed over every may-producer of each binder; flat bodies (constants + variables). |
 
 ### (a) Semantics
 
@@ -68,16 +70,26 @@ The forward-closed selection induces `origins::atom_slice`: all producers of eac
 
 `selected_reduct_queries` proves both enumeration + goal-list answer equalities. `selected_stable_agrees` composes the bridge with (b)'s local-stratification uniqueness; `selected_wfm_queries` composes it with (e), so the full + actual selected programs return identical query answers over their independently defined WFM.
 
+### (g) Envelope pruning
+
+`envelope(p, l)` = closure of L under every rule whose built-ins hold, every NAF dropped; leastness is never used, so a checked post-fixpoint (a hinted feature model's concretization) qualifies. `prune` keeps a live instance (built-ins true, positive body inside L) with each NAF item's witnesses cut to those inside L; a dead instance keeps its head alone, never retained, so it needs no edge. Indices stay aligned with the source program.
+
+`envelope_bounds`: Γ_P(I) ⊆ L for every reference set I. `pruned_gamma`: Γ_P(I) = Γ_{P_L}(I) for I ⊆ L only (outside L the equality fails: `p :- not q` at I = {q}). The alternating iterates from ∅ stay inside L, so `pruned_wfm` gives equal lower/upper sets and the same stable models. `pruned_covered_wfm` composes (b) + (e) over the pruned program; `pruned_certified_is_wfm` = a support + closure certificate over the SOURCE program + the pruned program's covering graph ⇒ the model = WFM(source).
+
+### (h) Forwarding + k1
+
+`flow.rs` adds argument structure: flat body goals, heads that may build `Identity(symbol, Deps)` from variables; derivation by depth (no finite universe assumed). A compositional typing gives an identity's type from its symbol + its immediate arguments' types: base origins, k = 1 (the immediate Deps' base origins) and any per-symbol mix are instances, so a restricted refinement needs no separate rank-inheritance argument. The untrusted hint = per rule variable a type set + one binder (a body goal position holding the variable). `closed_hint` checks every may-producer of each binder: a constant's type, a forwarded variable's hinted types, every hinted tuple of a constructor. `hint_sound` (induction on depth) ⇒ every head variable's value in every derivable instance has a hinted type; `growth_covered` ⇒ each concrete Deps dependency (constructor output → one input) is an edge the checker enumerates over every hinted tuple.
+
 ## Controls
 
-`controls.rs` verifies: correlated NAF with incompatible witnesses; empty witness/list meanings; independently necessary support + closure; a rejected one-node growth loop; an inhabited two-constructor chain that generates a nested identity and a legal ground clause instance; total WFM for stratified NAF; genuinely undefined WFM for an odd negative self-loop; nonempty enumeration + NAF goal-list answers under proper clause selection, despite an extra selected fact outside the atom slice making global mask/model equality false.
+`controls.rs` verifies: correlated NAF with incompatible witnesses; empty witness/list meanings; independently necessary support + closure; a rejected one-node growth loop; an inhabited two-constructor chain that generates a nested identity and a legal ground clause instance; total WFM for stratified NAF; genuinely undefined WFM for an odd negative self-loop; nonempty enumeration + NAF goal-list answers under proper clause selection, despite an extra selected fact outside the atom slice making global mask/model equality false. `inactive_negative_control`: a rule whose positive body has no producer and whose NAF loops on its own head admits through the pruned program (two-valued WFM), while no graph without a negative cycle covers the unpruned program; `active_negative_control`: its live twin forces a negative self-loop in every envelope's pruned program and leaves the atom undefined in the AFP WFM, so refusal is necessary. `k1_base_refuses`: every closed base-origin hint of a forwarding program forces the growth cycle P → O → P; `k1_forwarding_control`: the k = 1 hint of the same program instantiates every `growth_covered` premise, its refined edges descend a rank, and every concrete Deps dependency descends it.
 
 ## Production obligations outside the spike
 
 - Real canonical parser/codec, exact term/patient grammars, interning identity + collision handling.
 - Safety/shape admission → complete finite ground instances; real clause/type/operation extraction; source literals + patient constants included in the base.
-- The may-feature fixpoint's own soundness, matching/unification overapproximation, variable-headed producers, correlations, NAF auxiliary construction + whole-statement guard provenance.
-- Concrete clause-origin edge coverage, growth-edge completeness for every real Deps/arithmetic position, SCC cycle detection + rank computation.
+- The may-feature fixpoint's own soundness (its concretization = an `envelope`), matching/unification overapproximation (`flow::may_sound`), variable-headed producers, correlations, NAF auxiliary construction + whole-statement guard provenance.
+- Concrete clause-origin edge coverage of the pruned program, growth-edge completeness for arithmetic outputs + nested body patterns (`flow.rs` covers Deps constructors over flat bodies), the patient extension (a KB checked with patient-top covers every admitted finite patient extension), rank checks.
 - Concrete reachable/support/reduct facts mapped into the program-derived universe; executable indices, joins/anti-joins, levels, canonicalization + resource limits refining these abstract predicates.
 - Query grounding + valuation completeness, root seeding + slice extraction, payload traversal, projection/sort/dedup, digests + output serialization.
 - Ground built-in truth → the verified schema's exact arithmetic/comparison relations; partial/undefined operation handling.

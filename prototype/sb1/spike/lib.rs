@@ -3,6 +3,8 @@ use vstd::prelude::*;
 
 pub mod afp;
 pub mod controls;
+pub mod envelope;
+pub mod flow;
 pub mod grounding;
 pub mod origins;
 pub mod rank;
