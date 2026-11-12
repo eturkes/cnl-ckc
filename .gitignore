@@ -10,4 +10,7 @@ rust/target/
 # vendored-crate ballast: a tracked .pl reds the `ckc check` prolog inventory;
 # cargo builds green without these files (they never compile on x86_64-linux)
 rust/vendor/**/*.pl
+# cargo vendor keeps each crate's Cargo.toml.orig, which its .cargo-checksum.json lists: re-included
+# over a machine-level `*.orig` ignore
+!rust/vendor/*/Cargo.toml.orig
 .verus-solver-log/
