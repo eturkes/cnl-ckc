@@ -264,7 +264,7 @@ fn empty_loaded(arena: &ETermArena) -> (out: ELoaded)
     out
 }
 
-proof fn db_of_push(docs: Seq<DocFile>, doc: DocFile)
+pub proof fn db_of_push(docs: Seq<DocFile>, doc: DocFile)
     ensures
         db_of(docs.push(doc)) == db_of(docs) + doc_db(doc),
 {

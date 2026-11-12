@@ -1,0 +1,2 @@
+% S2: A foreign head constructor is not compiler-shaped.
+guideline_entity(actual,f(A),adult,countable) :- guideline_entity(actual,A,patient,countable).

@@ -10,6 +10,7 @@ pub mod check;
 pub mod compare;
 pub mod emit;
 pub mod engine;
+pub mod model;
 pub mod release;
 pub mod replay;
 pub mod term;

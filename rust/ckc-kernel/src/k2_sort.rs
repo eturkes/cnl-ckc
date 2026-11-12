@@ -148,7 +148,7 @@ proof fn bytes_order_total(a: Seq<u8>, b: Seq<u8>)
     }
 }
 
-proof fn term_order_total(a: Term, b: Term)
+pub proof fn term_order_total(a: Term, b: Term)
     ensures
         a == b || ckc_spec::engine::term_lt(a, b) || ckc_spec::engine::term_lt(b, a),
     decreases a,
@@ -502,7 +502,7 @@ pub fn sort_unique(arena: &ETermArena, roots: &Vec<usize>) -> (out: Vec<usize>)
     out
 }
 
-proof fn insert_property(x: Term, terms: Seq<Term>, p: spec_fn(Term) -> bool)
+pub proof fn insert_property(x: Term, terms: Seq<Term>, p: spec_fn(Term) -> bool)
     requires
         p(x),
         forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
@@ -554,7 +554,7 @@ proof fn msort_property(terms: Seq<Term>, p: spec_fn(Term) -> bool)
     }
 }
 
-proof fn dedup_property(terms: Seq<Term>, p: spec_fn(Term) -> bool)
+pub proof fn dedup_property(terms: Seq<Term>, p: spec_fn(Term) -> bool)
     requires
         forall|i: int| 0 <= i < terms.len() ==> p(#[trigger] terms[i]),
     ensures

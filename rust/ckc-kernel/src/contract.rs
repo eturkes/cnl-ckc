@@ -815,4 +815,127 @@ pub fn schema_file() -> (r: Vec<u8>)
     crate::compare_impl::schema_file_impl()
 }
 
+// Contract mc (staged core) D1 + D7, the test + bench surface: documents = v1 document bytes in
+// load order (the patient suffix = the documents from `patient` on + `facts`, ground term texts a
+// patient-fact API supplies), the model = one ground term text per fact, claims = (fact text,
+// clause id = position in `replay::db_of` then the facts, (variable index, ground term text)
+// pairs, level). Verified ⇒ the spec's admission + acceptance over the decoded values (MC-T2, core
+// half); refusals, undecodable inputs + indeterminate outcomes follow contract mc D9, graded by
+// tests.
+pub fn mc_check_model(
+    docs: &Vec<Vec<u8>>,
+    facts: &Vec<Vec<u8>>,
+    patient: usize,
+    identity: &[u8],
+    slice: &Option<Vec<usize>>,
+    model: &Vec<Vec<u8>>,
+    cert: &ckc_spec::model::EMcCertificate,
+) -> (r: Result<ckc_spec::model::EMcOutcome, ckc_spec::model::EMcInput>)
+    ensures
+        r matches Result::Ok(ckc_spec::model::EMcOutcome::Verified)
+            ==> ckc_spec::model::check_verified(
+            ckc_spec::model::bytes_seq(docs@),
+            ckc_spec::model::bytes_seq(facts@),
+            patient as nat,
+            identity@,
+            ckc_spec::model::slice_view(*slice),
+            ckc_spec::model::bytes_seq(model@),
+            cert@,
+        ),
+{
+    crate::mc_check::check_model_impl(docs, facts, patient, identity, slice, model, cert)
+}
+
+// MC-T3: a question (custody first: its rejects = its own Out) answered over the checked model of
+// the slice; the result = the canonical bytes of yes | no(finite_failure) | solutions(L).
+pub fn mc_answer(
+    docs: &Vec<Vec<u8>>,
+    facts: &Vec<Vec<u8>>,
+    patient: usize,
+    identity: &[u8],
+    slice: &Vec<usize>,
+    model: &Vec<Vec<u8>>,
+    cert: &ckc_spec::model::EMcCertificate,
+    query: &ckc_spec::replay::ESrc,
+) -> (r: Result<ckc_spec::model::EMcOutcome, ckc_spec::model::EMcInput>)
+    ensures
+        r matches Result::Ok(ckc_spec::model::EMcOutcome::VerifiedResult(b))
+            ==> ckc_spec::model::answer_verified(
+            ckc_spec::model::bytes_seq(docs@),
+            ckc_spec::model::bytes_seq(facts@),
+            patient as nat,
+            identity@,
+            ckc_spec::model::slice_set(slice@),
+            ckc_spec::model::bytes_seq(model@),
+            cert@,
+            query@,
+            b@,
+        ),
+{
+    crate::mc_check::answer_impl(docs, facts, patient, identity, slice, model, cert, query)
+}
+
+// MC-T1: an accepted model is stable (the least model of its reduct).
+pub proof fn mc_t1(
+    p: ckc_spec::model::Program,
+    m: ISet<ckc_spec::term::Term>,
+    c: ckc_spec::model::Certificate,
+)
+    requires
+        ckc_spec::model::accepted(p, m, c),
+    ensures
+        ckc_spec::model::stable(p, m),
+{
+    crate::mc_proof::mc_t1_proof(p, m, c)
+}
+
+// MC-T1b: every stable model lies between the well-founded bounds.
+pub proof fn mc_t1b(p: ckc_spec::model::Program, m: ISet<ckc_spec::term::Term>)
+    requires
+        ckc_spec::model::stable(p, m),
+    ensures
+        ckc_spec::model::lower(p).subset_of(m),
+        m.subset_of(ckc_spec::model::upper(p)),
+{
+    crate::mc_proof::mc_t1b_proof(p, m)
+}
+
+// Under H1 (TA's two-valued well-founded model): an accepted model = the well-founded model.
+pub proof fn mc_wfm(
+    p: ckc_spec::model::Program,
+    m: ISet<ckc_spec::term::Term>,
+    c: ckc_spec::model::Certificate,
+)
+    requires
+        ckc_spec::model::accepted(p, m, c),
+        ckc_spec::model::two_valued(p),
+    ensures
+        m == ckc_spec::model::lower(p),
+{
+    crate::mc_proof::mc_wfm_proof(p, m, c)
+}
+
+// Under H2 (TA: the slice two-valued + its question answers = the whole program's): the answers
+// over an accepted slice model = the answers over the well-founded model of the whole program.
+pub proof fn mc_t3_wfm(
+    p: ckc_spec::model::Program,
+    s: ISet<nat>,
+    m: ISet<ckc_spec::term::Term>,
+    c: ckc_spec::model::Certificate,
+    q: ckc_spec::model::Question,
+)
+    requires
+        ckc_spec::model::accepted(ckc_spec::model::select(p, s), m, c),
+        ckc_spec::model::two_valued(ckc_spec::model::select(p, s)),
+        ckc_spec::model::answer_terms(ckc_spec::model::lower(ckc_spec::model::select(p, s)), q)
+            == ckc_spec::model::answer_terms(ckc_spec::model::lower(p), q),
+    ensures
+        ckc_spec::model::answer_terms(m, q) == ckc_spec::model::answer_terms(
+            ckc_spec::model::lower(p),
+            q,
+        ),
+{
+    crate::mc_proof::mc_t3_wfm_proof(p, s, m, c, q)
+}
+
 } // verus!

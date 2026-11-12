@@ -2,7 +2,8 @@
 // items from rustc, so the unused/dead families stay off; the clippy families
 // below propose std APIs without a vstd spec (`is_empty`, `vec!`,
 // `RangeInclusive::contains`, slices in place of `&Vec` views, `?`) or count
-// ghost parameters against arity/type-size limits.
+// ghost parameters against arity/type-size limits (or as used only in recursion: their
+// spec uses are erased).
 #![allow(unused_variables, dead_code, unused_imports)]
 #![allow(
     clippy::ptr_arg,
@@ -13,7 +14,8 @@
 #![allow(
     clippy::question_mark,
     clippy::too_many_arguments,
-    clippy::type_complexity
+    clippy::type_complexity,
+    clippy::only_used_in_recursion
 )]
 // Rewrites clippy proposes here (closures, `matches!`, `if let`,
 // `unwrap_or_default`, collapsed branches) change the proof obligations
@@ -216,6 +218,22 @@ mod m7_q12;
 mod m7_strength;
 mod m7_supersession;
 mod m7_temporal;
+mod mc_admit;
+mod mc_answer;
+mod mc_cert;
+mod mc_check;
+mod mc_closure;
+mod mc_g1;
+mod mc_join;
+mod mc_lemma;
+mod mc_load;
+mod mc_model;
+mod mc_order;
+mod mc_patient;
+mod mc_proof;
+mod mc_safe;
+mod mc_subst;
+mod mc_term;
 mod release_impl;
 mod release_rows;
 mod resolve_data;
@@ -228,6 +246,9 @@ mod v1_term_impl;
 pub use ckc_spec::align::{ECheck, EModel, EResolve, EResolved, ESpan};
 pub use ckc_spec::check::{
     EBundle, ECoverage, ECoverageRow, EDecision, EEvidence, EFileSrc, ERendered, EStatus, EVerdict,
+};
+pub use ckc_spec::model::{
+    EMcBinding, EMcCertificate, EMcClaim, EMcInput, EMcItem, EMcOutcome, EMcReason, EMcStage,
 };
 pub use ckc_spec::release::EMember;
 pub use ckc_spec::replay::{EOut, ERow, ESrc};
