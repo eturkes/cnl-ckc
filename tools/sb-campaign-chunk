@@ -16,10 +16,23 @@ ckc=$(readlink -f -- "$6")
 checker=$(readlink -f -- "$7")
 # SB1_TA_RECEIPTS=none = census verdicts pending (the exploratory pilot): the server records
 # `receipt unchecked` + `kb_identity` in load.tsv; D11 joins admitted receipts by identity.
+# SB1_TA_RUN=<census seal> = the integrated load (the server runs the census itself, `--ta-run`) in
+# place of a receipt check; SB1_LOAD_DEADLINE_MS = a declared load censor (default = the frozen
+# 1,800,000 ms; the integrated ×100 loads declare 43,200,000: load is reported, never gated).
 receipts=${SB1_TA_RECEIPTS:-$root/bench/sb/receipts}
+ta_run=${SB1_TA_RUN:-}
+load_deadline=${SB1_LOAD_DEADLINE_MS:-1800000}
+[[ $load_deadline =~ ^[1-9][0-9]*$ ]] || { printf 'sb-campaign-chunk: bad SB1_LOAD_DEADLINE_MS\n' >&2; exit 2; }
 producer="$root/prototype/sb1/producer.prolog"
 required=("$instance/composition.tsv" "$ckc" "$checker" "$producer")
-[[ "$receipts" == none ]] || required+=("$receipts")
+if [[ -n $ta_run ]]; then
+  ta_run=$(readlink -f -- "$ta_run")
+  required+=("$ta_run")
+  census=(--ta-run "$ta_run")
+else
+  [[ "$receipts" == none ]] || required+=("$receipts")
+  census=(--ta-receipts "$receipts")
+fi
 for path in "${required[@]}"; do
   if [[ ! -e "$path" ]]; then
     printf 'sb-campaign-chunk: missing %s\n' "$path" >&2
@@ -36,12 +49,12 @@ if (( $# == 9 )); then
 fi
 # SB1_ONLY_BLOCKS=<b>,… = a replacement replay: the full plan's draws, those blocks alone.
 [[ -z ${SB1_ONLY_BLOCKS:-} ]] || paired+=(--only-blocks "$SB1_ONLY_BLOCKS")
-# Settings = the run manifest's frozen values (call + load deadline 1,800,000 ms, kill cap
-# 48 GB, RSS sample 50 ms, size cap 8 GB); SWI limits live in the server's producer call.
+# Settings = the run manifest's frozen values (call + load deadline 1,800,000 ms unless declared,
+# kill cap 48 GB, RSS sample 50 ms, size cap 8 GB); SWI limits live in the server's producer call.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 RAYON_NUM_THREADS=1 CKC_JOBS=1
 exec "$ckc" bench run "$instance" "${paired[@]}" --root "$root" \
-  --serve "$checker serve --provider static --ta-receipts $receipts --producer $producer" \
+  --serve "$checker serve --provider static ${census[*]} --producer $producer" \
   "${queries[@]}" --blocks "$blocks" --seed "$seed" \
-  --deadline-ms 1800000 --load-deadline-ms 1800000 --sample-ms 50 \
+  --deadline-ms 1800000 --load-deadline-ms "$load_deadline" --sample-ms 50 \
   --memory-bytes 48000000000 --size-bytes 8000000000 \
   --identity-file "$checker" --identity-file "$producer" --out "$out"

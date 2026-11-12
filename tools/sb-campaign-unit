@@ -25,12 +25,16 @@
 # Layout: <base>/markers/<id>.{sleeper,done}, <base>/runs/<id>/ (harness), <base>/state/<id>/ (rc,
 # chunk.log, host-before.txt, host-after.txt, unit-cpus.txt, wrapper-cpus.txt, sleeper.txt,
 # shield-orig.tsv, shield.txt, host-samples.tsv; preflight: preflight.tsv).
-# SB1_TA_RECEIPTS + SB1_ONLY_BLOCKS pass through to the chunk (`none` = census verdicts pending; a
-# block list = a sparse replacement replay); SB1_SLEEPER=none skips the marker wait (a host without a
+# `census` = the same unit around probe.py over one instance (the C4w argv, `--receipt-host pool`)
+# inside the census capsule (MemoryMax=28G, MemorySwapMax=0, OOMPolicy=continue): one receipt per
+# knowledge identity in <receipt-dir>, the run's tables in <base>/runs/<id>.
+# SB1_TA_RECEIPTS + SB1_ONLY_BLOCKS + SB1_TA_RUN + SB1_LOAD_DEADLINE_MS pass through to the chunk
+# (`none` = census verdicts pending; a block list = a sparse replacement replay; a census seal = the
+# integrated load; a declared load censor); SB1_SLEEPER=none skips the marker wait (a host without a
 # second slot to hold), recorded in sleeper.txt, which the grade's policy check refuses.
 set -euo pipefail
 usage() {
-  printf 'usage: tools/sb-campaign-unit run <base> <id> <instance-dir> <blocks> <seed> <ckc> <checker> [<r-pair G1 instance-dir>]\n       tools/sb-campaign-unit preflight|hold <base> <id>\n       tools/sb-campaign-unit shield|unshield <state-dir>\n       tools/sb-campaign-unit unshield\n' >&2
+  printf 'usage: tools/sb-campaign-unit run <base> <id> <instance-dir> <blocks> <seed> <ckc> <checker> [<r-pair G1 instance-dir>]\n       tools/sb-campaign-unit census <base> <id> <instance-dir> <ta-seal> <receipt-dir> <source-commit>\n       tools/sb-campaign-unit preflight|hold <base> <id>\n       tools/sb-campaign-unit shield|unshield <state-dir>\n       tools/sb-campaign-unit unshield\n' >&2
   exit 2
 }
 pinned=(2 3 6 7)
@@ -122,7 +126,9 @@ mkdir -p "$m" "$st" "$base/runs"
 if [[ $mode == hold ]]; then
   (( $# == 3 )) || usage
   touch "$m/$id.sleeper"
-  end=$((SECONDS + 12 * 3600))
+  # 24 h cap > every run it shields: a census = 43,200 s + setup; a C4t chunk = its 43,200 s load
+  # censor + the calls.
+  end=$((SECONDS + 24 * 3600))
   until [[ -e $m/$id.done || -s $st/rc ]] || (( SECONDS > end )); do sleep 10; done
   rm -f "$m/$id.sleeper"
   printf 'sleeper %s released\n' "$id"
@@ -130,6 +136,7 @@ if [[ $mode == hold ]]; then
 fi
 case $mode in
   run) (( $# == 8 || $# == 9 )) || usage ;;
+  census) (( $# == 7 )) || usage ;;
   preflight) (( $# == 3 )) || usage ;;
   *) usage ;;
 esac
@@ -138,6 +145,21 @@ XDG_RUNTIME_DIR=/run/user/$(id -u)
 export XDG_RUNTIME_DIR
 unit=sb1-$mode-$id
 [[ $mode == run ]] && unit=sb1-chunk-$id
+# census = one knowledge identity's typed analysis (contract sb § Typed analysis at load: a receipt
+# per identity) under the census capsule; the probe checks its own unit's cgroup + caps.
+caps=()
+if [[ $mode == census ]]; then
+  caps=(-p MemoryMax=28G -p MemorySwapMax=0 -p OOMPolicy=continue)
+  instance=$(readlink -f -- "$4") seal=$(readlink -f -- "$5") receipts=$(readlink -f -- "$6") commit=$7
+  [[ -x $seal && -s $instance/composition.tsv && -d $receipts && $commit =~ ^[0-9a-f]{40}$ ]] || {
+    printf 'sb-campaign-unit: census needs an executable seal, <instance>/composition.tsv, a receipt dir + a 40-hex commit\n' >&2
+    exit 2
+  }
+  # The workstation C4w argv (probe adds --dc), the pool's receipt host + this unit's name.
+  args=(--ta "$seal" --root "$root" --composition "$instance/composition.tsv" --out "$base/runs/$id"
+    --patient last --redesign --seconds 43200 --service-unit "$unit"
+    --receipt-dir "$receipts" --ta-source-commit "$commit" --receipt-host pool)
+fi
 taskset -cp "$host_cpus" "$$" >/dev/null 2>&1 || printf 'sb-campaign-unit: wrapper left unpinned (taskset)\n' >&2
 # A system unit as the campaign user in the campaign's slice (sudo = the pool host's wheel rule).
 unit_run() {
@@ -210,6 +232,9 @@ if [[ ! -s $st/rc ]] && ! active; then
     # (X4's degenerate bracket: the rehearsal's R block, both samples before it).
     # shellcheck disable=SC2016  # "$@" + $ST expand inside the unit's shell
     script='sleep 2; tools/sb-campaign-chunk "$@"; r=$?; sleep 2; printf "%s\n" "$r" >"$ST/rc"'
+  elif [[ $mode == census ]]; then
+    # shellcheck disable=SC2016  # "$@" + $ST expand inside the unit's shell
+    script='sleep 2; python3 -I prototype/sb1/ta/probe.py "$@"; r=$?; sleep 2; printf "%s\n" "$r" >"$ST/rc"'
   else
     : >"$st/preflight.tsv"
     args=()
@@ -219,10 +244,11 @@ if [[ ! -s $st/rc ]] && ! active; then
   fi
   # The unit writes as the campaign user: its log exists first, so no append creates it as root.
   : >>"$st/chunk.log"
-  if ! unit_run --unit="$unit" --working-directory="$root" -p "CPUAffinity=${pinned[*]}" \
+  if ! unit_run --unit="$unit" --working-directory="$root" -p "CPUAffinity=${pinned[*]}" "${caps[@]}" \
     -p "ExecStartPre=$root/tools/sb-campaign-unit shield $st" \
     -p "ExecStopPost=$root/tools/sb-campaign-unit unshield $st" \
-    -E SB1_TA_RECEIPTS="${SB1_TA_RECEIPTS:-}" -E SB1_ONLY_BLOCKS="${SB1_ONLY_BLOCKS:-}" -E ST="$st" \
+    -E SB1_TA_RECEIPTS="${SB1_TA_RECEIPTS:-}" -E SB1_ONLY_BLOCKS="${SB1_ONLY_BLOCKS:-}" \
+    -E SB1_TA_RUN="${SB1_TA_RUN:-}" -E SB1_LOAD_DEADLINE_MS="${SB1_LOAD_DEADLINE_MS:-}" -E ST="$st" \
     -p "StandardOutput=append:$st/chunk.log" -p "StandardError=append:$st/chunk.log" \
     bash -c "$script" _ "${args[@]}"; then
     printf 'sb-campaign-unit: %s failed to start (shield.txt, chunk.log)\n' "$unit" >&2
