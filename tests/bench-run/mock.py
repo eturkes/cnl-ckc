@@ -64,10 +64,12 @@ def main():
     if mode in ("timeout", "memory", "size") and role == "checker":
         print("PARTIAL-ANSWER", flush=True)
         if mode == "timeout":
+            # Both outlive the harness's 2 s post-kill wait; the worker outlives the checker,
+            # so a harness that never kills the group returns while the worker still runs.
             child = subprocess.Popen([sys.executable, "-I", __file__, "worker", "unused",
-                                      str(out), "0", "5", str(4 * 1024 * 1024)])
+                                      str(out), "0", "25", str(4 * 1024 * 1024)])
             (out.parent / "child.pid").write_text(str(child.pid))
-            time.sleep(5)
+            time.sleep(20)
         elif mode == "memory":
             allocation(out, 0, 2, 40 * 1024 * 1024)
         else:

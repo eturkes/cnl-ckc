@@ -26,3 +26,9 @@ vulnerabilities:
       - pkg:deb/debian/openssl
     statement: openssl information disclosure via DTLS handshake retransmission; fixed in libssl3 + openssl 3.0.22-1~deb12u2; CI-only container, nothing ships from it
     expired_at: 2026-11-27
+  - id: CVE-2026-109518
+    purls:
+      - pkg:deb/debian/apt
+      - pkg:deb/debian/libapt-pkg6.0
+    statement: apt remote code execution via hard-link reuse during package download; fixed in apt + libapt-pkg6.0 2.6.2; CI-only container, nothing ships from it
+    expired_at: 2026-12-12

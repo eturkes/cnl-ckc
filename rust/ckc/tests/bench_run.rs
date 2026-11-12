@@ -572,7 +572,7 @@ fn timeout_discards_partial_answers_and_reaps_the_group() {
     let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let s = Scratch::new("timeout");
     // The mock writes child.pid after two interpreter start-ups; under host load a 250 ms
-    // deadline could expire first. 2,500 ms still lands inside its 5 s hold.
+    // deadline could expire first. 2,500 ms still lands inside its 20 s hold.
     let output = s.run("timeout", &["--deadline-ms", "2500"]);
     assert_eq!(
         output.status.code(),
@@ -598,6 +598,8 @@ fn timeout_discards_partial_answers_and_reaps_the_group() {
             .split_whitespace()
             .next()
             .unwrap();
+        // The worker's own 25 s hold outlasts the checker's 20 s: live here = the group kill
+        // never reached it (a no-op `Group::kill` returns once the checker ends).
         assert_eq!(state, "Z", "timed-out descendant is still live");
     }
 }
