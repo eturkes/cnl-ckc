@@ -298,17 +298,31 @@ pub fn v1_check_impl(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
         r matches ckc_spec::v1text::EV1Verdict::Reject { at } ==> at <= bytes@.len(),
 {
     let read = crate::v1_read::read_bytes(bytes);
+    proof {
+        reveal(text::accepts);
+    }
+    match v1_check_read_impl(&read.text) {
+        ckc_spec::v1text::EV1Verdict::Ok => ckc_spec::v1text::EV1Verdict::Ok,
+        ckc_spec::v1text::EV1Verdict::Reject { at } => ckc_spec::v1text::EV1Verdict::Reject {
+            at: crate::v1_read::raw_offset(&read, bytes.len(), at),
+        },
+    }
+}
+
+// The canonical law alone, over bytes already read (`v1_check_impl` = this over `read_bytes`).
+pub fn v1_check_read_impl(text: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
+    ensures
+        r.is_accept() <==> text::canonical_v1(text@),
+        r matches ckc_spec::v1text::EV1Verdict::Reject { at } ==> at <= text@.len(),
+{
     let mut at = 0usize;
     let mut arena = ETermArena { nodes: Vec::new() };
     proof {
         reveal(crate::k2_term::arena_ok);
-        reveal(text::accepts);
     }
-    match v1_parse_at(&read.text, &mut arena, &mut at) {
+    match v1_parse_at(text, &mut arena, &mut at) {
         Some(_) => ckc_spec::v1text::EV1Verdict::Ok,
-        None => ckc_spec::v1text::EV1Verdict::Reject {
-            at: crate::v1_read::raw_offset(&read, bytes.len(), at),
-        },
+        None => ckc_spec::v1text::EV1Verdict::Reject { at },
     }
 }
 

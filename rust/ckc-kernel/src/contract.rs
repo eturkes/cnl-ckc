@@ -23,6 +23,17 @@ pub fn v1_check(bytes: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
     crate::v1_impl::v1_check_impl(bytes)
 }
 
+// The canonical law alone, over bytes already read: `v1_check(b)` = this over `v1_read(b)`.
+// Kani checks this stage on symbolic bytes: CBMC cannot bound the read output's length, so a
+// symbolic `v1_check` unrolls the parser on a symbolic one.
+pub fn v1_check_read(text: &[u8]) -> (r: ckc_spec::v1text::EV1Verdict)
+    ensures
+        r.is_accept() <==> ckc_spec::v1text::canonical_v1(text@),
+        r matches ckc_spec::v1text::EV1Verdict::Reject { at } ==> at <= text@.len(),
+{
+    crate::v1_impl::v1_check_read_impl(text)
+}
+
 // Contract sgw: the reading of a v1 file (each `_` → the letter of the next new variable of
 // its line), the bytes the canonical law then judges.
 pub fn v1_read(bytes: &[u8]) -> (r: Vec<u8>)

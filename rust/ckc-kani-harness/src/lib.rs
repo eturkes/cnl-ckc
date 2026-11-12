@@ -15,7 +15,11 @@ mod harness {
     #[kani::proof]
     #[kani::unwind(9)]
     fn reader_v1_check_small() {
-        // Eight input bytes: each scan has at most eight trips + one exit check.
+        // The canonical law over read bytes (`v1_check` = it over `v1_read`): CBMC cannot bound
+        // the read output's length, so a symbolic `v1_check` unrolls the parser on a symbolic
+        // one (> 146 min). Eight `_`-free bytes, which read as themselves (spec
+        // `v1text::read_from` respells a lone `_` run alone; argued, not a proved lemma):
+        // each scan has at most eight trips + one exit check.
         let bytes: [u8; 8] = kani::any();
         for byte in bytes {
             kani::assume(matches!(
@@ -23,7 +27,7 @@ mod harness {
                 b'%' | b'\n' | b'(' | b')' | b'\'' | b'.' | b'a' | b' '
             ));
         }
-        if let EV1Verdict::Reject { at } = contract::v1_check(&bytes) {
+        if let EV1Verdict::Reject { at } = contract::v1_check_read(&bytes) {
             assert!(at <= bytes.len());
         }
     }
