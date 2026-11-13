@@ -1,0 +1,14 @@
+format	sb1-ta-receipt 1
+kb_identity	7b2553776490915d427f7ff1e5232005f1366c0934ebc5dba6cb8e95d38f819c
+knowledge_documents	49202
+knowledge_bytes	1150855787
+verdict	admitted
+ta_source_commit	e8a140c5c5b8858f383048a6e9406e832f5c213c
+ta_binary_sha256	4e691bed5334fd833a7056dde8697bd2f34685ec4d7eed4115a16f0d2b2c9530
+dc	1
+cap_bytes	30064771072
+vmhwm_bytes	11272855552
+parse_seconds	35.476899789
+analysis_seconds	1596.428163294
+host	pool
+command	timeout 43200 /home/offload/offload/c4-65ee3d26/rust/target/bench/sb1-c4/bin/ta-4e691bed5334fd833a7056dde8697bd2f34685ec4d7eed4115a16f0d2b2c9530 --root /home/offload/offload/c4-65ee3d26 --composition /home/offload/offload/c4-65ee3d26/rust/target/bench/sb1-frozen/F4-g100-s1/composition.tsv --patient last --dc --out /home/offload/offload/c4-65ee3d26/rust/target/bench/sb1-c4/runs/c4p-5/metrics --redesign
