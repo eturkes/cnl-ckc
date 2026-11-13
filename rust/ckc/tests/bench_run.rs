@@ -854,6 +854,13 @@ fn warm_server_loads_once_and_scores_each_call_at_its_sink() {
     assert!(summary.iter().all(|r| r["status"] == "complete"));
     let memory = s.result("memory.tsv");
     assert!(memory.contains("peak_summed_rss_bytes\t"));
+    // TAS-P2: the harness's own terminal VmHWM (its lifecycle-bound term), a positive byte count.
+    let own: u64 = memory
+        .lines()
+        .find_map(|l| l.strip_prefix("harness_terminal_hwm_bytes\t"))
+        .and_then(|v| v.parse().ok())
+        .expect("harness_terminal_hwm_bytes");
+    assert!(own > 0);
     assert!(s.result("teardown.tsv").contains("exit status: 0"));
 }
 

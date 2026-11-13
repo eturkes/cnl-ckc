@@ -744,10 +744,11 @@ pub(super) fn campaign(config: &Config, plan: &[Plan]) -> Result<Vec<RunRow>> {
     report::write(
         &config.out.join("memory.tsv"),
         format!(
-            "key\tvalue\npeak_summed_rss_bytes\t{}\npeak_single_hwm_bytes\t{}\nsampler_error\t{}\n",
+            "key\tvalue\npeak_summed_rss_bytes\t{}\npeak_single_hwm_bytes\t{}\nsampler_error\t{}\nharness_terminal_hwm_bytes\t{}\n",
             state.peak_rss,
             state.peak_single_hwm,
-            field(state.error.as_deref().unwrap_or("none"))
+            field(state.error.as_deref().unwrap_or("none")),
+            procfs::own_hwm().map_or_else(|| "NA".to_owned(), |b| b.to_string())
         ),
     )?;
     Ok(rows)

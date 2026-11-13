@@ -45,6 +45,14 @@ pub(super) fn stat(pid: u32) -> Option<Process> {
         executable: None,
     })
 }
+// This process's own VmHWM, read at its end: the harness's terminal term in TAS-P2's lifecycle bound
+// (a lifetime peak, so it covers every earlier instant; a wait4 by a parent would add its reaped
+// children's peaks).
+pub(super) fn own_hwm() -> Option<u64> {
+    let mut me = stat(std::process::id())?;
+    status(&mut me).ok().filter(|same| *same)?;
+    Some(me.hwm)
+}
 fn status(process: &mut Process) -> Result<bool> {
     let text = match fs::read_to_string(format!("/proc/{}/status", process.pid)) {
         Ok(text) => text,
