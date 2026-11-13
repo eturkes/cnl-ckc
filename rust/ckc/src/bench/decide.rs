@@ -19,16 +19,18 @@
 // lifecycle peak) ≤ 32 GB). rc 0 = go, 1 = hold (one `hold` line per failed condition), 2 = usage
 // or an unreadable input.
 use super::grade::{
-    BUDGET_BYTES, Call, Manifest, Result, Row, assess, cell, exit, manifest, number, policy,
-    preflight_assess, table, text,
+    Assessment, BUDGET_BYTES, Call, Manifest, Result, Row, assess, cell, exit, manifest, number,
+    policy, preflight_assess, table, text,
 };
 use super::stats::ratio;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const HELP: &str = "usage: ckc bench decide <plan.tsv> <closure.tsv> <base> <frozen-root> <run-manifest> [--receipts <dir> --census <sha256> --host <label> --overhead-ms <n>]";
+const HELP: &str = "usage: ckc bench decide <plan.tsv> <closure.tsv> <base> <frozen-root> <run-manifest> [--receipts <dir> --census <sha256> --host <label> --overhead-ms <n> | --whole-vector]";
+// TAS-P2 (`--whole-vector`): the closure's `unit` rows every attempt's unit records must carry.
+const UNIT_KEYS: [&str; 4] = ["tool_sha256", "censor_s", "memory.max", "memory.swap.max"];
 // The receipt flags come together, in this order (all four or none).
 const LOAD_NS: f64 = 1.8e12;
 const SPACING_NS: u64 = 30_000_000_000;
@@ -142,6 +144,7 @@ struct Closure {
     identity: Vec<(String, String)>,
     kb: BTreeMap<String, String>,
     preflight: Vec<String>,
+    unit: BTreeMap<String, String>,
 }
 fn closure(path: &Path) -> Result<Closure> {
     let mut c = Closure::default();
@@ -160,6 +163,9 @@ fn closure(path: &Path) -> Result<Closure> {
                 }
             }
             "preflight" if value == "go" => c.preflight.push(key),
+            "unit" => {
+                c.unit.insert(key, value);
+            }
             source => return Err(format!("closure: {source} {key}")),
         }
     }
@@ -180,8 +186,10 @@ fn decide(args: &[String]) -> Result<bool> {
     let [plan, closure_path, base, frozen, manifest_path] = positional else {
         return Err(HELP.into());
     };
+    let whole = matches!(flags, [w] if w == "--whole-vector");
     let receipts = match flags {
         [] => None,
+        [_] if whole => None,
         [r, dir, c, census, h, host, o, overhead]
             if r == "--receipts" && c == "--census" && h == "--host" && o == "--overhead-ms" =>
         {
@@ -201,6 +209,13 @@ fn decide(args: &[String]) -> Result<bool> {
     let m = manifest(Path::new(manifest_path))?;
     let plan = chunks(Path::new(plan))?;
     let frozen_closure = closure(Path::new(closure_path))?;
+    if whole
+        && let Some(key) = UNIT_KEYS
+            .iter()
+            .find(|k| !frozen_closure.unit.contains_key(**k))
+    {
+        return Err(format!("closure: no unit {key} row (--whole-vector)"));
+    }
     let mut d = Decision::default();
     for id in &frozen_closure.preflight {
         match preflight_assess(&base.join("state").join(id)) {
@@ -237,9 +252,10 @@ fn decide(args: &[String]) -> Result<bool> {
         }
     }
     for c in &plan {
-        chunk(c, base, frozen, &m, &frozen_closure, &mut d)?;
+        chunk(c, base, frozen, &m, &frozen_closure, &mut d, whole)?;
     }
     match &receipts {
+        None if whole => {}
         None => {
             d.out.push("receipt_join\tpending".into());
             d.holds
@@ -267,6 +283,7 @@ fn conform(
     plan: &[Row],
     original: Option<&[Row]>,
     frozen: &Closure,
+    whole: bool,
 ) -> Result<(BTreeSet<u64>, Vec<String>)> {
     let mut bad = Vec::new();
     let settings = keyed(&run.join("settings.tsv"))?;
@@ -342,7 +359,9 @@ fn conform(
     };
     let held: BTreeSet<u64> = match original {
         None if listed.is_empty() => (1..=c.blocks).collect(),
-        Some(_) if !listed.is_empty() => listed.clone(),
+        // TAS-P2: a whole-vector replacement replays every block.
+        Some(_) if whole && listed.is_empty() => (1..=c.blocks).collect(),
+        Some(_) if !whole && !listed.is_empty() => listed.clone(),
         _ => {
             bad.push("settings only_blocks".into());
             listed.clone()
@@ -367,7 +386,7 @@ fn conform(
                     number(r, "block")
                         .ok()
                         .flatten()
-                        .is_some_and(|b| listed.contains(&b))
+                        .is_some_and(|b| held.contains(&b))
                 })
                 .cloned()
                 .collect()
@@ -438,6 +457,148 @@ fn schedule(run: &Path, held: &BTreeSet<u64>, spacing: u64, calls: &[Call]) -> V
     }
     bad
 }
+// TAS-P2 integrity of one attempt (`.scratch/imp/tas-p2-protocol.md` P2-1, P2-5, P2-6): the unit's
+// capsule, censor + main-process records against the closure's `unit` rows; no launcher-report
+// failure; a complete load bound (U ≥ L, + the unit main ≤ 32 GB); every launcher + server terminal
+// own term bounded and the harness's terminal VmHWM recorded; every unit-cgroup process classified
+// (harness-observed, a report-bound producer, the unit main, or a hook outside the main's lifetime).
+// Returns the failed items, the unit main's VmHWM + the teardown Σ of terminal own terms.
+fn p2(
+    run: &Path,
+    state: &Path,
+    a: &Assessment,
+    unit: &BTreeMap<String, String>,
+) -> (Vec<String>, u64, u64) {
+    let mut bad = Vec::new();
+    let kv = |path: PathBuf| -> BTreeMap<String, String> {
+        fs::read_to_string(path)
+            .unwrap_or_default()
+            .lines()
+            .filter_map(|l| l.split_once('\t'))
+            .map(|(k, v)| (k.to_owned(), v.to_owned()))
+            .collect()
+    };
+    let num = |m: &BTreeMap<String, String>, k: &str| m.get(k).and_then(|v| v.parse::<u64>().ok());
+    let capsule = kv(state.join("capsule.txt"));
+    for key in ["memory.max", "memory.swap.max"] {
+        if capsule.get(key) != unit.get(key) {
+            bad.push(format!("P2-1: capsule {key}"));
+        }
+    }
+    let censor = kv(state.join("censor.txt"));
+    if censor.get("censor_s") != unit.get("censor_s") {
+        bad.push("P2-1: censor value".into());
+    }
+    if censor.contains_key("fired") {
+        bad.push("P2-1: the observation censor fired".into());
+    }
+    let record = kv(state.join("unit-main.tsv"));
+    if record.get("tool_sha256") != unit.get("tool_sha256") {
+        bad.push("P2-1: unit main executable".into());
+    }
+    let main_key = num(&record, "pid").zip(num(&record, "start_ticks"));
+    let main = num(&record, "vmhwm_kb").map(|kb| kb.saturating_mul(1024));
+    if main_key.is_none() || main.is_none() {
+        bad.push("P2-6: unit main record".into());
+    }
+    let main = main.unwrap_or(0);
+    let bound = a
+        .report
+        .iter()
+        .find_map(|l| l.strip_prefix("load_bound\t"))
+        .map(|l| {
+            let f: Vec<u64> = l.split('\t').map_while(|v| v.parse().ok()).collect();
+            (f.first().copied(), f.get(1).copied())
+        });
+    if !matches!(bound, Some((Some(l), Some(u))) if u >= l && u.saturating_add(main) <= BUDGET_BYTES)
+    {
+        bad.push("P2-6: load bound incomplete, below its sample or above 32 GB".into());
+    }
+    let mut known: BTreeSet<(u64, u64)> = BTreeSet::new();
+    let mut tables = vec![run.join("load").join("processes.tsv")];
+    let mut tail = 0u64;
+    for entry in fs::read_dir(run).into_iter().flatten().flatten() {
+        let (path, name) = (
+            entry.path(),
+            entry.file_name().to_string_lossy().into_owned(),
+        );
+        if name.starts_with("run-") {
+            tables.push(path.join("processes.tsv"));
+            let counters =
+                fs::read_to_string(path.join("checker-counters.tsv")).unwrap_or_default();
+            let get = |key: &str| {
+                let prefix = format!("runtime\t{key}\t");
+                counters
+                    .lines()
+                    .find_map(|l| l.strip_prefix(prefix.as_str())?.parse::<u64>().ok())
+            };
+            if get("launcher_report_failure").is_some_and(|v| v > 0) {
+                bad.push(format!("P2-5: launcher-report failure in {name}"));
+            }
+            if let Some(key) = get("producer_pid").zip(get("producer_start_ticks")) {
+                known.insert(key);
+            }
+        } else if name.starts_with("arm-") && path.is_dir() {
+            for (file, what) in [
+                ("launcher-terminal-check.tsv", "launcher"),
+                ("server-terminal-check.tsv", "server"),
+            ] {
+                let check = kv(path.join(file));
+                match (
+                    check.get("verdict").map(String::as_str),
+                    num(&check, "own_bound_bytes"),
+                ) {
+                    (Some("bounded"), Some(b)) => tail = tail.saturating_add(b),
+                    _ => bad.push(format!("P2-6: {name} {what} terminal term unbounded")),
+                }
+            }
+        }
+    }
+    match num(&kv(run.join("memory.tsv")), "harness_terminal_hwm_bytes") {
+        Some(b) => tail = tail.saturating_add(b),
+        None => bad.push("P2-6: harness terminal term unrecorded".into()),
+    }
+    for path in &tables {
+        for row in table(path).unwrap_or_default() {
+            if let (Ok(Some(p)), Ok(Some(s))) = (number(&row, "pid"), number(&row, "start_ticks")) {
+                known.insert((p, s));
+            }
+        }
+    }
+    let key = |r: &Row| match (number(r, "pid"), number(r, "start_ticks")) {
+        (Ok(Some(p)), Ok(Some(s))) => Some((p, s)),
+        _ => None,
+    };
+    match (table(&state.join("unit-roster.tsv")), main_key) {
+        (Ok(rows), Some(mk)) => {
+            let at = |r: &Row| number(r, "epoch_us").ok().flatten();
+            let lives: Vec<u64> = rows
+                .iter()
+                .filter(|r| key(r) == Some(mk))
+                .filter_map(at)
+                .collect();
+            let span = lives.iter().min().zip(lives.iter().max());
+            let mut unresolved = BTreeSet::new();
+            for r in &rows {
+                match (key(r), at(r), span) {
+                    (Some(k), _, _) if k == mk || known.contains(&k) => {}
+                    (Some(_), Some(t), Some((first, last))) if t < *first || t > *last => {}
+                    (Some(k), _, _) => {
+                        unresolved.insert((k, cell(r, "comm").unwrap_or("?").to_owned()));
+                    }
+                    (None, _, _) => {
+                        unresolved.insert(((0, 0), "unreadable row".to_owned()));
+                    }
+                }
+            }
+            for ((p, _), comm) in unresolved {
+                bad.push(format!("P2-6: unit process {p} ({comm}) unresolved"));
+            }
+        }
+        _ => bad.push("P2-6: unit roster or unit main record unreadable".into()),
+    }
+    (bad, main, tail)
+}
 fn chunk(
     c: &Chunk,
     base: &Path,
@@ -445,6 +606,7 @@ fn chunk(
     m: &Manifest,
     sealed: &Closure,
     d: &mut Decision,
+    whole: bool,
 ) -> Result<()> {
     let mut attempts = Vec::new();
     for id in [c.id.clone(), format!("{}-r", c.id)] {
@@ -460,10 +622,18 @@ fn chunk(
     }
     let mut invalid = BTreeSet::new();
     let mut chosen: BTreeMap<u64, usize> = BTreeMap::new();
+    // TAS-P2: each attempt's class + its terms outside the harness's bounds (unit main, teardown Σ).
+    let (mut classes, mut extras): (Vec<&str>, Vec<(u64, u64)>) = (Vec::new(), Vec::new());
     for (k, (id, a)) in attempts.iter().enumerate() {
         let (run, state) = (base.join("runs").join(id), base.join("state").join(id));
         let original = (k > 0).then(|| attempts[0].1.plan.as_slice());
-        let (held, mut bad) = conform(c, &run, &a.plan, original, sealed)?;
+        let (held, mut bad) = conform(c, &run, &a.plan, original, sealed, whole)?;
+        let (mut main, mut teardown) = (0, 0);
+        if whole {
+            let (items, m, tail) = p2(&run, &state, a, &sealed.unit);
+            bad.extend(items);
+            (main, teardown) = (m, tail);
+        }
         let spacing = if c.pair.is_some() { SPACING_NS } else { 0 };
         bad.extend(schedule(&run, &held, spacing, &a.calls));
         let applied = policy(&state)?;
@@ -495,13 +665,13 @@ fn chunk(
         }
         match lifecycle {
             None => bad.push("lifecycle peak unrecorded".into()),
-            Some(p) if p > BUDGET_BYTES => bad.push(format!(
+            Some(p) if p.saturating_add(main) > BUDGET_BYTES => bad.push(format!(
                 "lifecycle peak {:.2} GB above 32 GB",
                 p as f64 / 1e9
             )),
             Some(_) => {}
         }
-        if k > 0 && !held.is_subset(&invalid) {
+        if !whole && k > 0 && !held.is_subset(&invalid) {
             bad.push("replaces a valid block".into());
         }
         if !["0", "1"].contains(&a.rc.as_str()) {
@@ -554,7 +724,9 @@ fn chunk(
             }
             if ok {
                 valid += 1;
-                chosen.entry(b).or_insert(k);
+                if !whole {
+                    chosen.entry(b).or_insert(k);
+                }
             }
             let validity = if ok { "valid" } else { "invalid" };
             d.out
@@ -570,6 +742,51 @@ fn chunk(
             a.unbounded,
             if a.pinned { "ok" } else { "NOT-PINNED" }
         ));
+        if whole {
+            // P2-4: integrity first; an `unassessed` mandatory verdict holds; only a sound attempt
+            // whose host verdicts rejected it is environmental; the first valid attempt is selected
+            // whole, and a replacement follows an environmental original alone.
+            let windows: Vec<&str> = a
+                .report
+                .iter()
+                .filter(|l| l.starts_with("load_window\t"))
+                .filter_map(|l| l.split('\t').nth(4))
+                .collect();
+            let verdicts: Vec<&str> = held
+                .iter()
+                .map(|b| a.verdicts.get(b).map_or("absent", String::as_str))
+                .chain(windows.iter().copied())
+                .collect();
+            if verdicts
+                .iter()
+                .any(|v| *v != "accepted" && *v != "rejected")
+            {
+                bad.push("P2-4: a mandatory host verdict unassessed or absent".into());
+            }
+            let class = if !bad.is_empty() {
+                "hard"
+            } else if a.pinned && !windows.is_empty() && verdicts.iter().all(|v| *v == "accepted") {
+                "valid"
+            } else {
+                "environmental"
+            };
+            d.out.push(format!("vector\t{}\t{id}\t{class}", c.id));
+            if k > 0 && classes.first() != Some(&"environmental") {
+                d.holds.push(format!(
+                    "{}: attempt {id}: a replacement after a {} original",
+                    c.id,
+                    classes.first().copied().unwrap_or("missing")
+                ));
+            } else if class == "valid" && chosen.is_empty() {
+                chosen.extend(held.iter().map(|&b| (b, k)));
+            }
+            if k > 0 && class == "environmental" {
+                d.holds
+                    .push(format!("{}: attempt {id}: environmental again", c.id));
+            }
+            classes.push(class);
+        }
+        extras.push((main, teardown));
         for b in bad {
             d.holds.push(format!("{}: attempt {id}: {b}", c.id));
         }
@@ -584,6 +801,7 @@ fn chunk(
             continue;
         };
         let (id, a) = &attempts[k];
+        let main = extras[k].0;
         d.out.push(format!("selected\t{}\t{b}\t{id}", c.id));
         let planned = a
             .plan
@@ -599,7 +817,10 @@ fn chunk(
             ));
         }
         for x in &calls {
-            if !(x.budget && x.bound.is_some_and(|v| v <= BUDGET_BYTES)) {
+            if !(x.budget
+                && x.bound
+                    .is_some_and(|v| v.saturating_add(main) <= BUDGET_BYTES))
+            {
                 fails += 1;
                 d.holds.push(format!(
                     "{}: block {b}: {} {} {} outside the budget",
@@ -619,6 +840,29 @@ fn chunk(
             {
                 pairs.push((base as f64, target as f64));
             }
+        }
+    }
+    // P2-6: U_life = max(each load U, each call U, the teardown Σ of terminal own HWMs) + the unit
+    // main — VmHWM is a lifetime peak, so the terminal Σ covers idle + teardown.
+    if whole && let Some(&k) = chosen.values().next() {
+        let ((id, a), (main, teardown)) = (&attempts[k], extras[k]);
+        let load = a
+            .report
+            .iter()
+            .filter_map(|l| l.strip_prefix("load_bound\t"))
+            .filter_map(|l| l.split('\t').nth(1)?.parse::<u64>().ok())
+            .max()
+            .unwrap_or(0);
+        let call = a.calls.iter().filter_map(|x| x.bound).max().unwrap_or(0);
+        let life = load.max(call).max(teardown).saturating_add(main);
+        d.out
+            .push(format!("lifecycle_bound\t{}\t{id}\t{life}", c.id));
+        if life > BUDGET_BYTES {
+            d.holds.push(format!(
+                "{}: lifecycle bound {:.2} GB above 32 GB",
+                c.id,
+                life as f64 / 1e9
+            ));
         }
     }
     if c.pair.is_some() {

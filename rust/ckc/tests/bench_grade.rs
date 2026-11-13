@@ -90,6 +90,7 @@ struct Chunk {
     runs_edit: fn(String) -> String,        // runs.tsv as written, then edited
     kb: fn(&str) -> String,                 // the knowledge identity a server reports per instance
     load_window: Option<(i64, i64)>, // load-bound.tsv's target load window (µs; None = no file)
+    p2: Plant,                       // TAS-P2: a plant over the written unit records
 }
 fn clean(name: &'static str) -> Chunk {
     Chunk {
@@ -135,6 +136,7 @@ fn clean(name: &'static str) -> Chunk {
         runs_edit: |runs| runs,
         kb: kb_of,
         load_window: None,
+        p2: |_, _| {},
     }
 }
 // Block b's calls, in order: (arm, query, start µs, end µs).
@@ -594,6 +596,7 @@ struct Campaign {
     // The frozen closure's rows (source, key, value) + the named preflight's planted state.
     closure: Vec<(&'static str, &'static str, String)>,
     preflight: fn(&mut Preflight),
+    whole: bool, // TAS-P2: `--whole-vector`, every attempt's unit records written
 }
 fn closure_rows() -> Vec<(&'static str, &'static str, String)> {
     vec![
@@ -652,6 +655,7 @@ fn campaign(name: &'static str) -> Campaign {
         extra: &[],
         closure: closure_rows(),
         preflight: |_| {},
+        whole: false,
     }
 }
 // A replacement of chunk `of`: its blocks, seed + plan size, one hour after the original.
@@ -659,6 +663,69 @@ fn replacement(of: &Chunk, only: &'static [i64]) -> Chunk {
     let mut r = clean(of.name);
     (r.paired, r.blocks, r.seed, r.only) = (of.paired, of.blocks, of.seed, only);
     r.t0 = T0 + 3_600_000_000;
+    r
+}
+// TAS-P2 (`--whole-vector`): the unit records every attempt carries (`tools/sb-campaign-unit` with
+// SB1_CAPSULE=1 + the server's terminal checks), valid; `c.p2` plants over them afterwards.
+// A plant over one attempt's written unit records: (run, state).
+type Plant = fn(&Path, &Path);
+const UNIT_SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+fn p2_files(c: &Chunk, run: &Path, state: &Path) {
+    let write = |path: PathBuf, text: &str| fs::write(path, text).unwrap();
+    write(
+        state.join("capsule.txt"),
+        "memory.max\t30064771072\nmemory.swap.max\t0\n",
+    );
+    write(state.join("censor.txt"), "censor_s\t43200\n");
+    write(
+        state.join("unit-main.tsv"),
+        &format!("pid\t100\nstart_ticks\t5\nvmhwm_kb\t20000\ntool_sha256\t{UNIT_SHA}\n"),
+    );
+    write(
+        state.join("unit-roster.tsv"),
+        "epoch_us\tpid\tstart_ticks\trss_kb\thwm_kb\tcomm\n1\t100\t5\t9000\t20000\tpython3\n3\t100\t5\t9000\t20000\tpython3\n",
+    );
+    let memory = fs::read_to_string(run.join("memory.tsv")).unwrap_or_default();
+    write(
+        run.join("memory.tsv"),
+        &format!("{memory}harness_terminal_hwm_bytes\t100000000\n"),
+    );
+    let arms: &[&str] = if c.paired {
+        &["target", "baseline"]
+    } else {
+        &["target"]
+    };
+    for arm in arms {
+        let dir = run.join(format!("arm-{arm}"));
+        fs::create_dir_all(&dir).unwrap();
+        for file in ["launcher-terminal-check.tsv", "server-terminal-check.tsv"] {
+            write(
+                dir.join(file),
+                "verdict\tbounded\nown_bound_bytes\t20000000\n",
+            );
+        }
+    }
+    (c.p2)(run, state);
+}
+// The campaign under `--whole-vector`: no receipts, the closure's `unit` rows, a load window per attempt.
+fn whole_campaign(name: &'static str) -> Campaign {
+    let mut k = campaign(name);
+    (k.whole, k.receipts) = (true, None);
+    for (_, c) in &mut k.attempts {
+        c.load_window = Some((c.t0 - 25_000_000, c.t0 - 5_000_000));
+    }
+    k.closure.extend([
+        ("unit", "tool_sha256", UNIT_SHA.to_owned()),
+        ("unit", "censor_s", "43200".to_owned()),
+        ("unit", "memory.max", "30064771072".to_owned()),
+        ("unit", "memory.swap.max", "0".to_owned()),
+    ]);
+    k
+}
+// A whole-vector replacement of `of`: every block, its own load window.
+fn whole_replacement(of: &Chunk) -> Chunk {
+    let mut r = replacement(of, &[]);
+    r.load_window = Some((r.t0 - 25_000_000, r.t0 - 5_000_000));
     r
 }
 fn decide(k: &Campaign) -> Graded {
@@ -671,7 +738,11 @@ fn decide_run(k: &Campaign) -> (std::process::Output, Fixture) {
     let (frozen, manifest) = freeze(&k.attempts[0].1, &dir);
     fs::create_dir_all(dir.join("runs")).unwrap();
     for (id, c) in &k.attempts {
-        attempt(c, &dir.join("runs").join(id), &dir.join("state").join(id));
+        let (run, state) = (dir.join("runs").join(id), dir.join("state").join(id));
+        attempt(c, &run, &state);
+        if k.whole {
+            p2_files(c, &run, &state);
+        }
     }
     for extra in k.extra {
         fs::create_dir_all(dir.join("runs").join(extra)).unwrap();
@@ -698,6 +769,9 @@ fn decide_run(k: &Campaign) -> (std::process::Output, Fixture) {
     let mut command = Command::new(program());
     command.args(["bench", "decide"]);
     command.args([&plan, &closure, &dir, &frozen, &manifest]);
+    if k.whole {
+        command.arg("--whole-vector");
+    }
     if let Some(receipt) = k.receipts {
         let receipts = dir.join("receipts");
         fs::create_dir_all(&receipts).unwrap();
@@ -2399,4 +2473,229 @@ fn the_load_repair_self_test_passes_and_fires_on_a_planted_expectation() {
         "{}",
         String::from_utf8_lossy(&out.stdout)
     );
+}
+
+// TAS-P2 (`.scratch/imp/tas-p2-protocol.md` P2-4 + P2-6, `--whole-vector`): a clean campaign goes
+// without receipts, every attempt `valid`, one lifecycle bound per chunk.
+#[test]
+fn a_whole_vector_campaign_goes_on_its_unit_records() {
+    let g = decide(&whole_campaign("whole-clean"));
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    assert!(
+        g.rows("vector").iter().all(|r| r[3] == "valid"),
+        "{}",
+        g.stdout
+    );
+    assert_eq!(g.rows("lifecycle_bound").len(), 2, "{}", g.stdout);
+    // Diagnostic PSI never decides (P2-3).
+    let mut k = whole_campaign("whole-psi");
+    k.attempts[1].1.p2 = |_, s| {
+        fs::write(
+            s.join("host-diag.tsv"),
+            "epoch_us\tmem_full_avg10\n1\t50.00\n",
+        )
+        .unwrap()
+    };
+    assert_eq!(decide(&k).verdict(), "go");
+    // Without the closure's unit rows the mode refuses to run.
+    let mut k = whole_campaign("whole-no-unit");
+    k.closure.retain(|r| r.0 != "unit");
+    let (out, _fixture) = decide_run(&k);
+    assert_eq!(out.status.code(), Some(2));
+}
+
+// P2-4: one whole replacement follows an environmental original alone; a valid or hard original,
+// an environmental replacement or a partial replacement holds.
+#[test]
+fn whole_vector_replacements_follow_an_environmental_original_alone() {
+    let mut k = whole_campaign("whole-env");
+    k.attempts[1].1.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    let original = k.attempts[1].1.clone();
+    k.attempts.push(("c01-r", whole_replacement(&original)));
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    let picked: Vec<&str> = g
+        .rows("selected")
+        .iter()
+        .filter(|r| r[1] == "c01")
+        .map(|r| r[3])
+        .collect();
+    assert_eq!(picked, ["c01-r", "c01-r"], "{}", g.stdout);
+    let classes: Vec<&str> = g
+        .rows("vector")
+        .iter()
+        .filter(|r| r[1] == "c01")
+        .map(|r| r[3])
+        .collect();
+    assert_eq!(classes, ["environmental", "valid"]);
+    // A valid original: its replacement holds.
+    let mut k = whole_campaign("whole-valid-original");
+    let original = k.attempts[1].1.clone();
+    k.attempts.push(("c01-r", whole_replacement(&original)));
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds
+            .iter()
+            .any(|h| h.contains("a replacement after a valid original")),
+        "{holds:?}"
+    );
+    // A hard original (its capsule wrong) beside a host rejection: never replaceable.
+    let mut k = whole_campaign("whole-hard-original");
+    k.attempts[1].1.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    k.attempts[1].1.p2 = |_, s| {
+        fs::write(
+            s.join("capsule.txt"),
+            "memory.max\tmax\nmemory.swap.max\t0\n",
+        )
+        .unwrap()
+    };
+    let original = k.attempts[1].1.clone();
+    let mut r = whole_replacement(&original);
+    r.p2 = |_, _| {};
+    r.foreign = |_, _| 0.0;
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds
+            .iter()
+            .any(|h| h.contains("a replacement after a hard original")),
+        "{holds:?}"
+    );
+    // An environmental replacement holds.
+    let mut k = whole_campaign("whole-env-twice");
+    k.attempts[1].1.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    let mut r = whole_replacement(&k.attempts[1].1);
+    r.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds.iter().any(|h| h.contains("environmental again")),
+        "{holds:?}"
+    );
+    // A partial replacement (only block 1) holds.
+    let mut k = whole_campaign("whole-partial");
+    k.attempts[1].1.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    let mut r = replacement(&k.attempts[1].1, &[1]);
+    r.load_window = Some((r.t0 - 25_000_000, r.t0 - 5_000_000));
+    r.foreign = |_, _| 0.0;
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds.iter().any(|h| h.contains("settings only_blocks")),
+        "{holds:?}"
+    );
+}
+
+// P2-1, P2-5, P2-6: each planted unit record holds, with its own reason.
+#[test]
+fn whole_vector_unit_records_hold_when_planted() {
+    let cases: [(&str, Plant, &str); 9] = [
+        (
+            "capsule",
+            |_, s| {
+                fs::write(
+                    s.join("capsule.txt"),
+                    "memory.max\tmax\nmemory.swap.max\t0\n",
+                )
+                .unwrap()
+            },
+            "P2-1: capsule memory.max",
+        ),
+        (
+            "censor",
+            |_, s| fs::write(s.join("censor.txt"), "censor_s\t43200\nfired\t1\n").unwrap(),
+            "P2-1: the observation censor fired",
+        ),
+        (
+            "main-digest",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-main.tsv")).unwrap();
+                fs::write(
+                    s.join("unit-main.tsv"),
+                    t.replace(UNIT_SHA, &"b".repeat(64)),
+                )
+                .unwrap()
+            },
+            "P2-1: unit main executable",
+        ),
+        (
+            "launcher-report",
+            |r, _| {
+                fs::write(
+                    r.join("run-000001/checker-counters.tsv"),
+                    "kind\tcounter\tvalue\nruntime\tlauncher_report_failure\t1\n",
+                )
+                .unwrap()
+            },
+            "P2-5: launcher-report failure in run-000001",
+        ),
+        (
+            "unresolved",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-roster.tsv")).unwrap();
+                fs::write(
+                    s.join("unit-roster.tsv"),
+                    format!("{t}2\t777\t9\t100\t100\tstray\n"),
+                )
+                .unwrap()
+            },
+            "P2-6: unit process 777 (stray) unresolved",
+        ),
+        (
+            "launcher-unbounded",
+            |r, _| {
+                fs::write(
+                    r.join("arm-target/launcher-terminal-check.tsv"),
+                    "verdict\tunbounded\nown_bound_bytes\tNA\n",
+                )
+                .unwrap()
+            },
+            "P2-6: arm-target launcher terminal term unbounded",
+        ),
+        (
+            "server-missing",
+            |r, _| fs::remove_file(r.join("arm-target/server-terminal-check.tsv")).unwrap(),
+            "P2-6: arm-target server terminal term unbounded",
+        ),
+        (
+            "harness-terminal",
+            |r, _| {
+                let t = fs::read_to_string(r.join("memory.tsv")).unwrap();
+                let kept: String = t
+                    .lines()
+                    .filter(|l| !l.starts_with("harness_terminal"))
+                    .map(|l| format!("{l}\n"))
+                    .collect();
+                fs::write(r.join("memory.tsv"), kept).unwrap()
+            },
+            "P2-6: harness terminal term unrecorded",
+        ),
+        (
+            "main-heavy",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-main.tsv")).unwrap();
+                fs::write(
+                    s.join("unit-main.tsv"),
+                    t.replace("vmhwm_kb\t20000\n", "vmhwm_kb\t31000000\n"),
+                )
+                .unwrap()
+            },
+            "P2-6: load bound incomplete, below its sample or above 32 GB",
+        ),
+    ];
+    for (name, plant, reason) in cases {
+        let mut k = whole_campaign(name);
+        k.attempts[1].1.p2 = plant;
+        let g = decide(&k);
+        assert_eq!(g.rc, 1, "{name}: {}", g.stdout);
+        assert!(
+            g.holds().iter().any(|h| h.contains(reason)),
+            "{name}: {:?}",
+            g.holds()
+        );
+    }
 }
