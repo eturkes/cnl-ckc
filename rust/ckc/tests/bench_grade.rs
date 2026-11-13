@@ -2361,3 +2361,42 @@ fn every_attempt_directory_is_planned_and_every_chunk_ran() {
     k.plan += &plan_row("c02", false, 2, SEED + 3, "-");
     assert_eq!(decide(&k).holds(), ["c02: no original attempt"]);
 }
+
+// The repair validator (contract sb § Carried rulings, direct load-memory evidence) applies its
+// frozen rules through `--self-test`: rc 0 here, and one self-test case planted with a wrong
+// expected rc turns it red (rc 2) — the check's firing every run.
+#[test]
+fn the_load_repair_self_test_passes_and_fires_on_a_planted_expectation() {
+    let tool = root().join("tools/sb-load-repair");
+    let plan = root().join("bench/sb/load-repair-plan.tsv");
+    let self_test = |validator: &Path| {
+        Command::new("python3")
+            .arg("-I")
+            .arg(validator)
+            .arg(&plan)
+            .arg("--self-test")
+            .output()
+            .unwrap()
+    };
+    let out = self_test(&tool);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+    let fixture = scratch("load-repair-self-test");
+    fs::create_dir_all(&fixture.dir).unwrap();
+    let planted = fixture.dir.join("sb-load-repair");
+    let text = fs::read_to_string(&tool).unwrap();
+    let anchor = "({}, None, 0),";
+    assert_eq!(text.matches(anchor).count(), 1, "plant anchor");
+    fs::write(&planted, text.replace(anchor, "({}, None, 1),")).unwrap();
+    let out = self_test(&planted);
+    assert_eq!(
+        out.status.code(),
+        Some(2),
+        "{}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+}
