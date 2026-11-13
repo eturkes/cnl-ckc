@@ -24,14 +24,22 @@
 # caller's PATH (the system manager's lacks the host's tools).
 # Layout: <base>/markers/<id>.{sleeper,done}, <base>/runs/<id>/ (harness), <base>/state/<id>/ (rc,
 # chunk.log, host-before.txt, host-after.txt, unit-cpus.txt, wrapper-cpus.txt, sleeper.txt,
-# shield-orig.tsv, shield.txt, host-samples.tsv; preflight: preflight.tsv).
+# shield-orig.tsv, shield.txt, host-samples.tsv, host-diag.tsv, unit-roster.tsv, capsule.txt; preflight:
+# preflight.tsv). host-diag.tsv + unit-roster.tsv = diagnostics beside the grader's input, never graded:
+# memory + CPU pressure (PSI) + MemFree + MemAvailable, and each process of the unit's cgroup per
+# sample (pid, start ticks, VmRSS, VmHWM, comm); capsule.txt = the unit's memory.max + memory.swap.max.
 # `census` = the same unit around probe.py over one instance (the C4w argv, `--receipt-host pool`)
 # inside the census capsule (MemoryMax=28G, MemorySwapMax=0, OOMPolicy=continue): one receipt per
 # knowledge identity in <receipt-dir>, the run's tables in <base>/runs/<id>.
 # SB1_TA_RECEIPTS + SB1_ONLY_BLOCKS + SB1_TA_RUN + SB1_LOAD_DEADLINE_MS pass through to the chunk
 # (`none` = census verdicts pending; a block list = a sparse replacement replay; a census seal = the
 # integrated load; a declared load censor); SB1_SLEEPER=none skips the marker wait (a host without a
-# second slot to hold), recorded in sleeper.txt, which the grade's policy check refuses.
+# second slot to hold), recorded in sleeper.txt, which the grade's policy check refuses; SB1_CAPSULE=1 =
+# the TAS-P2 run unit: the census capsule + tools/sb-unit-main as its main process (no shell or sleep
+# beside the harness tree; its own terminal VmHWM in unit-main.tsv) + SB1_CENSOR_S=<s> = one
+# monotonic observation censor around the chunk (rc 124 on expiry; censor.txt). outer.tsv = the apparatus
+# outside the unit (the wrapper, its sampler, the sleeper + each one's ancestors up to a shared
+# service): role, pid, start ticks, VmHWM kB, comm at its end — measured, never charged (TAS-P2 P2-6).
 set -euo pipefail
 usage() {
   printf 'usage: tools/sb-campaign-unit run <base> <id> <instance-dir> <blocks> <seed> <ckc> <checker> [<r-pair G1 instance-dir>]\n       tools/sb-campaign-unit census <base> <id> <instance-dir> <ta-seal> <receipt-dir> <source-commit>\n       tools/sb-campaign-unit preflight|hold <base> <id>\n       tools/sb-campaign-unit shield|unshield <state-dir>\n       tools/sb-campaign-unit unshield\n' >&2
@@ -131,6 +139,7 @@ if [[ $mode == hold ]]; then
   end=$((SECONDS + 24 * 3600))
   until [[ -e $m/$id.done || -s $st/rc ]] || (( SECONDS > end )); do sleep 10; done
   rm -f "$m/$id.sleeper"
+  outer_rows sleeper "$$" >>"$st/outer.tsv" || true
   printf 'sleeper %s released\n' "$id"
   exit 0
 fi
@@ -160,6 +169,12 @@ if [[ $mode == census ]]; then
     --patient last --redesign --seconds 43200 --service-unit "$unit"
     --receipt-dir "$receipts" --ta-source-commit "$commit" --receipt-host pool)
 fi
+[[ -z ${SB1_CENSOR_S:-} || $SB1_CENSOR_S =~ ^[1-9][0-9]*$ ]] || { printf 'sb-campaign-unit: SB1_CENSOR_S must be whole seconds\n' >&2; exit 2; }
+case ${SB1_CAPSULE:-} in
+  '') ;;
+  1) [[ $mode == run ]] && caps=(-p MemoryMax=28G -p MemorySwapMax=0 -p OOMPolicy=continue) ;;
+  *) printf 'sb-campaign-unit: SB1_CAPSULE must be 1 or unset\n' >&2; exit 2 ;;
+esac
 taskset -cp "$host_cpus" "$$" >/dev/null 2>&1 || printf 'sb-campaign-unit: wrapper left unpinned (taskset)\n' >&2
 # A system unit as the campaign user in the campaign's slice (sudo = the pool host's wheel rule).
 unit_run() {
@@ -178,11 +193,67 @@ host() {
     uptime; { ps -eo pid,pcpu,psr,rss,etimes,comm --sort=-pcpu || true; } | head -8; } >"$1"
 }
 active() { local s; s=$(systemctl show "$unit" -p ActiveState --value 2>/dev/null) || return 1; [[ $s == active || $s == activating || $s == deactivating ]]; }
+# One apparatus row (outer.tsv) for a process + each ancestor of the same user up to a shared service
+# (systemd, sshd); VmHWM is the process's own peak so far.
+outer_rows() {
+  local role=$1 p=$2 line comm hwm k v uid me
+  local -a stat
+  me=$(id -u)
+  while (( p > 1 )); do
+    { read -r line <"/proc/$p/stat"; } 2>/dev/null || return 0
+    read -r -a stat <<<"${line##*) }"
+    { read -r comm <"/proc/$p/comm"; } 2>/dev/null || comm=NA
+    hwm=NA uid=NA
+    while read -r k v _; do
+      case $k in Uid:) uid=$v ;; VmHWM:) hwm=$v; break ;; esac
+    done 2>/dev/null <"/proc/$p/status"
+    [[ $uid == "$me" && $comm != systemd && $comm != sshd* ]] || return 0
+    printf '%s\t%s\t%s\t%s\t%s\n' "$role" "$p" "${stat[19]:-NA}" "$hwm" "$comm"
+    role=ancestor p=${stat[1]:-0}
+  done
+}
+# One diagnostics row: PSI some/full avg10 + totals (memory), some (CPU), MemFree + MemAvailable (kB);
+# NA where a file is unreadable.
+diag_row() {
+  local ms=NA mst=NA mf=NA mft=NA cs=NA cst=NA free=NA avail=NA kind a tot k v
+  while read -r kind a _ _ tot; do
+    case $kind in some) ms=${a#avg10=} mst=${tot#total=} ;; full) mf=${a#avg10=} mft=${tot#total=} ;; esac
+  done 2>/dev/null </proc/pressure/memory
+  while read -r kind a _ _ tot; do
+    [[ $kind == some ]] && { cs=${a#avg10=} cst=${tot#total=}; break; }
+  done 2>/dev/null </proc/pressure/cpu
+  while read -r k v _; do
+    case $k in MemFree:) free=$v ;; MemAvailable:) avail=$v; break ;; esac
+  done </proc/meminfo
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$ms" "$mst" "$mf" "$mft" "$cs" "$cst" "$free" "$avail"
+}
+# The unit cgroup's processes, one row each (field 22 of /proc/<pid>/stat = start ticks: counted from
+# the last ')' because comm may hold spaces); a process gone mid-read drops out of that sample.
+roster_rows() {
+  local t=$1 cg=$2 f p line rss hwm comm k v
+  local -a stat
+  for f in "$cg/cgroup.procs" "$cg"/*/cgroup.procs; do
+    [[ -r $f ]] || continue
+    while read -r p; do
+      { read -r line <"/proc/$p/stat"; } 2>/dev/null || continue
+      read -r -a stat <<<"${line##*) }"
+      rss=NA hwm=NA
+      while read -r k v _; do
+        case $k in VmHWM:) hwm=$v ;; VmRSS:) rss=$v; break ;; esac
+      done 2>/dev/null <"/proc/$p/status"
+      { read -r comm <"/proc/$p/comm"; } 2>/dev/null || comm=NA
+      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$t" "$p" "${stat[19]:-NA}" "$rss" "$hwm" "$comm"
+    done <"$f"
+  done
+}
 # 1 s host samples until the unit's cgroup goes or its rc lands; bash builtins + sleep. Busy jiffies
 # host-wide + over the pinned CPUs (X1's input); throttle counters repeat per sibling/package: only
 # their deltas matter.
 sample() {
   local cg=$1 out=$2 t name us ni sy id io irq sirq stl busy idle pb cu sw si so k v ct pt mt f x
+  local me=$BASHPID
+  [[ -s $st/host-diag.tsv ]] || printf 'epoch_us\tmem_some_avg10\tmem_some_total_us\tmem_full_avg10\tmem_full_total_us\tcpu_some_avg10\tcpu_some_total_us\tmem_free_kb\tmem_available_kb\n' >"$st/host-diag.tsv"
+  [[ -s $st/unit-roster.tsv ]] || printf 'epoch_us\tpid\tstart_ticks\trss_kb\thwm_kb\tcomm\n' >"$st/unit-roster.tsv"
   [[ -s $out ]] || printf 'epoch_us\tbusy_jiffies\tidle_jiffies\tcampaign_cpu_us\tcampaign_swap_bytes\tpswpin\tpswpout\tcore_throttle\tpackage_throttle\tmax_temp_mc\tpinned_busy_jiffies\n' >"$out"
   while [[ -e $cg/cpu.stat && ! -s $st/rc ]]; do
     t=${EPOCHREALTIME/./}
@@ -202,8 +273,11 @@ sample() {
     for f in /sys/devices/system/cpu/cpu*/thermal_throttle/package_throttle_count; do read -r x <"$f" && pt=$((pt + x)); done
     for f in /sys/class/thermal/thermal_zone*/temp; do { read -r x <"$f"; } 2>/dev/null && (( x > mt )) && mt=$x; done
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$t" "$busy" "$idle" "$cu" "$sw" "$si" "$so" "$ct" "$pt" "$mt" "$pb" >>"$out"
+    diag_row "$t" >>"$st/host-diag.tsv"
+    roster_rows "$t" "$cg" >>"$st/unit-roster.tsv"
     sleep 1
   done
+  outer_rows sampler "$me" | head -n 1 >>"$st/outer.tsv"
 }
 started=
 if [[ ! -s $st/rc ]] && ! active; then
@@ -242,6 +316,8 @@ if [[ ! -s $st/rc ]] && ! active; then
     # shellcheck disable=SC2016  # expands inside the unit's shell
     script='mark() { printf "%s\t%s\n" "$1" "${EPOCHREALTIME/./}" >>"$ST/preflight.tsv"; }; sleep 20; mark campaign-control-start; timeout 60 taskset -c 2 bash -c "while :; do :; done" || true; mark campaign-control-end; sleep 3600'
   fi
+  main=(bash -c "$script" _ "${args[@]}")
+  [[ $mode == run && ${SB1_CAPSULE:-} == 1 ]] && main=(python3 -I "$root/tools/sb-unit-main" "$st" "${SB1_CENSOR_S:--}" tools/sb-campaign-chunk "${args[@]}")
   # The unit writes as the campaign user: its log exists first, so no append creates it as root.
   : >>"$st/chunk.log"
   if ! unit_run --unit="$unit" --working-directory="$root" -p "CPUAffinity=${pinned[*]}" "${caps[@]}" \
@@ -250,7 +326,7 @@ if [[ ! -s $st/rc ]] && ! active; then
     -E SB1_TA_RECEIPTS="${SB1_TA_RECEIPTS:-}" -E SB1_ONLY_BLOCKS="${SB1_ONLY_BLOCKS:-}" \
     -E SB1_TA_RUN="${SB1_TA_RUN:-}" -E SB1_LOAD_DEADLINE_MS="${SB1_LOAD_DEADLINE_MS:-}" -E ST="$st" \
     -p "StandardOutput=append:$st/chunk.log" -p "StandardError=append:$st/chunk.log" \
-    bash -c "$script" _ "${args[@]}"; then
+    "${main[@]}"; then
     printf 'sb-campaign-unit: %s failed to start (shield.txt, chunk.log)\n' "$unit" >&2
     exit 2
   fi
@@ -262,6 +338,7 @@ if [[ -n $cgp ]] && active; then
   # The policy evidence: the CPU list systemd applied to the unit's main process + the wrapper's own.
   { systemctl show "$unit" -p CPUAffinity -p MainPID
     grep -E '^Cpus_allowed_list' "/proc/$(systemctl show "$unit" -p MainPID --value)/status"; } >"$st/unit-cpus.txt" 2>&1 || true
+  { printf 'memory.max\t'; cat "/sys/fs/cgroup$cgp/memory.max"; printf 'memory.swap.max\t'; cat "/sys/fs/cgroup$cgp/memory.swap.max"; } >"$st/capsule.txt" 2>&1 || true
   ( set +e; sample "/sys/fs/cgroup$cgp" "$st/host-samples.tsv" ) &
   sp=$!
   { printf 'wrapper '; grep -E '^Cpus_allowed_list' "/proc/$$/status"
@@ -295,6 +372,7 @@ fi
 while active; do sleep 15; done
 [[ -z $sp ]] || wait "$sp" || true
 host "$st/host-after.txt"
+outer_rows wrapper "$$" >>"$st/outer.tsv" || true
 touch "$m/$id.done"
 tail -n 2 "$st/chunk.log" 2>/dev/null || true
 rc=$(cat "$st/rc" 2>/dev/null || echo 125)

@@ -4,7 +4,10 @@
 # `<id>\t<query>\t<new dir>` answered by `done\t<id>\t<rc>` once the call's files exist. Each call
 # records its request's arrival (`request.tsv`) and, except in mode `unreported`, a producer report
 # in `checker-counters.tsv` (contract sb P8): mode `producer-self` names the server's own pid with
-# a 1 GiB peak; otherwise a pid no process holds with a 1,000,000,000 B peak. Mode `grow` touches
+# a 1 GiB peak (`producer-self-start` adds its own start ticks, `producer-self-stale` that start + 1:
+# TAS-P2's (pid, start_ticks) binding; `producer-self-small` = its own start with a 1 B peak: the samples'
+# larger HWM must win); otherwise a pid no process holds with a 1,000,000,000 B peak;
+# `producer-cpu` adds `producer_cpu_us` 2,000,000 (a launcher-reaped producer's CPU). Mode `grow` touches
 # 48 MiB per call before answering (the server's VmHWM rises after the last periodic sample); mode
 # `transient` runs a 0.3 s child in the first call, gone before the answer (scientist-8 S7).
 # Load modes (the direct load-memory bound): `census` reaps a child touching 48 MiB with wait4 and
@@ -95,10 +98,18 @@ def main():
                            f"sha256\t{hashlib.sha256(answer).hexdigest()}\ncpu_ticks\t{ticks()}\n")
             tmp.rename(out / "sink-complete.tsv")
         if mode != "unreported":
-            pid, peak = (os.getpid(), 1 << 30) if mode == "producer-self" else (4294967295, 10**9)
-            (out / "checker-counters.tsv").write_text(
-                f"kind\tcounter\tvalue\nruntime\tproducer_pid\t{pid}\n"
-                f"runtime\tproducer_maxrss_bytes\t{peak}\n")
+            own = mode.startswith("producer-self")
+            pid, peak = (os.getpid(), 1 << 30) if own else (4294967295, 10**9)
+            if mode == "producer-self-small":
+                peak = 1
+            rows = (f"kind\tcounter\tvalue\nruntime\tproducer_pid\t{pid}\n"
+                    f"runtime\tproducer_maxrss_bytes\t{peak}\n")
+            if mode in ("producer-self-start", "producer-self-stale", "producer-self-small"):
+                start = int(Path("/proc/self/stat").read_text().rsplit(")", 1)[1].split()[19])
+                rows += f"runtime\tproducer_start_ticks\t{start + (mode == 'producer-self-stale')}\n"
+            if mode == "producer-cpu":
+                rows += "runtime\tproducer_cpu_us\t2000000\n"
+            (out / "checker-counters.tsv").write_text(rows)
         (out / "call-done.tsv").write_text(f"rc\t{rc}\n")
         print(f"done\t{ident}\t{rc}", flush=True)
         print(os.getpid(), file=sys.stderr, flush=True)

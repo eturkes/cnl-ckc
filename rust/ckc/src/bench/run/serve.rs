@@ -149,7 +149,8 @@ fn line(
 // window saw. Σ of those lifetime maxima + the peak ≥ the call's simultaneous peak (one producer per
 // call) only while every one of them is still resident there under its identity (pid + start
 // time): one gone could have peaked unseen ⇒ no bound. None = that, a roster process unreadable at
-// the request, or no producer report.
+// the request, or no producer report. A report naming `producer_start_ticks` binds the producer
+// term to that lifetime (TAS-P2): a window process reusing the pid under another start keeps its HWM.
 fn memory_bound(
     directory: &Path,
     window: &State,
@@ -157,18 +158,25 @@ fn memory_bound(
     roster: Option<&[(u32, u64)]>,
 ) -> Option<u64> {
     let text = fs::read_to_string(directory.join("checker-counters.tsv")).ok()?;
-    let value = |name: &str| {
-        let prefix = format!("runtime\t{name}\t");
-        text.lines()
-            .find_map(|l| l.strip_prefix(prefix.as_str())?.parse::<u64>().ok())
-    };
-    let (pid, peak) = (value("producer_pid")?, value("producer_maxrss_bytes")?);
+    let (pid, peak) = (
+        counter(&text, "producer_pid")?,
+        counter(&text, "producer_maxrss_bytes")?,
+    );
+    let start = counter(&text, "producer_start_ticks");
     let terminal: BTreeMap<(u32, u64), u64> = resident.iter().map(|p| (p.key(), p.hwm)).collect();
-    let mut sum = peak;
+    // A bound producer's term = the larger of its report + every HWM the samples saw for that (pid,
+    // start): wait4's maxrss can trail /proc's VmHWM (the load bound's census rule).
+    let seen = start
+        .and_then(|s| Some((u32::try_from(pid).ok()?, s)))
+        .map_or(0, |k| {
+            let sampled = window.processes.get(&k).map_or(0, |p| p.hwm);
+            sampled.max(terminal.get(&k).copied().unwrap_or(0))
+        });
+    let mut sum = peak.max(seen);
     for key in roster?
         .iter()
         .chain(window.processes.keys())
-        .filter(|k| u64::from(k.0) != pid)
+        .filter(|k| u64::from(k.0) != pid || start.is_some_and(|s| k.1 != s))
         .collect::<BTreeSet<_>>()
     {
         // A window sample after the boundary can read a higher HWM: the larger reading counts.
@@ -176,6 +184,12 @@ fn memory_bound(
         sum = sum.saturating_add((*terminal.get(key)?).max(seen));
     }
     Some(sum)
+}
+// One `runtime\t<name>\t<value>` row of a call's checker counters.
+fn counter(text: &str, name: &str) -> Option<u64> {
+    let prefix = format!("runtime\t{name}\t");
+    text.lines()
+        .find_map(|l| l.strip_prefix(prefix.as_str())?.parse::<u64>().ok())
 }
 // Call-relative window: every timestamp minus the call's request time.
 fn rebase(mut window: State, start: u64) -> State {
@@ -342,6 +356,14 @@ fn call(
     (row.request_unix, row.end_unix) = (Some(clock.unix_at(start)), Some(clock.unix_at(end)));
     row.wall = end - start;
     row.cpu = cpu_after.saturating_sub(cpu_before) as f64 / ticks;
+    // A launcher-spawned producer is the server's grandchild, reaped by its live launcher: its CPU
+    // reaches the server's children ticks only at the launcher's exit ⇒ the report's own wait4 CPU.
+    if let Some(us) = fs::read_to_string(directory.join("checker-counters.tsv"))
+        .ok()
+        .and_then(|text| counter(&text, "producer_cpu_us"))
+    {
+        row.cpu += us as f64 / 1e6;
+    }
     let mut sink_at = None;
     match answered {
         Err(reason) => {

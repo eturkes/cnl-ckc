@@ -981,6 +981,137 @@ fn warm_memory_bound_adds_the_producer_peak_to_the_other_processes() {
     );
 }
 
+// TAS-P2: a report naming the producer's start ticks drops only that lifetime's HWM — the server
+// reporting itself under its own start drops its HWM; under a stale start it keeps it; the producer
+// term = max(report, the samples' HWM for that lifetime).
+#[test]
+fn warm_memory_bound_binds_the_producer_on_its_start_ticks() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    for mode in [
+        "producer-self-start",
+        "producer-self-stale",
+        "producer-self-small",
+    ] {
+        let s = Scratch::new(&format!("bound-{mode}"));
+        succeeded(&s.warm(mode, false, &[]));
+        let text = s.result("runs.tsv");
+        for run in rows(&text) {
+            let n: usize = run["run"].parse().unwrap();
+            let counters = s.result(&format!("run-{n:06}/checker-counters.tsv"));
+            let pid = counters
+                .lines()
+                .find_map(|l| l.strip_prefix("runtime\tproducer_pid\t"))
+                .unwrap()
+                .to_owned();
+            let processes_text = s.result(&format!("run-{n:06}/processes.tsv"));
+            let processes = rows(&processes_text);
+            assert!(processes.iter().any(|p| p["pid"] == pid), "{mode} run {n}");
+            let all: u64 = processes.iter().map(|p| number(p, "hwm_bytes")).sum();
+            let own: u64 = processes
+                .iter()
+                .filter(|p| p["pid"] == pid)
+                .map(|p| number(p, "hwm_bytes"))
+                .sum();
+            // start: the 1 GiB report replaces the server's HWM; stale: another lifetime keeps it;
+            // small: the samples' larger HWM wins over a 1 B report.
+            let expected = match mode {
+                "producer-self-start" => all - own + (1 << 30),
+                "producer-self-stale" => all + (1 << 30),
+                _ => all,
+            };
+            assert_eq!(
+                number(&run, "memory_bound_bytes"),
+                expected,
+                "{mode} run {n}"
+            );
+        }
+    }
+}
+
+// TAS-P2: a launcher-reaped producer's CPU arrives as the report's `producer_cpu_us` (the server's
+// children ticks miss a live launcher's grandchildren): the call's CPU adds it; a report without it
+// adds nothing.
+#[test]
+fn warm_call_cpu_adds_the_reported_producer_cpu() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    for (mode, reported) in [("producer-cpu", true), ("normal", false)] {
+        let s = Scratch::new(&format!("cpu-{mode}"));
+        succeeded(&s.warm(mode, false, &[]));
+        let text = s.result("runs.tsv");
+        for run in rows(&text) {
+            let cpu: f64 = run["cpu_seconds"].parse().unwrap();
+            assert_eq!(cpu >= 2.0, reported, "{mode} run {}: {cpu}", run["run"]);
+        }
+    }
+}
+
+// TAS-P2's unit main (`tools/sb-unit-main`): the chunk's rc passes through, the censor fires as rc 124
+// + `fired` (its chunk's group reaped), a signal death reads 128 + the signal, and `unit-main.tsv`
+// records the main's own pid, start ticks, VmHWM + the digest of the tool bytes that ran.
+#[test]
+fn unit_main_passes_rc_fires_its_censor_and_records_itself() {
+    let tool = root().join("tools/sb-unit-main");
+    let digest: String = {
+        use sha2::{Digest, Sha256};
+        Sha256::digest(fs::read(&tool).unwrap())
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect()
+    };
+    let s = Scratch::new("unit-main");
+    let cases = [
+        ("normal", "-", "exit 3", "3"),
+        ("censor", "1", "sleep 30 & echo $! > child; wait", "124"),
+        ("signal", "-", "kill -KILL $$", "137"),
+    ];
+    let runs: Vec<_> = cases
+        .iter()
+        .map(|&(name, censor, script, _)| {
+            let dir = s.0.join(name);
+            fs::create_dir_all(&dir).unwrap();
+            let child = Command::new("python3")
+                .arg("-I")
+                .arg(&tool)
+                .arg(&dir)
+                .arg(censor)
+                .args(["bash", "-c", script])
+                .current_dir(&dir)
+                .spawn()
+                .unwrap();
+            (dir, child)
+        })
+        .collect();
+    for ((dir, mut child), (name, _, _, rc)) in runs.into_iter().zip(cases) {
+        assert!(child.wait().unwrap().success(), "{name}");
+        assert_eq!(
+            fs::read_to_string(dir.join("rc")).unwrap(),
+            format!("{rc}\n"),
+            "{name}"
+        );
+        let censor = fs::read_to_string(dir.join("censor.txt")).unwrap();
+        assert_eq!(
+            censor.contains("fired\t1"),
+            name == "censor",
+            "{name}: {censor}"
+        );
+        if name == "censor" {
+            let pid = fs::read_to_string(dir.join("child")).unwrap();
+            assert!(
+                !Path::new(&format!("/proc/{}", pid.trim())).exists(),
+                "censor: child left"
+            );
+        }
+        let main = fs::read_to_string(dir.join("unit-main.tsv")).unwrap();
+        let keys: Vec<&str> = main.lines().filter_map(|l| l.split('\t').next()).collect();
+        assert_eq!(
+            keys,
+            ["pid", "start_ticks", "vmhwm_kb", "tool_sha256"],
+            "{name}"
+        );
+        assert!(main.contains(&format!("tool_sha256\t{digest}\n")), "{name}");
+    }
+}
+
 // Contract sb § Carried rulings Replacement round (scientist-8 S6): every attempted call records
 // its request write + its answer or failure in UNIX ns, whatever the outcome (the server's own
 // arrival stamp lies between them); a lost server's later calls, never written, record neither.

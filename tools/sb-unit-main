@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""TAS-P2 unit main process: `tools/sb-campaign-unit run` with SB1_CAPSULE=1 starts this as the unit's
+ExecStart, so the unit holds no process outside the harness tree but this one, whose exact terminal
+VmHWM it records itself (the charged ledger's term for it).
+
+Usage: python3 -I tools/sb-unit-main <state-dir> <censor-seconds|-> <chunk argv…>
+2 s idle → the chunk in its own session → 2 s idle (the 1 s sampler brackets every block). The censor
+is one monotonic limit from the chunk's launch through its loads, calls + teardown: on expiry
+SIGTERM to the chunk's group, SIGKILL 60 s later, rc 124; any process left in other groups dies at
+the unit's stop. Writes <state-dir>/censor.txt (censor_s, fired), unit-main.tsv (pid, start_ticks,
+vmhwm_kb, tool_sha256 = this file's bytes) and rc (bash convention: 128 + signal for a signal death).
+"""
+import hashlib
+import os
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+
+def own(field: str) -> int:
+    for line in Path("/proc/self/status").read_text().splitlines():
+        if line.startswith(field):
+            return int(line.split()[1])
+    raise SystemExit(f"sb-unit-main: no {field} in /proc/self/status")
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 4 or not (argv[2] == "-" or argv[2].isdigit() and int(argv[2]) > 0):
+        print(__doc__.split("\n\n")[1], file=sys.stderr)
+        return 2
+    state, censor, chunk = Path(argv[1]), argv[2], argv[3:]
+    tool = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()  # the bytes this run executes
+    limit = None if censor == "-" else int(censor)
+    (state / "censor.txt").write_text(f"censor_s\t{censor}\n")
+    time.sleep(2)
+    child = subprocess.Popen(chunk, start_new_session=True)
+    try:
+        rc = child.wait(timeout=limit)
+    except subprocess.TimeoutExpired:
+        with (state / "censor.txt").open("a") as f:
+            f.write("fired\t1\n")
+        os.killpg(child.pid, signal.SIGTERM)
+        try:
+            child.wait(timeout=60)
+        except subprocess.TimeoutExpired:
+            os.killpg(child.pid, signal.SIGKILL)
+            child.wait()
+        rc = 124
+    if rc < 0:
+        rc = 128 - rc
+    time.sleep(2)
+    start = Path("/proc/self/stat").read_text().rsplit(")", 1)[1].split()[19]
+    (state / "unit-main.tsv").write_text(
+        f"pid\t{os.getpid()}\nstart_ticks\t{start}\nvmhwm_kb\t{own('VmHWM:')}\n"
+        f"tool_sha256\t{tool}\n")
+    (state / "rc").write_text(f"{rc}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
