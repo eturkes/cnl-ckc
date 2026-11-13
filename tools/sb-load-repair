@@ -3,16 +3,17 @@
 
 Usage: python3 -I tools/sb-load-repair <load-repair-plan.tsv> <base> [--self-test]
 <base>/runs/<id>[-r] = `ckc bench run` outputs, <base>/state/<id>[-r]/grade.tsv = `ckc bench grade` of that
-attempt (load_bound + load_window rows). rc 0 = every planned identity has a complete bounded direct
-load ≤ 32,000,000,000 B, 1 = HOLD (a hard failure, a missing or still-invalid attempt), 2 = usage or a
-self-test plant that passed.
+attempt (load_bound + load_window rows), <base>/state/<id>[-r]/rc = the harness rc. rc 0 = every planned
+identity has a complete bounded direct load ≤ 32,000,000,000 B, 1 = HOLD (a hard failure, a missing or
+still-invalid attempt), 2 = usage or a self-test plant that passed.
 
-Per attempt: hard = a wrong identity or output, a budget failure, an unbounded call, not `ready`, not
-`receipt integrated` for the planned knowledge identity, a missing complete bound U (NA), U < the sampled
-peak L, L or U or the attempt's lifecycle peak > 32 GB; environmental = only host verdicts (a block or
-the load window rejected or unassessed) — one replacement `<id>-r` allowed; pass = neither. Selection =
-the first valid attempt. Per identity: max(L, U, lifecycle, the confirmation's peak P, every legacy
-direct load peak) ≤ 32 GB.
+Per attempt: hard = a wrong identity or output, a budget failure, an unbounded call, a harness rc outside
+{0, 1}, a sampler error, an executable other than the plan's sealed `ckc`, checker or census seal, settings
+other than the plan's seed + one block of the three queries, not `ready`, not `receipt integrated` for the
+planned knowledge identity, a missing complete bound U (NA), U < the sampled peak L, L or U or the
+attempt's lifecycle peak > 32 GB; environmental = only host verdicts (a block or the load window rejected
+or unassessed) — one replacement `<id>-r` allowed; pass = neither. Selection = the first valid attempt.
+Per identity: max(L, U, lifecycle, the confirmation's peak P, every legacy direct load peak) ≤ 32 GB.
 """
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ import tempfile
 from pathlib import Path
 
 BUDGET = 32_000_000_000
+QUERIES = "q-all,q-one,q-patient"  # contract sb: one block of the chunk's three queries per identity
 
 
 def table(path: Path) -> list[dict[str, str]]:
@@ -43,7 +45,25 @@ def number(text: str | None) -> int | None:
     return int(text) if text is not None and text.isdigit() else None
 
 
-def attempt(base: Path, run_id: str, kb: str) -> tuple[str, list[str], dict[str, int]]:
+def executables(settings: dict[str, str], host: dict[str, str], identities: list[dict[str, str]],
+                row: dict[str, str]) -> list[str]:
+    """`ckc` = host.tsv's harness digest; the checker = the serve command's first word as identities.tsv
+    hashed it; the census = the `--ta-run` seal, whose file name carries its sha256 (the SEAL row checks
+    the bytes)."""
+    bad = []
+    if host.get("harness_sha256") != row["ckc"]:
+        bad.append("ckc executable")
+    serve = settings.get("serve", "").split()
+    hashes = [r.get("sha256") for r in identities if serve and r.get("path") == serve[0]]
+    if not hashes or any(h != row["checker"] for h in hashes):
+        bad.append("checker executable")
+    census = serve[serve.index("--ta-run") + 1] if "--ta-run" in serve[:-1] else ""
+    if Path(census).name != f"ta-{row['census']}":
+        bad.append("census executable")
+    return bad
+
+
+def attempt(base: Path, run_id: str, row: dict[str, str]) -> tuple[str, list[str], dict[str, int]]:
     """(pass | environmental | hard, reasons, measured {L, U, lifecycle})."""
     run, state = base / "runs" / run_id, base / "state" / run_id
     hard, env, measured = [], [], {}
@@ -52,16 +72,27 @@ def attempt(base: Path, run_id: str, kb: str) -> tuple[str, list[str], dict[str,
         summary = {k: v for f in next(r for r in grade if r[0] == "summary")[1:] for k, _, v in [f.partition("=")]}
         loads = {r["arm"]: r for r in table(run / "loads.tsv")}
         load = kv(run / "arm-target" / "load.tsv")
-        lifecycle = number(kv(run / "memory.tsv").get("peak_summed_rss_bytes"))
+        memory, settings, host = kv(run / "memory.tsv"), kv(run / "settings.tsv"), kv(run / "host.tsv")
+        identities = table(run / "identities.tsv")
+        rc = (state / "rc").read_text().strip()
     except (OSError, StopIteration, IndexError) as error:
         return "hard", [f"unreadable attempt: {error}"], measured
+    lifecycle = number(memory.get("peak_summed_rss_bytes"))
     for key, want in [("identity", "ok"), ("sha_bad", "0"), ("sha_unchecked", "0"), ("budget_fail", "0"),
                       ("memory_unbounded", "0"), ("runs_plan", "ok"), ("incomplete", "0")]:
         if summary.get(key) != want:
             hard.append(f"{key}={summary.get(key)}")
+    if rc not in ("0", "1"):
+        hard.append(f"harness rc {rc}")
+    if memory.get("sampler_error") != "none":
+        hard.append(f"sampler_error={memory.get('sampler_error')}")
+    for key, want in [("seed", row["seed"]), ("blocks", "1"), ("queries", QUERIES), ("only_blocks", "")]:
+        if settings.get(key) != want:
+            hard.append(f"settings {key}={settings.get(key)}")
+    hard += executables(settings, host, identities, row)
     if loads.get("target", {}).get("outcome") != "ready":
         hard.append("load not ready")
-    if load.get("receipt") != "integrated" or load.get("kb_identity") != kb:
+    if load.get("receipt") != "integrated" or load.get("kb_identity") != row["kb_identity"]:
         hard.append("not an integrated load of the planned knowledge identity")
     bound = [r for r in grade if r[0] == "load_bound"]
     sampled, upper = (number(bound[0][1]), number(bound[0][2])) if bound else (None, None)
@@ -80,10 +111,10 @@ def attempt(base: Path, run_id: str, kb: str) -> tuple[str, list[str], dict[str,
     windows = [r for r in grade if r[0] == "load_window" and r[1] == "target"]
     if not windows:
         hard.append("no load window graded")
-    for row in windows + [r for r in grade if r[0] == "block"]:
-        verdict, why = (row[4], row[5])
+    for row_ in windows + [r for r in grade if r[0] == "block"]:
+        verdict, why = (row_[4], row_[5])
         if verdict != "accepted":
-            env.append(f"{row[0]} {row[1]} {verdict} {why}")
+            env.append(f"{row_[0]} {row_[1]} {verdict} {why}")
     return ("hard" if hard else "environmental" if env else "pass"), hard + env, measured
 
 
@@ -94,7 +125,7 @@ def validate(plan_path: Path, base: Path, report=print) -> int:
         for run_id in (row["id"], row["id"] + "-r"):
             if not (base / "runs" / run_id).exists():
                 continue
-            verdict, reasons, measured = attempt(base, run_id, row["kb_identity"])
+            verdict, reasons, measured = attempt(base, run_id, row)
             report(f"attempt\t{run_id}\t{verdict}\t{'; '.join(reasons) or '-'}")
             if verdict == "pass":
                 chosen = measured
@@ -116,14 +147,24 @@ def validate(plan_path: Path, base: Path, report=print) -> int:
     return 1 if held else 0
 
 
-def fake(base: Path, run_id: str, kb: str, **plant) -> None:
+def fake(base: Path, run_id: str, row: dict[str, str], **plant) -> None:
     run, state = base / "runs" / run_id, base / "state" / run_id
     (run / "arm-target").mkdir(parents=True)
     state.mkdir(parents=True)
+    checker = f"/seal/checker-{row['checker']}"
     (run / "loads.tsv").write_text("arm\tstart_ns\tready_ns\tload_ns\trss_at_ready_bytes\toutcome\tdetail\n"
                                    "target\t1\t2\t1\t5\tready\t\n")
-    (run / "arm-target" / "load.tsv").write_text(f"receipt\tintegrated\nkb_identity\t{plant.get('identity', kb)}\n")
-    (run / "memory.tsv").write_text(f"peak_summed_rss_bytes\t{plant.get('lifecycle', 17_000_000_000)}\n")
+    (run / "arm-target" / "load.tsv").write_text(
+        f"receipt\tintegrated\nkb_identity\t{plant.get('identity', row['kb_identity'])}\n")
+    (run / "memory.tsv").write_text(f"key\tvalue\npeak_summed_rss_bytes\t{plant.get('lifecycle', 17_000_000_000)}\n"
+                                    f"sampler_error\t{plant.get('sampler', 'none')}\n")
+    (run / "settings.tsv").write_text(
+        f"key\tvalue\nseed\t{plant.get('seed', row['seed'])}\nblocks\t1\nqueries\t{QUERIES}\nonly_blocks\t\n"
+        f"serve\t{checker} serve --provider static --ta-run /seal/ta-{plant.get('census', row['census'])}\n")
+    (run / "host.tsv").write_text(f"key\tvalue\nharness_sha256\t{plant.get('ckc', row['ckc'])}\n")
+    (run / "identities.tsv").write_text(
+        f"arm\tpath\tbytes\tsha256\ntarget\t{checker}\t1\t{plant.get('checker', row['checker'])}\n")
+    (state / "rc").write_text(f"{plant.get('rc', 0)}\n")
     window = plant.get("window", "accepted\t-")
     (state / "grade.tsv").write_text(
         "summary\tidentity=ok\tsha_bad=0\tsha_unchecked=0\tbudget_fail=0\tblocks=1\taccepted=1\trejected=0\t"
@@ -135,13 +176,20 @@ def fake(base: Path, run_id: str, kb: str, **plant) -> None:
 
 def self_test(plan_path: Path) -> int:
     rows = table(plan_path)
+    other = "0" * 64
     cases = [  # (plant on the first planned identity, replacement plant or None, expected rc)
         ({}, None, 0),
         ({"U": "NA"}, None, 1),
         ({"L": 16_700_000_000}, None, 1),
         ({"U": 32_000_000_001}, None, 1),
         ({"lifecycle": 32_000_000_001}, None, 1),
-        ({"identity": "0" * 64}, None, 1),
+        ({"identity": other}, None, 1),
+        ({"ckc": other}, None, 1),
+        ({"checker": other}, None, 1),
+        ({"census": other}, None, 1),
+        ({"seed": "1"}, None, 1),
+        ({"sampler": "read-failed"}, None, 1),
+        ({"rc": 2}, None, 1),
         ({"window": "rejected\tX1"}, None, 1),
         ({"window": "rejected\tX1"}, {}, 0),
         ({"U": "NA"}, {}, 1),
@@ -151,9 +199,9 @@ def self_test(plan_path: Path) -> int:
         with tempfile.TemporaryDirectory(prefix="sb-load-repair-") as tmp:
             base = Path(tmp)
             for i, row in enumerate(rows):
-                fake(base, row["id"], row["kb_identity"], **(plant if i == 0 else {}))
+                fake(base, row["id"], row, **(plant if i == 0 else {}))
             if replacement is not None:
-                fake(base, rows[0]["id"] + "-r", rows[0]["kb_identity"], **replacement)
+                fake(base, rows[0]["id"] + "-r", rows[0], **replacement)
             got = validate(plan_path, base, report=lambda _line: None)
             status = "ok" if got == want else "FAILED"
             failed += got != want
