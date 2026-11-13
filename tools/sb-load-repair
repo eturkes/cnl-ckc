@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""SB1 direct load-memory repair validator (contract sb § Carried rulings, the direct load-memory amendment).
+
+Usage: python3 -I tools/sb-load-repair <load-repair-plan.tsv> <base> [--self-test]
+<base>/runs/<id>[-r] = `ckc bench run` outputs, <base>/state/<id>[-r]/grade.tsv = `ckc bench grade` of that
+attempt (load_bound + load_window rows). rc 0 = every planned identity has a complete bounded direct
+load ≤ 32,000,000,000 B, 1 = HOLD (a hard failure, a missing or still-invalid attempt), 2 = usage or a
+self-test plant that passed.
+
+Per attempt: hard = a wrong identity or output, a budget failure, an unbounded call, not `ready`, not
+`receipt integrated` for the planned knowledge identity, a missing complete bound U (NA), U < the sampled
+peak L, L or U or the attempt's lifecycle peak > 32 GB; environmental = only host verdicts (a block or
+the load window rejected or unassessed) — one replacement `<id>-r` allowed; pass = neither. Selection =
+the first valid attempt. Per identity: max(L, U, lifecycle, the confirmation's peak P, every legacy
+direct load peak) ≤ 32 GB.
+"""
+from __future__ import annotations
+
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+BUDGET = 32_000_000_000
+
+
+def table(path: Path) -> list[dict[str, str]]:
+    lines = path.read_text().split("\n")
+    head = lines[0].split("\t")
+    return [dict(zip(head, line.split("\t"))) for line in lines[1:] if line]
+
+
+def kv(path: Path) -> dict[str, str]:
+    out = {}
+    for line in path.read_text().split("\n"):
+        key, _, value = line.partition("\t")
+        if key and key not in out:
+            out[key] = value
+    return out
+
+
+def number(text: str | None) -> int | None:
+    return int(text) if text is not None and text.isdigit() else None
+
+
+def attempt(base: Path, run_id: str, kb: str) -> tuple[str, list[str], dict[str, int]]:
+    """(pass | environmental | hard, reasons, measured {L, U, lifecycle})."""
+    run, state = base / "runs" / run_id, base / "state" / run_id
+    hard, env, measured = [], [], {}
+    try:
+        grade = [line.split("\t") for line in (state / "grade.tsv").read_text().split("\n") if line]
+        summary = {k: v for f in next(r for r in grade if r[0] == "summary")[1:] for k, _, v in [f.partition("=")]}
+        loads = {r["arm"]: r for r in table(run / "loads.tsv")}
+        load = kv(run / "arm-target" / "load.tsv")
+        lifecycle = number(kv(run / "memory.tsv").get("peak_summed_rss_bytes"))
+    except (OSError, StopIteration, IndexError) as error:
+        return "hard", [f"unreadable attempt: {error}"], measured
+    for key, want in [("identity", "ok"), ("sha_bad", "0"), ("sha_unchecked", "0"), ("budget_fail", "0"),
+                      ("memory_unbounded", "0"), ("runs_plan", "ok"), ("incomplete", "0")]:
+        if summary.get(key) != want:
+            hard.append(f"{key}={summary.get(key)}")
+    if loads.get("target", {}).get("outcome") != "ready":
+        hard.append("load not ready")
+    if load.get("receipt") != "integrated" or load.get("kb_identity") != kb:
+        hard.append("not an integrated load of the planned knowledge identity")
+    bound = [r for r in grade if r[0] == "load_bound"]
+    sampled, upper = (number(bound[0][1]), number(bound[0][2])) if bound else (None, None)
+    if sampled is None or upper is None:
+        hard.append("no complete load bound")
+    else:
+        measured.update(L=sampled, U=upper)
+        if upper < sampled:
+            hard.append("U < L")
+        if max(sampled, upper) > BUDGET:
+            hard.append("load memory > 32 GB")
+    if lifecycle is None or lifecycle > BUDGET:
+        hard.append(f"lifecycle peak {lifecycle}")
+    else:
+        measured["lifecycle"] = lifecycle
+    windows = [r for r in grade if r[0] == "load_window" and r[1] == "target"]
+    if not windows:
+        hard.append("no load window graded")
+    for row in windows + [r for r in grade if r[0] == "block"]:
+        verdict, why = (row[4], row[5])
+        if verdict != "accepted":
+            env.append(f"{row[0]} {row[1]} {verdict} {why}")
+    return ("hard" if hard else "environmental" if env else "pass"), hard + env, measured
+
+
+def validate(plan_path: Path, base: Path, report=print) -> int:
+    held = False
+    for row in table(plan_path):
+        chosen = None
+        for run_id in (row["id"], row["id"] + "-r"):
+            if not (base / "runs" / run_id).exists():
+                continue
+            verdict, reasons, measured = attempt(base, run_id, row["kb_identity"])
+            report(f"attempt\t{run_id}\t{verdict}\t{'; '.join(reasons) or '-'}")
+            if verdict == "pass":
+                chosen = measured
+                break
+            if verdict == "hard":
+                break
+        if chosen is None:
+            held = True
+            report(f"identity\t{row['id']}\t{row['instance']}\tHOLD\tno valid complete attempt")
+            continue
+        legacy = number(row["legacy_load_peak_bytes"]) or 0
+        peak = max(chosen["L"], chosen["U"], chosen["lifecycle"], int(row["confirmation_peak_bytes"]), legacy)
+        ok = peak <= BUDGET
+        held |= not ok
+        report(f"identity\t{row['id']}\t{row['instance']}\t{'pass' if ok else 'HOLD'}\t"
+               f"L={chosen['L']} U={chosen['U']} lifecycle={chosen['lifecycle']} "
+               f"P={row['confirmation_peak_bytes']} legacy={row['legacy_load_peak_bytes']} max={peak}")
+    report(f"load-repair\t{'hold' if held else 'pass'}")
+    return 1 if held else 0
+
+
+def fake(base: Path, run_id: str, kb: str, **plant) -> None:
+    run, state = base / "runs" / run_id, base / "state" / run_id
+    (run / "arm-target").mkdir(parents=True)
+    state.mkdir(parents=True)
+    (run / "loads.tsv").write_text("arm\tstart_ns\tready_ns\tload_ns\trss_at_ready_bytes\toutcome\tdetail\n"
+                                   "target\t1\t2\t1\t5\tready\t\n")
+    (run / "arm-target" / "load.tsv").write_text(f"receipt\tintegrated\nkb_identity\t{plant.get('identity', kb)}\n")
+    (run / "memory.tsv").write_text(f"peak_summed_rss_bytes\t{plant.get('lifecycle', 17_000_000_000)}\n")
+    window = plant.get("window", "accepted\t-")
+    (state / "grade.tsv").write_text(
+        "summary\tidentity=ok\tsha_bad=0\tsha_unchecked=0\tbudget_fail=0\tblocks=1\taccepted=1\trejected=0\t"
+        "unassessed=0\tincomplete=0\tx3=same\tpinned=ok\tmemory_unbounded=0\truns_plan=ok\n"
+        f"load_bound\t{plant.get('L', 16_500_000_000)}\t{plant.get('U', 16_600_000_000)}\t-\n"
+        f"load_window\ttarget\t1\t2\t{window}\t0.0\t1.0\t0\t0\t90.0\t1.0\n"
+        "block\t1\t3\t4\taccepted\t-\t0.0\t1.0\t0\t0\t90.0\t0\t1.0\t0\n")
+
+
+def self_test(plan_path: Path) -> int:
+    rows = table(plan_path)
+    cases = [  # (plant on the first planned identity, replacement plant or None, expected rc)
+        ({}, None, 0),
+        ({"U": "NA"}, None, 1),
+        ({"L": 16_700_000_000}, None, 1),
+        ({"U": 32_000_000_001}, None, 1),
+        ({"lifecycle": 32_000_000_001}, None, 1),
+        ({"identity": "0" * 64}, None, 1),
+        ({"window": "rejected\tX1"}, None, 1),
+        ({"window": "rejected\tX1"}, {}, 0),
+        ({"U": "NA"}, {}, 1),
+    ]
+    failed = 0
+    for plant, replacement, want in cases:
+        with tempfile.TemporaryDirectory(prefix="sb-load-repair-") as tmp:
+            base = Path(tmp)
+            for i, row in enumerate(rows):
+                fake(base, row["id"], row["kb_identity"], **(plant if i == 0 else {}))
+            if replacement is not None:
+                fake(base, rows[0]["id"] + "-r", rows[0]["kb_identity"], **replacement)
+            got = validate(plan_path, base, report=lambda _line: None)
+            status = "ok" if got == want else "FAILED"
+            failed += got != want
+            print(f"self-test\t{plant}\treplacement={replacement}\twant={want}\tgot={got}\t{status}")
+            shutil.rmtree(base, ignore_errors=True)
+    return 2 if failed else 0
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2 or (len(argv) < 3 and "--self-test" not in argv):
+        print(__doc__.split("\n\n")[1], file=sys.stderr)
+        return 2
+    plan = Path(argv[1])
+    if "--self-test" in argv:
+        return self_test(plan)
+    return validate(plan, Path(argv[2]))
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

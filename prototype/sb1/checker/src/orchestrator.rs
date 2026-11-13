@@ -704,9 +704,12 @@ pub struct ServeRequest {
 }
 // `ta --dc --patient last --redesign` over the whole composition (the redesigned analysis
 // I2 measured; without the flag a census binary runs its old default); rc 0 = admitted.
+// The census exits before the ready line, so the harness's RSS samples can miss its last
+// milliseconds: its exact wait4 peak (pid + bytes) = its term of the load's complete memory bound
+// (contract sb, the direct load-memory amendment).
 fn run_census(request: &ServeRequest, binary: &Path) -> Result<Vec<(String, String)>, Failure> {
     let out = request.base.output.join("ta");
-    let status = Command::new(binary)
+    let child = Command::new(binary)
         .arg("--root")
         .arg(&request.base.root)
         .arg("--composition")
@@ -717,12 +720,15 @@ fn run_census(request: &ServeRequest, binary: &Path) -> Result<Vec<(String, Stri
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .status()
+        .spawn()
         .map_err(|e| Failure::io(binary, e))?;
-    match status.code() {
+    let exit = crate::peak::wait(child).map_err(|e| Failure::io(binary, e))?;
+    match exit.status.code() {
         Some(0) => Ok(vec![
             ("receipt".into(), "integrated".into()),
             ("ta_out".into(), out.display().to_string()),
+            ("census_pid".into(), exit.pid.to_string()),
+            ("census_maxrss_bytes".into(), exit.peak_bytes.to_string()),
         ]),
         Some(1) => Err(Failure::refused(
             "load",
@@ -730,7 +736,7 @@ fn run_census(request: &ServeRequest, binary: &Path) -> Result<Vec<(String, Stri
         )),
         _ => Err(Failure {
             rc: 2,
-            message: format!("in-process typed analysis {status}"),
+            message: format!("in-process typed analysis {}", exit.status),
         }),
     }
 }

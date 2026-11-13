@@ -149,11 +149,24 @@ fn an_integrated_load_runs_the_redesigned_census() {
             arm.join("ta").display()
         )
     );
-    assert!(
-        fs::read_to_string(arm.join("load.tsv"))
-            .unwrap()
-            .contains("receipt\tintegrated\n")
-    );
+    let table = fs::read_to_string(arm.join("load.tsv")).unwrap();
+    assert!(table.contains("receipt\tintegrated\n"));
+    // The census's exact wait4 peak + pid reach load.tsv: a 64 MiB block the stand-in touches
+    // between any two RSS samples still counts.
+    let field = |table: &str, key: &str| {
+        table
+            .lines()
+            .find_map(|l| l.strip_prefix(&format!("{key}\t"))?.parse::<u64>().ok())
+    };
+    assert!(field(&table, "census_pid").is_some_and(|pid| pid > 0));
+    assert!(field(&table, "census_maxrss_bytes").is_some());
+    fs::remove_dir_all(&arm).unwrap();
+    fs::write(directory.join("census-touch"), "64M\n").unwrap();
+    let (result, _) = load_with(&directory, None, Some(census.clone()));
+    result.unwrap();
+    let table = fs::read_to_string(arm.join("load.tsv")).unwrap();
+    assert!(field(&table, "census_maxrss_bytes").is_some_and(|bytes| bytes >= 64 << 20));
+    fs::remove_file(directory.join("census-touch")).unwrap();
     for (code, rc) in [("1", 1), ("2", 2)] {
         fs::remove_dir_all(&arm).unwrap();
         fs::write(directory.join("census-rc"), format!("{code}\n")).unwrap();

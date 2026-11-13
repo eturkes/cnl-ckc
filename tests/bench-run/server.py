@@ -7,6 +7,9 @@
 # a 1 GiB peak; otherwise a pid no process holds with a 1,000,000,000 B peak. Mode `grow` touches
 # 48 MiB per call before answering (the server's VmHWM rises after the last periodic sample); mode
 # `transient` runs a 0.3 s child in the first call, gone before the answer (scientist-8 S7).
+# Load modes (the direct load-memory bound): `census` reaps a child touching 48 MiB with wait4 and
+# reports it as an integrated load's census (`arm/load.tsv`); `census-unreported` omits that report;
+# `load-transient` runs a 0.3 s child before ready, reported nowhere.
 import hashlib
 import mmap
 import os
@@ -39,6 +42,18 @@ def main():
     if mode == "load-exit":
         sys.exit(4)
     time.sleep(0.05)
+    if mode in ("census", "census-unreported"):
+        touch = ("import mmap, time\nm = mmap.mmap(-1, 48 * 1024 * 1024)\n"
+                 "for o in range(0, len(m), 4096):\n    m[o] = 1\ntime.sleep(0.05)\n")
+        child = subprocess.Popen([sys.executable, "-I", "-c", touch])
+        _, status, usage = os.wait4(child.pid, 0)
+        assert os.waitstatus_to_exitcode(status) == 0
+        rows = "knowledge_documents\t1\nreceipt\tintegrated\n"
+        if mode == "census":
+            rows += f"census_pid\t{child.pid}\ncensus_maxrss_bytes\t{usage.ru_maxrss * 1024}\n"
+        (arm / "load.tsv").write_text(rows)
+    if mode == "load-transient":
+        subprocess.run(["sleep", "0.3"], check=True)
     table(arm / "load-phases.tsv", LOAD, "load", 0.005)
     print("ready", flush=True)
     calls = 0

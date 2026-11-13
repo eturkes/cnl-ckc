@@ -89,6 +89,7 @@ struct Chunk {
     producer: &'static str,                 // the producer identity file's digest
     runs_edit: fn(String) -> String,        // runs.tsv as written, then edited
     kb: fn(&str) -> String,                 // the knowledge identity a server reports per instance
+    load_window: Option<(i64, i64)>, // load-bound.tsv's target load window (µs; None = no file)
 }
 fn clean(name: &'static str) -> Chunk {
     Chunk {
@@ -133,6 +134,7 @@ fn clean(name: &'static str) -> Chunk {
         producer: PRODUCER,
         runs_edit: |runs| runs,
         kb: kb_of,
+        load_window: None,
     }
 }
 // Block b's calls, in order: (arm, query, start µs, end µs).
@@ -535,6 +537,17 @@ fn attempt(c: &Chunk, run: &Path, state: &Path) {
         }
         fs::write(state.join("host-samples.tsv"), rows).unwrap();
     }
+    if let Some((s, e)) = c.load_window {
+        fs::write(
+            run.join("load-bound.tsv"),
+            format!(
+                "load_peak_sampled_bytes\t5000000000\nload_bound_bytes\t5100000000\nload_bound_reason\t-\norigin_unix_ns\t1\nload_window\ttarget\t{}\t{}\nterm\t7\t9\t5100000000\tready-hwm\n",
+                s * 1000,
+                e * 1000
+            ),
+        )
+        .unwrap();
+    }
 }
 fn graded(out: std::process::Output, fixture: Fixture) -> Graded {
     assert!(
@@ -792,6 +805,51 @@ fn foreign_cpu_above_half_rejects_its_block_alone() {
     assert_eq!(
         ["accepted", "rejected", "unassessed"].map(|k| &s[k][..]),
         ["2", "1", "0"]
+    );
+}
+
+// Contract sb § Carried rulings, the direct load-memory amendment: the harness's load window gets
+// the block rules (X1 over its own interval, the chunk's X3) + its bound echoed; a run without
+// load-bound.tsv prints neither.
+#[test]
+fn load_window_takes_the_block_rules_and_echoes_the_bound() {
+    let mut c = clean("load-window");
+    c.load_window = Some((T0 - 25_000_000, T0 - 5_000_000));
+    let g = grade(&c);
+    assert_eq!(
+        g.rows("load_bound"),
+        [["load_bound", "5000000000", "5100000000", "-"]]
+    );
+    let w = g.rows("load_window");
+    assert_eq!(
+        (w.len(), w[0][1], w[0][4], w[0][5]),
+        (1, "target", "accepted", "-")
+    );
+    // 0.6 foreign CPUs across the load window alone (X1 = the window's mean): the window rejects,
+    // every block stays accepted.
+    let mut c = clean("load-window-x1");
+    c.load_window = Some((T0 - 25_000_000, T0 - 5_000_000));
+    c.foreign = |_, t| {
+        if (T0 - 26_000_000..T0 - 4_000_000).contains(&t) {
+            0.6
+        } else {
+            0.0
+        }
+    };
+    let g = grade(&c);
+    let w = g.rows("load_window");
+    assert_eq!((w[0][4], w[0][5]), ("rejected", "X1"));
+    assert_eq!(g.blocks(), accepted(2));
+    // A changed host rejects the load window too (X3, the chunk's).
+    let mut c = clean("load-window-x3");
+    c.load_window = Some((T0 - 25_000_000, T0 - 5_000_000));
+    c.after = ("powersave", 55, true);
+    let g = grade(&c);
+    assert_eq!(g.rows("load_window")[0][4..6], ["rejected", "X3"]);
+    assert!(
+        grade(&clean("no-load-window"))
+            .rows("load_window")
+            .is_empty()
     );
 }
 

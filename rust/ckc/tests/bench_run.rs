@@ -742,6 +742,66 @@ impl Scratch {
             .unwrap()
     }
 }
+// Contract sb § Carried rulings, the direct load-memory amendment: `load-bound.tsv` = the load
+// window's sampled summed-RSS peak L + its complete same-run bound U (Σ lifetime maxima).
+#[test]
+fn warm_load_bound_counts_the_census_peak_and_refuses_unaccounted_exits() {
+    let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let read = |s: &Scratch| {
+        let text = s.result("load-bound.tsv");
+        let value = |key: &str| {
+            text.lines()
+                .find_map(|l| l.strip_prefix(&format!("{key}\t")).map(str::to_owned))
+                .unwrap()
+        };
+        let census: Vec<u64> = text
+            .lines()
+            .filter(|l| l.starts_with("term\t") && l.ends_with("\tcensus-wait4"))
+            .map(|l| l.split('\t').nth(3).unwrap().parse().unwrap())
+            .collect();
+        let sampled: u64 = value("load_peak_sampled_bytes").parse().unwrap();
+        (
+            sampled,
+            value("load_bound_bytes"),
+            value("load_bound_reason"),
+            census,
+        )
+    };
+    // Every process the load saw is resident at ready: U is numeric and ≥ the sampled peak.
+    let s = Scratch::new("load-bound-normal");
+    succeeded(&s.warm("normal", false, &[]));
+    let (sampled, bound, reason, census) = read(&s);
+    assert!(
+        bound.parse::<u64>().unwrap() >= sampled,
+        "{bound} < {sampled}"
+    );
+    assert_eq!((reason.as_str(), census.len()), ("-", 0));
+    // The census left before ready: its 48 MiB wait4 peak counts whether or not a sample saw it.
+    let s = Scratch::new("load-bound-census");
+    succeeded(&s.warm("census", false, &[]));
+    let (sampled, bound, reason, census) = read(&s);
+    let bound: u64 = bound.parse().unwrap();
+    assert!(
+        bound >= sampled && bound >= 48 << 20,
+        "{bound} vs {sampled}"
+    );
+    assert_eq!(reason, "-");
+    assert!(census.len() == 1 && census[0] >= 48 << 20, "{census:?}");
+    // An integrated arm without its census report, a child gone unreported: no bound.
+    for (mode, why) in [
+        ("census-unreported", "without its census peak"),
+        (
+            "load-transient",
+            "left before ready without a terminal peak",
+        ),
+    ] {
+        let s = Scratch::new(&format!("load-bound-{mode}"));
+        succeeded(&s.warm(mode, false, &[]));
+        let (_, bound, reason, _) = read(&s);
+        assert_eq!(bound, "NA", "{mode}");
+        assert!(reason.contains(why), "{mode}: {reason}");
+    }
+}
 // The server leads its own process group; the harness does not.
 fn server_pids(s: &Scratch, run: usize) -> std::collections::BTreeSet<String> {
     let text = s.result(&format!("run-{run:06}/rss-processes.tsv"));

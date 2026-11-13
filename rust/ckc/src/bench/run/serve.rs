@@ -447,9 +447,12 @@ fn call(
     })
 }
 // Every arm's server: target first, then the paired baseline.
-fn load(config: &Config, origin: Instant, sampler: &Sampler) -> Result<(Vec<Server>, Vec<Phase>)> {
+// The servers, their load phases + every owned process resident at a ready line → its VmHWM.
+type Loaded = (Vec<Server>, Vec<Phase>, BTreeMap<(u32, u64), u64>);
+fn load(config: &Config, origin: Instant, sampler: &Sampler) -> Result<Loaded> {
     let mut servers = Vec::new();
     let mut phases = Vec::new();
+    let mut boundary: BTreeMap<(u32, u64), u64> = BTreeMap::new();
     // `rss_at_ready_bytes` = the arm's server group at its ready line: the resident
     // prepared knowledge base the record adds the census receipt's VmHWM to.
     let mut table =
@@ -468,8 +471,12 @@ fn load(config: &Config, origin: Instant, sampler: &Sampler) -> Result<(Vec<Serv
             None,
         );
         let ready = ns(origin.elapsed());
-        let resident: u64 = sampler
-            .boundary()?
+        let snapshot = sampler.boundary()?;
+        for process in &snapshot {
+            let hwm = boundary.entry(process.key()).or_insert(0);
+            *hwm = (*hwm).max(process.hwm);
+        }
+        let resident: u64 = snapshot
             .iter()
             .filter(|p| p.group == server.pid())
             .map(|p| p.rss)
@@ -508,23 +515,122 @@ fn load(config: &Config, origin: Instant, sampler: &Sampler) -> Result<(Vec<Serv
     }
     sampler.phase("idle");
     report::write(&config.out.join("loads.tsv"), table)?;
-    Ok((servers, phases))
+    Ok((servers, phases, boundary))
+}
+// Contract sb § Carried rulings, the direct load-memory amendment (scientist-11 R1–R3): the load
+// window's sampled summed-RSS peak L + a complete same-run bound U. U = Σ over every owned process
+// the window saw or its ready lines found: an integrated arm's census (its pid in the arm's
+// load.tsv) at its exact wait4 peak; a process resident at an arm's ready line at its VmHWM there
+// (or a larger sampled HWM). Any other departed process could have peaked unseen ⇒ no bound; so
+// does an integrated arm without its census report. Σ of lifetime maxima ≥ the simultaneous peak.
+fn load_bound(
+    config: &Config,
+    window: &State,
+    boundary: &BTreeMap<(u32, u64), u64>,
+    origin_unix_ns: u64,
+) -> Result<()> {
+    let mut census = Vec::new();
+    let mut reason = None;
+    for arm in ["target", "baseline"] {
+        let Ok(text) = fs::read_to_string(config.out.join(format!("arm-{arm}/load.tsv"))) else {
+            continue;
+        };
+        let value = |key: &str| {
+            text.lines()
+                .find_map(|l| l.strip_prefix(&format!("{key}\t"))?.parse::<u64>().ok())
+        };
+        if text.lines().any(|l| l == "receipt\tintegrated") {
+            match (value("census_pid"), value("census_maxrss_bytes")) {
+                (Some(pid), Some(peak)) => census.push((pid, peak)),
+                _ => {
+                    reason.get_or_insert(format!("integrated arm {arm} without its census peak"));
+                }
+            }
+        }
+    }
+    let mut terms = String::new();
+    let mut sum = 0u64;
+    let mut counted = BTreeSet::new();
+    for key in window
+        .processes
+        .keys()
+        .chain(boundary.keys())
+        .collect::<BTreeSet<_>>()
+    {
+        let seen = window.processes.get(key).map_or(0, |p| p.hwm);
+        let (bytes, source) = match census.iter().find(|c| c.0 == u64::from(key.0)) {
+            Some(&(pid, peak)) => {
+                counted.insert(pid);
+                (peak.max(seen), "census-wait4")
+            }
+            None => match boundary.get(key) {
+                Some(&hwm) => (hwm.max(seen), "ready-hwm"),
+                None => {
+                    reason.get_or_insert(format!(
+                        "process {} (start {}) left before ready without a terminal peak",
+                        key.0, key.1
+                    ));
+                    continue;
+                }
+            },
+        };
+        sum = sum.saturating_add(bytes);
+        terms.push_str(&format!("term\t{}\t{}\t{bytes}\t{source}\n", key.0, key.1));
+    }
+    // A census the sampler never saw still lived: its peak counts.
+    for &(pid, peak) in census.iter().filter(|c| !counted.contains(&c.0)) {
+        sum = sum.saturating_add(peak);
+        terms.push_str(&format!("term\t{pid}\t-\t{peak}\tcensus-wait4-unsampled\n"));
+    }
+    let bound = match &reason {
+        Some(_) => "NA".to_owned(),
+        None => sum.to_string(),
+    };
+    // Each arm's load window on the host samples' clock (the grade's load_window rows).
+    let mut windows = String::new();
+    for row in fs::read_to_string(config.out.join("loads.tsv"))
+        .map_err(|e| e.to_string())?
+        .lines()
+        .skip(1)
+    {
+        let f: Vec<&str> = row.split('\t').collect();
+        if let (Some(arm), Some(Ok(start)), Some(Ok(ready))) = (
+            f.first(),
+            f.get(1).map(|v| v.parse::<u64>()),
+            f.get(2).map(|v| v.parse::<u64>()),
+        ) {
+            windows.push_str(&format!(
+                "load_window\t{arm}\t{}\t{}\n",
+                origin_unix_ns.saturating_add(start),
+                origin_unix_ns.saturating_add(ready)
+            ));
+        }
+    }
+    report::write(
+        &config.out.join("load-bound.tsv"),
+        format!(
+            "load_peak_sampled_bytes\t{}\nload_bound_bytes\t{bound}\nload_bound_reason\t{}\norigin_unix_ns\t{origin_unix_ns}\n{windows}{terms}",
+            window.peak_rss,
+            field(reason.as_deref().unwrap_or("-"))
+        ),
+    )
 }
 pub(super) fn campaign(config: &Config, plan: &[Plan]) -> Result<Vec<RunRow>> {
     let ticks = report::ticks()?;
     private_directory(&config.out)?;
     report::metadata(config, plan, ticks)?;
     let origin = Instant::now();
+    // The unix time of `origin`, read beside it: maps the load windows onto the host samples.
+    let origin_unix_ns = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, ns);
     let sampler = Sampler::start(origin, config.period)?;
-    let (mut servers, load_phases) = load(config, origin, &sampler)?;
+    let (mut servers, load_phases, boundary) = load(config, origin, &sampler)?;
     let load_window = config.out.join("load");
     private_directory(&load_window)?;
-    report::per_run(
-        &load_window,
-        &Ledger::new(ticks),
-        &load_phases,
-        &sampler.drain(),
-    )?;
+    let window = sampler.drain();
+    load_bound(config, &window, &boundary, origin_unix_ns)?;
+    report::per_run(&load_window, &Ledger::new(ticks), &load_phases, &window)?;
     let mut raw = File::create(config.out.join("runs.tsv")).map_err(|e| e.to_string())?;
     raw.write_all(report::RUN_HEADER.as_bytes())
         .map_err(|e| e.to_string())?;

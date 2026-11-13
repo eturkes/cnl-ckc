@@ -382,6 +382,21 @@ fn interference(samples: Option<&[Sample]>, s: i64, e: i64, hz: f64) -> [String;
 }
 // X3 fields (kernel + CONFIG_KEYS, whitespace-normalized); None = a record without every field
 // (p01's pre-sampler format) or no record.
+// X3 is the chunk's: a changed host rejects every block + load window; an incomplete record leaves
+// an otherwise accepted one unassessed.
+fn chunk_x3(v: &mut [String; 8], x3: &str) {
+    if x3 == "DIFFERS" {
+        v[1] = if v[1] == "-" {
+            "X3".into()
+        } else {
+            format!("{}+X3", v[1])
+        };
+        v[0] = "rejected".into();
+    } else if x3 == "missing" && v[0] == "accepted" {
+        v[0] = "unassessed".into();
+        v[1] = "X3-missing".into();
+    }
+}
 fn host_config(path: &Path) -> Result<Option<Vec<String>>> {
     if !path.is_file() {
         return Ok(None);
@@ -807,19 +822,7 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
             ]
             .map(str::to_owned),
         };
-        // X3 is the chunk's: a changed host rejects every block; an incomplete record leaves an
-        // otherwise accepted block unassessed.
-        if x3 == "DIFFERS" {
-            v[1] = if v[1] == "-" {
-                "X3".into()
-            } else {
-                format!("{}+X3", v[1])
-            };
-            v[0] = "rejected".into();
-        } else if x3 == "missing" && v[0] == "accepted" {
-            v[0] = "unassessed".into();
-            v[1] = "X3-missing".into();
-        }
+        chunk_x3(&mut v, x3);
         // A call never timed leaves the block's interval unknown: incomplete, never replaceable.
         if lacking > 0 {
             v[0] = "incomplete".into();
@@ -842,6 +845,41 @@ pub(super) fn assess(run: &Path, state: &Path, frozen: &Path, m: &Manifest) -> R
             v[..7].join("\t"),
             v[7]
         ));
+    }
+
+    // Contract sb § Carried rulings, the direct load-memory amendment: the harness's load windows
+    // (load-bound.tsv, unix ns) under the block rules (X1, X2, X4 over the window, X3 the chunk's)
+    // + its sampled peak and complete bound, echoed for the repair's validator.
+    let bound_path = run.join("load-bound.tsv");
+    if bound_path.is_file() {
+        let text = fs::read_to_string(&bound_path).map_err(|e| format!("load-bound.tsv: {e}"))?;
+        let value = |key: &str| {
+            text.lines()
+                .find_map(|l| l.strip_prefix(&format!("{key}\t")))
+                .unwrap_or("NA")
+                .to_owned()
+        };
+        out.push("#load_bound\tsampled_peak_bytes\tbound_bytes\treason".into());
+        out.push(format!(
+            "load_bound\t{}\t{}\t{}",
+            value("load_peak_sampled_bytes"),
+            value("load_bound_bytes"),
+            value("load_bound_reason")
+        ));
+        out.push("#load_window\tarm\tstart_us\tend_us\tverdict\twhy\tforeign_cpus\tmax_gap_s\tthrottle_core\tthrottle_package\tmax_temp_c\thost_foreign_cpus".into());
+        for line in text.lines().filter(|l| l.starts_with("load_window\t")) {
+            let f: Vec<&str> = line.split('\t').collect();
+            let unix = |i: usize| {
+                f.get(i)
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .map(|ns| (ns / 1000) as i64)
+                    .ok_or(format!("load-bound.tsv: {line}"))
+            };
+            let (arm, s, e) = (f[1], unix(2)?, unix(3)?);
+            let mut v = interference(host.as_deref(), s, e, hz);
+            chunk_x3(&mut v, x3);
+            out.push(format!("load_window\t{arm}\t{s}\t{e}\t{}", v.join("\t")));
+        }
     }
 
     if arms.contains_key("baseline") {
