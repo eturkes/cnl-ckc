@@ -605,7 +605,9 @@ struct Campaign {
     closure: Vec<(&'static str, &'static str, String)>,
     preflight: fn(&mut Preflight),
     whole: bool, // TAS-P2: `--whole-vector`, every attempt's unit records written
+    argv: Argv,  // the flags after the five positionals, rewritten
 }
+type Argv = fn(Vec<String>) -> Vec<String>;
 fn closure_rows() -> Vec<(&'static str, &'static str, String)> {
     vec![
         ("settings", "format", "sb1-harness-3".into()),
@@ -664,6 +666,7 @@ fn campaign(name: &'static str) -> Campaign {
         closure: closure_rows(),
         preflight: |_| {},
         whole: false,
+        argv: |a| a,
     }
 }
 // A replacement of chunk `of`: its blocks, seed + plan size, one hour after the original.
@@ -827,8 +830,9 @@ fn decide_run(k: &Campaign) -> (std::process::Output, Fixture) {
     let mut command = Command::new(program());
     command.args(["bench", "decide"]);
     command.args([&plan, &closure, &dir, &frozen, &manifest]);
+    let mut flags: Vec<String> = Vec::new();
     if k.whole {
-        command.arg("--whole-vector");
+        flags.push("--whole-vector".into());
     }
     if let Some(receipt) = k.receipts {
         let receipts = dir.join("receipts");
@@ -839,16 +843,22 @@ fn decide_run(k: &Campaign) -> (std::process::Output, Fixture) {
                 fs::write(receipts.join(format!("{kb}.tsv")), body).unwrap();
             }
         }
-        command.arg("--receipts").arg(&receipts);
-        command.args([
-            "--census",
-            CENSUS,
-            "--host",
-            "pool",
-            "--overhead-ms",
-            "10000",
-        ]);
+        let dir = receipts.to_str().unwrap();
+        flags.extend(
+            [
+                "--receipts",
+                dir,
+                "--census",
+                CENSUS,
+                "--host",
+                "pool",
+                "--overhead-ms",
+                "10000",
+            ]
+            .map(String::from),
+        );
     }
+    command.args((k.argv)(flags));
     (command.output().unwrap(), fixture)
 }
 fn within(c: &Chunk, b: i64, t: i64) -> bool {
@@ -2213,8 +2223,18 @@ fn r_gates_on_its_gating_chunk_alone() {
 #[test]
 fn the_receipt_join_fails_closed() {
     type Receipt = fn(&str) -> Option<String>;
-    let plants: [(&'static str, Receipt, String); 9] = [
+    let plants: [(&'static str, Receipt, String); 11] = [
         ("receipt-missing", |_| None, "no receipt".into()),
+        (
+            "receipt-negative",
+            |kb| Some(receipt_body(kb, &[("parse_seconds", "-1")])),
+            "parse_seconds unmeasured".into(),
+        ),
+        (
+            "receipt-zero-peak",
+            |kb| Some(receipt_body(kb, &[("vmhwm_bytes", "0")])),
+            "vmhwm_bytes unmeasured".into(),
+        ),
         (
             "receipt-refused",
             |kb| Some(receipt_body(kb, &[("verdict", "refused")])),
@@ -2267,6 +2287,23 @@ fn the_receipt_join_fails_closed() {
         want.sort();
         assert_eq!(g.holds(), want, "{name}");
     }
+    // A knowledge identity of 64 non-hex characters: malformed, never a receipt file name.
+    let mut k = campaign("receipt-malformed");
+    k.attempts[0].1.kb = |iid| {
+        if iid == BASELINE {
+            "g".repeat(64)
+        } else {
+            kb_of(iid)
+        }
+    };
+    for row in &mut k.closure {
+        if row.0 == "kb" && row.1 == BASELINE {
+            row.2 = "g".repeat(64);
+        }
+    }
+    let g = decide(&k);
+    let want = format!("receipt {}: malformed identity", "g".repeat(64));
+    assert_eq!(g.holds(), [want.as_str()], "{}", g.stdout);
     let mut k = campaign("receipt-lines");
     k.receipts = Some(|kb| {
         Some(receipt_body(
@@ -3492,4 +3529,232 @@ fn whole_vector_a_gate_r_short_of_its_pairs_holds() {
         holds.contains(&"r01: R not estimable over 1 of 2 pairs"),
         "{holds:?}"
     );
+}
+
+// Contract sb § Decision tool (law § decide): a plan row outside its shape, a closure preflight row
+// short of `go` and any flag outside the two modes = usage (rc 2), never a decision.
+#[test]
+fn decide_refuses_malformed_plans_closures_and_flags() {
+    let rc = |k: &Campaign| decide_run(k).0.status.code();
+    let mut missed = Vec::new();
+    // A three-query chunk with an R role; a chunk planned twice.
+    let mut k = campaign("refuse-role");
+    k.plan =
+        plan_row("r01", true, 2, SEED, "gate") + &plan_row("c01", false, 2, SEED + 1, "report");
+    missed.extend((rc(&k) != Some(2)).then_some("role"));
+    let mut k = campaign("refuse-twice");
+    k.plan.push_str(&plan_row("c01", false, 2, SEED + 1, "-"));
+    missed.extend((rc(&k) != Some(2)).then_some("twice"));
+    // A closure preflight row short of go.
+    let mut k = campaign("refuse-preflight");
+    for row in &mut k.closure {
+        if row.0 == "preflight" {
+            row.2 = "hold".into();
+        }
+    }
+    missed.extend((rc(&k) != Some(2)).then_some("preflight"));
+    // A lone unknown flag; each receipt flag misspelled in turn.
+    let mut k = campaign("refuse-flag");
+    k.receipts = None;
+    k.argv = |_| vec!["--bogus".into()];
+    missed.extend((rc(&k) != Some(2)).then_some("bogus"));
+    let spellings: [(&str, Argv); 4] = [
+        ("receipts", |mut a| {
+            a[0] = "--receipt".into();
+            a
+        }),
+        ("census", |mut a| {
+            a[2] = "--censu".into();
+            a
+        }),
+        ("host", |mut a| {
+            a[4] = "--hosts".into();
+            a
+        }),
+        ("overhead", |mut a| {
+            a[6] = "--overhead".into();
+            a
+        }),
+    ];
+    for (name, argv) in spellings {
+        let mut k = campaign("refuse-spelling");
+        k.argv = argv;
+        missed.extend((rc(&k) != Some(2)).then_some(name));
+    }
+    assert!(missed.is_empty(), "{missed:?}");
+}
+
+// Contract sb § Decision tool + Replacement round: an attempt's plan.tsv = its frozen draws — each
+// row's composition its arm's instance, each draw once per block, every held block, each block's
+// draw set — and a replacement replays its original's rows for its blocks, in order.
+#[test]
+fn decide_holds_plan_draws_off_their_frozen_shape() {
+    fn plan_edit(run: &Path, edit: fn(&mut Vec<String>)) {
+        let path = run.join("plan.tsv");
+        let mut lines: Vec<String> = fs::read_to_string(&path)
+            .unwrap()
+            .lines()
+            .map(String::from)
+            .collect();
+        edit(&mut lines);
+        fs::write(&path, lines.join("\n") + "\n").unwrap();
+    }
+    let plants: [(&str, Plant); 3] = [
+        ("draw-instance", |r, _| {
+            plan_edit(r, |l| {
+                let last = l.len() - 1;
+                l[last] = l[last].replace(&instance_base(TARGET), &instance_base(BASELINE));
+            })
+        }),
+        ("draw-repeated", |r, _| {
+            plan_edit(r, |l| l.push(l[l.len() - 1].clone()))
+        }),
+        ("draw-query", |r, _| {
+            plan_edit(r, |l| {
+                let last = l.len() - 1;
+                l[last] = l[last].replace("q-patient", "q-other");
+            })
+        }),
+    ];
+    let mut missed = Vec::new();
+    for (name, plant) in plants {
+        let mut k = campaign(name);
+        k.attempts[1].1.p2 = plant;
+        let g = decide(&k);
+        if !g.holds().contains(&"c01: attempt c01: plan draws") {
+            missed.push(format!("{name}: {:?}", g.holds()));
+        }
+    }
+    // An attempt short of a held block.
+    let mut k = campaign("draw-blocks");
+    k.attempts[1].1.blocks = 1;
+    let g = decide(&k);
+    if !g.holds().contains(&"c01: attempt c01: plan draws") {
+        missed.push(format!("draw-blocks: {:?}", g.holds()));
+    }
+    // A replacement of block 2 whose rows run in another order than its original's.
+    let mut k = campaign("draw-replacement");
+    k.attempts[1].1.foreign = |c, t| if within(c, 2, t) { 0.8 } else { 0.0 };
+    let mut r = replacement(&k.attempts[1].1, &[2]);
+    r.p2 = |r, _| {
+        plan_edit(r, |l| {
+            let n = l.len();
+            l.swap(n - 1, n - 2);
+        })
+    };
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    if !g.holds().contains(&"c01: attempt c01-r: plan draws") {
+        missed.push(format!("draw-replacement: {:?}", g.holds()));
+    }
+    assert!(missed.is_empty(), "{missed:#?}");
+}
+
+// Contract sb § Decision tool: no early start (started ≥ planned) + each block's first request ≥
+// spacing × Δblock − 1 s after the first held block's (R: 30 s) — both lines inclusive.
+#[test]
+fn decide_schedule_lines_are_inclusive() {
+    type Edit = fn(&mut Campaign);
+    let cases: [(&str, Edit); 3] = [
+        ("schedule-on-time", |k| k.attempts[1].1.started = |_| 0),
+        ("spacing-due", |k| {
+            k.attempts[0].1.block_start = |c, b| c.t0 + (b - 1) * 29_000_000
+        }),
+        ("spacing-whole", |k| {
+            k.attempts[0].1.block_start = |c, b| c.t0 + (b - 1) * 30_000_000
+        }),
+    ];
+    for (name, edit) in cases {
+        let mut k = campaign(name);
+        edit(&mut k);
+        let g = decide(&k);
+        assert_eq!((g.rc, g.verdict()), (0, "go"), "{name}: {}", g.stdout);
+    }
+}
+
+// P2-5 + P2-4 (2): a launcher-report failure count of 0 is no failure, and a cut attempt whose
+// censor never fired holds unassessable alone — each record read by its value, not its key.
+#[test]
+fn whole_vector_unit_records_read_their_values() {
+    let mut k = whole_campaign("whole-zero-failures");
+    k.attempts[1].1.p2 = |r, _| {
+        fs::write(
+            r.join("run-000001/checker-counters.tsv"),
+            "kind\tcounter\tvalue\nruntime\tlauncher_report_failure\t0\n",
+        )
+        .unwrap()
+    };
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    let mut k = whole_campaign("whole-cut-unfired");
+    k.attempts[1].1.p2 = |r, _| {
+        fs::remove_file(r.join("runs.tsv")).unwrap();
+        let _ = fs::remove_file(r.join("load-bound.tsv"));
+        let _ = fs::remove_dir_all(r.join("load"));
+    };
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds
+            .iter()
+            .any(|h| h.starts_with("c01: attempt c01: P2-4: unassessable")),
+        "{holds:?}"
+    );
+    assert!(
+        !holds.iter().any(|h| h.contains("censor fired")),
+        "{holds:?}"
+    );
+}
+
+// Contract sb § Decision tool: the lifecycle peak ≤ 32 GB + R's UB95 ≤ 2 are inclusive lines; a pair
+// needs a positive baseline score; the attempt row counts its valid blocks and the chunk row its
+// selected budget failures.
+#[test]
+fn decide_lines_pairs_and_counts() {
+    // 32,000,000,000 B exactly (the receipt mode: no unit main) passes.
+    let mut k = campaign("lifecycle-line");
+    k.attempts[1].1.lifecycle = Some(32_000_000_000);
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    // R = UB95 = 2 exactly (every pair 2 s against 1 s) passes.
+    let mut k = campaign("ratio-line");
+    k.attempts[0].1.score = |_, arm, _| {
+        if arm == "target" {
+            2_000_000_000
+        } else {
+            1_000_000_000
+        }
+    };
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    // A zero baseline score leaves its pair out: R not estimable over 0 of 2.
+    let mut k = campaign("ratio-zero-base");
+    k.attempts[0].1.score = |_, arm, _| if arm == "baseline" { 0 } else { 1_500_000_000 };
+    let g = decide(&k);
+    assert!(
+        g.holds()
+            .contains(&"r01: R not estimable over 0 of 2 pairs"),
+        "{:?}",
+        g.holds()
+    );
+    // Each clean attempt's row counts its 2 valid blocks; one call over 300 s = budget_fail=1.
+    let g = decide(&campaign("counts-clean"));
+    let valid: Vec<&str> = g.rows("attempt").iter().map(|r| r[r.len() - 1]).collect();
+    assert_eq!(valid, ["2", "2"], "{}", g.stdout);
+    let mut k = campaign("counts-budget");
+    k.attempts[1].1.score = |b, _, q| {
+        if b == 2 && q == "q-patient" {
+            300_000_000_001
+        } else {
+            1_500_000_000
+        }
+    };
+    let g = decide(&k);
+    let fails: Vec<&str> = g
+        .rows("chunk")
+        .iter()
+        .filter(|r| r[1] == "c01")
+        .filter_map(|r| r.iter().find_map(|f| f.strip_prefix("budget_fail=")))
+        .collect();
+    assert_eq!(fails, ["1"], "{}", g.stdout);
 }
