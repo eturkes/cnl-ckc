@@ -89,7 +89,7 @@ struct Chunk {
     producer: &'static str,                 // the producer identity file's digest
     runs_edit: fn(String) -> String,        // runs.tsv as written, then edited
     kb: fn(&str) -> String,                 // the knowledge identity a server reports per instance
-    load_window: Option<(i64, i64)>, // load-bound.tsv's target load window (µs; None = no file)
+    load_window: Option<(i64, i64)>, // load-bound.tsv's load window, one per arm (µs; None = no file)
     p2: Plant,                       // TAS-P2: a plant over the written unit records
 }
 fn clean(name: &'static str) -> Chunk {
@@ -540,12 +540,20 @@ fn attempt(c: &Chunk, run: &Path, state: &Path) {
         fs::write(state.join("host-samples.tsv"), rows).unwrap();
     }
     if let Some((s, e)) = c.load_window {
+        // The harness writes one window per loads.tsv row: every arm's.
+        let arms: &[&str] = if c.paired {
+            &["target", "baseline"]
+        } else {
+            &["target"]
+        };
+        let windows: String = arms
+            .iter()
+            .map(|arm| format!("load_window\t{arm}\t{}\t{}\n", s * 1000, e * 1000))
+            .collect();
         fs::write(
             run.join("load-bound.tsv"),
             format!(
-                "load_peak_sampled_bytes\t5000000000\nload_bound_bytes\t5100000000\nload_bound_reason\t-\norigin_unix_ns\t1\nload_window\ttarget\t{}\t{}\nterm\t7\t9\t5100000000\tready-hwm\n",
-                s * 1000,
-                e * 1000
+                "load_peak_sampled_bytes\t5000000000\nload_bound_bytes\t5100000000\nload_bound_reason\t-\norigin_unix_ns\t1\n{windows}term\t7\t9\t5100000000\tready-hwm\n"
             ),
         )
         .unwrap();
@@ -667,7 +675,7 @@ fn replacement(of: &Chunk, only: &'static [i64]) -> Chunk {
 }
 // TAS-P2 (`--whole-vector`): the unit records every attempt carries (`tools/sb-campaign-unit` with
 // SB1_CAPSULE=1 + the server's terminal checks), valid; `c.p2` plants over them afterwards.
-// A plant over one attempt's written unit records: (run, state).
+// A plant over one attempt's written records (under `--whole-vector` after its unit records): (run, state).
 type Plant = fn(&Path, &Path);
 const UNIT_SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 fn p2_files(c: &Chunk, run: &Path, state: &Path) {
@@ -681,10 +689,7 @@ fn p2_files(c: &Chunk, run: &Path, state: &Path) {
         state.join("unit-main.tsv"),
         &format!("pid\t100\nstart_ticks\t5\nvmhwm_kb\t20000\ntool_sha256\t{UNIT_SHA}\n"),
     );
-    write(
-        state.join("unit-roster.tsv"),
-        "epoch_us\tpid\tstart_ticks\trss_kb\thwm_kb\tcomm\n1\t100\t5\t9000\t20000\tpython3\n3\t100\t5\t9000\t20000\tpython3\n",
-    );
+    let mut roster = "epoch_us\tpid\tstart_ticks\trss_kb\thwm_kb\tcomm\n1\t100\t5\t9000\t20000\tpython3\n3\t100\t5\t9000\t20000\tpython3\n".to_owned();
     let memory = fs::read_to_string(run.join("memory.tsv")).unwrap_or_default();
     write(
         run.join("memory.tsv"),
@@ -695,17 +700,68 @@ fn p2_files(c: &Chunk, run: &Path, state: &Path) {
     } else {
         &["target"]
     };
-    for arm in arms {
+    // Each arm's launcher + server: identities the harness sampled (VmHWM 15 MB) + their terminal
+    // self-reports (own bound 20 MB = max(ru_maxrss, VmHWM)) + the server's check of each + the
+    // launcher's startup record (its server as parent, VmHWM 17 MB).
+    let mut sampled = "pid\tstart_ticks\tfirst_seen_ns\tlast_seen_ns\tsamples\tpeak_rss_bytes\thwm_bytes\tobserved_own_cpu_ticks\tlast_state\n".to_owned();
+    for (k, arm) in arms.iter().enumerate() {
         let dir = run.join(format!("arm-{arm}"));
         fs::create_dir_all(&dir).unwrap();
-        for file in ["launcher-terminal-check.tsv", "server-terminal-check.tsv"] {
+        for (j, what) in ["launcher", "server"].into_iter().enumerate() {
+            let (pid, ticks) = (300 + 10 * k + j, 11 + 2 * k + j);
+            sampled.push_str(&format!(
+                "{pid}\t{ticks}\t1\t2\t2\t9000000\t15000000\t1\tS\n"
+            ));
+            roster.push_str(&format!("2\t{pid}\t{ticks}\t9000\t15000\t{what}\n"));
             write(
-                dir.join(file),
-                "verdict\tbounded\nown_bound_bytes\t20000000\n",
+                dir.join(format!("{what}-terminal.tsv")),
+                &format!(
+                    "format\tsb1-{what}-terminal 1\npid\t{pid}\nstart_ticks\t{ticks}\nresource_scope\tself\nru_maxrss_bytes\t18000000\nvmhwm_bytes\t20000000\nexit_kind\tnormal\nexit_code\t0\n"
+                ),
+            );
+            write(
+                dir.join(format!("{what}-terminal-check.tsv")),
+                &format!(
+                    "format\tsb1-{what}-terminal-check 1\npid\t{pid}\nstart_ticks\t{ticks}\nverdict\tbounded\nown_bound_bytes\t20000000\n"
+                ),
             );
         }
+        let (launcher, server, ticks) = (300 + 10 * k, 301 + 10 * k, 11 + 2 * k);
+        write(
+            dir.join("producer-launcher.tsv"),
+            &format!(
+                "format\tsb1-producer-launcher 1\npid\t{launcher}\nparent_pid\t{server}\nstart_ticks\t{ticks}\npgid\t{server}\nvmhwm_bytes\t17000000\n"
+            ),
+        );
     }
+    fs::create_dir_all(run.join("load")).unwrap();
+    write(run.join("load/processes.tsv"), &sampled);
+    write(state.join("unit-roster.tsv"), &roster);
     (c.p2)(run, state);
+}
+// A plant rewriting one line of an attempt's file: (path under the run, old line, new line).
+fn swap(run: &Path, file: &str, old: &str, new: &str) {
+    let path = run.join(file);
+    let text = fs::read_to_string(&path).unwrap();
+    assert!(text.contains(old), "{file}: no {old:?}");
+    fs::write(&path, text.replacen(old, new, 1)).unwrap();
+}
+// A plant rewriting each `load_window` line of an attempt's load-bound.tsv (a line → its new text).
+fn rewindow(run: &Path, edit: fn(&str) -> String) {
+    let path = run.join("load-bound.tsv");
+    let text = fs::read_to_string(&path).unwrap();
+    let new: String = text
+        .lines()
+        .map(|l| {
+            if l.starts_with("load_window\t") {
+                edit(l)
+            } else {
+                format!("{l}\n")
+            }
+        })
+        .collect();
+    assert_ne!(new, text, "load-bound.tsv: no load_window line rewritten");
+    fs::write(&path, new).unwrap();
 }
 // The campaign under `--whole-vector`: no receipts, the closure's `unit` rows, a load window per attempt.
 fn whole_campaign(name: &'static str) -> Campaign {
@@ -742,6 +798,8 @@ fn decide_run(k: &Campaign) -> (std::process::Output, Fixture) {
         attempt(c, &run, &state);
         if k.whole {
             p2_files(c, &run, &state);
+        } else {
+            (c.p2)(&run, &state);
         }
     }
     for extra in k.extra {
@@ -2588,12 +2646,41 @@ fn whole_vector_replacements_follow_an_environmental_original_alone() {
         holds.iter().any(|h| h.contains("settings only_blocks")),
         "{holds:?}"
     );
+    // A wrong output digest inside an environmentally rejected original: hard (P2-4 (1)).
+    let mut k = whole_campaign("whole-wrong-original");
+    k.attempts[1].1.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    k.attempts[1].1.output = |b, _, q| (b == 2 && q == "q-patient").then(|| "f".repeat(64));
+    let r = whole_replacement(&k.attempts[1].1);
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds
+            .iter()
+            .any(|h| h.contains("a replacement after a hard original")),
+        "{holds:?}"
+    );
+    // A unit off its reserved CPUs with every verdict accepted: hard through its policy item (P2-4 (3)
+    // lists no replaceable reason beyond a rejected X1–X4 verdict).
+    let mut k = whole_campaign("whole-unpinned-original");
+    k.attempts[1].1.cpus = Some("0-7");
+    let r = whole_replacement(&k.attempts[1].1);
+    k.attempts.push(("c01-r", r));
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds.iter().any(|h| h.contains("policy unit-cpus"))
+            && holds
+                .iter()
+                .any(|h| h.contains("a replacement after a hard original")),
+        "{holds:?}"
+    );
 }
 
-// P2-1, P2-5, P2-6: each planted unit record holds, with its own reason.
+// P2-1, P2-4, P2-5, P2-6, P2-10: each planted unit record holds, with its own reason.
 #[test]
 fn whole_vector_unit_records_hold_when_planted() {
-    let cases: [(&str, Plant, &str); 9] = [
+    let cases: [(&str, Plant, &str); 34] = [
         (
             "capsule",
             |_, s| {
@@ -2686,16 +2773,436 @@ fn whole_vector_unit_records_hold_when_planted() {
             },
             "P2-6: load bound incomplete, below its sample or above 32 GB",
         ),
+        // The terminal terms, re-derived from each raw self-report + the harness's samples.
+        (
+            "arm-dropped",
+            |r, _| fs::remove_dir_all(r.join("arm-baseline")).unwrap(),
+            "P2-6: arm-baseline launcher terminal term unbounded",
+        ),
+        (
+            "raw-missing",
+            |r, _| fs::remove_file(r.join("arm-target/server-terminal.tsv")).unwrap(),
+            "P2-6: arm-target server terminal term without its raw self-report",
+        ),
+        (
+            "raw-scope",
+            |r, _| {
+                swap(
+                    r,
+                    "arm-target/launcher-terminal.tsv",
+                    "resource_scope\tself",
+                    "resource_scope\tchildren",
+                )
+            },
+            "P2-6: arm-target launcher terminal term without its raw self-report",
+        ),
+        (
+            "identity-off-raw",
+            |r, _| swap(r, "arm-target/server-terminal.tsv", "pid\t301", "pid\t302"),
+            "P2-6: arm-target server terminal term identity off its raw record",
+        ),
+        (
+            "bound-off-raw",
+            |r, _| {
+                swap(
+                    r,
+                    "arm-target/launcher-terminal-check.tsv",
+                    "own_bound_bytes\t20000000",
+                    "own_bound_bytes\t25000000",
+                )
+            },
+            "P2-6: arm-target launcher terminal term bound off max(ru_maxrss, VmHWM)",
+        ),
+        (
+            "identity-foreign",
+            |r, _| {
+                for f in ["server-terminal.tsv", "server-terminal-check.tsv"] {
+                    swap(r, &format!("arm-target/{f}"), "pid\t301", "pid\t999");
+                }
+            },
+            "P2-6: arm-target server terminal term identity never sampled by the harness",
+        ),
+        (
+            "repeated",
+            |r, _| {
+                for f in ["server-terminal.tsv", "server-terminal-check.tsv"] {
+                    swap(
+                        r,
+                        &format!("arm-target/{f}"),
+                        "pid\t301\nstart_ticks\t12",
+                        "pid\t300\nstart_ticks\t11",
+                    );
+                }
+            },
+            "P2-6: arm-target server terminal term identity repeated",
+        ),
+        (
+            "unplanned-arm",
+            |r, _| fs::create_dir(r.join("arm-extra")).unwrap(),
+            "P2-10: unplanned directory arm-extra",
+        ),
+        // The capsule's fence: an R arm's server the unit's cgroup never held.
+        (
+            "outside-fence",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-roster.tsv")).unwrap();
+                let kept: String = t
+                    .lines()
+                    .filter(|l| !l.starts_with("2\t311\t"))
+                    .map(|l| format!("{l}\n"))
+                    .collect();
+                fs::write(s.join("unit-roster.tsv"), kept).unwrap()
+            },
+            "P2-1: arm-baseline server outside the unit's cgroup",
+        ),
+        // A zero bound whose raw record + samples agree on zero.
+        (
+            "zero-bound",
+            |r, _| {
+                swap(
+                    r,
+                    "arm-target/launcher-terminal.tsv",
+                    "ru_maxrss_bytes\t18000000\nvmhwm_bytes\t20000000",
+                    "ru_maxrss_bytes\t0\nvmhwm_bytes\t0",
+                );
+                swap(
+                    r,
+                    "arm-target/launcher-terminal-check.tsv",
+                    "own_bound_bytes\t20000000",
+                    "own_bound_bytes\t0",
+                );
+                swap(
+                    r,
+                    "load/processes.tsv",
+                    "300\t11\t1\t2\t2\t9000000\t15000000",
+                    "300\t11\t1\t2\t2\t0\t0",
+                );
+            },
+            "P2-6: arm-target launcher terminal term bound off max(ru_maxrss, VmHWM)",
+        ),
+        (
+            "unplanned-run",
+            |r, _| fs::create_dir(r.join("run-999999")).unwrap(),
+            "P2-10: unplanned directory run-999999",
+        ),
+        (
+            "stray-dir",
+            |r, _| fs::create_dir(r.join("extra")).unwrap(),
+            "P2-10: unplanned directory extra",
+        ),
+        // An unplanned call's table sampling a foreign identity never vouches for it.
+        (
+            "stray-sample",
+            |r, _| {
+                fs::create_dir(r.join("run-999999")).unwrap();
+                let header = fs::read_to_string(r.join("load/processes.tsv")).unwrap();
+                let header = header.lines().next().unwrap();
+                fs::write(
+                    r.join("run-999999/processes.tsv"),
+                    format!("{header}\n999\t12\t1\t2\t2\t9000000\t15000000\t1\tS\n"),
+                )
+                .unwrap();
+                for f in ["server-terminal.tsv", "server-terminal-check.tsv"] {
+                    swap(r, &format!("arm-target/{f}"), "pid\t301", "pid\t999");
+                }
+            },
+            "P2-6: arm-target server terminal term identity never sampled by the harness",
+        ),
+        // The launcher's startup record (P2-5): absent, its peak omitted while every later record
+        // remains, a zero peak, another identity, another parent.
+        (
+            "startup-missing",
+            |r, _| fs::remove_file(r.join("arm-target/producer-launcher.tsv")).unwrap(),
+            "P2-5: arm-target launcher startup record missing",
+        ),
+        (
+            "startup-peak-omitted",
+            |r, _| {
+                swap(
+                    r,
+                    "arm-target/producer-launcher.tsv",
+                    "vmhwm_bytes\t17000000\n",
+                    "",
+                )
+            },
+            "P2-5: arm-target launcher startup record peak missing",
+        ),
+        (
+            "startup-peak-zero",
+            |r, _| {
+                swap(
+                    r,
+                    "arm-target/producer-launcher.tsv",
+                    "vmhwm_bytes\t17000000",
+                    "vmhwm_bytes\t0",
+                )
+            },
+            "P2-5: arm-target launcher startup record peak missing",
+        ),
+        (
+            "startup-foreign",
+            |r, _| {
+                swap(
+                    r,
+                    "arm-target/producer-launcher.tsv",
+                    "\npid\t300\n",
+                    "\npid\t399\n",
+                )
+            },
+            "P2-5: arm-target launcher startup record off its terminal identity",
+        ),
+        (
+            "startup-parent",
+            |r, _| {
+                swap(
+                    r,
+                    "arm-target/producer-launcher.tsv",
+                    "parent_pid\t301\n",
+                    "parent_pid\t399\n",
+                )
+            },
+            "P2-5: arm-target launcher startup record not its server's child",
+        ),
+        // The load bound (P2-6): below its own sample (U < L), incomplete (U = NA).
+        (
+            "load-below",
+            |r, _| {
+                swap(
+                    r,
+                    "load-bound.tsv",
+                    "load_bound_bytes\t5100000000",
+                    "load_bound_bytes\t4900000000",
+                )
+            },
+            "P2-6: load bound incomplete, below its sample or above 32 GB",
+        ),
+        (
+            "load-unbounded",
+            |r, _| {
+                swap(
+                    r,
+                    "load-bound.tsv",
+                    "load_bound_bytes\t5100000000",
+                    "load_bound_bytes\tNA",
+                )
+            },
+            "P2-6: load bound incomplete, below its sample or above 32 GB",
+        ),
+        // One load window per planned arm, none for another (P2-3, P2-4); no capsule record (P2-1).
+        (
+            "window-missing",
+            |r, _| {
+                rewindow(r, |l| {
+                    if l.starts_with("load_window\tbaseline\t") {
+                        String::new()
+                    } else {
+                        format!("{l}\n")
+                    }
+                })
+            },
+            "P2-4: arm-baseline load window absent or repeated",
+        ),
+        (
+            "windows-none",
+            |r, _| rewindow(r, |_| String::new()),
+            "P2-4: arm-target load window absent or repeated",
+        ),
+        (
+            "window-repeated",
+            |r, _| rewindow(r, |l| format!("{l}\n{l}\n")),
+            "P2-4: arm-target load window absent or repeated",
+        ),
+        (
+            "window-unplanned",
+            |r, _| {
+                rewindow(r, |l| {
+                    format!("{l}\n{}\n", l.replacen("\ttarget\t", "\textra\t", 1))
+                })
+            },
+            "P2-4: load window of unplanned arm-extra",
+        ),
+        (
+            "capsule-missing",
+            |_, s| fs::remove_file(s.join("capsule.txt")).unwrap(),
+            "P2-1: capsule memory.max",
+        ),
     ];
+    // Every plant runs; the misses report together.
+    let mut missed = Vec::new();
     for (name, plant, reason) in cases {
         let mut k = whole_campaign(name);
+        // The R chunk's attempt holds both arms; the rest plant the three-query chunk's.
+        k.attempts
+            [usize::from(!["arm-dropped", "outside-fence", "window-missing"].contains(&name))]
+        .1
+        .p2 = plant;
+        let g = decide(&k);
+        if g.rc != 1 || !g.holds().iter().any(|h| h.contains(reason)) {
+            missed.push(format!("{name}: rc {} {:?}", g.rc, g.holds()));
+        }
+    }
+    assert!(missed.is_empty(), "{missed:#?}");
+}
+
+// P2-5 + P2-6: the kernel's recorded peak (VmHWM, ru_maxrss) can trail an RSS it showed before (the
+// G1 rehearsal on nixbox: a server's terminal VmHWM 126,976 B below its load-window sample) ⇒ a
+// server's or launcher's terminal term = the larger of its own bound, every VmHWM the harness sampled
+// for it + the launcher's startup VmHWM; a report below a sample never holds.
+#[test]
+fn whole_vector_terminal_terms_take_the_larger_of_report_and_samples() {
+    fn sample(hwm: &str) -> String {
+        format!("301\t12\t1\t2\t2\t9000000\t{hwm}")
+    }
+    fn startup(r: &Path, hwm: &str) {
+        let new = format!("vmhwm_bytes\t{hwm}");
+        swap(
+            r,
+            "arm-target/producer-launcher.tsv",
+            "vmhwm_bytes\t17000000",
+            &new,
+        )
+    }
+    // A reading above the self-report: the vector goes.
+    let trails: [(&str, Plant); 2] = [
+        ("server", |r, _| {
+            swap(
+                r,
+                "load/processes.tsv",
+                &sample("15000000"),
+                &sample("25000000"),
+            )
+        }),
+        ("launcher", |r, _| startup(r, "20000001")),
+    ];
+    for (name, plant) in trails {
+        let mut k = whole_campaign("whole-trail");
         k.attempts[1].1.p2 = plant;
         let g = decide(&k);
-        assert_eq!(g.rc, 1, "{name}: {}", g.stdout);
+        assert_eq!((g.rc, g.verdict()), (0, "go"), "{name}: {}", g.stdout);
+    }
+    // The largest term counts, once, on its own identity: a 40 GB self-report, sample or startup peak
+    // lifts c01's lifecycle bound past 32 GB = 40 GB + the other arm process's 20 MB own bound + the
+    // harness's 100 MB terminal term + the unit main's 20,000 kB; a 30 GB startup peak beside a 40 GB
+    // server sample adds 30 GB through the launcher's own term.
+    let heavies: [(&str, Plant, u64); 4] = [
+        (
+            "own",
+            |r, _| {
+                let heavy = "vmhwm_bytes\t40000000000";
+                swap(
+                    r,
+                    "arm-target/server-terminal.tsv",
+                    "vmhwm_bytes\t20000000",
+                    heavy,
+                );
+                let heavy = "own_bound_bytes\t40000000000";
+                swap(
+                    r,
+                    "arm-target/server-terminal-check.tsv",
+                    "own_bound_bytes\t20000000",
+                    heavy,
+                )
+            },
+            40_140_480_000,
+        ),
+        (
+            "server",
+            |r, _| {
+                swap(
+                    r,
+                    "load/processes.tsv",
+                    &sample("15000000"),
+                    &sample("40000000000"),
+                )
+            },
+            40_140_480_000,
+        ),
+        ("launcher", |r, _| startup(r, "40000000000"), 40_140_480_000),
+        (
+            "both",
+            |r, _| {
+                swap(
+                    r,
+                    "load/processes.tsv",
+                    &sample("15000000"),
+                    &sample("40000000000"),
+                );
+                startup(r, "30000000000")
+            },
+            70_120_480_000,
+        ),
+    ];
+    for (name, plant, bound) in heavies {
+        let mut k = whole_campaign("whole-heavy");
+        k.attempts[1].1.p2 = plant;
+        let g = decide(&k);
+        let life: Vec<u64> = g
+            .rows("lifecycle_bound")
+            .iter()
+            .filter(|r| r[1] == "c01")
+            .filter_map(|r| r[3].parse().ok())
+            .collect();
+        assert_eq!(life, [bound], "{name}: {}", g.stdout);
+        let holds = g.holds();
         assert!(
-            g.holds().iter().any(|h| h.contains(reason)),
-            "{name}: {:?}",
-            g.holds()
+            holds
+                .iter()
+                .any(|h| h.starts_with("c01: lifecycle bound") && h.ends_with("above 32 GB")),
+            "{name}: {holds:?}"
+        );
+        assert!(
+            !holds
+                .iter()
+                .any(|h| h.contains("terminal term") || h.contains("startup record")),
+            "{name}: {holds:?}"
         );
     }
+}
+
+// P2-4 (2): an attempt cut short inside its load (the harness writes runs.tsv, load-bound.tsv +
+// load/ after every load) = hard on its partial evidence, its censor named; the receipt mode keeps
+// rc 2 on the same cut.
+#[test]
+fn whole_vector_unassessable_attempts_hold_on_their_partial_evidence() {
+    let cut: Plant = |r, s| {
+        fs::remove_file(r.join("runs.tsv")).unwrap();
+        let _ = fs::remove_file(r.join("load-bound.tsv"));
+        let _ = fs::remove_dir_all(r.join("load"));
+        fs::write(s.join("censor.txt"), "censor_s\t43200\nfired\t1\n").unwrap();
+    };
+    let run = |k: &Campaign| {
+        let (out, _fixture) = decide_run(k);
+        let text = String::from_utf8_lossy(&out.stdout).into_owned();
+        (out.status.code(), text)
+    };
+    let mut k = whole_campaign("whole-cut");
+    k.attempts[1].1.p2 = cut;
+    let (rc, out) = run(&k);
+    assert_eq!(rc, Some(1), "{out}");
+    for want in [
+        "vector\tc01\tc01\thard",
+        "hold\tc01: attempt c01: P2-4: unassessable",
+        "hold\tc01: attempt c01: P2-1: the observation censor fired",
+    ] {
+        assert!(out.contains(want), "{want:?} absent:\n{out}");
+    }
+    assert!(!out.contains("no original attempt"), "{out}");
+    // A cut replacement after an environmental original: the replacement hard, the original kept.
+    let mut k = whole_campaign("whole-cut-replacement");
+    k.attempts[1].1.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    let mut r = whole_replacement(&k.attempts[1].1);
+    r.p2 = cut;
+    k.attempts.push(("c01-r", r));
+    let (rc, out) = run(&k);
+    assert_eq!(rc, Some(1), "{out}");
+    for want in [
+        "vector\tc01\tc01\tenvironmental",
+        "vector\tc01\tc01-r\thard",
+        "hold\tc01: attempt c01-r: P2-4: unassessable",
+    ] {
+        assert!(out.contains(want), "{want:?} absent:\n{out}");
+    }
+    let mut k = campaign("cut-receipts");
+    k.attempts[1].1.p2 = cut;
+    assert_eq!(run(&k).0, Some(2));
 }

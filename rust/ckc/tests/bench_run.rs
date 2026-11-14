@@ -1119,6 +1119,39 @@ fn unit_main_passes_rc_fires_its_censor_and_records_itself() {
     }
 }
 
+// TAS-P2 P2-6: the sleeper (`tools/sb-campaign-unit hold`) is measured, never charged: once its
+// chunk's rc lands it records its own apparatus row in the state's outer.tsv (role `sleeper`, pid,
+// start ticks, VmHWM kB, comm), then each same-user ancestor, and drops its marker.
+#[test]
+fn a_sleeper_records_its_own_apparatus_row() {
+    let s = Scratch::new("sleeper");
+    let state = s.0.join("state/x");
+    fs::create_dir_all(&state).unwrap();
+    fs::write(state.join("rc"), "0\n").unwrap();
+    let child = Command::new("bash")
+        .arg(root().join("tools/sb-campaign-unit"))
+        .arg("hold")
+        .arg(&s.0)
+        .arg("x")
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let pid = child.id().to_string();
+    let out = child.wait_with_output().unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(out.status.success() && stderr.is_empty(), "{stderr}");
+    let outer = fs::read_to_string(state.join("outer.tsv")).unwrap();
+    let first: Vec<&str> = outer.lines().next().unwrap_or("").split('\t').collect();
+    assert_eq!(first.len(), 5, "{outer}");
+    assert_eq!(first[..2], ["sleeper", pid.as_str()], "{outer}");
+    assert!(
+        first[2..4].iter().all(|f| f.parse::<u64>().is_ok()),
+        "{outer}"
+    );
+    assert!(!s.0.join("markers/x.sleeper").exists());
+}
+
 // Contract sb § Carried rulings Replacement round (scientist-8 S6): every attempted call records
 // its request write + its answer or failure in UNIX ns, whatever the outcome (the server's own
 // arrival stamp lies between them); a lost server's later calls, never written, record neither.

@@ -108,6 +108,25 @@ unshield() {
   stamp "$st" restored
   return "$bad"
 }
+# One apparatus row (outer.tsv; defined before `hold`, which calls it) for a process + each ancestor of the same user up to a shared service
+# (systemd, sshd); VmHWM is the process's own peak so far.
+outer_rows() {
+  local role=$1 p=$2 line comm hwm k v uid me
+  local -a stat
+  me=$(id -u)
+  while (( p > 1 )); do
+    { read -r line <"/proc/$p/stat"; } 2>/dev/null || return 0
+    read -r -a stat <<<"${line##*) }"
+    { read -r comm <"/proc/$p/comm"; } 2>/dev/null || comm=NA
+    hwm=NA uid=NA
+    while read -r k v _; do
+      case $k in Uid:) uid=$v ;; VmHWM:) hwm=$v; break ;; esac
+    done 2>/dev/null <"/proc/$p/status"
+    [[ $uid == "$me" && $comm != systemd && $comm != sshd* ]] || return 0
+    printf '%s\t%s\t%s\t%s\t%s\n' "$role" "$p" "${stat[19]:-NA}" "$hwm" "$comm"
+    role=ancestor p=${stat[1]:-0}
+  done
+}
 case ${1:-} in
   shield)
     (( $# == 2 )) || usage
@@ -193,25 +212,6 @@ host() {
     uptime; { ps -eo pid,pcpu,psr,rss,etimes,comm --sort=-pcpu || true; } | head -8; } >"$1"
 }
 active() { local s; s=$(systemctl show "$unit" -p ActiveState --value 2>/dev/null) || return 1; [[ $s == active || $s == activating || $s == deactivating ]]; }
-# One apparatus row (outer.tsv) for a process + each ancestor of the same user up to a shared service
-# (systemd, sshd); VmHWM is the process's own peak so far.
-outer_rows() {
-  local role=$1 p=$2 line comm hwm k v uid me
-  local -a stat
-  me=$(id -u)
-  while (( p > 1 )); do
-    { read -r line <"/proc/$p/stat"; } 2>/dev/null || return 0
-    read -r -a stat <<<"${line##*) }"
-    { read -r comm <"/proc/$p/comm"; } 2>/dev/null || comm=NA
-    hwm=NA uid=NA
-    while read -r k v _; do
-      case $k in Uid:) uid=$v ;; VmHWM:) hwm=$v; break ;; esac
-    done 2>/dev/null <"/proc/$p/status"
-    [[ $uid == "$me" && $comm != systemd && $comm != sshd* ]] || return 0
-    printf '%s\t%s\t%s\t%s\t%s\n' "$role" "$p" "${stat[19]:-NA}" "$hwm" "$comm"
-    role=ancestor p=${stat[1]:-0}
-  done
-}
 # One diagnostics row: PSI some/full avg10 + totals (memory), some (CPU), MemFree + MemAvailable (kB);
 # NA where a file is unreadable.
 diag_row() {

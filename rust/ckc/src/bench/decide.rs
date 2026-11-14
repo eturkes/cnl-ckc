@@ -457,10 +457,12 @@ fn schedule(run: &Path, held: &BTreeSet<u64>, spacing: u64, calls: &[Call]) -> V
     }
     bad
 }
-// TAS-P2 integrity of one attempt (`.scratch/imp/tas-p2-protocol.md` P2-1, P2-5, P2-6): the unit's
-// capsule, censor + main-process records against the closure's `unit` rows; no launcher-report
-// failure; a complete load bound (U ≥ L, + the unit main ≤ 32 GB); every launcher + server terminal
-// own term bounded and the harness's terminal VmHWM recorded; every unit-cgroup process classified
+// TAS-P2 integrity of one attempt (`.scratch/imp/tas-p2-protocol.md` P2-1, P2-5, P2-6, P2-10): the
+// unit's capsule, censor + main-process records against the closure's `unit` rows; no launcher-report
+// failure; a complete load bound (U ≥ L, + the unit main ≤ 32 GB); each planned arm's launcher +
+// server terminal own term re-derived from its raw self-report and the harness's samples + its
+// launcher's startup record, the harness's terminal VmHWM recorded; no unplanned directory; every
+// unit-cgroup process classified
 // (harness-observed, a report-bound producer, the unit main, or a hook outside the main's lifetime).
 // Returns the failed items, the unit main's VmHWM + the teardown Σ of terminal own terms.
 fn p2(
@@ -468,6 +470,7 @@ fn p2(
     state: &Path,
     a: &Assessment,
     unit: &BTreeMap<String, String>,
+    arms: &BTreeSet<String>,
 ) -> (Vec<String>, u64, u64) {
     let mut bad = Vec::new();
     let kv = |path: PathBuf| -> BTreeMap<String, String> {
@@ -517,12 +520,23 @@ fn p2(
     let mut known: BTreeSet<(u64, u64)> = BTreeSet::new();
     let mut tables = vec![run.join("load").join("processes.tsv")];
     let mut tail = 0u64;
+    // The harness's directories = `load`, `arm-<arm>` per planned arm, `run-<n>` per planned call;
+    // any other is unplanned, and an unplanned call's tables never count as harness samples.
+    let calls: BTreeSet<String> = a
+        .plan
+        .iter()
+        .filter_map(|r| number(r, "run").ok().flatten())
+        .map(|n| format!("run-{n:06}"))
+        .collect();
     for entry in fs::read_dir(run).into_iter().flatten().flatten() {
         let (path, name) = (
             entry.path(),
             entry.file_name().to_string_lossy().into_owned(),
         );
-        if name.starts_with("run-") {
+        if !path.is_dir() {
+            continue;
+        }
+        if calls.contains(&name) {
             tables.push(path.join("processes.tsv"));
             let counters =
                 fs::read_to_string(path.join("checker-counters.tsv")).unwrap_or_default();
@@ -538,32 +552,96 @@ fn p2(
             if let Some(key) = get("producer_pid").zip(get("producer_start_ticks")) {
                 known.insert(key);
             }
-        } else if name.starts_with("arm-") && path.is_dir() {
-            for (file, what) in [
-                ("launcher-terminal-check.tsv", "launcher"),
-                ("server-terminal-check.tsv", "server"),
-            ] {
-                let check = kv(path.join(file));
-                match (
-                    check.get("verdict").map(String::as_str),
-                    num(&check, "own_bound_bytes"),
-                ) {
-                    (Some("bounded"), Some(b)) => tail = tail.saturating_add(b),
-                    _ => bad.push(format!("P2-6: {name} {what} terminal term unbounded")),
-                }
+        } else if name != "load"
+            && name
+                .strip_prefix("arm-")
+                .is_none_or(|arm| !arms.contains(arm))
+        {
+            bad.push(format!("P2-10: unplanned directory {name}"));
+        }
+    }
+    // Each identity the harness sampled in this attempt → the largest VmHWM it sampled for it.
+    let mut sampled: BTreeMap<(u64, u64), u64> = BTreeMap::new();
+    for path in &tables {
+        for row in table(path).unwrap_or_default() {
+            if let (Ok(Some(p)), Ok(Some(s))) = (number(&row, "pid"), number(&row, "start_ticks")) {
+                let hwm = number(&row, "hwm_bytes").ok().flatten().unwrap_or(0);
+                let peak = sampled.entry((p, s)).or_insert(0);
+                *peak = (*peak).max(hwm);
             }
+        }
+    }
+    known.extend(sampled.keys().copied());
+    // A terminal check is the measured server's own verdict ⇒ each term is re-derived here: the raw
+    // self-report (format, self scope, the check's identity), own bound = max(ru_maxrss, VmHWM) > 0,
+    // an identity the harness sampled, each identity once. The term = the larger of that bound, every
+    // VmHWM the harness sampled for it + the launcher's startup VmHWM: the kernel's recorded peak can
+    // trail an RSS it showed before (G1: 126,976 B), as wait4's maxrss trails VmHWM (P2-5).
+    let id = |m: &BTreeMap<String, String>| num(m, "pid").zip(num(m, "start_ticks"));
+    let (mut terminal, mut fenced) = (BTreeSet::new(), Vec::new());
+    for arm in arms {
+        let dir = run.join(format!("arm-{arm}"));
+        let start = kv(dir.join("producer-launcher.tsv"));
+        let mut checks = Vec::new();
+        for what in ["launcher", "server"] {
+            let raw = kv(dir.join(format!("{what}-terminal.tsv")));
+            let check = kv(dir.join(format!("{what}-terminal-check.tsv")));
+            fenced.extend(id(&check).map(|k| (format!("arm-{arm} {what}"), k)));
+            let own = num(&check, "own_bound_bytes");
+            let terms = num(&raw, "ru_maxrss_bytes")
+                .zip(num(&raw, "vmhwm_bytes"))
+                .map(|(r, v)| r.max(v));
+            let why = match (check.get("verdict").map(String::as_str), own, id(&check)) {
+                (Some("bounded"), Some(own), Some(key)) => {
+                    if raw.get("format") != Some(&format!("sb1-{what}-terminal 1"))
+                        || raw.get("resource_scope").map(String::as_str) != Some("self")
+                    {
+                        Some("without its raw self-report")
+                    } else if id(&raw) != Some(key) {
+                        Some("identity off its raw record")
+                    } else if terms != Some(own) || own == 0 {
+                        Some("bound off max(ru_maxrss, VmHWM) of its raw record")
+                    } else if !sampled.contains_key(&key) {
+                        Some("identity never sampled by the harness")
+                    } else if !terminal.insert(key) {
+                        Some("identity repeated")
+                    } else {
+                        let startup =
+                            num(&start, "vmhwm_bytes").filter(|_| id(&start) == Some(key));
+                        let term = own.max(sampled[&key]).max(startup.unwrap_or(0));
+                        tail = tail.saturating_add(term);
+                        None
+                    }
+                }
+                _ => Some("unbounded"),
+            };
+            if let Some(why) = why {
+                bad.push(format!("P2-6: arm-{arm} {what} terminal term {why}"));
+            }
+            checks.push(id(&check));
+        }
+        // P2-5: the launcher's startup record (published before the load) is mandatory evidence:
+        // the launcher's terminal identity, its arm's server as parent, a startup VmHWM > 0 (a term
+        // of the launcher's above); the comparisons a missing terminal check leaves open hold above.
+        let (launcher, server) = (checks[0], checks[1]);
+        let why = if start.get("format").map(String::as_str) != Some("sb1-producer-launcher 1") {
+            Some("missing")
+        } else if launcher.is_some_and(|k| id(&start) != Some(k)) {
+            Some("off its terminal identity")
+        } else if server.is_some_and(|(p, _)| num(&start, "parent_pid") != Some(p)) {
+            Some("not its server's child")
+        } else if num(&start, "vmhwm_bytes").is_none_or(|b| b == 0) {
+            Some("peak missing")
+        } else {
+            None
+        };
+        if let Some(why) = why {
+            bad.push(format!("P2-5: arm-{arm} launcher startup record {why}"));
         }
     }
     match num(&kv(run.join("memory.tsv")), "harness_terminal_hwm_bytes") {
         Some(b) => tail = tail.saturating_add(b),
         None => bad.push("P2-6: harness terminal term unrecorded".into()),
-    }
-    for path in &tables {
-        for row in table(path).unwrap_or_default() {
-            if let (Ok(Some(p)), Ok(Some(s))) = (number(&row, "pid"), number(&row, "start_ticks")) {
-                known.insert((p, s));
-            }
-        }
     }
     let key = |r: &Row| match (number(r, "pid"), number(r, "start_ticks")) {
         (Ok(Some(p)), Ok(Some(s))) => Some((p, s)),
@@ -594,6 +672,14 @@ fn p2(
             for ((p, _), comm) in unresolved {
                 bad.push(format!("P2-6: unit process {p} ({comm}) unresolved"));
             }
+            // P2-1: each server + launcher (long-lived: the 1 s roster sees them) inside the
+            // capsule's cgroup; its producers inherit it.
+            let members: BTreeSet<(u64, u64)> = rows.iter().filter_map(key).collect();
+            for (what, k) in fenced {
+                if !members.contains(&k) {
+                    bad.push(format!("P2-1: {what} outside the unit's cgroup"));
+                }
+            }
         }
         _ => bad.push("P2-6: unit roster or unit main record unreadable".into()),
     }
@@ -609,15 +695,41 @@ fn chunk(
     whole: bool,
 ) -> Result<()> {
     let mut attempts = Vec::new();
+    // TAS-P2 (P2-4 (2)): an attempt `assess` cannot read (the harness writes runs.tsv after every
+    // load ⇒ a censor, kill or stop inside the load; a spawn or sampler error) keeps its partial
+    // evidence = hard, its censor record named; the receipt mode stays rc 2.
+    let mut unassessable = false;
     for id in [c.id.clone(), format!("{}-r", c.id)] {
-        let run = base.join("runs").join(&id);
-        if run.is_dir() {
-            let a = assess(&run, &base.join("state").join(&id), frozen, m)?;
-            attempts.push((id, a));
+        let (run, state) = (base.join("runs").join(&id), base.join("state").join(&id));
+        if !run.is_dir() {
+            continue;
+        }
+        match assess(&run, &state, frozen, m) {
+            Ok(a) => attempts.push((id, a)),
+            Err(e) if whole => {
+                unassessable = true;
+                d.out.push(format!("vector\t{}\t{id}\thard", c.id));
+                d.holds
+                    .push(format!("{}: attempt {id}: P2-4: unassessable ({e})", c.id));
+                // censor.txt = `key\tvalue` lines, as p2 reads them.
+                let censor = fs::read_to_string(state.join("censor.txt")).unwrap_or_default();
+                if censor
+                    .lines()
+                    .any(|l| l.split_once('\t').is_some_and(|(k, _)| k == "fired"))
+                {
+                    d.holds.push(format!(
+                        "{}: attempt {id}: P2-1: the observation censor fired",
+                        c.id
+                    ));
+                }
+            }
+            Err(e) => return Err(e),
         }
     }
     if attempts.first().map(|(id, _)| id) != Some(&c.id) {
-        d.holds.push(format!("{}: no original attempt", c.id));
+        if !unassessable {
+            d.holds.push(format!("{}: no original attempt", c.id));
+        }
         return Ok(());
     }
     let mut invalid = BTreeSet::new();
@@ -630,7 +742,8 @@ fn chunk(
         let (held, mut bad) = conform(c, &run, &a.plan, original, sealed, whole)?;
         let (mut main, mut teardown) = (0, 0);
         if whole {
-            let (items, m, tail) = p2(&run, &state, a, &sealed.unit);
+            let arms = c.arms().into_keys().collect();
+            let (items, m, tail) = p2(&run, &state, a, &sealed.unit, &arms);
             bad.extend(items);
             (main, teardown) = (m, tail);
         }
@@ -743,19 +856,38 @@ fn chunk(
             if a.pinned { "ok" } else { "NOT-PINNED" }
         ));
         if whole {
-            // P2-4: integrity first; an `unassessed` mandatory verdict holds; only a sound attempt
-            // whose host verdicts rejected it is environmental; the first valid attempt is selected
-            // whole, and a replacement follows an environmental original alone.
-            let windows: Vec<&str> = a
+            // P2-4: integrity first; an `unassessed` or absent mandatory verdict holds (P2-3: one load
+            // window per planned arm, none for another), and a policy item (the unit's CPUs + shield,
+            // P2-1) is hard (`bad` above): P2-4 (3) lists no replaceable reason beyond a rejected X1–X4
+            // verdict; only a sound attempt whose verdicts rejected it is environmental; the first
+            // valid attempt is selected whole, and a replacement follows an environmental original
+            // alone.
+            let windows: Vec<(&str, &str)> = a
                 .report
                 .iter()
-                .filter(|l| l.starts_with("load_window\t"))
-                .filter_map(|l| l.split('\t').nth(4))
+                .filter_map(|l| l.strip_prefix("load_window\t"))
+                .filter_map(|l| {
+                    let mut f = l.split('\t');
+                    Some((f.next()?, f.nth(2)?))
+                })
                 .collect();
+            let arms = c.arms();
+            let mut count: BTreeMap<&str, usize> =
+                arms.keys().map(|arm| (arm.as_str(), 0)).collect();
+            for &(arm, _) in &windows {
+                *count.entry(arm).or_default() += 1;
+            }
+            for (arm, n) in count {
+                if !arms.contains_key(arm) {
+                    bad.push(format!("P2-4: load window of unplanned arm-{arm}"));
+                } else if n != 1 {
+                    bad.push(format!("P2-4: arm-{arm} load window absent or repeated"));
+                }
+            }
             let verdicts: Vec<&str> = held
                 .iter()
                 .map(|b| a.verdicts.get(b).map_or("absent", String::as_str))
-                .chain(windows.iter().copied())
+                .chain(windows.iter().map(|w| w.1))
                 .collect();
             if verdicts
                 .iter()
@@ -763,9 +895,10 @@ fn chunk(
             {
                 bad.push("P2-4: a mandatory host verdict unassessed or absent".into());
             }
+            // Past these holds each verdict reads accepted | rejected: environmental = one rejected.
             let class = if !bad.is_empty() {
                 "hard"
-            } else if a.pinned && !windows.is_empty() && verdicts.iter().all(|v| *v == "accepted") {
+            } else if verdicts.iter().all(|v| *v == "accepted") {
                 "valid"
             } else {
                 "environmental"
