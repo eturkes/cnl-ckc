@@ -460,11 +460,11 @@ fn schedule(run: &Path, held: &BTreeSet<u64>, spacing: u64, calls: &[Call]) -> V
 // TAS-P2 integrity of one attempt (`.scratch/imp/tas-p2-protocol.md` P2-1, P2-5, P2-6, P2-10): the
 // unit's capsule, censor + main-process records against the closure's `unit` rows; no launcher-report
 // failure; a complete load bound (U ≥ L, + the unit main ≤ 32 GB); each planned arm's launcher +
-// server terminal own term re-derived from its raw self-report and the harness's samples + its
-// launcher's startup record, the harness's terminal VmHWM recorded; no unplanned directory; every
-// unit-cgroup process classified
-// (harness-observed, a report-bound producer, the unit main, or a hook outside the main's lifetime).
-// Returns the failed items, the unit main's VmHWM + the teardown Σ of terminal own terms.
+// server terminal own term re-derived from its raw self-report, the harness's samples, the unit
+// roster's readings + its launcher's startup record, the harness's terminal VmHWM recorded; no
+// unplanned directory; every unit-cgroup process classified (harness-observed, a report-bound
+// producer, the unit main, or a hook outside the main's lifetime).
+// Returns the failed items, the unit main's term + the teardown Σ of terminal own terms.
 fn p2(
     run: &Path,
     state: &Path,
@@ -499,12 +499,36 @@ fn p2(
     if record.get("tool_sha256") != unit.get("tool_sha256") {
         bad.push("P2-1: unit main executable".into());
     }
+    let key = |r: &Row| match (number(r, "pid"), number(r, "start_ticks")) {
+        (Ok(Some(p)), Ok(Some(s))) => Some((p, s)),
+        _ => None,
+    };
+    // P2-6: harness + unit-roster terms merge once per identity ⇒ each identity's largest 1 s roster
+    // reading (VmHWM or RSS, kB) joins its term: the unit main's, each server's + launcher's (the
+    // harness's own term + the producers' stay the harness's).
+    let roster = table(&state.join("unit-roster.tsv"));
+    let mut read: BTreeMap<(u64, u64), u64> = BTreeMap::new();
+    for r in roster.iter().flatten() {
+        if let Some(k) = key(r) {
+            let kb = ["hwm_kb", "rss_kb"]
+                .iter()
+                .filter_map(|c| number(r, c).ok().flatten())
+                .max()
+                .unwrap_or(0);
+            let peak = read.entry(k).or_insert(0);
+            *peak = (*peak).max(kb.saturating_mul(1024));
+        }
+    }
     let main_key = num(&record, "pid").zip(num(&record, "start_ticks"));
-    let main = num(&record, "vmhwm_kb").map(|kb| kb.saturating_mul(1024));
+    let main = num(&record, "vmhwm_kb")
+        .filter(|&kb| kb > 0)
+        .map(|kb| kb.saturating_mul(1024));
     if main_key.is_none() || main.is_none() {
         bad.push("P2-6: unit main record".into());
     }
-    let main = main.unwrap_or(0);
+    let main = main
+        .unwrap_or(0)
+        .max(main_key.and_then(|k| read.get(&k).copied()).unwrap_or(0));
     let bound = a
         .report
         .iter()
@@ -574,9 +598,10 @@ fn p2(
     known.extend(sampled.keys().copied());
     // A terminal check is the measured server's own verdict ⇒ each term is re-derived here: the raw
     // self-report (format, self scope, the check's identity), own bound = max(ru_maxrss, VmHWM) > 0,
-    // an identity the harness sampled, each identity once. The term = the larger of that bound, every
-    // VmHWM the harness sampled for it + the launcher's startup VmHWM: the kernel's recorded peak can
-    // trail an RSS it showed before (G1: 126,976 B), as wait4's maxrss trails VmHWM (P2-5).
+    // an identity the harness sampled, each identity once. The term = the largest of that bound, every
+    // VmHWM the harness sampled for it, every unit-roster reading of it + the launcher's startup VmHWM:
+    // the kernel's recorded peak can trail an RSS it showed before (G1: up to 266,240 B), as wait4's
+    // maxrss trails VmHWM (P2-5).
     let id = |m: &BTreeMap<String, String>| num(m, "pid").zip(num(m, "start_ticks"));
     let (mut terminal, mut fenced) = (BTreeSet::new(), Vec::new());
     for arm in arms {
@@ -608,7 +633,10 @@ fn p2(
                     } else {
                         let startup =
                             num(&start, "vmhwm_bytes").filter(|_| id(&start) == Some(key));
-                        let term = own.max(sampled[&key]).max(startup.unwrap_or(0));
+                        let term = own
+                            .max(sampled[&key])
+                            .max(startup.unwrap_or(0))
+                            .max(read.get(&key).copied().unwrap_or(0));
                         tail = tail.saturating_add(term);
                         None
                     }
@@ -643,11 +671,7 @@ fn p2(
         Some(b) => tail = tail.saturating_add(b),
         None => bad.push("P2-6: harness terminal term unrecorded".into()),
     }
-    let key = |r: &Row| match (number(r, "pid"), number(r, "start_ticks")) {
-        (Ok(Some(p)), Ok(Some(s))) => Some((p, s)),
-        _ => None,
-    };
-    match (table(&state.join("unit-roster.tsv")), main_key) {
+    match (&roster, main_key) {
         (Ok(rows), Some(mk)) => {
             let at = |r: &Row| number(r, "epoch_us").ok().flatten();
             let lives: Vec<u64> = rows
@@ -657,7 +681,7 @@ fn p2(
                 .collect();
             let span = lives.iter().min().zip(lives.iter().max());
             let mut unresolved = BTreeSet::new();
-            for r in &rows {
+            for r in rows {
                 match (key(r), at(r), span) {
                     (Some(k), _, _) if k == mk || known.contains(&k) => {}
                     (Some(_), Some(t), Some((first, last))) if t < *first || t > *last => {}

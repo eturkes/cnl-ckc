@@ -2680,7 +2680,7 @@ fn whole_vector_replacements_follow_an_environmental_original_alone() {
 // P2-1, P2-4, P2-5, P2-6, P2-10: each planted unit record holds, with its own reason.
 #[test]
 fn whole_vector_unit_records_hold_when_planted() {
-    let cases: [(&str, Plant, &str); 34] = [
+    let cases: [(&str, Plant, &str); 40] = [
         (
             "capsule",
             |_, s| {
@@ -3026,6 +3026,59 @@ fn whole_vector_unit_records_hold_when_planted() {
             |_, s| fs::remove_file(s.join("capsule.txt")).unwrap(),
             "P2-1: capsule memory.max",
         ),
+        // The unit main's record without one of its fields: a missing peak would drop its term.
+        (
+            "main-key-missing",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-main.tsv")).unwrap();
+                fs::write(s.join("unit-main.tsv"), t.replace("start_ticks\t5\n", "")).unwrap()
+            },
+            "P2-6: unit main record",
+        ),
+        (
+            "main-peak-missing",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-main.tsv")).unwrap();
+                fs::write(s.join("unit-main.tsv"), t.replace("vmhwm_kb\t20000\n", "")).unwrap()
+            },
+            "P2-6: unit main record",
+        ),
+        // P2-4 (1): an arm's load record off `ready`, or ready without a measured RSS.
+        (
+            "load-not-ready",
+            |r, _| swap(r, "loads.tsv", "\tready\t", "\tfailed\t"),
+            "arm target: no single ready load with a knowledge identity",
+        ),
+        (
+            "load-rss-zero",
+            |r, _| swap(r, "loads.tsv", "\t6000000000\tready", "\t0\tready"),
+            "arm target: ready load unmeasured",
+        ),
+        // P2-6: a process sampled beside the main's first or last roster row lived with it.
+        (
+            "roster-at-first",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-roster.tsv")).unwrap();
+                fs::write(
+                    s.join("unit-roster.tsv"),
+                    format!("{t}1\t777\t9\t100\t100\tstray\n"),
+                )
+                .unwrap()
+            },
+            "P2-6: unit process 777 (stray) unresolved",
+        ),
+        (
+            "roster-at-last",
+            |_, s| {
+                let t = fs::read_to_string(s.join("unit-roster.tsv")).unwrap();
+                fs::write(
+                    s.join("unit-roster.tsv"),
+                    format!("{t}3\t777\t9\t100\t100\tstray\n"),
+                )
+                .unwrap()
+            },
+            "P2-6: unit process 777 (stray) unresolved",
+        ),
     ];
     // Every plant runs; the misses report together.
     let mut missed = Vec::new();
@@ -3205,4 +3258,238 @@ fn whole_vector_unassessable_attempts_hold_on_their_partial_evidence() {
     let mut k = campaign("cut-receipts");
     k.attempts[1].1.p2 = cut;
     assert_eq!(run(&k).0, Some(2));
+}
+
+// P2-4 (3)–(4): an environmental original earns one whole replacement; without one the vector selects
+// nothing — each block holds `no valid attempt` and no lifecycle bound prints for it.
+#[test]
+fn whole_vector_without_a_valid_attempt_selects_nothing() {
+    let mut k = whole_campaign("whole-env-alone");
+    k.attempts[1].1.foreign = |c, t| if within(c, 1, t) { 0.8 } else { 0.0 };
+    let g = decide(&k);
+    assert_eq!(g.rc, 1, "{}", g.stdout);
+    let of = |kind: &str, col: usize| -> Vec<String> {
+        g.rows(kind)
+            .iter()
+            .filter(|r| r[1] == "c01")
+            .map(|r| r[col].to_owned())
+            .collect()
+    };
+    assert_eq!(of("vector", 3), ["environmental"], "{}", g.stdout);
+    assert_eq!(of("selected", 3), ["-", "-"], "{}", g.stdout);
+    assert!(of("lifecycle_bound", 3).is_empty(), "{}", g.stdout);
+    let holds = g.holds();
+    for want in [
+        "c01: block 1: no valid attempt",
+        "c01: block 2: no valid attempt",
+    ] {
+        assert!(holds.contains(&want), "{want:?} absent: {holds:?}");
+    }
+}
+
+// P2-6: the shield hooks run in the unit's cgroup before the main starts + after the stop killed every
+// remaining process ⇒ a roster row strictly before the main's first row or after its last never
+// charges (a row beside the main's own = the plants roster-at-first|last).
+#[test]
+fn whole_vector_roster_rows_outside_the_main_never_hold() {
+    let rows: [(&str, Plant); 2] = [
+        ("before", |_, s| {
+            let t = fs::read_to_string(s.join("unit-roster.tsv")).unwrap();
+            fs::write(
+                s.join("unit-roster.tsv"),
+                format!("{t}0\t777\t9\t100\t100\tshield\n"),
+            )
+            .unwrap()
+        }),
+        ("after", |_, s| {
+            let t = fs::read_to_string(s.join("unit-roster.tsv")).unwrap();
+            fs::write(
+                s.join("unit-roster.tsv"),
+                format!("{t}4\t778\t9\t100\t100\tshield\n"),
+            )
+            .unwrap()
+        }),
+    ];
+    for (name, plant) in rows {
+        let mut k = whole_campaign("whole-hooks");
+        k.attempts[1].1.p2 = plant;
+        let g = decide(&k);
+        assert_eq!((g.rc, g.verdict()), (0, "go"), "{name}: {}", g.stdout);
+    }
+}
+
+// The budget per call (contract sb; P2-6 adds the unit main's terminal VmHWM, 20,000 kB = 20,480,000
+// B, to every window): verified within 300 s, bound + main ≤ 32 GB; either term alone holds the call.
+#[test]
+fn whole_vector_calls_hold_outside_the_budget_on_either_term() {
+    // 300 s + 1 ns on the vector's last call, its memory far inside: the time term alone.
+    let mut k = whole_campaign("whole-budget-time");
+    k.attempts[1].1.score = |b, _, q| {
+        if b == 2 && q == "q-patient" {
+            300_000_000_001
+        } else {
+            1_500_000_000
+        }
+    };
+    let g = decide(&k);
+    assert_eq!(
+        g.holds(),
+        ["c01: block 2: target q-patient verified outside the budget"],
+        "{}",
+        g.stdout
+    );
+    // A bound 10 MB under 32 GB passes its own grade; the unit main's term tips the call + the
+    // lifecycle bound (32,010,480,000 B) over.
+    let mut k = whole_campaign("whole-budget-bound");
+    k.attempts[1].1.bound = |b, _, q| {
+        Some(if b == 2 && q == "q-patient" {
+            31_990_000_000
+        } else {
+            1_300_000_000
+        })
+    };
+    let g = decide(&k);
+    assert_eq!(
+        g.holds(),
+        [
+            "c01: block 2: target q-patient verified outside the budget",
+            "c01: lifecycle bound 32.01 GB above 32 GB",
+        ],
+        "{}",
+        g.stdout
+    );
+    // Bound + main = 32,000,000,000 B exactly: inside the budget + the lifecycle line.
+    let mut k = whole_campaign("whole-budget-line");
+    k.attempts[1].1.bound = |b, _, q| {
+        Some(if b == 2 && q == "q-patient" {
+            31_979_520_000
+        } else {
+            1_300_000_000
+        })
+    };
+    let g = decide(&k);
+    assert_eq!((g.rc, g.verdict()), (0, "go"), "{}", g.stdout);
+    let life: Vec<&str> = g
+        .rows("lifecycle_bound")
+        .iter()
+        .filter(|r| r[1] == "c01")
+        .map(|r| r[3])
+        .collect();
+    assert_eq!(life, ["32000000000"], "{}", g.stdout);
+}
+
+// P2-6: harness + unit-roster terms merge once per identity ⇒ each server's, launcher's + the unit
+// main's term also covers every VmHWM the 1 s unit roster read for it; a terminal VmHWM of 0 = missing.
+#[test]
+fn whole_vector_terms_merge_the_unit_roster_readings() {
+    fn roster(s: &Path, old: &str, new: &str) {
+        let path = s.join("unit-roster.tsv");
+        let text = fs::read_to_string(&path).unwrap();
+        assert!(text.contains(old), "unit-roster.tsv: no {old:?}");
+        fs::write(&path, text.replacen(old, new, 1)).unwrap();
+    }
+    // A 40 GB (39,062,500 kB) roster reading of c01's server or launcher = its term: the lifecycle
+    // bound = 40 GB + the other arm process's 20 MB + the harness's 100 MB + the main's 20,000 kB. The
+    // main's reading of 1,000,000 kB over its terminal 20,000 kB = its term: the largest window bound
+    // (the load's 5,100,000,000 B) + 1,024,000,000 B.
+    let cases: [(&str, Plant, u64); 4] = [
+        (
+            "server",
+            |_, s| {
+                roster(
+                    s,
+                    "2\t301\t12\t9000\t15000\tserver",
+                    "2\t301\t12\t9000\t39062500\tserver",
+                )
+            },
+            40_140_480_000,
+        ),
+        (
+            "launcher",
+            |_, s| {
+                roster(
+                    s,
+                    "2\t300\t11\t9000\t15000\tlauncher",
+                    "2\t300\t11\t9000\t39062500\tlauncher",
+                )
+            },
+            40_140_480_000,
+        ),
+        // A roster RSS above the same row's VmHWM (two reads of one process) counts as well.
+        (
+            "server-rss",
+            |_, s| {
+                roster(
+                    s,
+                    "2\t301\t12\t9000\t15000\tserver",
+                    "2\t301\t12\t39062500\t15000\tserver",
+                )
+            },
+            40_140_480_000,
+        ),
+        (
+            "main",
+            |_, s| {
+                roster(
+                    s,
+                    "3\t100\t5\t9000\t20000\tpython3",
+                    "3\t100\t5\t9000\t1000000\tpython3",
+                )
+            },
+            5_100_000_000 + 1_024_000_000,
+        ),
+    ];
+    let mut missed = Vec::new();
+    for (name, plant, bound) in cases {
+        let mut k = whole_campaign("whole-roster-term");
+        k.attempts[1].1.p2 = plant;
+        let g = decide(&k);
+        let life: Vec<u64> = g
+            .rows("lifecycle_bound")
+            .iter()
+            .filter(|r| r[1] == "c01")
+            .filter_map(|r| r[3].parse().ok())
+            .collect();
+        if life != [bound] {
+            missed.push(format!("{name}: {life:?} ≠ [{bound}]"));
+        }
+    }
+    // A terminal VmHWM of 0 = the main's record missing its peak.
+    let mut k = whole_campaign("whole-main-zero");
+    k.attempts[1].1.p2 = |_, s| {
+        let t = fs::read_to_string(s.join("unit-main.tsv")).unwrap();
+        fs::write(
+            s.join("unit-main.tsv"),
+            t.replace("vmhwm_kb\t20000\n", "vmhwm_kb\t0\n"),
+        )
+        .unwrap()
+    };
+    let g = decide(&k);
+    if !g
+        .holds()
+        .contains(&"c01: attempt c01: P2-6: unit main record")
+    {
+        missed.push(format!("main-zero: {:?}", g.holds()));
+    }
+    assert!(missed.is_empty(), "{missed:#?}");
+}
+
+// Contract sb's R on the gating chunk (P2-7: r1 = the gate): R needs every selected pair complete; a
+// refused baseline call leaves it not estimable = a hold on the gate.
+#[test]
+fn whole_vector_a_gate_r_short_of_its_pairs_holds() {
+    let mut k = whole_campaign("whole-r-short");
+    k.attempts[0].1.outcome = |b, arm, _| {
+        if b == 2 && arm == "baseline" {
+            "refused"
+        } else {
+            "verified"
+        }
+    };
+    let g = decide(&k);
+    let holds = g.holds();
+    assert!(
+        holds.contains(&"r01: R not estimable over 1 of 2 pairs"),
+        "{holds:?}"
+    );
 }
