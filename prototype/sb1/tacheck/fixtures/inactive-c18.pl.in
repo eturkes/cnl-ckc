@@ -1,0 +1,2 @@
+guideline_entity(actual,'$guideline_id'(product,d,1,ref(1),[]),p,countable) :- guideline_entity(actual,'$guideline_id'(product,d,1,ref(1),[]),q,countable), \+ guideline_entity(actual,'$guideline_id'(product,d,1,ref(1),[]),p,countable).
+guideline_entity(actual,'$guideline_id'(product,d,2,ref(1),[]),q,countable).

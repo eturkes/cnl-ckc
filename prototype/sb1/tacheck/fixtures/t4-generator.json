@@ -1,0 +1,61 @@
+{
+  "format": "sb1-tas-t4-generator 2",
+  "amends": {
+    "v1": "fixtures/t4-generator-v1.json",
+    "v1_sha256": "62a065e55ac64268c1d8fa8f574822561d6f6092b431747ed07fa14f94798c2e",
+    "reason": "F-prime must declare every predicate of the payload rows it emits; v1 case003 omitted the patient guideline_arg predicate and correctly refused at hint decode",
+    "preserved_output": "rust/target/bench/builder-20-t4-first",
+    "unchanged": "seed, 256 generated cases, eight templates, ten original named cases, exact semantic oracle and acceptance predicates"
+  },
+  "seed_u64": "6071227972663472132",
+  "rng": "SplitMix64; wrapping u64 state += 0x9e3779b97f4a7c15; xor/multiply 0xbf58476d1ce4e5b9, 0x94d049bb133111eb; xor >> 31",
+  "generated_cases": 256,
+  "template_assignment": "case i uses i mod 8; 32 cases per template; seed drives opaque noun/doc/constant names, role 1/2 choices and applicable fact-presence contrasts",
+  "templates": [
+    "positive variable-headed copy chain",
+    "repeated-variable argument equality; exact role 1/2",
+    "owner-qualified links with unequal targets",
+    "fact-only disjoint patient extension; patient-top links",
+    "correlated NAF local joining an argument and noun",
+    "two constructors through a forwarding rule; nested reachable Deps",
+    "two negative strata over an optional fact",
+    "positive recursion with a founded seed"
+  ],
+  "named_cases": [
+    "inactive-c17", "active-c17", "inactive-c18", "active-c18",
+    "forwarding-k1-with-noncyclic-complement", "patient-identity-root",
+    "known-origin-root", "nonleast-fact-only", "empty-program", "correlated-naf-alias",
+    "posthoc-v1-case003-undeclared-payload"
+  ],
+  "prospective_cases": 266,
+  "total_cases": 267,
+  "post_hoc_cases": [{
+    "id": "posthoc-v1-case003-undeclared-payload",
+    "kind": "post hoc negative hint-grammar control",
+    "inputs": ["fixtures/t4-v1-case003-kb.pl.in", "fixtures/t4-v1-case003-patient.pl.in"],
+    "hint": "v1 case003 F-prime: full source-head payload rows with the original KB-only declared-predicate list",
+    "expected": "refused (certificate): payload predicate not declared",
+    "authority": "May::finish declared-payload grammar; positive v2 declared-predicate control and restored control admit"
+  }],
+  "ground_domain": {
+    "syntax": "atoms, structural integers, compiler-shaped identity constructors, variables, positive literals, one-level correlated NAF; no arithmetic built-ins",
+    "construction": "independent exact positive-envelope closure from source clauses and facts; enumerate every supported positive rule instance and every whole-conjunction NAF witness in that envelope; AFP on the resulting finite pruned ground program (TA-T0 sanity checked independently by B3)",
+    "guards": "10000 exact atoms, 32 closure rounds, term depth 6; crossing a guard fails the test as incomplete, never truncates a case",
+    "oracle": "own term/substitution/join + agenda reduct/AFP; shares parser/IR alone with the implementation"
+  },
+  "hints_per_case": [
+    "canonical solver F; independently checked",
+    "F-prime declares every predicate of the payload rows it emits",
+    "larger seeded closed F-prime: every source-head feature/link over the full finite abstract source domain; complete signed edges checked monotone on original clause ids",
+    "unseeded or nonclosed unary row removal where applicable",
+    "independent source-row, registry/tag and rank perturbations where applicable",
+    "compatible complete evidence on positive non-constructing F-prime cases; at least one strict nonleast admission required"
+  ],
+  "acceptance": "every accepted certificate has total independent WFM; full and CSR-selected answers agree with the independent exact oracle; concrete-to-mixed type map covers every reachable constructed value for refined cases",
+  "coverage_limits": [
+    "finite template/renaming domain, not arbitrary source programs",
+    "no arithmetic outputs, rational operations or nested body-identity binding",
+    "source/tag perturbations have explicit applicability counts; empty programs have no removable seed/rank",
+    "query-result checks use exact atom sets and existential correlated NAF; production projection/canonical answer serialization remains the thin path's separate check"
+  ]
+}

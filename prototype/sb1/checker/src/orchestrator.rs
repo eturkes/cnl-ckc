@@ -161,7 +161,15 @@ fn mark(origin: Instant, directory: &Path, event: &str) -> Result<(), Failure> {
         .map_err(|e| Failure::io(&path, e))
 }
 
+fn launcher_failure(error: std::io::Error) -> Failure {
+    Failure {
+        rc: 2,
+        message: format!("launcher-report {error}"),
+    }
+}
+
 pub struct PreparedProgram {
+    launcher: crate::peak::Launcher,
     loaded: Loaded,
     index: HeadIndex,
     sources: Vec<ClauseSource>,
@@ -179,11 +187,27 @@ impl PreparedProgram {
         root: &Path,
         composition: &Path,
         codec: SourceCodec,
+        external: Option<&mut dyn SliceProvider>,
+    ) -> Result<Self, Failure> {
+        Self::prepare_recorded(root, composition, codec, external, None)
+    }
+
+    fn prepare_recorded(
+        root: &Path,
+        composition: &Path,
+        codec: SourceCodec,
         mut external: Option<&mut dyn SliceProvider>,
+        output: Option<&Path>,
     ) -> Result<Self, Failure> {
         let origin = Instant::now();
         let mut phases = Vec::new();
         let mut counters = Counters::default();
+        let launcher = crate::peak::Launcher::start_in(output).map_err(launcher_failure)?;
+        if let Some(directory) = output {
+            launcher
+                .record_startup(directory)
+                .map_err(launcher_failure)?;
+        }
         let (mut loaded, patients) = phase(&mut phases, origin, "load_parse", "load", || {
             let bytes = read(composition)?;
             let mut paths = composition_paths(utf8(&bytes, "composition")?)?;
@@ -243,6 +267,7 @@ impl PreparedProgram {
             Ok((index, ids, identity))
         })?;
         Ok(Self {
+            launcher,
             loaded,
             index,
             sources,
@@ -490,7 +515,7 @@ impl PreparedProgram {
             let stdout = request.output.join("producer.stdout");
             let stderr = request.output.join("producer.stderr");
             mark(self.origin, &request.output, "producer_spawn_begin")?;
-            let child = Command::new(&request.swipl)
+            let command = Command::new(&request.swipl)
                 .args([
                     "--stack-limit=32g",
                     "--table-space=32g",
@@ -508,14 +533,32 @@ impl PreparedProgram {
                 .arg(&identity)
                 .arg(&slice)
                 .arg(&request.output)
-                .stdin(Stdio::null())
-                .stdout(File::create(&stdout).map_err(|e| Failure::io(&stdout, e))?)
-                .stderr(File::create(&stderr).map_err(|e| Failure::io(&stderr, e))?)
-                .spawn()
-                .map_err(|e| Failure::io(&request.swipl, e))?;
-            let exit = crate::peak::wait(child).map_err(|e| Failure::io(&request.swipl, e))?;
+                .get_args()
+                .map(std::ffi::OsStr::to_owned)
+                .collect::<Vec<_>>();
+            let args = std::iter::once(request.swipl.as_os_str().to_owned())
+                .chain(command)
+                .collect::<Vec<_>>();
+            let exit = self
+                .launcher
+                .run(&args, &stdout, &stderr)
+                .and_then(|exit| {
+                    self.launcher.record_exit(&request.output, &exit)?;
+                    Ok(exit)
+                })
+                .map_err(|error| {
+                    self.counters.runtime("launcher_report_failure", 1);
+                    launcher_failure(error)
+                })?;
             mark(self.origin, &request.output, "producer_exited")?;
             self.counters.runtime("producer_pid", u64::from(exit.pid));
+            self.counters
+                .runtime("producer_start_ticks", exit.start_ticks);
+            self.counters.runtime("producer_cpu_us", exit.cpu_us);
+            self.counters
+                .runtime("producer_wait4_maxrss_bytes", exit.wait4_peak_bytes);
+            self.counters
+                .runtime("producer_observed_hwm_bytes", exit.observed_hwm_bytes);
             self.counters
                 .runtime("producer_maxrss_bytes", exit.peak_bytes);
             let status = exit.status;
@@ -672,7 +715,13 @@ pub fn orchestrate_retained(
     codec: SourceCodec,
 ) -> Result<(String, PreparedProgram), Failure> {
     fs::create_dir_all(&request.output).map_err(|e| Failure::io(&request.output, e))?;
-    let mut prepared = PreparedProgram::prepare(&request.root, &request.composition, codec, None)?;
+    let mut prepared = PreparedProgram::prepare_recorded(
+        &request.root,
+        &request.composition,
+        codec,
+        None,
+        Some(&request.output),
+    )?;
     let result = prepared.call(request, None);
     prepared.write_metrics(&request.output)?;
     prepared.trace(&request.output, "result_return_ready")?;
@@ -814,12 +863,35 @@ pub fn serve(
     request: &ServeRequest,
     codec: SourceCodec,
     input: impl std::io::BufRead,
+    output: impl Write,
+) -> Result<(), Failure> {
+    serve_with_provider(request, codec, input, output, None)
+}
+pub fn serve_with_provider(
+    request: &ServeRequest,
+    codec: SourceCodec,
+    input: impl std::io::BufRead,
     mut output: impl Write,
+    mut external: Option<&mut dyn SliceProvider>,
 ) -> Result<(), Failure> {
     let arm = &request.base.output;
     fs::create_dir_all(arm).map_err(|e| Failure::io(arm, e))?;
-    let mut prepared =
-        PreparedProgram::prepare(&request.base.root, &request.base.composition, codec, None)?;
+    let mut prepared = match external.as_mut() {
+        Some(provider) => PreparedProgram::prepare_recorded(
+            &request.base.root,
+            &request.base.composition,
+            codec,
+            Some(&mut **provider),
+            Some(arm),
+        )?,
+        None => PreparedProgram::prepare_recorded(
+            &request.base.root,
+            &request.base.composition,
+            codec,
+            None,
+            Some(arm),
+        )?,
+    };
     let origin = prepared.origin;
     let mut load = vec![(
         "knowledge_documents".to_owned(),
@@ -884,7 +956,11 @@ pub fn serve(
             query: PathBuf::from(query),
             ..request.base.clone()
         };
-        let rc = match prepared.call(&call, None) {
+        let result = match external.as_mut() {
+            Some(provider) => prepared.call(&call, Some(&mut **provider)),
+            None => prepared.call(&call, None),
+        };
+        let rc = match result {
             Ok(text) => {
                 prepared.write_complete_sink(&directory, &text)?;
                 0
@@ -906,3 +982,7 @@ pub fn serve(
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "producer_peak_tests.rs"]
+mod producer_peak_tests;

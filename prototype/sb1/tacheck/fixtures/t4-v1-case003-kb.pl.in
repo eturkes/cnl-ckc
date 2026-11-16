@@ -1,0 +1,1 @@
+guideline_entity(actual,X,end_148976321a777e60,countable) :- guideline_arg(actual,X,1,Y), guideline_entity(actual,Y,seed_148976321a777e60,countable).

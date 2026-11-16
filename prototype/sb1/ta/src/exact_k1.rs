@@ -10,6 +10,13 @@ use sb1_checker::term::{Id, Node, quote_atom, variable_name};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 
+thread_local! {
+    static FULL_MIXED_DUMP: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+pub fn set_full_mixed_dump(value: bool) {
+    FULL_MIXED_DUMP.set(value);
+}
+
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Tag {
     Base,
@@ -532,7 +539,7 @@ impl Refined {
         // A refined cycle projects inside one cyclic base SCC. Other source
         // rows inherit the base condensation rank; their features remain closed.
         crate::work::phase("k1_growth");
-        let mut growth = if restricted {
+        let mut growth = if restricted && !FULL_MIXED_DUMP.get() {
             Growth::for_sources(
                 &ir,
                 &mut model,
@@ -787,6 +794,47 @@ impl Refined {
                 )
             }
         }
+    }
+    pub fn hint_variants(&self) -> Vec<(usize, Vec<(usize, Tag)>)> {
+        self.variants
+            .iter()
+            .map(|v| {
+                (
+                    v.original,
+                    v.tags.iter().map(|(x, t)| (*x, t.clone())).collect(),
+                )
+            })
+            .collect()
+    }
+    pub fn hint_growth(&mut self) -> Growth {
+        let mut growth = Growth::hint_sources(&self.program, &mut self.model);
+        let mut edges = Builder::new(growth.nodes.len());
+        for from in 0..growth.nodes.len() {
+            let targets = growth
+                .graph
+                .row(from)
+                .into_iter()
+                .filter(|edge| {
+                    let source = match growth.nodes[edge.to] {
+                        Origin::Skolem(o) => Tag::Skolem(self.keys[self.type_index(o)].template),
+                        Origin::Arithmetic { clause, goal } => {
+                            Tag::Arithmetic(self.variants[clause].original, goal)
+                        }
+                    };
+                    growth.supports(from, edge.to).any(|(clause, var)| {
+                        self.variants[clause]
+                            .tags
+                            .get(&var)
+                            .is_none_or(|t| *t == source)
+                    })
+                })
+                .map(|edge| edge.to)
+                .collect();
+            let row = edges.growth(targets);
+            edges.attach(from, row);
+        }
+        growth.graph = edges.finish(growth.graph.counters.clone());
+        growth
     }
     pub fn admitted(&self) -> bool {
         self.growth.admitted()

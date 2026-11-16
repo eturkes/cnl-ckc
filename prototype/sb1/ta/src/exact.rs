@@ -896,6 +896,55 @@ impl Model {
         }
         out
     }
+    pub fn hint(&self, program: &Program) -> crate::hints::MayHint {
+        let mut unary = self
+            .unary
+            .iter()
+            .filter(|(_, p)| !p.values.is_empty())
+            .map(|(f, p)| (*f, p.id(&self.sets)))
+            .collect::<Vec<_>>();
+        unary.sort_unstable();
+        let mut rectangles = self
+            .links
+            .iter()
+            .flat_map(|(label, relation)| {
+                relation.sources.iter().flat_map(move |(source, owners)| {
+                    owners
+                        .iter()
+                        .map(move |(owner, target)| (*label, *owner, *source, *target))
+                })
+            })
+            .collect::<Vec<_>>();
+        rectangles.sort_unstable();
+        let mut roots = unary.iter().map(|(_, set)| *set).collect::<Vec<_>>();
+        roots.extend(rectangles.iter().flat_map(|(_, o, s, t)| [*o, *s, *t]));
+        roots.extend([ALL, EMPTY]);
+        roots.sort_unstable();
+        roots.dedup();
+        let position = |set| roots.binary_search(&set).expect("hint set root");
+        crate::hints::MayHint {
+            generic: self.generic,
+            origins: self
+                .abs
+                .origins
+                .iter()
+                .map(|id| {
+                    let a = program.arena.named(*id, "$guideline_id", 5).unwrap();
+                    [a[0], a[1], a[2], a[3]]
+                })
+                .collect(),
+            sets: roots.iter().map(|set| self.sets.values(*set)).collect(),
+            unary: unary
+                .into_iter()
+                .map(|(f, set)| (f, position(set)))
+                .collect(),
+            rectangles: rectangles
+                .into_iter()
+                .map(|(l, o, s, t)| (l, position(o), position(s), position(t)))
+                .collect(),
+            predicates: self.predicates.iter().copied().collect(),
+        }
+    }
     pub fn dump(&self) -> crate::front::Dump {
         let unary = self
             .unary

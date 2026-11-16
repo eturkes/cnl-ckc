@@ -1,0 +1,13 @@
+{
+  "format": "sb1-tas-t3-normalization 1",
+  "feature_values": "semantic kind prefix + rendered exact scalar or (Kind,Doc,Sentence,Slot); lexicographic dictionary; raw finite Any is distinct from All",
+  "features": "unary raw rows; owner/source/label rectangles expanded and their target sets unioned; All target dominates; semantic dictionary ids; same canonical columns/order as C3",
+  "signed_graph": "all original clauses, including patient nodes; sort by source path then original ordinal; map signed CSR rows to canonical ids; growth=false; SCC diagnostic groups sorted as sets of canonical ids",
+  "base_growth": "every independent source-hint closure and constructor/output edge; remove only the additional scalar leaf node 0 and edges to it from census comparison; publish scalar edges separately; all such edges still checked against ranks",
+  "final_nodes": "every complete mixed semantic (origin,tag-tuple) or arithmetic-site/tag node; raw, never source-restricted; scalar leaf normalization alone",
+  "final_projected_edges": "if restricted refinement: keep a complete mixed edge exactly when its source projects to a base SCC with a cycle; Skolem projects through the semantic template origin, arithmetic through original clause+goal; predicate evaluated on independent base graph after base-object parity; base/full-refinement modes keep every source",
+  "final_complete_edges": "all non-scalar mixed edges, compared both ways with --redesign --dump-analysis --dump-full-mixed, whose only algorithm delta is existing build_k1 instead of for_sources in the restricted branch; filter and projection check unchanged",
+  "outcome": "mode, checked admission, checked full-refinement flag, semantic registry size, original-mapped variant count, refined-template count, projected edge/projection-check count",
+  "reachability": "query roots from the checked provider; separate BFS reads canonical signed-edge bytes, adds selected-document metadata, maps back to original ids; exact equality with actual provider selection",
+  "x100": "F1b-g100-s1 correctness run compares signed original nodes/edges/SCC and projected growth/outcome against C3x-ad; feature flattening, complete-mixed oracle at x100 and query-answer acquisition remain separate named limits"
+}

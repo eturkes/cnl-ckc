@@ -9,6 +9,8 @@ pub mod program;
 pub mod query;
 mod slice;
 pub mod term;
+mod terminal;
+pub use terminal::server_terminal_exit;
 
 use digest::sha256;
 use engine::{Claim, Model};

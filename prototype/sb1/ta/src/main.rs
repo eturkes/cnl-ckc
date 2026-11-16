@@ -110,6 +110,7 @@ fn run() -> Result<i32, String> {
     let mut redesign_front = false;
     let mut redesign = false;
     let mut dump_analysis = false;
+    let mut dump_full_mixed = false;
     let mut front_only = false;
     let mut dump_front = false;
     let mut skip_audit = false;
@@ -136,6 +137,7 @@ fn run() -> Result<i32, String> {
             "--redesign" => redesign = true,
             "--candidate-census" => candidate_census = true,
             "--dump-analysis" => dump_analysis = true,
+            "--dump-full-mixed" => dump_full_mixed = true,
             "--front-only" => front_only = true,
             "--dump-front" => dump_front = true,
             "--skip-audit" => skip_audit = true,
@@ -219,6 +221,10 @@ fn run() -> Result<i32, String> {
             "front diagnostics require refined mode without shapes/reference/queries".into(),
         );
     }
+    if dump_full_mixed && (!redesign || !dump_analysis || !queries.is_empty()) {
+        return Err("--dump-full-mixed requires --redesign --dump-analysis without queries".into());
+    }
+    sb1_ta::exact_k1::set_full_mixed_dump(dump_full_mixed);
     let root = root.ok_or("--root required")?;
     let composition = composition.ok_or("--composition required")?;
     let out = out.ok_or("--out required")?;

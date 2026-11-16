@@ -1,0 +1,21 @@
+case	recipe	expected	authority
+cdc	cdc-dc	admitted	sb P1
+adult	cdc-dc+consumer/adult	admitted	sb P1
+minor	cdc-dc+consumer/minor	admitted	sb P1
+cancer	cdc-dc+consumer/cancer	admitted	sb P1
+dose	cdc-dc+dose-world	admitted	sb P1
+L1	cdc-dc+ta/L1	negative	sb D8 L1
+L2	cdc-dc+ta/L2	negative	sb D8 L2
+L3	cdc-dc+ta/L3	negative	sb D8 L3
+L4	cdc-dc+ta/L4	negative	sb D8 L4
+L5	cdc-dc+ta/L5-A+ta/L5-B	negative	sb D8 L5
+G1	cdc-dc+ta/G1	growth	sb D8 G1
+G2	cdc-dc+ta/G2	growth	sb D8 G2
+P3	cdc-dc+ta/P3	admitted	sb D8 P3
+P4	cdc-dc+ta/P4	admitted	sb D8 P4
+P5	cdc-dc+ta/P5-A+ta/P5-B	admitted	sb D8 P5
+P6	cdc-dc+ta/P6	admitted	sb D8 P6
+inactive-c17	fixture/inactive-c17	admitted	scientist-9 finite semantics + spike inactive_negative_control; WFM true={alpha}, undefined={}
+active-c17	fixture/active-c17	negative	scientist-9 finite semantics + spike active_negative_control; WFM true={alpha,beta}, undefined={exclusion}
+inactive-c18	fixture/inactive-c18	admitted	scientist-9 finite semantics; WFM true={qB}, undefined={}
+active-c18	fixture/active-c18	negative	scientist-9 finite semantics; WFM true={qA}, undefined={pA}

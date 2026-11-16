@@ -13,6 +13,7 @@ pub mod features;
 pub mod front;
 pub mod graph;
 pub mod growth;
+pub mod hints;
 pub mod k1;
 pub mod memory;
 pub use features as may;

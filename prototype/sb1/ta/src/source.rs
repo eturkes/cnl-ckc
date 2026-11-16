@@ -66,6 +66,12 @@ impl Program {
         Ok(count.unwrap_or(1))
     }
     pub fn load(root: &Path, composition: &Path, patient_last: bool) -> Result<Self, String> {
+        Self::load_mode(root, composition, patient_last, false)
+    }
+    pub fn load_knowledge(root: &Path, composition: &Path) -> Result<Self, String> {
+        Self::load_mode(root, composition, true, true)
+    }
+    fn load_mode(root: &Path, composition: &Path, patient_last: bool, knowledge_only: bool) -> Result<Self, String> {
         let text = fs::read_to_string(composition).map_err(|e| e.to_string())?;
         let paths = text
             .lines()
@@ -83,7 +89,8 @@ impl Program {
             return Err("patient suffix exceeds composition".into());
         }
         let mut out = Self::new();
-        for (i, path) in paths.iter().enumerate() {
+        let end = if knowledge_only { paths.len() - patient_documents } else { paths.len() };
+        for (i, path) in paths.iter().take(end).enumerate() {
             let path = root.join(path);
             let text = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
             let start = out.clauses.len();

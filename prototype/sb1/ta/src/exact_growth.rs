@@ -97,7 +97,18 @@ pub struct Growth {
 }
 impl Growth {
     pub fn build(program: &Program, model: &mut Model, audit: bool, skip_audit: bool) -> Self {
-        Self::build_sources(program, model, None, audit, skip_audit, "base_growth")
+        Self::build_sources(
+            program,
+            model,
+            None,
+            audit,
+            skip_audit,
+            "base_growth",
+            false,
+        )
+    }
+    pub fn hint_sources(program: &Program, model: &mut Model) -> Self {
+        Self::build_sources(program, model, None, false, false, "hint_sources", true)
     }
     pub(crate) fn build_k1(
         program: &Program,
@@ -105,7 +116,7 @@ impl Growth {
         audit: bool,
         skip_audit: bool,
     ) -> Self {
-        Self::build_sources(program, model, None, audit, skip_audit, "k1_growth")
+        Self::build_sources(program, model, None, audit, skip_audit, "k1_growth", false)
     }
     pub(crate) fn for_sources(
         program: &Program,
@@ -121,6 +132,7 @@ impl Growth {
             audit,
             skip_audit,
             "k1_growth",
+            false,
         )
     }
     fn build_sources(
@@ -130,6 +142,7 @@ impl Growth {
         audit: bool,
         skip_audit: bool,
         phase: &'static str,
+        complete_hint: bool,
     ) -> Self {
         let arena = &program.arena;
         let mut nodes = (0..model.abs.origins.len())
@@ -193,6 +206,16 @@ impl Growth {
             .iter()
             .map(|(_, c, v)| (*c, *v))
             .collect::<VecDeque<_>>();
+        if complete_hint {
+            for (i, clause) in program.clauses.iter().enumerate() {
+                if program.patient(i) {
+                    continue;
+                }
+                let mut variables = BTreeSet::new();
+                arena.vars(clause.head, &mut variables);
+                queue.extend(variables.into_iter().map(|v| (i, v)));
+            }
+        }
         let mut sites = HashMap::<Site, SiteState>::new();
         let mut patterns = HashMap::new();
         let mut states = HashMap::new();

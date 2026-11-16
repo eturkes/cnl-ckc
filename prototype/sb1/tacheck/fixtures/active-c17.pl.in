@@ -1,0 +1,3 @@
+guideline_entity(actual,'$guideline_id'(product,dead,1,ref(1),[]),alpha,countable).
+guideline_entity(actual,'$guideline_id'(product,dead,1,ref(1),[]),beta,countable).
+guideline_exclusion(dead) :- guideline_entity(actual,'$guideline_id'(product,dead,1,ref(1),[]),beta,countable), \+ guideline_exclusion(dead).
