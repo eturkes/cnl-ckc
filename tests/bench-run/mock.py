@@ -6,6 +6,10 @@ import subprocess
 import sys
 import time
 
+# The test's measured CPU contention (rust/ckc/tests/bench_run.rs `contention`): wall-clock holds
+# that must outlast a scaled deadline, or overlap start-ups a loaded host stretches, scale with it.
+SLACK = int(os.environ.get("CKC_BENCH_RUN_SLACK", "1"))
+
 
 def stamp(out, label):
     with (out / "controls.tsv").open("a") as stream:
@@ -67,19 +71,19 @@ def main():
             # Both outlive the harness's 2 s post-kill wait; the worker outlives the checker,
             # so a harness that never kills the group returns while the worker still runs.
             child = subprocess.Popen([sys.executable, "-I", __file__, "worker", "unused",
-                                      str(out), "0", "25", str(4 * 1024 * 1024)])
+                                      str(out), "0", str(25 * SLACK), str(4 * 1024 * 1024)])
             (out.parent / "child.pid").write_text(str(child.pid))
-            time.sleep(20)
+            time.sleep(20 * SLACK)
         elif mode == "memory":
-            allocation(out, 0, 2, 40 * 1024 * 1024)
+            allocation(out, 0, 2 * SLACK, 40 * 1024 * 1024)
         else:
             print("x" * (2 * 1024 * 1024), flush=True)
     elif mode == "allocations":
         workers = [subprocess.Popen([sys.executable, "-I", __file__, "worker", "unused",
-                                     str(out), str(delay), str(hold), str(size)])
+                                     str(out), str(delay), str(hold * SLACK), str(size)])
                    for delay, hold, size in [(0.025, 0.14, 12 * 1024 * 1024),
                                               (0.095, 0.18, 18 * 1024 * 1024)]]
-        allocation(out, 0.01, 0.30, 8 * 1024 * 1024)
+        allocation(out, 0.01, 0.30 * SLACK, 8 * 1024 * 1024)
         for worker in workers:
             worker.wait()
     elif mode == "short-spike":

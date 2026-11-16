@@ -21,6 +21,9 @@ import subprocess
 import sys
 import time
 
+# The test's measured CPU contention (bench_run.rs `contention`): a hold the sampler must catch
+# scales with it.
+SLACK = int(os.environ.get("CKC_BENCH_RUN_SLACK", "1"))
 SCORED = ["patient", "slice", "materialize", "producer", "decode", "index", "support",
           "closure", "answers"]
 LOAD = ["load_parse", "load_admission", "load_analysis", "load_index", "load_receipt"]
@@ -56,7 +59,7 @@ def main():
             rows += f"census_pid\t{child.pid}\ncensus_maxrss_bytes\t{usage.ru_maxrss * 1024}\n"
         (arm / "load.tsv").write_text(rows)
     if mode == "load-transient":
-        subprocess.run(["sleep", "0.3"], check=True)
+        subprocess.run(["sleep", f"{0.3 * SLACK:g}"], check=True)
     table(arm / "load-phases.tsv", LOAD, "load", 0.005)
     print("ready", flush=True)
     calls = 0
@@ -73,14 +76,14 @@ def main():
             memory = mmap.mmap(-1, 48 * 1024 * 1024)
             for offset in range(0, len(memory), 4096):
                 memory[offset] = 1
-            time.sleep(1)
+            time.sleep(SLACK)
         if mode == "grow":
             grown = mmap.mmap(-1, 48 * 1024 * 1024)
             for offset in range(0, len(grown), 4096):
                 grown[offset] = 1
             grown.close()
         if mode == "transient" and calls == 1:
-            subprocess.run(["sleep", "0.3"], check=True)
+            subprocess.run(["sleep", f"{0.3 * SLACK:g}"], check=True)
         if mode == "protocol":
             print(f"done\t{int(ident) + 1}\t0", flush=True)
             continue

@@ -32,3 +32,163 @@ vulnerabilities:
       - pkg:deb/debian/libapt-pkg6.0
     statement: apt remote code execution via hard-link reuse during package download; fixed in apt + libapt-pkg6.0 2.6.2; CI-only container, nothing ships from it
     expired_at: 2026-12-12
+  - id: CVE-2026-6460
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via type confusion in data definition commands; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-6467
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql privilege escalation via uncontrolled search path in extension management; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-14661
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql persistent Denial of Service via arbitrary file append in sslkeylogfile parameter; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-18447
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via type confusion in SQL-language functions; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116304
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in parallel worker coordination; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116306
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via composite-value field assignment type confusion; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116307
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in plperl; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116309
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via type confusion in PL/Perl; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116314
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via crafted archive in pg_restore; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116315
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via heap-based buffer overflow in tsvector_delete(); fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116316
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql privilege escalation via unqualified type resolution in temporary schema; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116317
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via heap-based buffer overflow in ts_rank_cd(); fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116319
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in plperl; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116320
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in PL/Perl; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116323
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in PL/Tcl; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116326
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via uncaught exceptions in PL/Perl; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116328
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via integer wraparound in memory contexts; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116330
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via predictable restriction key in pg_dump restore script; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116331
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via aggregate optimization type confusion; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116332
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free during portal setup; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116335
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via operator link type confusion; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-116336
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via dropped index in REINDEX CONCURRENTLY; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120139
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via integer wraparound in tuple-size calculations; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120141
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via type confusion in materialized set-returning functions; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120143
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in trigger functions; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120145
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via system catalog replication target; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120147
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in dblink extension; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120148
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via type confusion in extended statistics; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120149
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via foreign batch inserts; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120150
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via use-after-free in expanded-record domain checks; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120151
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via PL/pgSQL type confusion; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17
+  - id: CVE-2026-120153
+    purls:
+      - pkg:deb/debian/libpq5
+    statement: postgresql arbitrary code execution via SQL injection in extension-script substitutions; fixed in libpq5 15.20-0+deb12u1; CI-only container, nothing ships from it
+    expired_at: 2026-12-17

@@ -17,6 +17,38 @@ fn program() -> PathBuf {
         .map(PathBuf::from)
         .unwrap_or_else(|| env!("CARGO_BIN_EXE_ckc").into())
 }
+// A loaded host stretches every wall-clock margin here: at 8× CPU oversubscription the fixed 30 s
+// guard killed `ckc bench run` mid-run (rc 124). Each value a loaded host can overrun scales by the
+// CPU share this thread gets now = wall ÷ on-CPU time of a busy loop (schedstat field 1, ns),
+// rounded; 1 without schedstat: guards, deadlines (one that must fire still lands after the work
+// before it), holds a deadline or the sampler must land in, start tolerances; the mocks read it as
+// CKC_BENCH_RUN_SLACK. A lower bound + a deadline with no work before it (300 ms against a 5 s
+// hold) keep their base.
+fn contention() -> u64 {
+    let on_cpu = || -> Option<u64> {
+        fs::read_to_string("/proc/thread-self/schedstat")
+            .ok()?
+            .split_whitespace()
+            .next()?
+            .parse()
+            .ok()
+    };
+    let (Some(start), wall) = (on_cpu(), std::time::Instant::now()) else {
+        return 1;
+    };
+    let mut x = 0u64;
+    loop {
+        for i in 0..10_000 {
+            x = std::hint::black_box(x.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(i));
+        }
+        let Some(now) = on_cpu() else { return 1 };
+        let cpu = now.saturating_sub(start);
+        if cpu >= 20_000_000 {
+            let wall = wall.elapsed().as_nanos() as u64;
+            return ((wall + cpu / 2) / cpu).max(1);
+        }
+    }
+}
 struct Scratch(PathBuf);
 impl Scratch {
     fn new(name: &str) -> Self {
@@ -47,13 +79,15 @@ impl Scratch {
         self.invoke(&composition, "result", mode, extra)
     }
     fn invoke(&self, composition: &Path, out: &str, mode: &str, extra: &[&str]) -> Output {
+        let slack = contention();
+        let deadline = (5000 * slack).to_string();
         let mut options: Vec<String> = [
             "--query",
             "q-all",
             "--blocks",
             "1",
             "--deadline-ms",
-            "5000",
+            &deadline,
             "--sample-ms",
             "10",
         ]
@@ -68,7 +102,7 @@ impl Scratch {
             }
         }
         Command::new("timeout")
-            .args(["--kill-after=1", "30"])
+            .args(["--kill-after=1", &(30 * slack).to_string()])
             .arg(program())
             .args(["bench", "run"])
             .arg(composition)
@@ -77,6 +111,8 @@ impl Scratch {
             .args(["--root", root().to_str().unwrap(), "--out"])
             .arg(self.0.join(out))
             .args(options)
+            // The mock's wall-clock holds stretch with the scaled deadlines (tests/bench-run/mock.py).
+            .env("CKC_BENCH_RUN_SLACK", slack.to_string())
             .current_dir(&self.0)
             .output()
             .unwrap()
@@ -85,8 +121,11 @@ impl Scratch {
         let composition = self.composition("target");
         let script = self.0.join("orchestrator.py");
         fs::write(&script, ORCHESTRATOR).unwrap();
+        let slack = contention();
+        // late-timeout's deadline must fire after the sink, so it stretches with the pre-sink work.
+        let deadline = if mode == "late-timeout" { 1000 } else { 5000 } * slack;
         Command::new("timeout")
-            .args(["--kill-after=1", "30"])
+            .args(["--kill-after=1", &(30 * slack).to_string()])
             .arg(program())
             .args(["bench", "run"])
             .arg(composition)
@@ -100,17 +139,14 @@ impl Scratch {
                 "--blocks",
                 "1",
                 "--deadline-ms",
-                if mode == "late-timeout" {
-                    "1000"
-                } else {
-                    "5000"
-                },
+                &deadline.to_string(),
                 "--sample-ms",
                 "10",
             ])
             .args(["--root", root().to_str().unwrap(), "--out"])
             .arg(self.0.join("result"))
             .env("SB1_STAGE_TRACE", if mode == "traced" { "1" } else { "0" })
+            .env("CKC_BENCH_RUN_SLACK", slack.to_string())
             .args(if mode == "late-memory" {
                 vec!["--memory-bytes", "42000000"]
             } else {
@@ -165,8 +201,9 @@ fn no_answers(s: &Scratch) {
 }
 
 const ORCHESTRATOR: &str = r#"
-import hashlib, pathlib, subprocess, sys, time
+import hashlib, os, pathlib, subprocess, sys, time
 mode = sys.argv[1]
+slack = int(os.environ.get('CKC_BENCH_RUN_SLACK', '1'))
 assert sys.argv[2] == '--root' and len(sys.argv) == 7
 out = pathlib.Path(sys.argv[5])
 start = time.perf_counter()
@@ -210,12 +247,14 @@ if mode != 'missing-sink':
 if mode == 'late-teardown':
     memory = bytearray(24*1024*1024)
     for i in range(0,len(memory),4096): memory[i]=1
-    time.sleep(.4)
+    time.sleep(.4 * slack)
+# The late holds outlast every scaled deadline: the cap under test ends them (else the deadline or
+# the guard does, failing the test).
 if mode == 'late-memory':
     memory = bytearray(40*1024*1024)
     for i in range(0,len(memory),4096): memory[i]=1
-    time.sleep(2)
-if mode == 'late-timeout': time.sleep(5)
+    time.sleep(3600)
+if mode == 'late-timeout': time.sleep(3600)
 print('ORCHESTRATED-ANSWER')
 "#;
 
@@ -538,7 +577,10 @@ fn touched_allocations_are_seen_across_offsets_and_process_lifetimes() {
 fn subperiod_spike_retains_the_sampling_uncertainty() {
     let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let s = Scratch::new("short-spike");
-    succeeded(&s.run("short-spike", &["--sample-ms", "200"]));
+    // The control's spike (a 4 ms hold + its wake-up) must undercut the period on a loaded host too.
+    let period = 200_000_000 * contention();
+    let sample_ms = (period / 1_000_000).to_string();
+    succeeded(&s.run("short-spike", &["--sample-ms", &sample_ms]));
     let settings = s.result("settings.tsv");
     assert!(settings.contains(
         "sampling_limit\tspikes-and-process-lifetimes-shorter-than-period-may-be-missed"
@@ -546,7 +588,7 @@ fn subperiod_spike_retains_the_sampling_uncertainty() {
     let text = s.result("runs.tsv");
     let run = &rows(&text)[0];
     assert_eq!(run["memory_uncertainty"], "possibly-missed-subperiod-spike");
-    assert_eq!(number(run, "sample_period_ns"), 200_000_000);
+    assert_eq!(number(run, "sample_period_ns"), period);
     let controls = s.result("run-000001/controls.tsv");
     let mut allocated = BTreeMap::new();
     let mut completed = 0;
@@ -557,7 +599,7 @@ fn subperiod_spike_retains_the_sampling_uncertainty() {
             allocated.insert(values[1], timestamp);
         } else if values[0] == "freed" {
             assert!(
-                timestamp - allocated[values[1]] < 200_000_000,
+                timestamp - allocated[values[1]] < period,
                 "the control's actual allocation lifetime must be shorter than the sampling period"
             );
             completed += 1;
@@ -572,8 +614,10 @@ fn timeout_discards_partial_answers_and_reaps_the_group() {
     let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let s = Scratch::new("timeout");
     // The mock writes child.pid after two interpreter start-ups; under host load a 250 ms
-    // deadline could expire first. 2,500 ms still lands inside its 20 s hold.
-    let output = s.run("timeout", &["--deadline-ms", "2500"]);
+    // deadline could expire first. 2,500 ms still lands inside its 20 s hold (both × the
+    // measured factor; the mock reads invoke's).
+    let deadline = (2500 * contention()).to_string();
+    let output = s.run("timeout", &["--deadline-ms", &deadline]);
     assert_eq!(
         output.status.code(),
         Some(1),
@@ -695,6 +739,7 @@ impl Scratch {
         for q in ["q-one", "q-patient"] {
             fs::write(target.join(format!("queries/{q}.pl")), "query.\n").unwrap();
         }
+        let slack = contention();
         let mut args: Vec<String> = vec![
             "bench".into(),
             "run".into(),
@@ -715,7 +760,11 @@ impl Scratch {
             "--blocks".into(),
             "2".into(),
             "--deadline-ms".into(),
-            "3000".into(),
+            (3000 * slack).to_string(),
+            // Unset, the load deadline = the call deadline: a test's short call deadline would
+            // also bound the mock server's interpreter start-up.
+            "--load-deadline-ms".into(),
+            (3000 * slack).to_string(),
             "--sample-ms".into(),
             "10".into(),
         ];
@@ -734,9 +783,10 @@ impl Scratch {
             }
         }
         Command::new("timeout")
-            .args(["--kill-after=1", "60"])
+            .args(["--kill-after=1", &(60 * slack).to_string()])
             .arg(program())
             .args(&args)
+            .env("CKC_BENCH_RUN_SLACK", slack.to_string())
             .current_dir(&self.0)
             .output()
             .unwrap()
@@ -1066,9 +1116,13 @@ fn unit_main_passes_rc_fires_its_censor_and_records_itself() {
             .collect()
     };
     let s = Scratch::new("unit-main");
+    // The censor fires once bash has recorded its child, which a loaded host delays.
+    let slack = contention();
+    let censor = slack.to_string();
+    let hold = format!("sleep {} & echo $! > child; wait", 30 * slack);
     let cases = [
         ("normal", "-", "exit 3", "3"),
-        ("censor", "1", "sleep 30 & echo $! > child; wait", "124"),
+        ("censor", censor.as_str(), hold.as_str(), "124"),
         ("signal", "-", "kill -KILL $$", "137"),
     ];
     let runs: Vec<_> = cases
@@ -1265,6 +1319,8 @@ fn host_record_names_the_resolved_swipl_and_the_campaign_tools() {
 fn warm_block_spacing_starts_each_block_at_its_offset() {
     let _guard = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let s = Scratch::new("spacing");
+    // A block starts late (kept late) once its predecessor's calls overrun the spacing.
+    let late = 1_000_000_000 * contention() as i128;
     succeeded(&s.warm(
         "normal",
         true,
@@ -1291,7 +1347,7 @@ fn warm_block_spacing_starts_each_block_at_its_offset() {
     for (k, &run) in first.iter().enumerate().skip(1) {
         let (offset, want) = (arrival(run) - t1, 400_000_000 * k as i128);
         assert!(
-            offset >= want - 20_000_000 && offset < want + 1_000_000_000,
+            offset >= want - 20_000_000 && offset < want + late,
             "block {}: {offset} ns after block 1",
             k + 1
         );
